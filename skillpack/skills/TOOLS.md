@@ -96,13 +96,13 @@ SDK 的进 `%LOCALAPPDATA%`。**第 1 步的探测对所有工具都必做**，�
 
 | 工具 | 干什么 | 装法 | 许可 |
 |---|---|---|---|
-| **Python 3.12+** | 绝大多数工具链的宿主 | `winget install --accept-source-agreements --accept-package-agreements --disable-interactivity Python.Python.3.12` | 🟢 |
-| **Git** | 拉源码仓 | `winget install --accept-source-agreements --accept-package-agreements --disable-interactivity Git.Git` | 🟢 |
-| **Node.js 20+** | jshook / playwright / reqable 的宿主 | `winget install --accept-source-agreements --accept-package-agreements --disable-interactivity OpenJS.NodeJS.LTS` | 🟢 |
-| **.NET SDK 8** | ilspycmd / dnSpy.Console / de4dot 的宿主 | `winget install --accept-source-agreements --accept-package-agreements --disable-interactivity Microsoft.DotNet.SDK.8` | 🟢 |
-| **JDK 21+** | jadx / apktool / Ghidra 的宿主 | `winget install --accept-source-agreements --accept-package-agreements --disable-interactivity Microsoft.OpenJDK.21` | 🟢 |
-| **Go** | pentestswarm 等 | `winget install --accept-source-agreements --accept-package-agreements --disable-interactivity GoLang.Go` | 🟢 |
-| **Rust（可选）** | binwalk 等 crates 工具 | `winget install --accept-source-agreements --accept-package-agreements --disable-interactivity Rustlang.Rustup` | 🟢 |
+| **Python 3.12+** | 绝大多数工具链的宿主 | `winget install --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity Python.Python.3.12` | 🟢 |
+| **Git** | 拉源码仓 | `winget install --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity Git.Git` | 🟢 |
+| **Node.js 20+** | jshook / playwright / reqable 的宿主 | `winget install --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity OpenJS.NodeJS.LTS` | 🟢 |
+| **.NET SDK 8** | ilspycmd / dnSpy.Console / de4dot 的宿主 | `winget install --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity Microsoft.DotNet.SDK.8` | 🟢 |
+| **JDK 21+** | jadx / apktool / Ghidra 的宿主 | `winget install --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity Microsoft.OpenJDK.21` | 🟢 |
+| **Go** | pentestswarm 等 | `winget install --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity GoLang.Go` | 🟢 |
+| **Rust（可选）** | binwalk 等 crates 工具 | `winget install --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity Rustlang.Rustup` | 🟢 |
 | **MSVC Build Tools** | 编译原生测试件 | Visual Studio Build Tools + C++ 工作负载 | 🟡 |
 
 > **`DOTNET_ROOT` 铁律**：`ilspycmd` 是 .NET tool，跑之前必须先 `(Get-Command dotnet).Source` 取其所在目录赋给 `$env:DOTNET_ROOT`，否则它找不到 runtime 直接退出。**不要在文档里写死任何盘符。**
@@ -117,7 +117,7 @@ SDK 的进 `%LOCALAPPDATA%`。**第 1 步的探测对所有工具都必做**，�
 | **capa** | 能力识别（加密/网络/注入分支） | ghidra-static, malware-analysis | GitHub releases → `D:\Tools\capa\`，rules 一并放 `D:\Tools\capa\rules\` | 🟢 |
 | **FLOSS** | 提取静态/混淆/字符串（.NET 加 `--language dotnet`） | ghidra-static, dotnet-reverse | GitHub releases → `D:\Tools\floss\` | 🟢 |
 | **radare2** (`r2`/`rabin2`/`rasm2`) | CLI 侦察、反汇编、patch | radare2 skill | GitHub radare2 releases → `D:\Tools\radare2\` | 🟢 |
-| **7-Zip** | 解压样本、解包 | 全局 | `winget install --accept-source-agreements --accept-package-agreements --disable-interactivity 7zip.7zip` | 🟢 |
+| **7-Zip** | 解压样本、解包 | 全局 | `winget install --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity 7zip.7zip` | 🟢 |
 | **UPX** | UPX 加/脱壳 | re-unpack | GitHub releases → `D:\Tools\upx\` | 🟢 |
 | **IDA Pro** | 反编译主力 | ida-reverse | **商业**，自己买 | 🔴 |
 | **Ghidra** | 开源反编译主力（无 IDA 时主入口） | ghidra-reverse | GitHub releases → `D:\Tools\ghidra\`，需 JDK 21 | 🟢 |
@@ -161,7 +161,7 @@ GUI 程序弹窗等输入、零 stdout、进程永不退出。**agent 不得经 
 |---|---|---|---|
 | **jadx** | DEX→Java，APK 反编译第一源 | GitHub jadx releases → `D:\Tools\jadx\` | 🟢 |
 | **apktool** | 资源完整还原 + 回编译 | GitHub Apktool jar + `apktool.bat` 包装 → `D:\Tools\apktool\` | 🟢 |
-| **Android SDK platform-tools** (`adb`) | 装机/驱动/截图 | `winget install --accept-source-agreements --accept-package-agreements --disable-interactivity Google.PlatformTools` | 🟢 |
+| **Android SDK platform-tools** (`adb`) | 装机/驱动/截图 | `winget install --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity Google.PlatformTools` | 🟢 |
 | **apksigner / zipalign** | 重签名 / 对齐 | 随 Android SDK build-tools，`sdkmanager "build-tools;35.0.0"` | 🟢 |
 | **apkanalyzer / aapt2** | 官方 smali 反汇编、资源解析 | 随 SDK cmdline-tools / build-tools | 🟢 |
 | **frida-tools** (`frida` / `frida-ps`) | 动态插桩 | `pip install frida-tools` | 🟢 |
@@ -182,7 +182,7 @@ GUI 程序弹窗等输入、零 stdout、进程永不退出。**agent 不得经 
 | **Npcap** | 实时抓包驱动 | Wireshark 安装器内一并装，需管理员 | 🟢 |
 | **mitmproxy** | HTTPS 中间人、addon | `pip install mitmproxy` | 🟢 |
 | **Fiddler Classic/Everywhere** | Windows 侧抓包 | 官网下载 | 🟡 |
-| **nmap** | 端口/服务扫描 | `winget install --accept-source-agreements --accept-package-agreements --disable-interactivity Insecure.Nmap` | 🟢 |
+| **nmap** | 端口/服务扫描 | `winget install --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity Insecure.Nmap` | 🟢 |
 
 > **mitmproxy 根证书**：`%USERPROFILE%\.mitmproxy\mitmproxy-ca-cert.cer` —— **不要写死用户名**。
 > **代理默认口**：`127.0.0.1:8080`。端口必须来自实测，不得猜。
@@ -200,7 +200,7 @@ GUI 程序弹窗等输入、零 stdout、进程永不退出。**agent 不得经 
 | **qiling** | OS 级仿真（含 Windows rootfs） | `pip install qiling` | 🟢 |
 | **pwntools** | exp 编写、ROP | `pip install pwntools` | 🟢 |
 | **frida-tools** | 见 §4 | `pip install frida-tools` | 🟢 |
-| **yara** | 规则匹配 | `winget install --accept-source-agreements --accept-package-agreements --disable-interactivity VirusTotal.YARA` | 🟢 |
+| **yara** | 规则匹配 | `winget install --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity VirusTotal.YARA` | 🟢 |
 | **binwalk** | 固件提取 | `cargo install binwalk`（无 winget 无预编译） | 🟡 |
 
 > **pip 类工具装进 venv**，别污染系统 Python。建议一个 `D:\Tools\pyrev-venv\`，`D:\Tools\pyrev-venv\Scripts\` 加 PATH。
