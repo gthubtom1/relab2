@@ -71,7 +71,10 @@ $r.Via         # 从哪找到的：env / PATH / map / scan
 
 **为什么不能只靠 `Get-Command`**：商业工具（IDA / JEB）躺在
 `D:\Tools\disasm\IDA_Pro_v8.3_Portable\` 里，目录名不等于工具名，不在 PATH 上。
-所以完整探测是四级递进 —— 见 `skillpack/skills/TOOLS.md` §0 的表格。
+所以完整探测是四级递进 —— 见 `TOOL-CHAIN.md` 第 2 节。
+
+**缺工具时不用问人**：照 `TOOL-CHAIN.md` 第 3 节的标准动作自己接上
+（自己查 → 自己装 → 自己登记）。`TOOLS.md` 里没有，不代表不能用。
 
 **硬规矩：**
 完整版见 `kernel/04-console/cards/guest/全能专精指引.md` §4，摘要：
