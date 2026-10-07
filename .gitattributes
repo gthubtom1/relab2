@@ -1,0 +1,11 @@
+# 统一按 LF 存、按 LF 检出。
+#
+# 本机 core.autocrlf=true，git 会在检出时把 LF 转成 CRLF。对纯文档仓库这只是难看，
+# 但 extensions/pi/cmd-guard/ 里的文件同时存在于 agent-plugins 仓库，那边要按字节算
+# SHA256 做换机对账。两边行尾不一致 = 同一份源码两个哈希 = 对账永远失败。
+# 所以这里也钉死 LF，让两个仓库的同一份文件逐字节相同。
+* text=auto eol=lf
+
+# .ps1 在 936 代码页的机器上必须有 UTF-8 BOM，否则 PowerShell 5.1 按 ANSI 读，
+# 中文注释会把字符串终结符冲掉，直接语法错误。BOM 与行尾是两回事，各管各的。
+*.ps1 text eol=lf
