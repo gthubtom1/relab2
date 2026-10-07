@@ -1,0 +1,81 @@
+---
+name: mobile-reverse
+description: 安卓 App 的抓包、脱壳与动态逆向：模拟器起环境、mitmproxy 抓明文、过 SSL Pinning、Frida 动态 Hook。要分析手机 App 的接口/协议/加密、抓不到包、App 检测代理或证书绑定、要脱壳或内存里找关键参数时用。Windows 本机 EXE 走 reverse-engineering，不要拿这本顶。
+purpose: 用「模拟器 + 强制全局代理 + 系统证书 + Frida」这条固定流水线拿到明文流量，而不是跟 App 的防护硬碰
+use_when: 主人给一个安卓 App 要分析接口/协议/加密、要抓手机包、要复现某 App 的请求、要脱壳或 Hook；或抓包时报错断网、只能看到 CONNECT 看不到明文、App 检测到代理。iOS 不在本册范围。
+phase: reverse-engineering, protocol-automation
+needs: [本机工具清单 tools.local.json（读「雷电模拟器9」「安卓抓包套件」那几条），adb，frida，mitmproxy]
+---
+
+# 移动端逆向与抓包
+
+对主人先白话：环境起没起来、包抓到没有、卡在哪一层。一次只报一步。
+
+本 skill 管**安卓 App 怎么拿到明文流量、怎么过防护**。Windows 无源码 EXE 走 `reverse-engineering`；协议本身的因果对照走 `protocol-automation`。三本不要互相顶。
+
+## 先记住
+
+**这台机器上已经装好一整套了**，不要再问主人「要不要装模拟器」。工具在哪、怎么调起来，**读本机清单**（`tools.local.json`），按名字找这几条：
+
+- **雷电模拟器9 (ldconsole)** —— 模拟器本体 + 命令行入口
+- **安卓抓包套件 (android-tools)** —— 里面是下面那堆
+
+**路径不要写死进任何文档、不要提交进源树**。清单是本机的，换机器就换一份。
+
+## 为什么用这套
+
+多数安卓 App 抓不到包，不是抓包工具不行，是**三层各挡一道**：
+
+| 挡在哪| 表现| 对应解|
+|---|---|---|
+| App 不走系统 WiFi 代理| 面板里一条都没有| **ProxyDroid**（iptables 强制全局）|
+| Android 7.0+ 不信任用户证书| 大量 TLS 握手失败| **系统级 CA 证书**推入只读库|
+| SSL Pinning（证书绑定）| 一开代理就断网/报错| **Frida + unpinning.js**|
+
+三层是**递进**的：先按顺序把能拿的拿到，**卡在哪一层再上下一层**，不要一上来就 Frida。
+
+## 三步起手
+
+**第一步：起模拟器和抓包面板**
+
+- 模拟器：`ldconsole launch --index 0`（命令行，可脚本化）；GUI 是 `dnplayer.exe`
+- 什么都不用配，脚本已经把代理端口（8080）和面板一起拉起来了
+
+**第二步：一键把抓包环境注入模拟器**
+
+```
+python <android-tools>/setup_device.py
+```
+
+它一条命令做完三件：连模拟器 → 推系统只读根证书 → 装 ProxyDroid → 布署 frida-server。
+**跑完这一步，模拟器里普通 App 的 HTTPS 流量就应该明文出现在面板上了。**
+
+**第三步：装目标 App 开抓**
+
+- 装：`ldconsole installapp --index 0 --filename <apk路径>`
+- 打开它，回面板看流量
+- **看得到明文就到此为止**，不要再往下走
+
+## 抓不到包，按这个顺序排查
+
+1. **面板一条都没有** → 代理没生效。确认 ProxyDroid 装了并打开总开关，填的是本机 IP + 8080。
+2. **只有 CONNECT，没有明文** → 证书没被信任。重跑 `setup_device.py`；或确认系统分区是可读写的（这台模拟器已开）。
+3. **一开代理 App 就断网/转圈/报证书错** → **SSL Pinning**。这是唯一该上 Frida 的时候：
+   ```
+   start-frida.bat
+   frida -U -f <包名> -l <android-tools>/unpinning.js
+   ```
+   通杀 OkHttp3 / TrustManager 这类主流框架。
+4. **Frida 挂了或被检测到** → 换 spawn 模式（`-f` 而不是 `-n`）、改端口、或先停一下看是不是 App 有反调试。**这是新的一层，按 `debugging-troubleshooting` 立假设再动手，不要盲试参数。**
+
+## 边界（这些不是本册的活）
+
+- **改 App 本身的行为**（补丁、重打包）→ 走 `reverse-engineering` 的探针规矩，先出最小可回退候选。
+- **真实账号的敏感数据**：抓到就是抓到了，**不要往任何仓库、任何文档里贴令牌和密码**，只留结构。参照 `security-audit`。
+- **让模拟器常驻**：用完自己关（`ldconsole quit --index 0`），别留一堆后台进程占内存。
+- **重工具要有界**：Frida 脚本可能一直刷日志，输出落盘，主对话只留摘要。
+- **找不到工具**：先读 `tools.local.json`，再按 `TOOLING.md` 的顺序找。确需安装时，先给主人官方来源、命令、位置、影响和回退，**不要静默装**。
+
+## 那场会话留下的东西
+
+`<android-tools>/README.md` 是当时装环境时写的三步操作指引，和这册说的是同一件事——**手册讲操作，这册讲什么时候该用它**。两者对不上时以这册为准，并回头修正手册。

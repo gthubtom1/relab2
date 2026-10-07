@@ -1,0 +1,115 @@
+{
+  "flow": "source-takeover",
+  "note": "标准阶段身份和顺序不可删除、改名或重排；可以在标准阶段之间增加自定义阶段。每条必须有 requires，禁止空 confirm。不要套二开四停点。无源码 EXE 走 exe-rebuild。能交给别人用的停点必须有 build。边做边留下以后还能用的记录；还在做不拦，要点「做成了、进下一阶段」时账本里必须已有这些记录。领域含义在 workflows/source-takeover.md。",
+  "phases": [
+    {
+      "id": "0-intake",
+      "name": "接管与现状盘点",
+      "stop_point": "现状盘点确认",
+      "goal": "仓库是什么、怎么算正常工作；开源许可证≠自己的收费授权。问接不接自己的收费授权不要提前到本格，等到改造能用、有窗口改完界面 / 没有窗口改过命令体验之后当面问。record --kind spec 须 acceptance。",
+      "requires": [
+        "spec"
+      ]
+    },
+    {
+      "id": "1-baseline",
+      "name": "可复现构建与测试基线",
+      "stop_point": "构建测试基线确认",
+      "goal": "干净检出可复现构建+运行+既有测试；candidate --bless；本阶段新 test。",
+      "requires": [
+        "candidate",
+        "test"
+      ],
+      "require_bless": true,
+      "artifact_phase": true,
+      "physical_checks": [
+        "baseline_repro"
+      ]
+    },
+    {
+      "id": "2-map",
+      "name": "架构与风险测绘",
+      "stop_point": "架构与风险测绘确认",
+      "goal": "测绘架构/模块/高风险区；arch 须 decision；module 须 name/purpose；anchor 须 how（怎么重新找到，不记本版行号）。",
+      "requires": [
+        "arch",
+        "module",
+        "anchor"
+      ]
+    },
+    {
+      "id": "3-safety",
+      "name": "安全网与改造计划",
+      "stop_point": "安全网与改造计划确认",
+      "goal": "将改区域的特征化测试能证明改造前后一致；本阶段新 test；改造计划 record spec。",
+      "requires": [
+        "spec",
+        "test"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "safety_net"
+      ]
+    },
+    {
+      "id": "4-change",
+      "name": "受控改造",
+      "stop_point": "改造实现确认",
+      "goal": "小步改造 + 主流程仍真跑；改完须复验既有行为与加过的组件还在；改造能用之后：有窗口先改界面，没有窗口就改命令/调用体验，再问接不接自己的收费授权，不要直接进发布；本阶段新 test 须写明重跑安全网对照，不能只换几个字。改造后须 --set 与 last-good 不同的构建，test 绑这份新哈希。",
+      "requires": [
+        "candidate",
+        "test"
+      ],
+      "require_new_candidate": true,
+      "artifact_phase": true,
+      "physical_checks": [
+        "change_regression"
+      ]
+    },
+    {
+      "id": "5-build",
+      "name": "发布候选构建",
+      "stop_point": "发布候选确认",
+      "goal": "须已当面问过接不接自己的收费授权（改造后写入 spec/arch；开场/测绘/安全网格不算）。不接仍打候选；若接：按产品形态，不要用有没有窗口两分去关软件。桌面有窗才改通用授权页（主人看过）；三种基础是对才放行后面的程序/服务、错不放行、到期停；藏页/关页是附加，不能顶第一种。网站走站点收费门（对才提供服务，错不提供，到期停服务，不要关软件、不要藏授权页）；没有窗口不要为过关造页、造窗、造启动器，三种基础是对才放行主命令/服务、错不放行、到期停。接了则本格起须 license_dataflow 机器观察（这场不接不套）。作废/断网按这场要不要测，不是每场必测。再须一段未连正式的孪生/先测，另记已连正式，一句合成不算。不要为过关硬接。本格起产品根 FEATURES.md 须有真实行（功能名+作用），并有定档冻本对照；空表头不算记得。与源码同源的发布候选，落哈希，candidate --bless。没问不要 gh release。",
+      "requires": [
+        "candidate"
+      ],
+      "require_bless": true,
+      "physical_checks": [
+        "release_candidate"
+      ]
+    },
+    {
+      "id": "6-release",
+      "name": "发布与回滚",
+      "stop_point": "发布回滚演练确认",
+      "goal": "发布 + 回滚演练 + 回滚后复验；本阶段新 test + build。须 follow 三句和客户路径 cover（客户还在用的那一份，不能 SKIP）。",
+      "requires": [
+        "build",
+        "test",
+        "follow",
+        "cover"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "release_rollback",
+        "release_candidate"
+      ]
+    },
+    {
+      "id": "7-handoff",
+      "name": "交付与维护档案",
+      "stop_point": "交付验收确认",
+      "goal": "交付物与维护档案交到下一个人；本阶段新 test + 最终 build。",
+      "requires": [
+        "build",
+        "test"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "handoff",
+        "release_candidate"
+      ]
+    }
+  ]
+}

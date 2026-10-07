@@ -1,0 +1,31 @@
+# 构建产物与运行时状态
+__pycache__/
+*.pyc
+TEMP/
+dist/hubcore/.state/
+.state/
+
+# 保险箱快照：宿主配置的全字节副本，可能含 token，绝不进版本库
+safebox/
+04-console/safebox/
+04-console/hostlist/
+
+# 侧车状态：你在哪些项目用过中枢
+state/
+*.pid
+watchdog-log.jsonl
+hostlist/
+
+# 环境与本地配置
+.env
+*.log
+
+# 编辑器
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 卡片的私人内容不放仓库：底模/指引卡是主人自己的东西，
+# 要用就在工作台的卡片页里建。仓里只留代码。
+TEMP/

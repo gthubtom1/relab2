@@ -1,0 +1,12 @@
+# requirements.v1 — append-only owner requirement rows
+
+Put this file at `<product>/.hub/requirements.jsonl` (one JSON object per line).
+Do not summarize away rows. Conflicts get a new row with `status: conflict` and `supersedes`.
+
+```json
+{"requirement_id":"REQ-001","verbatim_intent":"shortest faithful quote","status":"captured","ts":"2026-01-01T00:00:00Z"}
+```
+
+Statuses: `captured` | `planned` | `implemented` | `verified` | `blocked` | `explicitly_retired` | `conflict`
+
+`state require --append` writes `requirement_id` / `verbatim_intent` / `status` / `ts`. Extra fields are optional notes.

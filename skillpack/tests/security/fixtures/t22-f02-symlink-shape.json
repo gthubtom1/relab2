@@ -1,0 +1,1 @@
+{"expect": {"exit": 20, "verdict": "DENY"}, "id": "F2-symlink-shape", "live_fs_note": "live symlink file needs privilege on this host; string-shape gate covers the same branch, live part stays UNVERIFIED", "masked_sample": "..[SEP]..[SEP]ev[.]il", "morphology": "symlink target escaping root", "status": "verified-string-shape-only", "target_parts": ["..", "..", "evil"]}

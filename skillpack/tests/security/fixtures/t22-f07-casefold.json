@@ -1,0 +1,1 @@
+{"candidate_parts": ["case", "CoN.txt"], "expect": {"exit": 20, "verdict": "DENY"}, "id": "F7-casefold", "masked_sample": "case[SEP]CoN.txt (mixed-case reserved device name)", "morphology": "case-cloaked reserved name; a case-sensitive check would allow it", "status": "verified"}

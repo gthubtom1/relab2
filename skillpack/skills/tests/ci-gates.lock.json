@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "1.0",
+  "subject": "skills/tests/ci-gates.json",
+  "subject_digest": "sha256:9ee9a54ca0746ce57213465a8b2bd3bf888a6d0652b5a37d85802345a9685256",
+  "gates_total": 23,
+  "gate_ids": [
+    "verify-spec-structure",
+    "audit-discovery-surface",
+    "verify-triage-lock",
+    "verify-community-banner",
+    "verify-source-attestation",
+    "verify-community-bundle",
+    "verify-canonical-base-lock",
+    "verify-routing-signals",
+    "test-routing-signals",
+    "test-contract-v2",
+    "test-community-route",
+    "test-route-ranking",
+    "test-community-decoys",
+    "test-frontmatter-parsing",
+    "verify-gate-wiring",
+    "validate-integration",
+    "verify-doc-links",
+    "verify-repository-security",
+    "verify-release-gate",
+    "test-adapt-community",
+    "test-routing",
+    "verify-routing-coherence",
+    "verify-evolution"
+  ],
+  "note": [
+    "Digest lock for the CI gate manifest. verify-gate-wiring.py fails when the",
+    "manifest and this file disagree, so a gate cannot be dropped from CI by",
+    "editing the manifest alone. Regenerate with --write-lock after an accepted",
+    "change and require an independent review of both files (spec 17.21 / T24)."
+  ]
+}

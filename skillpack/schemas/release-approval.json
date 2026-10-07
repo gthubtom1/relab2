@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schemas/release-approval.json",
+  "title": "Human release approval record (T16, spec 17.21)",
+  "description": "Machine-readable record of the human release approval. Lives with the release process (tag / environment), never committed as a pre-approval. scripts/verify-release-approval.py enforces every rule below with the standard library: decision must be approved, content_id must match the candidate, requester and approver must be two different humans, gate_pins must match the tree, and redistributable additionally requires signature proof that does not exist today.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "content_id",
+    "decision",
+    "requester",
+    "approver",
+    "approved_at",
+    "distribution",
+    "rollback_target",
+    "gate_pins"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "content_id": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Approved candidate identity (see schemas/release-candidate.json). A stale or foreign approval never matches."
+    },
+    "decision": {
+      "type": "string",
+      "const": "approved",
+      "description": "Any other value (including a missing record) blocks publication with exit 20."
+    },
+    "requester": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human who requested the release."
+    },
+    "approver": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human who approved. Must differ from requester; self-approval exits 20. Identity itself is enforced by the release environment (17.21); this record carries the claim the gate checks."
+    },
+    "approved_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z$",
+      "description": "UTC RFC 3339 approval time (17.26)."
+    },
+    "distribution": {
+      "type": "string",
+      "const": "local-only",
+      "description": "The only approvable value while signature.present is false (17.15)."
+    },
+    "rollback_target": {
+      "type": "object",
+      "required": ["type", "commit"],
+      "properties": {
+        "type": { "type": "string", "const": "git-commit" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "gate_pins": {
+      "type": "object",
+      "description": "Pinned sha256 digests of the gate scripts at approval time. Any drift exits 20.",
+      "minProperties": 1
+    },
+    "review_ref": {
+      "type": ["string", "null"],
+      "description": "Pointer to the human review thread (issue / PR discussion). Advisory only."
+    }
+  }
+}

@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reverse-skill.local/schemas/community-handoff-output.json",
+  "title": "CommunityHandoffOutput",
+  "description": "Frozen community handoff output contract, spec section 4.5 (schema version 1.0). Field names are camelCase per 4.0. Shape-only constraints live here; the cross-field semantic rules of 4.5/4.7 (failure_reason null unless status is failed/blocked, license_notice non-empty unless the license is verified, downstream_skill must be a canonical skill, next_safe_steps must not carry free-text commands) are enforced by the contract test and by the policy layer, because JSON Schema conditionals are outside the validator subset documented in schemas/README.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "status",
+    "wrapper_id",
+    "downstream_skill",
+    "case_root",
+    "next_safe_steps",
+    "evidence_ids",
+    "artifact_ids",
+    "failure_reason",
+    "limitations",
+    "license_notice",
+    "route_explanation",
+    "source_commit",
+    "registry_digest",
+    "untrusted_content"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "description": "Frozen contract version.",
+      "const": "1.0"
+    },
+    "status": {
+      "description": "Frozen status enum (4.7). No second status scale is allowed.",
+      "enum": ["matched", "needs_review", "blocked", "missing_input", "unavailable", "failed"]
+    },
+    "wrapper_id": {
+      "type": "string",
+      "pattern": "^wrapper-[a-z0-9-]+$",
+      "maxLength": 72
+    },
+    "downstream_skill": {
+      "description": "Canonical skill id, or null when no canonical skill was selected (4.5).",
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{1,63}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "case_root": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "next_safe_steps": {
+      "description": "Typed action objects only (17.23). A bare string, a shell command or an argv array is not representable: every element must be an action object whose kind comes from a closed enum.",
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action_id", "kind", "description", "requires_confirmation"],
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_.-]{1,63}$"
+          },
+          "kind": {
+            "enum": [
+              "read_file",
+              "write_artifact",
+              "open_skill",
+              "record_evidence",
+              "ask_user",
+              "request_target",
+              "device_action",
+              "run_allowlisted_command"
+            ]
+          },
+          "description": {
+            "description": "Human-readable description. It is data, never an executable command line.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "params": {
+            "description": "Typed parameters. command_id is required when kind is run_allowlisted_command; the canonical command allowlist itself is owned by 17.23/T23.",
+            "type": "object",
+            "maxProperties": 32
+          },
+          "requires_confirmation": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "evidence_ids": {
+      "type": "array",
+      "maxItems": 512,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+      }
+    },
+    "artifact_ids": {
+      "type": "array",
+      "maxItems": 512,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+      }
+    },
+    "failure_reason": {
+      "description": "Closed failure-reason enum (4.7); null unless status is failed or blocked.",
+      "oneOf": [
+        {
+          "enum": [
+            "auth_expired",
+            "auth_target_mismatch",
+            "scope_empty",
+            "path_escape",
+            "license_not_redistributable",
+            "tool_missing",
+            "timeout",
+            "budget_exceeded",
+            "untrusted_instruction",
+            "schema_invalid",
+            "internal_error"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "limitations": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1024
+      }
+    },
+    "license_notice": {
+      "description": "Must be non-empty whenever any loaded record has license_status other than verified (4.5). Shape allows the empty string; the contract test enforces the cross-field rule.",
+      "type": "string",
+      "maxLength": 4096
+    },
+    "route_explanation": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "source_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "registry_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "untrusted_content": {
+      "description": "Vendor bodies loaded as untrusted data (17.5). Every entry names the file and the digest that was actually loaded.",
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["record_id", "path", "digest", "trust"],
+        "properties": {
+          "record_id": {
+            "type": "string",
+            "pattern": "^community-[a-z0-9-]+-[0-9]{3}$"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "trust": {
+            "const": "untrusted"
+          }
+        }
+      }
+    },
+    "extensions": {
+      "description": "Only extension slot (4.0 rule 4). Keys must be lower snake_case, values must be JSON-serializable, and the whole serialized object must stay at or below 4096 bytes.",
+      "type": "object",
+      "maxProperties": 32
+    }
+  }
+}

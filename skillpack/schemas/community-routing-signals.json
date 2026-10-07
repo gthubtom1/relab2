@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reverse-skill.local/schemas/community-routing-signals.json",
+  "title": "CommunityRoutingSignals",
+  "description": "Frozen T26 contract for skills/community/routing-signals.json (schema version 1.0). Curated routing signal layer for the 293 adapted community skills. The whole vocabulary is the dependency-free draft 2020-12 subset the bundled validator in skills/scripts/test-contract-v2.py supports: type, required, properties, additionalProperties, items, enum, const, oneOf, minLength, maxLength, minimum, maximum, pattern, minItems, maxItems, maxProperties. No $ref/$defs, no allOf/anyOf/not, no if/then/else, no uniqueItems, no format, no patternProperties, no propertyNames. additionalProperties is false everywhere except the token_aliases map, whose members are the data being constrained. Coverage floors (noise >= 4, short_tokens containing the measured 2-character blind spot, token_aliases >= 6, signals >= 20), evidence provenance under design-freeze 1.2, the noise 80%-per-source rule under design-freeze 1.3, and signals[].id uniqueness cannot be expressed in JSON Schema and are enforced by skills/scripts/verify-routing-signals.py, which fails closed on every one of them. must/exclude/noise[].pattern are ECMAScript-style regular expressions; their compilability is also a verifier check because JSON Schema cannot compile a pattern.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "meta",
+    "token_aliases",
+    "short_tokens",
+    "noise",
+    "signals"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "description": "Frozen contract version. The only camelCase key in the document, per the 4.0 convention exception that the registry version key also uses.",
+      "const": "1.0"
+    },
+    "meta": {
+      "description": "Provenance and ownership of the curated layer. owner and registrySchemaVersion are const so a fork cannot silently claim this contract.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "owner",
+        "registrySchemaVersion",
+        "consumer",
+        "verifier",
+        "note"
+      ],
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 512
+        },
+        "owner": {
+          "const": "T26"
+        },
+        "registrySchemaVersion": {
+          "description": "Must equal skills/community/registry.json schemaVersion; the verifier compares the two and fails closed on a mismatch.",
+          "const": "1.0"
+        },
+        "consumer": {
+          "description": "The routing engine that consumes this layer.",
+          "const": "skills/scripts/community-route.py"
+        },
+        "verifier": {
+          "description": "The gate that validates this document.",
+          "const": "skills/scripts/verify-routing-signals.py"
+        },
+        "note": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 2048
+        }
+      }
+    },
+    "token_aliases": {
+      "description": "Curated plural to singular folds, applied on both the hint side and the record side so the mapping is symmetric by construction. This is a curated table, never a general stemmer: a general stemmer is a code change in the tokeniser, this is a data change in one auditable file. maxProperties bounds the table so the layer cannot grow into an unmeasured general stemmer.",
+      "type": "object",
+      "maxProperties": 128,
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 32,
+        "pattern": "^[a-z][a-z0-9-]{1,31}$"
+      }
+    },
+    "short_tokens": {
+      "description": "Two-character tokens the tokeniser must admit as whole tokens. The global minimum token length stays at 3: lowering it globally was rejected because it would admit arbitrary ASCII fragments, so exactly these literals are extended instead. Must contain the measured blind spot {ad, ci, db, id, io, os, ot, s3}. 'ai' is deliberately absent: the routing view hyphen-splits ai-fullstack, so it was present in 157 of 293 records' routing texts and made lookup('ai') return 3 wrappers at confidence 1.0, held back only by ambiguous_tie. That is a demonstrated over-trigger, which is the only ground on which design-freeze 1.1 permits dropping a short token; os/ot/s3 occur in 0/293 routing texts and are merely useless, so they stay. The count itself is a floor, not the whole contract: exact membership is enforced by skills/scripts/verify-routing-signals.py.",
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 64,
+      "items": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 2,
+        "pattern": "^[a-z0-9]{2}$"
+      }
+    },
+    "noise": {
+      "description": "Per-source boilerplate that must not be routable. A pattern is admissible only if it matches at least 80% of the records of at least one source (design-freeze 1.3); the verifier recomputes that fraction against the real registry and fails closed below the floor. Applied to the record's routing text with re.sub(..., flags=re.IGNORECASE), never to the hint.",
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["pattern", "scope", "note"],
+        "properties": {
+          "pattern": {
+            "description": "ECMAScript-style regular expression. Compilability is checked by the verifier.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "scope": {
+            "description": "any = name + description + keywords, which is the engine's reference text; description = the description and keyword fields only.",
+            "enum": ["any", "description"]
+          },
+          "note": {
+            "description": "Human reason, and the measured per-source fraction that admits the pattern.",
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 512
+          }
+        }
+      }
+    },
+    "signals": {
+      "description": "Curated per-record routing rules. A signal fires iff at least one must pattern matches the lower-cased hint and no exclude pattern matches. id is a registry record id and must be unique across the array; the verifier fails closed on a duplicate.",
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "must", "evidence", "evidence_kind", "note"],
+        "properties": {
+          "id": {
+            "description": "skills/community/registry.json skills[].id. Existence is checked by the verifier.",
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 64,
+            "pattern": "^community-[a-z0-9-]+-[0-9]{3}$"
+          },
+          "must": {
+            "description": "1..16 ECMAScript-style patterns; at least one must match for the signal to fire.",
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          "exclude": {
+            "description": "0..16 ECMAScript-style patterns; any match suppresses the signal. Optional, defaults to [].",
+            "type": "array",
+            "maxItems": 16,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          "evidence": {
+            "description": "Machine-checkable evidence string, verified under design-freeze 1.2 according to evidence_kind.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "evidence_kind": {
+            "description": "record = evidence.casefold() must be a substring of legacy_original_name + legacy_description + source_path. raw = evidence.casefold() must be a substring of a text file inside the record's own directory. Comparison is case-insensitive on both sides; a term that is only present as a different capitalisation is formatting, not evidence.",
+            "enum": ["record", "raw"]
+          },
+          "note": {
+            "description": "Human reason a reader can check, not a restatement of must and not a copy of evidence.",
+            "type": "string",
+            "minLength": 15,
+            "maxLength": 1024
+          }
+        }
+      }
+    }
+  }
+}

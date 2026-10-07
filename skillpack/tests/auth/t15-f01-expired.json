@@ -1,0 +1,1 @@
+{"allow_host_labels": ["target-01", "t15", "local"], "expires_at": "2020-01-01T00:00:00Z", "note": "expiry is in the past; the gate must exit 20 even though every other fact is valid"}

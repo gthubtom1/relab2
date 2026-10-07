@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "item_id": "REQ-001-check",
+      "requirement_id": "REQ-001",
+      "verbatim_intent": "这里逐字粘贴主人原话",
+      "phase_id": "2-impl",
+      "files": ["src/feature.py"],
+      "checks": ["business_flow"],
+      "status": "planned",
+      "receipt_refs": {}
+    }
+  ]
+}

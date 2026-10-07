@@ -1,0 +1,110 @@
+{
+  "flow": "desktop-product",
+  "note": "标准阶段身份和顺序不可删除、改名或重排；可以在标准阶段之间增加自定义阶段。每条必须有 requires，禁止空 confirm。不要套二开四停点。能交给别人用的停点必须有 build。边做边留下以后还能用的记录；还在做不拦，要点「做成了、进下一阶段」时账本里必须已有这些记录。领域含义在 workflows/desktop-product.md。",
+  "phases": [
+    {
+      "id": "0-spec",
+      "name": "需求与验收",
+      "stop_point": "需求合同确认",
+      "goal": "先讨论再记，禁止一句话开写。受众/痛点/核心主流程/可观察成功标准；逐项覆盖权限、异常、空数据、性能、数据备份迁移删除、更新售后。问接不接自己的收费授权不要提前到本格，等到核心能用、改完界面之后当面问。record --kind spec 须 acceptance。",
+      "requires": [
+        "spec"
+      ]
+    },
+    {
+      "id": "1-arch",
+      "name": "架构与地基",
+      "stop_point": "架构确认",
+      "goal": "架构、数据 schema、UI 骨架、安全地基、Git 基线；record --kind arch 须 decision。",
+      "requires": [
+        "arch"
+      ]
+    },
+    {
+      "id": "2-impl",
+      "name": "分阶段实现",
+      "stop_point": "核心功能实现确认",
+      "goal": "可跑候选 + 主流程真跑；改完须复验已记下的旧功能/组件还在；核心能用之后先改界面并问接不接自己的收费授权，不要直接进安装包；candidate 登记；test 须 product|human。",
+      "requires": [
+        "candidate",
+        "test"
+      ],
+      "physical_checks": [
+        "business_flow"
+      ]
+    },
+    {
+      "id": "3-build",
+      "name": "构建候选",
+      "stop_point": "构建候选确认",
+      "goal": "须已当面问过接不接自己的收费授权（实现后写入 spec/arch；开场/架构格不算）。与源码同源的候选，落哈希，candidate --bless 记为 last-good。没问不要打 zip。",
+      "requires": [
+        "candidate"
+      ],
+      "require_bless": true,
+      "physical_checks": [
+        "business_flow"
+      ]
+    },
+    {
+      "id": "4-package",
+      "name": "安装包",
+      "stop_point": "安装包确认",
+      "goal": "须已问过接不接自己的收费授权：不接（已写入 spec/arch）仍打包；若接：通用授权页已改成这个产品的样子（主人看过）且三种基础真跑（对才开；错不开；用到一半到期关掉程序和授权页。作废/断网按这场要不要测，不是每场必测）。接了则本格起须 license_dataflow 机器观察（这场不接不套）。藏页/关页是附加，不能顶第一种。再须一段未连正式的孪生/先测，另记已连正式，一句合成不算。不要为过关硬接。本格起产品根 FEATURES.md 须有真实行（功能名+作用），并有定档冻本对照；空表头不算记得。安装包 + PROGRAM_DIR/DATA_DIR 分开放；build 须 artifact/candidate_sha/install_receipt；artifact 必须是已有安装包文件。数据迁移实测在第 6 格，不要在本格点绿。",
+      "requires": [
+        "build"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "package_install",
+        "business_flow"
+      ]
+    },
+    {
+      "id": "5-install",
+      "name": "干净安装与首次启动",
+      "stop_point": "首次启动验收确认",
+      "goal": "干净环境 clean install + 首次启动；本阶段新 test，不能沿用实现阶段旧证据。当前候选必须仍是 4-package 打进包的那份哈希。",
+      "requires": [
+        "test"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "clean_install",
+        "business_flow"
+      ]
+    },
+    {
+      "id": "6-update",
+      "name": "v1→v2更新与回滚",
+      "stop_point": "更新回滚演练确认",
+      "goal": "真跑升级+数据迁移+失败回滚+回滚后业务复验；本阶段新 test，不能只交一张旧 build。须 follow 三句和客户路径 cover（已装软件里覆盖做成，不能 SKIP）。",
+      "requires": [
+        "build",
+        "test",
+        "follow",
+        "cover"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "update_rollback",
+        "business_flow"
+      ]
+    },
+    {
+      "id": "7-handoff",
+      "name": "交付与验收",
+      "stop_point": "交付验收确认",
+      "goal": "包交到用户手上；真实环境主流程点头；当前候选须仍是更新格那份哈希。本阶段新 test + 最终 build。",
+      "requires": [
+        "build",
+        "test"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "handoff",
+        "business_flow"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "flow": "protocol-automation",
+  "note": "App / Web 协议研究与自动化研发工作流。发现优先，不预设字段清单，以拿下目标为准。抓包须绑定具体实验窗口，实验须支持破坏性因果对照。自动化形态不设限（API/Web/Android/混合）。青龙或目标交付环境凭据外置，无硬编码。领域含义在 workflows/protocol-automation.md。",
+  "phases": [
+    {
+      "id": "0-spec",
+      "name": "目标与业务动作定义",
+      "stop_point": "需求合同确认",
+      "goal": "用户提供业务语义，明确起点、操作行为与成功标志（积分变动/状态翻转/页面跳转）。建立初始需求清单与已知线索。record --kind spec 须 acceptance。",
+      "requires": [
+        "spec"
+      ]
+    },
+    {
+      "id": "1-env-traffic",
+      "name": "环境与流量边界对齐",
+      "stop_point": "环境与流量边界确认",
+      "goal": "抓包与运行时观察环境就绪（浏览器/移动端/代理）。流量采集生命周期与实验动作严格绑定，禁止无边界长抓。physical_checks 须 traffic_boundary。",
+      "requires": [
+        "arch"
+      ],
+      "physical_checks": [
+        "traffic_boundary"
+      ]
+    },
+    {
+      "id": "2-discovery",
+      "name": "未知要素动态发现",
+      "stop_point": "未知要素发现确认",
+      "goal": "从实际流量中识别候选请求与动态变化字段；不预设参数清单；未知字段建立假设并记入实验账本。test 须 product|human。",
+      "requires": [
+        "candidate",
+        "test"
+      ]
+    },
+    {
+      "id": "3-solve-re",
+      "name": "逆向与算法还原攻坚",
+      "stop_point": "逆向与算法还原确认",
+      "goal": "遇到加密、签名、滑块、验证码、设备指纹或客户端混淆时，调度专业逆向技能攻坚还原；纯技术实现，无道德约束。test 须 product|human。",
+      "requires": [
+        "candidate",
+        "test"
+      ]
+    },
+    {
+      "id": "4-protocol-verify",
+      "name": "因果对照与协议闭环",
+      "stop_point": "因果对照与协议闭环确认",
+      "goal": "脱离客户端真实复现业务；执行参数破坏性对照实验（篡改参数服务端拒绝为 RED，正确参数业务通过为 GREEN）。physical_checks 须 causality_proof。",
+      "requires": [
+        "test"
+      ],
+      "physical_checks": [
+        "causality_proof"
+      ]
+    },
+    {
+      "id": "5-automate",
+      "name": "自动化引擎实现",
+      "stop_point": "自动化引擎实现确认",
+      "goal": "按最佳形态编写可重复运行的自动化工程代码（纯 API / Playwright / Android / 混合）；candidate --bless 锁定候选。physical_checks 须 automation_run。",
+      "requires": [
+        "candidate",
+        "test"
+      ],
+      "require_bless": true,
+      "physical_checks": [
+        "automation_run"
+      ]
+    },
+    {
+      "id": "6-test-regression",
+      "name": "异常与健壮性实测",
+      "stop_point": "异常与健壮性实测确认",
+      "goal": "测试风控重试、凭据过期刷新、长周期防封与异常容错能力。产出可重复验证的测试记录。physical_checks 须 automation_run。",
+      "requires": [
+        "build",
+        "test"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "automation_run"
+      ]
+    },
+    {
+      "id": "7-handoff",
+      "name": "目标环境交付",
+      "stop_point": "目标环境交付确认",
+      "goal": "打包并交付至青龙面板（任务调度/环境变量/多账号并发）或用户指定环境；检查无任何明文硬编码敏感凭据。physical_checks 须 delivery_clean 与 handoff。",
+      "requires": [
+        "build",
+        "test"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "delivery_clean",
+        "handoff"
+      ]
+    }
+  ]
+}

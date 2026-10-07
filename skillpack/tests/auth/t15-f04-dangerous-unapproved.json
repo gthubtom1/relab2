@@ -1,0 +1,1 @@
+{"action": "data_exfil", "allowed_actions": ["recon", "data_exfil"], "allow_host_labels": ["target-04", "t15", "local"], "note": "dangerous action listed but with no human_confirmations entry; the gate must exit 20"}

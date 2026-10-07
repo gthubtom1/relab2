@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "checks": {
+    "core_closed": {
+      "kind": "process",
+      "command": [
+        "<product-root-relative-probe-file>",
+        "core_closed"
+      ],
+      "cwd": ".",
+      "timeout_sec": 30,
+      "expect": {
+        "exit_code": 0,
+        "json": {
+          "main_opened": false
+        },
+        "json_not": {
+          "main_opened": true
+        }
+      }
+    },
+    "license_dataflow": {
+      "kind": "business",
+      "command": [
+        "<product-root-relative-probe-file>",
+        "license_dataflow"
+      ],
+      "cwd": ".",
+      "stdin": "<dynamic test license input>",
+      "timeout_sec": 30,
+      "expect": {
+        "exit_code": 0,
+        "json": {
+          "dynamic": true,
+          "device_code": "<device code observed by the core>",
+          "expiry_seconds": 86400,
+          "verify_interval_seconds": 60,
+          "mid_run_closed": true,
+          "kicked_closed": true,
+          "solo_still_open": true,
+          "rate_limited_closed": false,
+          "periodic_verify": true
+        },
+        "json_not": {
+          "dynamic": false
+        }
+      }
+    },
+    "<other-check-id>": {
+      "kind": "business",
+      "command": [
+        "<product-root-relative-probe-file>",
+        "<other-check-id>"
+      ],
+      "cwd": ".",
+      "timeout_sec": 30,
+      "expect": {
+        "exit_code": 0,
+        "json": {
+          "result": "pass"
+        }
+      }
+    }
+  }
+}

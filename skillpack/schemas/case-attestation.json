@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schemas/case-attestation.json",
+  "title": "Case authorization attestation (T15, spec 17.4)",
+  "description": "Offline-reviewable authorization fact for one case: who approved, what was approved, validity window, and in what verifiable form. Lives at work/<case>/attestation.json. The binding digest recomputes from live case facts (case_id, target digest, profile, risk, expiry, nonce, issuer); a copied ready_for_act line or a foreign attestation never recomputes, so the gate exits 20. Forgery would require recomputing the digest chain, not copying one English word. Approver identity itself is enforced by the approval process (same trust model as schemas/release-approval.json); this record carries the claim the gate re-verifies before every ACT.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "case_id",
+    "target_digest",
+    "profile",
+    "risk",
+    "expires_at",
+    "nonce",
+    "issuer",
+    "issued_at",
+    "binding"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "case_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Must equal scope.md meta case_id and auth-profile.json case_id."
+    },
+    "target_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "sha256 over LF-joined sorted target_allowlist. Any allowlist edit invalidates the attestation."
+    },
+    "profile": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Network profile mode the approval was issued for (must match scope.md network_profile.mode)."
+    },
+    "risk": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "description": "Unknown risk values fail closed."
+    },
+    "expires_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z$",
+      "description": "Must equal auth-profile.json expires_at; expires_at <= now exits 20."
+    },
+    "nonce": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32,}$",
+      "description": "Per-case random hex (16+ bytes). Binds the attestation to one issuance; two cases never share a binding."
+    },
+    "issuer": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Must equal auth-profile.json approver."
+    },
+    "issued_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z$"
+    },
+    "binding": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "sha256 over LF-joined [case_id, target_digest, profile, risk, expires_at, nonce, issuer]. Recomputed live by the gate; mismatch exits 20."
+    }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "note": "protocol-automation（App/Web 协议研究与自动化）的机器门样板。拷进产品根 .hub/physical-gates.json，把 <product-root-relative-probe-file> 换成你自己写的探针脚本（相对产品根，不能放 TEMP/）。每道门必须让探针打印出对应的 true 字段：只打印 result=pass 不算过。timeout_sec 上限 120 秒（核心限制）。",
+  "checks": {
+    "traffic_boundary": {
+      "kind": "business",
+      "command": [
+        "<product-root-relative-probe-file>",
+        "traffic_boundary"
+      ],
+      "cwd": ".",
+      "timeout_sec": 60,
+      "expect": {
+        "exit_code": 0,
+        "json": {
+          "traffic_ok": true
+        },
+        "json_not": {
+          "traffic_ok": false
+        }
+      }
+    },
+    "causality_proof": {
+      "kind": "business",
+      "command": [
+        "<product-root-relative-probe-file>",
+        "causality_proof"
+      ],
+      "cwd": ".",
+      "timeout_sec": 120,
+      "expect": {
+        "exit_code": 0,
+        "json": {
+          "causality_ok": true
+        },
+        "json_not": {
+          "causality_ok": false
+        }
+      }
+    },
+    "automation_run": {
+      "kind": "business",
+      "command": [
+        "<product-root-relative-probe-file>",
+        "automation_run"
+      ],
+      "cwd": ".",
+      "timeout_sec": 120,
+      "expect": {
+        "exit_code": 0,
+        "json": {
+          "automation_ok": true
+        },
+        "json_not": {
+          "automation_ok": false
+        }
+      }
+    },
+    "delivery_clean": {
+      "kind": "business",
+      "command": [
+        "<product-root-relative-probe-file>",
+        "delivery_clean"
+      ],
+      "cwd": ".",
+      "timeout_sec": 60,
+      "expect": {
+        "exit_code": 0,
+        "json": {
+          "clean_ok": true
+        },
+        "json_not": {
+          "clean_ok": false
+        }
+      }
+    },
+    "handoff": {
+      "kind": "handoff",
+      "command": [
+        "<product-root-relative-probe-file>",
+        "handoff"
+      ],
+      "cwd": ".",
+      "timeout_sec": 120,
+      "expect": {
+        "exit_code": 0,
+        "json": {
+          "handed_off": true
+        },
+        "json_not": {
+          "handed_off": false
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"allow_host_labels": ["target-02", "t15", "local"], "force_allowlist": [], "note": "blank target allowlist; the gate must exit 20 (spec 17.4)"}

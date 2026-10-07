@@ -1,0 +1,59 @@
+# NOTICE
+
+reverse-skill / integrated-skill-hub
+Copyright (c) 2026 zhaoxuya520
+
+本仓库包含**非完全原创**的第三方内容。下表按 `skills/community/registry.json`
+的 `sources[]` 逐条列出并入内容、锁定提交、许可证状态与 notice 位置。所有
+"并入"内容当前均为 `distribution = local-only`。
+
+| source id | 上游 | 锁定提交 | license_declared | license_status | maturity | notice |
+|---|---|---|---|---|---|---|
+| `ctf-super-hub` | https://github.com/asdfgh1445/ctf-super-hub | `16926d6d4216183995693e9c7936c042eb7f2fae` | `NOASSERTION` | `review-required` | partial | `docs/community/ctf-super-hub/THIRD_PARTY_NOTICES.md` |
+| `hack-skills` | https://github.com/yaklang/hack-skills | `6fbf0bc8d5c71830d62543a308d8744606c43d7c` | `MIT` | `review-required` | partial | `docs/community/hack-skills/LICENSE` |
+| `ai-fullstack-delivery` | https://github.com/zhaoxuya520/AI-Fullstack-Delivery-Workflow | `ab96b897d719941219ab3b3badb47cd6fda3e0eb` | `NONE` | `missing-license` | unverified | （无，未发现上游 LICENSE） |
+| `apk-reverse-community` | https://github.com/newliver666/apk-reverse | `7b6c6932a95f03d778e81e5e1a2cbf6f62dc97fd` | `MIT` | `verified` | partial | `docs/community/apk-reverse-community/LICENSE` |
+
+本仓库自身许可见根 `LICENSE`（MIT, Copyright (c) 2026 zhaoxuya520）。基线框架
+`zhaoxuya520/reverse-skill` 锁定于 `cab634bd855fc287f6e420c1f36fd1a6b9245960`。
+
+## 已知组合许可状态（17.29(2)）
+
+并入许可证并集为 `["MIT", "NOASSERTION", "NONE"]`，与目标分发许可 `MIT` 的
+兼容性结论为 **undetermined**：`NOASSERTION` 与 `NONE` 没有可判定的兼容性结论，
+按 17.29(1) 走 `NOASSERTION` 处理路径。按 17.29(6)，`NOASSERTION` 与 `mixed`
+一律 `local-only`，除非在 provenance 中记录人工批准。
+
+## 已知未决项（不是免责声明，是可复算的未满足条件）
+
+- **154** 条 `missing-license`（`ai-fullstack-delivery`）——无上游 LICENSE 文本。
+- **138** 条 `review-required`（`ctf-super-hub` 35 + `hack-skills` 103）——许可证文本
+  与第三方来源逐项核对未完成。
+- **154** 条 `maturity=unverified`——导入内容未验证。
+- **4/4** source 缺 `tree_digest` / `source_manifest`（17.28 离线可验证 attestation
+  缺失）——锁定提交不等于内容证明。
+- **0** 条已知 CVE 扫描记录（17.29(5)）。
+- notice 与 registry 逐字段一致性仅部分满足：各 notice 未携带 `source_url` 与
+  锁定提交。
+
+以上由 `scripts/verify-release-gate.py` 判定；`--release` 模式下全部阻断（退出码 20）。
+
+## 第三方内容清单
+
+- `ctf-super-hub` 的第三方来源逐条见
+  `docs/community/ctf-super-hub/THIRD_PARTY_NOTICES.md`（含 `ljagiello/ctf-skills`、
+  `foryourhealth111-pixel/Vibe-Skills`（Apache-2.0，副本见
+  `docs/community/ctf-super-hub/third_party/Vibe-Skills-LICENSE`）等）。
+- `hack-skills` 版权归 `VillanCh`（见 `docs/community/hack-skills/LICENSE`）；该
+  snapshot 内的 skill 正文含大量外部参考链接，逐条许可证与归属未完成核对。
+- `apk-reverse-community` 见 `docs/community/apk-reverse-community/LICENSE`。
+
+传递依赖（vendored 脚本、样例、数据、字体、二进制等）的独立许可证记录尚未建立；
+当前 snapshot 内未发现二进制、字体、归档或数据集文件，项化清单与聚合 digest
+由 `scripts/verify-release-gate.py --json` 的 `transitive_inventory` 字段给出。
+
+## 分发状态
+
+本仓库当前是 **local-only integration candidate**，不是可公开分发的发布物。
+`scripts/validate-integration.py --release` 与 `scripts/verify-release-gate.py
+--release` 在上述未决项清零前均以退出码 20 阻断。

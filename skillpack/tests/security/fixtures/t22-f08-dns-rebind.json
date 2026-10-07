@@ -1,0 +1,1 @@
+{"allow_cidrs": ["10.0.0.0/8"], "answers_rounds": [["10.0.0.1"], ["10.0.0.2"]], "expect": {"exit": 20, "verdict": "DENY"}, "host_labels": ["svc", "example"], "id": "F8-dns-rebind", "masked_sample": "svc[.]example round1=10.0.0.1 round2=10.0.0.2", "morphology": "DNS rebinding: answer changes between lookups (offline answers, no sockets)", "status": "verified-logic-only"}

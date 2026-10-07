@@ -1,0 +1,15 @@
+# safebox/ 是宿主配置的全字节副本，**可能含 token**，绝不进版本库。
+# 它已经被搬到 %LOCALAPPDATA%\HubCoreConsole\safebox\，这行是防它哪天又被挪回来。
+safebox/
+
+# hostlist/ 是主人手加的宿主名单和屏蔽名单——本机的东西，不跟着仓库走。
+hostlist/
+
+# cards/ **要进版本库**：那是成品的一部分。clone 下来就能用，不该缺东西。
+# 只有卡片主人后来自己新加的私人卡片要考虑是否公开。
+
+# 构建产物与运行时状态
+TEMP/
+__pycache__/
+*.pyc
+*.log

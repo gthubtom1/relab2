@@ -1,0 +1,1601 @@
+{
+ "schemaVersion": "1.0",
+ "meta": {
+  "description": "Curated routing signals for the 293 adapted community skills. Frozen by T26; see docs/community/ROUTE-RANKING.md and section 19 task card T26.",
+  "owner": "T26",
+  "registrySchemaVersion": "1.0",
+  "consumer": "skills/scripts/community-route.py",
+  "verifier": "skills/scripts/verify-routing-signals.py",
+  "note": "Every noise[] pattern is measured against the real registry: an entry is admissible only if it matches at least 80% of the records of at least one source, and the measured per-source fraction is recorded in its own note. Every signals[] entry is mined, not invented: the domain term is absent from that record's own routing text under the engine's own tokeniser, and present verbatim in a file inside the record's own vendored directory, which is what evidence_kind raw re-checks mechanically. The two hyphen compounds the tokeniser swallows (BloodHound-guided, Lattice-based) are the reason a curated layer exists at all. The verifier prints every measurement and fails closed on all of them. short_tokens is a measured list rather than a guess at the tokeniser's blind spot: it originally admitted ai, and the post-ship measurement showed why that was harmful. The routing view hyphen-splits the source identifier ai-fullstack, so the token ai was present in 157 of the 293 records' routing texts and gave every one of them a NAME-level (weight 3) hit for any hint containing ai; lookup('ai') returned 3 wrappers at confidence 1.0 and was held back only by ambiguous_tie, i.e. the ambiguity rule was the only thing standing between a bare two-letter hint and a wrong routing answer. ai is therefore dropped. os, ot and s3 stay even though they occur in 0 of 293 routing texts, because a literal that matches nothing is useless but harmless while a literal that matches 157 records is harmful; design-freeze 1.1 only allows dropping a short token that can be demonstrated harmful, and that is the distinction being applied here."
+ },
+ "token_aliases": {
+  "pcaps": "pcap",
+  "yaras": "yara",
+  "apks": "apk",
+  "attacks": "attack",
+  "endpoints": "endpoint",
+  "exploits": "exploit",
+  "hosts": "host",
+  "keys": "key",
+  "misconfigurations": "misconfiguration",
+  "protocols": "protocol",
+  "services": "service",
+  "shells": "shell",
+  "credentials": "credential",
+  "applications": "application",
+  "paths": "path",
+  "headers": "header"
+ },
+ "short_tokens": [
+  "ad",
+  "ci",
+  "db",
+  "id",
+  "io",
+  "os",
+  "ot",
+  "s3"
+ ],
+ "noise": [
+  {
+   "pattern": "community-raw",
+   "scope": "any",
+   "note": "Measured 293/293 records of every source carry the vendored snapshot root inside path and source_path, so the literal is pure provenance and routable from nowhere. ctf-super-hub 35/35 = 100%, hack-skills 103/103 = 100%, ai-fullstack-delivery 154/154 = 100%, apk-reverse-community 1/1 = 100%."
+  },
+  {
+   "pattern": "skills-hub",
+   "scope": "any",
+   "note": "The legacy importer injected this host-project name into keywords[] of all 293 records, so it can never discriminate between records. ctf-super-hub 35/35 = 100%, hack-skills 103/103 = 100%, ai-fullstack-delivery 154/154 = 100%, apk-reverse-community 1/1 = 100%."
+  },
+  {
+   "pattern": "upstream",
+   "scope": "any",
+   "note": "Same importer boilerplate as the host name, also in keywords[] of 293/293 records and therefore a constant, not a signal. ctf-super-hub 35/35 = 100%, hack-skills 103/103 = 100%, ai-fullstack-delivery 154/154 = 100%, apk-reverse-community 1/1 = 100%."
+  },
+  {
+   "pattern": "ai-fullstack-delivery",
+   "scope": "any",
+   "note": "The source identifier of one vendor tree, present in the path and keywords[] of that source's records and of no other record's. ai-fullstack-delivery 154/154 = 100%; it discriminates the source, never the capability, so it must not reach a hint."
+  },
+  {
+   "pattern": "hack-skills",
+   "scope": "any",
+   "note": "The source identifier of the second vendor tree, in the path and keywords[] of its own records only. hack-skills 103/103 = 100%; routing on it would hand every hack-skills record to any hint that merely says where the skill came from."
+  },
+  {
+   "pattern": "ctf-super-hub",
+   "scope": "any",
+   "note": "The source identifier of the third vendor tree, in the path and keywords[] of its own records only. ctf-super-hub 35/35 = 100%, which is why design-freeze 1.3 measures per source: a string covering 12% of the whole registry is still provably boilerplate for the source that owns it."
+  }
+ ],
+ "signals": [
+  {
+   "id": "community-hack-skills-037",
+   "must": [
+    "\\bbloodhound\\b",
+    "\\bmimikatz\\b",
+    "\\bkerberoast(ing)?\\b",
+    "\\bgpo\\b",
+    "\\bdcsync\\b",
+    "(?=.*权限)(?=.*写严)",
+    "(?=.*权限)(?=.*访问)"
+   ],
+   "exclude": [],
+   "evidence": "mimikatz",
+   "evidence_kind": "raw",
+   "note": "The AD ACL abuse body is built on credential-theft tooling: it names mimikatz, carries a BloodHound attack-path sheet, and walks the DCSync and GPO rights an operator actually abuses. None of that is routable today, because the frontmatter only says BloodHound-guided inside a hyphen compound the tokeniser swallows, so the single most characteristic verb of this record - dump the domain's credentials - reaches nothing."
+  },
+  {
+   "id": "community-hack-skills-038",
+   "must": [
+    "\\bcertipy\\b",
+    "\\bdcsync\\b",
+    "\\besc[0-9]+\\b",
+    "\\bpkinit\\b"
+   ],
+   "exclude": [],
+   "evidence": "certipy",
+   "evidence_kind": "raw",
+   "note": "An AD CS abuse request almost always names Certipy or an ESC number, because those are how the ESC1-ESC13 matrix is actually executed. The record's body enumerates them and its own matrix file names Certipy dozens of times, while the frontmatter advertises only the generic template-abuse vocabulary."
+  },
+  {
+   "id": "community-hack-skills-039",
+   "must": [
+    "\\brubeus\\b",
+    "\\bkrbtgt\\b",
+    "\\bas[- ]?reproast(ing)?\\b",
+    "\\bgolden\\s+ticket",
+    "\\bsilver\\s+ticket"
+   ],
+   "exclude": [],
+   "evidence": "rubeus",
+   "evidence_kind": "raw",
+   "note": "Kerberos ticket work is named after its tools and artifacts: Rubeus, the krbtgt account, AS-REP roasting, golden and silver tickets. The description covers the techniques in prose, so a hint that says the tool name or the hash the operator is after finds no record at all today."
+  },
+  {
+   "id": "community-hack-skills-090",
+   "must": [
+    "\\blattice\\b",
+    "\\blll\\b",
+    "\\bbkz\\b",
+    "\\bcoppersmith\\b"
+   ],
+   "exclude": [],
+   "evidence": "lattice",
+   "evidence_kind": "raw",
+   "note": "The record's entire subject is lattice reduction, but the frontmatter only says Lattice-based - a hyphen compound, so the tokeniser never emits the standalone word and a plain lattice hint gets zero references. The body is the deepest lattice material in the corpus, which makes this the clearest single recall hole in the registry."
+  },
+  {
+   "id": "community-hack-skills-112",
+   "must": [
+    "\\bcoppersmith\\b",
+    "\\bbkz\\b",
+    "\\bwiener\\b",
+    "\\bcommon[ -]?modulus\\b"
+   ],
+   "exclude": [],
+   "evidence": "coppersmith",
+   "evidence_kind": "raw",
+   "note": "Given RSA parameters, operators name the specific attack they want - Coppersmith small roots, Wiener, a shared modulus - not the word RSA, which already routes on the slug. Without these the record stays invisible to the follow-up hint that actually carries the technique."
+  },
+  {
+   "id": "community-hack-skills-123",
+   "must": [
+    "\\bbit[- ]?flip(ping)?\\b",
+    "\\bcbc\\s*bit",
+    "\\bmeet[- ]?in[- ]?the[- ]?middle\\b"
+   ],
+   "exclude": [],
+   "evidence": "bitflip",
+   "evidence_kind": "raw",
+   "note": "A CBC or ECB bit-flipping request is almost always phrased as the attack, and the record's body gives the exact working cbc_bitflip routine plus the mitigation test. The frontmatter names the class of weakness but never the operation the caller is trying to perform."
+  },
+  {
+   "id": "community-hack-skills-115",
+   "must": [
+    "\\becdsa\\b",
+    "\\bmalleab(ility|le)\\b",
+    "\\bpermit\\b",
+    "\\bnonce\\s+reuse\\b"
+   ],
+   "exclude": [],
+   "evidence": "ECDSA.recover",
+   "evidence_kind": "raw",
+   "note": "Signature replay in a smart contract is an ECDSA property: malleability or nonce reuse lets an attacker move an approval that was never meant to move. The audit body is written against the ECDSA.recover call, so an auditor who names the primitive is asking about this record specifically."
+  },
+  {
+   "id": "community-hack-skills-077",
+   "must": [
+    "\\bhashcat\\b",
+    "\\bjohn\\b",
+    "\\bdictionary\\s+attack\\b",
+    "\\brules?\\s+of\\s+hash"
+   ],
+   "exclude": [],
+   "evidence": "hashcat",
+   "evidence_kind": "raw",
+   "note": "When someone asks how to attack a hash, they ask with the tool in hand - hashcat, john, a wordlist. The record covers length extension and collision classes, which the hint never mentions, so a practical cracking request currently reaches only generic web skills."
+  },
+  {
+   "id": "community-hack-skills-058",
+   "must": [
+    "\\bvm[- ]?protect",
+    "\\bstring\\s+encrypt(ion)?\\b",
+    "\\bcontrol[- ]flow\\s+flat",
+    "\\bopaque\\s+predicate",
+    "\\bghidra\\b",
+    "\\bangr\\b"
+   ],
+   "exclude": [],
+   "evidence": "ghidra",
+   "evidence_kind": "raw",
+   "note": "The deobfuscation playbook is what an analyst reaches for once a packer or VM protector is named, and the body is organised around Ghidra and angr workflows. The frontmatter's generic junk-code wording does not contain the packer, protector or tool name the caller will actually type."
+  },
+  {
+   "id": "community-hack-skills-129",
+   "must": [
+    "\\bbytecode\\b",
+    "\\bdispatcher\\b",
+    "\\bvm\\b",
+    "\\bghidra\\b",
+    "\\bunicorn\\b"
+   ],
+   "exclude": [],
+   "evidence": "ghidra",
+   "evidence_kind": "raw",
+   "note": "A custom-VM or maze-challenge request names the dispatcher loop and the bytecode, and the body walks both under Ghidra and an emulation harness. A generic binary-analysis hint cannot distinguish this record from ordinary reversing, so the specific phrasing must."
+  },
+  {
+   "id": "community-hack-skills-052",
+   "must": [
+    "\\bwasm\\b",
+    "\\btyped\\s+array\\b",
+    "\\boob\\b",
+    "\\bv8\\b",
+    "\\bpointer\\s+compression\\b"
+   ],
+   "exclude": [],
+   "evidence": "WASM",
+   "evidence_kind": "raw",
+   "note": "Browser exploitation is requested by naming the surface - a WASM RWX page, a typed-array confusion, a V8 pointer-compression bug - not the word browser. The body enumerates exactly those primitives, and the frontmatter only says JIT type confusion, which is why this class of hint is currently unroutable."
+  },
+  {
+   "id": "community-hack-skills-133",
+   "must": [
+    "\\bcobalt\\s*strike\\b",
+    "\\bsliver\\b",
+    "\\bhavoc\\b",
+    "\\bexecute[- ]?assembly\\b"
+   ],
+   "exclude": [],
+   "evidence": "Sliver",
+   "evidence_kind": "raw",
+   "note": "EDR evasion is nearly always requested against a named C2 framework, and this body is organised around how Cobalt Strike, Sliver and Havoc load assemblies. The framework names are the only terms a caller supplies, and none of them is in the record's routable text."
+  },
+  {
+   "id": "community-hack-skills-041",
+   "must": [
+    "\\bfrida\\b",
+    "\\bobjection\\b",
+    "\\bdrozer\\b",
+    "\\bwebview\\b",
+    "\\btapjacking\\b"
+   ],
+   "exclude": [],
+   "evidence": "frida",
+   "evidence_kind": "raw",
+   "note": "Android assessment is driven by instrumentation: a Frida script, an Objection session, a Drozer agent. The frontmatter lists the vulnerability classes instead, so the tool-led hint that follows real work has nothing to match and silently drops to needs_review."
+  },
+  {
+   "id": "community-hack-skills-085",
+   "must": [
+    "\\bfrida\\b",
+    "\\bobjection\\b",
+    "\\blldb\\b",
+    "\\bkeychain\\b",
+    "\\buniversal\\s+links?\\b"
+   ],
+   "exclude": [],
+   "evidence": "frida",
+   "evidence_kind": "raw",
+   "note": "The iOS counterpart: runtime manipulation is done with Frida, Objection and LLDB, and keychain extraction and Universal Links are named after their artefacts. The class-only frontmatter means none of the concrete iOS terms routes to this record."
+  },
+  {
+   "id": "community-hack-skills-098",
+   "must": [
+    "\\bfrida\\b",
+    "\\bobjection\\b",
+    "\\bapktool\\b",
+    "\\bspki\\b",
+    "\\bcert(ificate)?\\s+pinning\\b"
+   ],
+   "exclude": [],
+   "evidence": "frida",
+   "evidence_kind": "raw",
+   "note": "Certificate pinning is bypassed by patching the app at runtime, and the body's procedure is built on Frida, Objection and apktool with the SPKI hash as the thing being bypassed. That procedure is invisible to routing because the frontmatter keeps only the abstract class names."
+  },
+  {
+   "id": "community-hack-skills-088",
+   "must": [
+    "\\bqemu\\b",
+    "\\bcommit_creds\\b",
+    "\\bmodprobe_path\\b",
+    "\\buaf\\b",
+    "\\boob\\b"
+   ],
+   "exclude": [],
+   "evidence": "QEMU",
+   "evidence_kind": "raw",
+   "note": "Kernel exploitation runs against a locally spun-up guest, and the two named primitives - commit_creds and modprobe_path - are the escalation targets the body works through. A hint that names the harness or the symbol gets no reference today, because the frontmatter carries only the vulnerability classes."
+  },
+  {
+   "id": "community-hack-skills-135",
+   "must": [
+    "\\bprintspoofer\\b",
+    "\\bjuicy\\b",
+    "\\bpotato\\b",
+    "\\bfodhelper\\b",
+    "\\balwaysinstallelevated\\b",
+    "\\beventvwr\\b",
+    "(?=.*变成)(?=.*管理员)",
+    "(?=.*普通)(?=.*用户)(?=.*服务)"
+   ],
+   "exclude": [],
+   "evidence": "PrintSpoofer",
+   "evidence_kind": "raw",
+   "note": "Local privilege escalation is requested by the named technique: a PrintSpoofer or JuicyPotato variant, the fodhelper or eventvwr UAC bypass, an AlwaysInstallElevated hijack. The frontmatter's generic token-abuse wording contains none of them, so the follow-up hint that names the technique is unroutable."
+  },
+  {
+   "id": "community-hack-skills-091",
+   "must": [
+    "\\bnfs\\b",
+    "\\bproxychains\\b",
+    "\\bsocat\\b",
+    "\\bssh[- ]?tunnel",
+    "\\bdbus\\b"
+   ],
+   "exclude": [],
+   "evidence": "showmount",
+   "evidence_kind": "raw",
+   "note": "Linux lateral movement is asked about by the mechanism, not the goal: an open NFS export, a ProxyChains hop, a socat forward, a D-Bus exploit. The body gives the exact command for each, and the frontmatter's prose names none of the tools, so every concrete pivot hint currently dead-ends."
+  },
+  {
+   "id": "community-hack-skills-099",
+   "must": [
+    "\\bresponder\\b",
+    "\\bllmnr\\b",
+    "\\bnbns\\b",
+    "\\bwpad\\b",
+    "\\barp[- ]?spoof(ing)?\\b"
+   ],
+   "exclude": [],
+   "evidence": "responder",
+   "evidence_kind": "raw",
+   "note": "Layer-2 and name-resolution attacks are performed with Responder and friends, and the body is written as that tool's runbook plus the protocol specifics - LLMNR, NBT-NS, WPAD, ARP spoofing. Naming the tool is how an operator asks, and the tool name is not routable."
+  },
+  {
+   "id": "community-hack-skills-101",
+   "must": [
+    "\\bresponder\\b",
+    "\\bntlmrelayx\\b",
+    "\\bpetitpotam\\b",
+    "\\bprinterbug\\b",
+    "\\bsmb2\\b",
+    "(?=.*旧协议)",
+    "(?=.*协议)(?=.*回应)"
+   ],
+   "exclude": [],
+   "evidence": "crackmapexec",
+   "evidence_kind": "raw",
+   "note": "Coercion and relay work is named after the relay and coercion tooling: ntlmrelayx, PetitPotam, PrinterBug, and the SMB2 signing check that decides whether a host is a relay candidate. The frontmatter's protocol prose never names them, so the working hint gets no reference."
+  },
+  {
+   "id": "community-hack-skills-134",
+   "must": [
+    "\\bimpacket\\b",
+    "\\bmimikatz\\b",
+    "\\bchisel\\b",
+    "\\bpass[- ]the[- ]hash\\b",
+    "\\bwmi\\b"
+   ],
+   "exclude": [],
+   "evidence": "impacket",
+   "evidence_kind": "raw",
+   "note": "Windows lateral movement is executed with impacket and mimikatz over a Chisel tunnel, and the body is literally that command set. The frontmatter lists the movement techniques in prose only, so the hint an operator copies out of a report reaches nothing."
+  },
+  {
+   "id": "community-hack-skills-108",
+   "must": [
+    "\\bffuf\\b",
+    "\\bsqlmap\\b",
+    "\\bnuclei\\b",
+    "\\bkatana\\b",
+    "\\bgobuster\\b",
+    "\\bferoxbuster\\b",
+    "\\bmasscan\\b"
+   ],
+   "exclude": [],
+   "evidence": "ffuf",
+   "evidence_kind": "raw",
+   "note": "Recon is requested with the tool - ffuf, sqlmap, nuclei, katana - and this body is the runbook for exactly that toolchain, the record under every other recon hint. As shipped it is reachable only through the vague word methodology, so a specific tool hint is answered by nothing."
+  },
+  {
+   "id": "community-ctf-super-hub-005",
+   "must": [
+    "\\bwireshark\\b",
+    "\\btshark\\b",
+    "\\bvolatility\\b",
+    "\\bvolatility3\\b",
+    "\\bdumpsec\\b",
+    "\\bexiftool\\b"
+   ],
+   "exclude": [],
+   "evidence": "tshark",
+   "evidence_kind": "raw",
+   "note": "A forensics challenge is named after its instrument - a PCAP opened in tshark, a memory image walked with Volatility, a deleted file carved with foremost. The record is the only forensics body in the registry, yet it is unreachable by the tool names because the frontmatter lists the evidence types instead."
+  },
+  {
+   "id": "community-ctf-super-hub-006",
+   "must": [
+    "\\bcobalt\\s*strike\\b",
+    "\\bdnspy\\b",
+    "\\bilspy\\b",
+    "\\bupx\\b",
+    "\\bshellcode\\b"
+   ],
+   "exclude": [],
+   "evidence": "dnSpy",
+   "evidence_kind": "raw",
+   "note": "Malware analysis is asked for by the tool that reveals the sample - de4dot and dnSpy or ILSpy for .NET, strings and shellcode extraction - and this body is that procedure. The frontmatter keeps only the challenge-type vocabulary, so the tool-led hint is unroutable."
+  },
+  {
+   "id": "community-ctf-super-hub-010",
+   "must": [
+    "\\bqiling\\b",
+    "\\bradare2\\b",
+    "\\bghidra\\b",
+    "\\bida\\b",
+    "\\bsmali\\b",
+    "\\buefi\\b",
+    "(?=.*虚拟机)(?=.*格式)",
+    "(?=.*虚拟机)(?=.*逻辑)"
+   ],
+   "exclude": [],
+   "evidence": "qiling",
+   "evidence_kind": "raw",
+   "note": "A reversing challenge is handed over with the toolchain attached, and this body is the playbook for it - Qiling and radare2 and Ghidra and smali and UEFI targets. The frontmatter describes the challenge classes, so the hint that actually identifies the environment matches nothing."
+  },
+  {
+   "id": "community-ctf-super-hub-004",
+   "must": [
+    "\\blattice\\b",
+    "\\blll\\b",
+    "\\bbkz\\b",
+    "\\bknapsack\\b",
+    "\\bwiener\\b",
+    "\\bdiscrete[- ]log\\b"
+   ],
+   "exclude": [],
+   "evidence": "knapsack",
+   "evidence_kind": "raw",
+   "note": "The crypto body is the densest lattice material in the whole registry, including the knapsack and reduction cases a solver is asked about by name. Its frontmatter says only 格攻击, so the English and algorithmic spellings of the same subject reach no record at all."
+  },
+  {
+   "id": "community-ctf-super-hub-018",
+   "must": [
+    "\\bidempotenc(y|ies)\\b",
+    "\\bchargeback",
+    "\\bmonotonic",
+    "\\bdouble[- ]spend",
+    "\\brefund",
+    "\\bsaga\\b",
+    "(?=.{0,40}(比赛|靶场|夺旗))(?=.{0,40}(逻辑|幂等|状态|流程|绕过|重复|多刷|约束|退款|支付))"
+   ],
+   "exclude": [],
+   "evidence": "idempotency",
+   "evidence_kind": "raw",
+   "note": "Business-logic testing is requested as a violated invariant - a double-spendable order, a broken idempotency key, a monotonicity failure - and the body is literally a list of invariants to check. The frontmatter's generic flow-bypass wording names none of them, which is the whole point of the record. The CTF-context regex added 2026-10-02 says nothing about the subject: it only marks the question as a business-logic invariant asked inside a CTF setting, which is the frame this record's own allowed_context (offline_ctf) already declares. Without it a hint framed that way reaches no business-logic record at all - the frame words carry no term overlap with any record - and the wrapper tie is then decided on description breadth alone."
+  },
+  {
+   "id": "community-ctf-super-hub-019",
+   "must": [
+    "\\bpreflight\\b",
+    "\\bcsrfable\\b",
+    "\\breplayable\\b",
+    "\\bsamesite\\b",
+    "\\bwebview\\b"
+   ],
+   "exclude": [],
+   "evidence": "preflight",
+   "evidence_kind": "raw",
+   "note": "Whether a state-changing request is even reachable from another origin turns on the CORS preflight and the SameSite attribute, and the body is written around those two gates. A hint that names the gate is the most specific thing a tester can say, and today it routes nowhere."
+  },
+  {
+   "id": "community-ai-fullstack-delivery-197",
+   "must": [
+    "\\bdevops\\b"
+   ],
+   "exclude": [],
+   "evidence": "devops",
+   "evidence_kind": "raw",
+   "note": "U9 alias-family attribution. The bare hint devops folds to the shared alias_delivery token, which 29 records carry as a NAME hit at identical rank, so the leader is path-first and arbitrary: the RAG pipeline record wins although its own directory contains zero occurrences of devops. The devops-engineer record owns the literal in its path and across its body files, so the folded hit is attributed to its literal owner at signal weight, above the folded tie."
+  },
+  {
+   "id": "community-ai-fullstack-delivery-188",
+   "must": [
+    "\\bpipeline\\b"
+   ],
+   "exclude": [],
+   "evidence": "pipeline",
+   "evidence_kind": "raw",
+   "note": "U9 alias-family attribution. The bare hint pipeline folds to alias_delivery and ties 29 records at identical rank, led path-first by the RAG pipeline record rather than by the record whose entire subject is CI/CD pipeline design. The ci-cd-pipeline record owns the literal in its slug, its description and its body plus template files, so the folded hit is attributed to its literal owner."
+  },
+  {
+   "id": "community-ai-fullstack-delivery-215",
+   "must": [
+    "\\bdelivery\\b",
+    "交付"
+   ],
+   "exclude": [],
+   "evidence": "delivery",
+   "evidence_kind": "raw",
+   "note": "U9 alias-family attribution. The bare hints delivery and 交付 both fold to alias_delivery and tie 29 records at identical rank, led path-first by the RAG pipeline record, whose directory holds neither 交付 (0 occurrences) nor devops and only incidental delivery mentions. The e2e-feature-delivery record is the one whose slug literally owns delivery and whose body owns both spellings (delivery in SKILL.md, 交付 across SKILL.md and the delivery checklist), so the folded hit is attributed to it."
+  },
+  {
+   "id": "community-apk-reverse-community-293",
+   "must": [
+    "安装包",
+    "瘦身|瘦个身|体积大|砍功能|不用的功能",
+    "弹广告|去广告|弹窗|开屏",
+    "签名|重签名|re-sign|校验过不去|重新认它",
+    "抓包|连了哪些服务器|传了些什么|去同一个地址报到",
+    "重装|装不上|装回去|不让装|有风险不让|让它跑起来",
+    "改完包|改包|改个值|加了什么料|会员校验在本地|自己说了算",
+    "盯着就|装乖|第三方统计|闪退|客户端的指纹|新格式|老机器|停更的老应用|先验验"
+   ],
+   "exclude": [],
+   "evidence": "debloat",
+   "evidence_kind": "record",
+   "note": "zh-integrate phase1 Top1: apk-reverse-community 包仅 1 条记录，gap-300 中 17 条中文 hint 全部零命中(15 no_match + 2 错配)。must 收敛 suggestions.json 该记录 3 条 suggested_zh 片段(安装包/弹广告/抓包/瘦身)并扩展覆盖 17 条实测措辞(签名/重装/改包/弹窗/闪退等)，证据 debloat 为该记录 description 原文子串。"
+  },
+  {
+   "id": "community-hack-skills-036",
+   "must": [
+    "后台拦路被拦了怎么办",
+    "后台拦路怎么绕",
+    "看看后台拦路能不能绕过",
+    "后台拦路有办法进吗"
+   ],
+   "exclude": [],
+   "evidence": "bypass",
+   "evidence_kind": "record",
+   "note": "zh-integrate phase2 batch1(hack): must 为 suggestions.json 该记录 suggested_zh 原文直挂(逐字转义), evidence bypass 取自该记录 description 原文。"
+  },
+  {
+   "id": "community-hack-skills-040",
+   "must": [
+    "看看有没有模型供应链问题",
+    "模型供应链怎么测",
+    "模型供应链从哪下手",
+    "帮忙看下模型供应链",
+    "这块模型供应链能过吗"
+   ],
+   "exclude": [],
+   "evidence": "security",
+   "evidence_kind": "record",
+   "note": "zh-integrate phase2 batch1(hack): must 为 suggestions.json 该记录 suggested_zh 原文直挂(逐字转义), evidence security 取自该记录 description 原文。"
+  },
+  {
+   "id": "community-hack-skills-042",
+   "must": [
+    "反调试被拦了怎么办",
+    "反调试怎么绕",
+    "看看反调试能不能绕过",
+    "反调试有办法进吗"
+   ],
+   "exclude": [],
+   "evidence": "anti-debugging",
+   "evidence_kind": "record",
+   "note": "zh-integrate phase2 batch1(hack): must 为 suggestions.json 该记录 suggested_zh 原文直挂(逐字转义), evidence anti-debugging 取自该记录 description 原文。"
+  },
+  {
+   "id": "community-hack-skills-043",
+   "must": [
+    "令牌伪造",
+    "令牌篡改",
+    "看看有没有接口令牌问题",
+    "接口令牌怎么测",
+    "接口令牌从哪下手",
+    "帮忙看下接口令牌"
+   ],
+   "exclude": [],
+   "evidence": "authentication",
+   "evidence_kind": "record",
+   "note": "zh-integrate phase2 batch1(hack): must 为 suggestions.json 该记录 suggested_zh 原文直挂(逐字转义), evidence authentication 取自该记录 description 原文。"
+  },
+  {
+   "id": "community-hack-skills-044",
+   "must": [
+    "看看有没有接口越权问题",
+    "接口越权怎么测",
+    "接口越权从哪下手",
+    "帮忙看下接口越权",
+    "这块接口越权能过吗",
+    "(?=.*\\border\\b)(?=.*购买)",
+    "(?=.*\\border\\b)(?=.*编号)"
+   ],
+   "exclude": [],
+   "evidence": "authorization",
+   "evidence_kind": "record",
+   "note": "zh-integrate phase2 batch1(hack): must 为 suggestions.json 该记录 suggested_zh 原文直挂(逐字转义), evidence authorization 取自该记录 description 原文。"
+  },
+  {
+   "id": "community-hack-skills-045",
+   "must": [
+    "看看有没有接口文档问题",
+    "接口文档怎么测",
+    "接口文档从哪下手",
+    "帮忙看下接口文档",
+    "这块接口文档能过吗"
+   ],
+   "exclude": [],
+   "evidence": "reconnaissance",
+   "evidence_kind": "record",
+   "note": "zh-integrate phase2 batch1(hack): must 为 suggestions.json 该记录 suggested_zh 原文直挂(逐字转义), evidence reconnaissance 取自该记录 description 原文。"
+  },
+  {
+   "id": "community-hack-skills-046",
+   "must": [
+    "看看有没有接口安全问题",
+    "接口安全怎么测",
+    "接口安全从哪下手",
+    "帮忙看下接口安全",
+    "这块接口安全能过吗"
+   ],
+   "exclude": [],
+   "evidence": "entry",
+   "evidence_kind": "record",
+   "note": "zh-integrate phase2 batch1(hack): must 为 suggestions.json 该记录 suggested_zh 原文直挂(逐字转义), evidence entry 取自该记录 description 原文。"
+  },
+  {
+   "id": "community-hack-skills-047",
+   "must": [
+    "任意写怎么打",
+    "任意写从哪突破",
+    "怀疑有任意写怎么验证"
+   ],
+   "exclude": [],
+   "evidence": "arbitrary",
+   "evidence_kind": "record",
+   "note": "zh-integrate phase2 batch1(hack): must 为 suggestions.json 该记录 suggested_zh 原文直挂(逐字转义), evidence arbitrary 取自该记录 description 原文。"
+  },
+  {
+   "id": "community-hack-skills-048",
+   "must": [
+    "看看有没有攻击面问题",
+    "攻击面怎么测",
+    "攻击面从哪下手",
+    "帮忙看下攻击面",
+    "这块攻击面能过吗"
+   ],
+   "exclude": [],
+   "evidence": "draw",
+   "evidence_kind": "record",
+   "note": "zh-integrate phase2 batch1(hack): must 为 suggestions.json 该记录 suggested_zh 原文直挂(逐字转义), evidence draw 取自该记录 description 原文。"
+  },
+  {
+   "id": "community-hack-skills-049",
+   "must": [
+    "看看有没有登录鉴权问题",
+    "登录鉴权怎么测",
+    "登录鉴权从哪下手",
+    "帮忙看下登录鉴权",
+    "这块登录鉴权能过吗"
+   ],
+   "exclude": [],
+   "evidence": "entry",
+   "evidence_kind": "record",
+   "note": "zh-integrate phase2 batch1(hack): must 为 suggestions.json 该记录 suggested_zh 原文直挂(逐字转义), evidence entry 取自该记录 description 原文。"
+  },
+  {
+   "id": "community-hack-skills-050",
+   "must": [
+    "登录绕过被拦了怎么办",
+    "登录绕过怎么绕",
+    "看看登录绕过能不能绕过",
+    "登录绕过有办法进吗"
+   ],
+   "exclude": [],
+   "evidence": "authentication",
+   "evidence_kind": "record",
+   "note": "zh-integrate phase2 batch1(hack): must 为 suggestions.json 该记录 suggested_zh 原文直挂(逐字转义), evidence authentication 取自该记录 description 原文。"
+  },
+  {
+   "id": "community-hack-skills-051",
+   "must": [
+    "二进制防护被拦了怎么办",
+    "二进制防护怎么绕",
+    "看看二进制防护能不能绕过",
+    "二进制防护有办法进吗",
+    "(?=.*脱壳)(?=.*样本)",
+    "保护壳"
+   ],
+   "exclude": [],
+   "evidence": "binary",
+   "evidence_kind": "record",
+   "note": "zh-integrate phase2 batch1(hack): must 为 suggestions.json 该记录 suggested_zh 原文直挂(逐字转义), evidence binary 取自该记录 description 原文。"
+  },
+  {
+   "id": "community-hack-skills-053",
+   "must": [
+    "看看有没有业务逻辑问题",
+    "业务逻辑怎么测",
+    "业务逻辑从哪下手",
+    "帮忙看下业务逻辑",
+    "这块业务逻辑能过吗",
+    "(?=.*重复领)(?=.*限制)",
+    "(?=.*逻辑)(?=.*限制)"
+   ],
+   "exclude": [],
+   "evidence": "entry",
+   "evidence_kind": "record",
+   "note": "zh-integrate phase2 batch1(hack): must 为 suggestions.json 该记录 suggested_zh 原文直挂(逐字转义), evidence entry 取自该记录 description 原文。"
+  },
+  {
+   "id": "community-hack-skills-054",
+   "must": [
+    "看看有没有业务逻辑问题",
+    "业务逻辑怎么测",
+    "业务逻辑从哪下手",
+    "帮忙看下业务逻辑",
+    "这块业务逻辑能过吗"
+   ],
+   "exclude": [],
+   "evidence": "business",
+   "evidence_kind": "record",
+   "note": "zh-integrate phase2 batch1(hack): must 为 suggestions.json 该记录 suggested_zh 原文直挂(逐字转义), evidence business 取自该记录 description 原文。"
+  },
+  {
+   "id": "community-hack-skills-055",
+   "must": [
+    "这组古典密码参数怎么解",
+    "古典密码从哪下手",
+    "拿到了古典密码怎么还原"
+   ],
+   "exclude": [],
+   "evidence": "classical",
+   "evidence_kind": "record",
+   "note": "zh-integrate phase2 batch1(hack): must 为 suggestions.json 该记录 suggested_zh 原文直挂(逐字转义), evidence classical 取自该记录 description 原文。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-145",
+   "must": [
+    "谁能调|看的规矩|登录那块"
+   ],
+   "exclude": [],
+   "evidence": "权限矩阵",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N186 登录谁能调什么/理出规矩)：must 收 gap hint 原话短片段并联，证据权限矩阵为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-148",
+   "must": [
+    "下游一抖|跟着挂|加一层保护"
+   ],
+   "exclude": [],
+   "evidence": "Idempotency-Key",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N188 下游一抖跟着挂/重试幂等加保护)：must 收 gap hint 原话短片段并联，证据Idempotency-Key为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-164",
+   "must": [
+    "慢任务|堆起来就卡|也不重试|得理一理"
+   ],
+   "exclude": [],
+   "evidence": "死信",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N195 后台慢任务堆积/失败不重试)：must 收 gap hint 原话短片段并联，证据死信为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-180",
+   "must": [
+    "跨好几张表|跑一次十分钟|运营要的数据"
+   ],
+   "exclude": [],
+   "evidence": "漏斗分析",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N200 跨表查一次十分钟)：must 收 gap hint 原话短片段并联，证据漏斗分析为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-191",
+   "must": [
+    "人肉配|配出不一样|写成代码管"
+   ],
+   "exclude": [],
+   "evidence": "drift",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N204 人肉配环境/写成代码管)：must 收 gap hint 原话短片段并联，证据drift为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-193",
+   "must": [
+    "半夜服务挂|没人知道|客诉叫醒|加个告警"
+   ],
+   "exclude": [],
+   "evidence": "黄金信号",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N205 半夜挂没人知道/客诉叫醒)：must 收 gap hint 原话短片段并联，证据黄金信号为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-195",
+   "must": [
+    "全量上太吓人|灰度一小撮|先灰度"
+   ],
+   "exclude": [],
+   "evidence": "金丝雀",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N206 全量太吓人/灰度一小撮)：must 收 gap hint 原话短片段并联，证据金丝雀为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-199",
+   "must": [
+    "一打包就慢|改一行等半天|构建得拆"
+   ],
+   "exclude": [],
+   "evidence": "Turbopack",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N207 打包慢改一行等半天)：must 收 gap hint 原话短片段并联，证据Turbopack为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-208",
+   "must": [
+    "传来传去|不知谁改的|共享的状态"
+   ],
+   "exclude": [],
+   "evidence": "Zustand",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N211 状态传来传去不知谁改)：must 收 gap hint 原话短片段并联，证据Zustand为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-211",
+   "must": [
+    "字段总对不上|联调天天吵|定个契约"
+   ],
+   "exclude": [],
+   "evidence": "联调清单",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N212 字段对不上联调吵)：must 收 gap hint 原话短片段并联，证据联调清单为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-232",
+   "must": [
+    "缠在一起|害死上线日|拖了会害死"
+   ],
+   "exclude": [],
+   "evidence": "Critical Path",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N221 任务缠一起/害死上线日)：must 收 gap hint 原话短片段并联，证据Critical Path为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-244",
+   "must": [
+    "亲自点一遍|过关标准|认的过关"
+   ],
+   "exclude": [],
+   "evidence": "Given-When-Then",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N227 老板亲自点/过关标准)：must 收 gap hint 原话短片段并联，证据Given-When-Then为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-259",
+   "must": [
+    "三方包爆|哪些版本中招|换哪个"
+   ],
+   "exclude": [],
+   "evidence": "npm audit",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N234 三方包爆洞/换哪个版本)：must 收 gap hint 原话短片段并联，证据npm audit为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-248",
+   "must": [
+    "人一多|就卡死|多少人同时|得压出来"
+   ],
+   "exclude": [],
+   "evidence": "USE Method",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N228 人一多卡死/压出并发)：must 收 gap hint 原话短片段并联，证据USE Method为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-270",
+   "must": [
+    "三天两头抖|几个九|得先算出来"
+   ],
+   "exclude": [],
+   "evidence": "错误预算",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N241 三天两头抖/几个九)：must 收 gap hint 原话短片段并联，证据错误预算为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-001",
+   "must": [
+    "刚入门|每天练什么|练什么的路子"
+   ],
+   "exclude": [],
+   "evidence": "brainstorming",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N251 入门从哪下手/每天练什么)：must 收 gap hint 原话短片段并联，证据brainstorming为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-007",
+   "must": [
+    "图和一段音频|藏在哪一层|给了张图"
+   ],
+   "exclude": [],
+   "evidence": "ctf-misc",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N257 图和音频/flag藏哪层)：must 收 gap hint 原话短片段并联，证据ctf-misc为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-008",
+   "must": [
+    "只给了个网名|一张头像|翻出来找线索"
+   ],
+   "exclude": [],
+   "evidence": "ctf-osint",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N258 网名头像/公开信息找线索)：must 收 gap hint 原话短片段并联，证据ctf-osint为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-025",
+   "must": [
+    "链接藏得很深|手工点不全|整站爬一遍|爬一遍列出来"
+   ],
+   "exclude": [],
+   "evidence": "strix-katana",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N274 链接藏深/整站爬)：must 收 gap hint 原话短片段并联，证据strix-katana为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-027",
+   "must": [
+    "跳转参数|居然真跳|得确认影响"
+   ],
+   "exclude": [],
+   "evidence": "strix-open-redirect",
+   "evidence_kind": "record",
+   "note": "signals-ext batch1 白话T2(N276 跳转参数改外址真跳)：must 收 gap hint 原话短片段并联，证据strix-open-redirect为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-146",
+   "must": [
+    "对外开的路径|越加越乱|都认的规矩"
+   ],
+   "exclude": [],
+   "evidence": "endpoint-design",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N187 路径命名版本规矩)：must 收 gap hint 原话短片段并联，证据endpoint-design为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-152",
+   "must": [
+    "套来套去|关系理不清|得重新弄"
+   ],
+   "exclude": [],
+   "evidence": "resource-modeling",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N190 资源套叠建模)：must 收 gap hint 原话短片段并联，证据resource-modeling为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-155",
+   "must": [
+    "对方调完|回调老说|没收到|查账得有"
+   ],
+   "exclude": [],
+   "evidence": "HMAC",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N191 回调重试查账)：must 收 gap hint 原话短片段并联，证据HMAC为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-157",
+   "must": [
+    "流水线里|那堆检查|一会过一会|不敢点了"
+   ],
+   "exclude": [],
+   "evidence": "ci-test-integration",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N192 流水线检查挂)：must 收 gap hint 原话短片段并联，证据ci-test-integration为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-175",
+   "must": [
+    "新老两个|哪个转化好|做个对照"
+   ],
+   "exclude": [],
+   "evidence": "ab-testing",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N199 版本对照转化)：must 收 gap hint 原话短片段并联，证据ab-testing为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-184",
+   "must": [
+    "要加字段|表太大|不敢动|不停服"
+   ],
+   "exclude": [],
+   "evidence": "Expand/Contract",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N201 大表加字段搬)：must 收 gap hint 原话短片段并联，证据Expand/Contract为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-200",
+   "must": [
+    "到处复制粘贴|改个样式|改十个地方"
+   ],
+   "exclude": [],
+   "evidence": "component-architecture",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N208 组件复制粘贴)：must 收 gap hint 原话短片段并联，证据component-architecture为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-202",
+   "must": [
+    "长表单|填到一半|刷新就全|校验还到"
+   ],
+   "exclude": [],
+   "evidence": "forms-validation",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N209 长表单刷新丢)：must 收 gap hint 原话短片段并联，证据forms-validation为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-218",
+   "must": [
+    "听说到付钱|掉了好几截|把路捋出来"
+   ],
+   "exclude": [],
+   "evidence": "NNGroup",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N216 听说付钱掉截)：must 收 gap hint 原话短片段并联，证据NNGroup为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-226",
+   "must": [
+    "十几个需求|抢两周时间|不吵架的"
+   ],
+   "exclude": [],
+   "evidence": "RICE",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N219 需求抢时间排)：must 收 gap hint 原话短片段并联，证据RICE为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-230",
+   "must": [
+    "被理解成|三个样|拆成开发|能直接干"
+   ],
+   "exclude": [],
+   "evidence": "INVEST",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N220 一句话三样拆)：must 收 gap hint 原话短片段并联，证据INVEST为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-235",
+   "must": [
+    "稀里糊涂就过|门到底卡|立个规矩"
+   ],
+   "exclude": [],
+   "evidence": "milestone-gate",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N223 门禁卡什么)：must 收 gap hint 原话短片段并联，证据milestone-gate为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-240",
+   "must": [
+    "排期看着|看着都满|哪个一炸|完全没数"
+   ],
+   "exclude": [],
+   "evidence": "PMBOK",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N225 排期一炸影响)：must 收 gap hint 原话短片段并联，证据PMBOK为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-243",
+   "must": [
+    "一拆就乱|拆到多细|谁干哪块"
+   ],
+   "exclude": [],
+   "evidence": "wbs-decomposition",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N226 大活拆分法)：must 收 gap hint 原话短片段并联，证据wbs-decomposition为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-250",
+   "must": [
+    "改完老功能|怕把别处|回归兜底"
+   ],
+   "exclude": [],
+   "evidence": "regression-testing",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N229 老功能回归)：must 收 gap hint 原话短片段并联，证据regression-testing为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-256",
+   "must": [
+    "永远不够测|哪些必须测|哪些能放"
+   ],
+   "exclude": [],
+   "evidence": "test-strategy",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N231 测哪些能放)：must 收 gap hint 原话短片段并联，证据test-strategy为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-257",
+   "must": [
+    "上次被绕过|上线前得|专门审一遍"
+   ],
+   "exclude": [],
+   "evidence": "IDOR",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N232 登录绕过审)：must 收 gap hint 原话短片段并联，证据IDOR为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-262",
+   "must": [
+    "拉的东西|不知道有|被人动过|得查一查"
+   ],
+   "exclude": [],
+   "evidence": "Sigstore",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N235 流水线投毒查)：must 收 gap hint 原话短片段并联，证据Sigstore为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-263",
+   "must": [
+    "还没上线|得先想想|攻击者会|几条路进"
+   ],
+   "exclude": [],
+   "evidence": "STRIDE",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N236 攻击者几条路)：must 收 gap hint 原话短片段并联，证据STRIDE为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-264",
+   "must": [
+    "天天被扫|那几类毛病|系统过一遍"
+   ],
+   "exclude": [],
+   "evidence": "OWASP Top 10",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N237 被扫毛病过遍)：must 收 gap hint 原话短片段并联，证据OWASP Top 10为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-279",
+   "must": [
+    "卡片各画各|像三家公司|得统一"
+   ],
+   "exclude": [],
+   "evidence": "Atomic Design",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N246 按钮卡片统一)：must 收 gap hint 原话短片段并联，证据Atomic Design为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-286",
+   "must": [
+    "信息一多|用户就晕|层级和导航|重新排"
+   ],
+   "exclude": [],
+   "evidence": "information-architecture",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N248 信息层级导航)：must 收 gap hint 原话短片段并联，证据information-architecture为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-288",
+   "must": [
+    "手机上看|一到电脑|电脑就乱|适配得做"
+   ],
+   "exclude": [],
+   "evidence": "Mobile-First",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N249 手机电脑乱配)：must 收 gap hint 原话短片段并联，证据Mobile-First为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-291",
+   "must": [
+    "点两下就|就迷路|路径得画|断在哪"
+   ],
+   "exclude": [],
+   "evidence": "Mermaid",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N250 点迷路断哪)：must 收 gap hint 原话短片段并联，证据Mermaid为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-002",
+   "must": [
+    "机器学习那套|自动认流量|筛样本"
+   ],
+   "exclude": [],
+   "evidence": "ctf-ai-ml",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N252 机器学习打赛)：must 收 gap hint 原话短片段并联，证据ctf-ai-ml为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-003",
+   "must": [
+    "五类题长啥|时间怎么分|得有人带"
+   ],
+   "exclude": [],
+   "evidence": "ctf-beginner-hub",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N253 五类题时间分)：must 收 gap hint 原话短片段并联，证据ctf-beginner-hub为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-014",
+   "must": [
+    "开了几个口|按什么顺序|得排一下"
+   ],
+   "exclude": [],
+   "evidence": "solve-challenge",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N263 靶机开口顺序)：must 收 gap hint 原话短片段并联，证据solve-challenge为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-015",
+   "must": [
+    "凭证改几个|当别人用|怎么收尾"
+   ],
+   "exclude": [],
+   "evidence": "strix-authentication-jwt",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N264 凭证改字符当)：must 收 gap hint 原话短片段并联，证据strix-authentication-jwt为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-016",
+   "must": [
+    "卡在中间|中间那道|给了半句|缺哪块知识"
+   ],
+   "exclude": [],
+   "evidence": "strix-beginner-hub",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N265 卡中间半句)：must 收 gap hint 原话短片段并联，证据strix-beginner-hub为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-017",
+   "must": [
+    "换了个号|编号改成|看到别人"
+   ],
+   "exclude": [],
+   "evidence": "strix-broken-function-level-authorization",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N266 编号改别人看)：must 收 gap hint 原话短片段并联，证据strix-broken-function-level-authorization为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-020",
+   "must": [
+    "目录拿字典|试了一遍|没见过的"
+   ],
+   "exclude": [],
+   "evidence": "strix-ffuf",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N269 目录字典试遍)：must 收 gap hint 原话短片段并联，证据strix-ffuf为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-023",
+   "must": [
+    "路径和版|版本全吐|还能抠出啥"
+   ],
+   "exclude": [],
+   "evidence": "strix-information-disclosure",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N272 报错吐路径版)：must 收 gap hint 原话短片段并联，证据strix-information-disclosure为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-024",
+   "must": [
+    "只看了后缀|换个名字传|会不会被"
+   ],
+   "exclude": [],
+   "evidence": "strix-insecure-file-uploads",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N273 后缀换名传执)：must 收 gap hint 原话短片段并联，证据strix-insecure-file-uploads为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-028",
+   "must": [
+    "参数里加|跳目录的|意外的文件"
+   ],
+   "exclude": [],
+   "evidence": "strix-path-traversal-lfi-rfi",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N277 跳目录意外文)：must 收 gap hint 原话短片段并联，证据strix-path-traversal-lfi-rfi为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-030",
+   "must": [
+    "系统命令|味道进去|真有反应"
+   ],
+   "exclude": [],
+   "evidence": "strix-rce",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N278 命令味真反应)：must 收 gap hint 原话短片段并联，证据strix-rce为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-031",
+   "must": [
+    "加符号页|页面就报|注入点丢|自动跑跑"
+   ],
+   "exclude": [],
+   "evidence": "strix-sql-injection",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N279 符号报错注入跑)：must 收 gap hint 原话短片段并联，证据strix-sql-injection为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-ctf-super-hub-035",
+   "must": [
+    "内容没过滤|打开就弹|利用链写圆"
+   ],
+   "exclude": [],
+   "evidence": "strix-xss",
+   "evidence_kind": "record",
+   "note": "signals-ext batch2 白话T2(N280 留言弹框链圆)：must 收 gap hint 原话短片段并联，证据strix-xss为该记录 description/name 原文子串。"
+  },
+  {
+   "id": "community-hack-skills-056",
+   "must": [
+    "嵌进来|碰到外面"
+   ],
+   "exclude": [],
+   "evidence": "framed",
+   "evidence_kind": "record",
+   "note": "community-T1 N117 页面嵌站碰外钮：must收hint原话短片段并联，证据framed为该记录description原文子串。"
+  },
+  {
+   "id": "community-hack-skills-078",
+   "must": [
+    "申请释放|布局排"
+   ],
+   "exclude": [],
+   "evidence": "ptmalloc",
+   "evidence_kind": "record",
+   "note": "community-T1 N133 反复申请释放排布局：must收hint原话短片段并联，证据ptmalloc为该记录description原文子串。"
+  },
+  {
+   "id": "community-hack-skills-100",
+   "must": [
+    "特殊符号|拼进去"
+   ],
+   "exclude": [],
+   "evidence": "MongoDB",
+   "evidence_kind": "record",
+   "note": "community-T1 N151 特殊符号拼进查询：must收hint原话短片段并联，证据MongoDB为该记录description原文子串。"
+  },
+  {
+   "id": "community-hack-skills-107",
+   "must": [
+    "时间差|发了两次"
+   ],
+   "exclude": [],
+   "evidence": "TOCTOU",
+   "evidence_kind": "record",
+   "note": "community-T1 N157 下单扣钱时间差发两次：must收hint原话短片段并联，证据TOCTOU为该记录description原文子串。"
+  },
+  {
+   "id": "community-hack-skills-116",
+   "must": [
+    "多敲个引|抠出别"
+   ],
+   "exclude": [],
+   "evidence": "out-of-band",
+   "evidence_kind": "record",
+   "note": "community-T1 N163 多敲引号炸抠信息：must收hint原话短片段并联，证据out-of-band为该记录description原文子串。"
+  },
+  {
+   "id": "community-hack-skills-132",
+   "must": [
+    "实时刷新|怎么做检"
+   ],
+   "exclude": [],
+   "evidence": "CSWSH",
+   "evidence_kind": "record",
+   "note": "community-T1 N174 实时刷新没检查显示：must收hint原话短片段并联，证据CSWSH为该记录description原文子串。"
+  },
+  {
+   "id": "community-hack-skills-125",
+   "must": [
+    "只通一台|转进去"
+   ],
+   "exclude": [],
+   "evidence": "Chisel",
+   "evidence_kind": "record",
+   "note": "community-T1 N169 只通跳板转流量进去：must收hint原话短片段并联，证据Chisel为该记录description原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-139",
+   "must": [
+    "测试机上|搬到线上"
+   ],
+   "exclude": [],
+   "evidence": "ai-deployment",
+   "evidence_kind": "record",
+   "note": "community-T1 N181 测试行线上起不来：must收hint原话短片段并联，证据ai-deployment为该记录keywords/path原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-140",
+   "must": [
+    "接到客服|超时和胡"
+   ],
+   "exclude": [],
+   "evidence": "llm-integration",
+   "evidence_kind": "record",
+   "note": "community-T1 N182 大模型客服超时胡说：must收hint原话短片段并联，证据llm-integration为该记录keywords/path原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-141",
+   "must": [
+    "分数涨了|客诉没少"
+   ],
+   "exclude": [],
+   "evidence": "ml-evaluation",
+   "evidence_kind": "record",
+   "note": "community-T1 N183 分涨诉不少：must收hint原话短片段并联，证据ml-evaluation为该记录keywords/path原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-142",
+   "must": [
+    "损失不动|哪边出问"
+   ],
+   "exclude": [],
+   "evidence": "model-training",
+   "evidence_kind": "record",
+   "note": "community-T1 N184 训练损失不动：must收hint原话短片段并联，证据model-training为该记录keywords/path原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-143",
+   "must": [
+    "对不上问|排序都得"
+   ],
+   "exclude": [],
+   "evidence": "rag-pipeline",
+   "evidence_kind": "record",
+   "note": "community-T1 N185 问答库对不上排序：must收hint原话短片段并联，证据rag-pipeline为该记录keywords/path原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-162",
+   "must": [
+    "一个单测|心里发慌"
+   ],
+   "exclude": [],
+   "evidence": "unit-testing",
+   "evidence_kind": "record",
+   "note": "community-T1 N194 无单测改行慌：must收hint原话短片段并联，证据unit-testing为该记录keywords/path原文子串。"
+  },
+  {
+   "id": "community-ai-fullstack-delivery-273",
+   "must": [
+    "三年堆下|架构说明"
+   ],
+   "exclude": [],
+   "evidence": "architecture-doc",
+   "evidence_kind": "record",
+   "note": "community-T1 N243 三年堆写架构说明：must收hint原话短片段并联，证据architecture-doc为该记录keywords/path原文子串。"
+  },
+  {
+   "id": "community-hack-skills-082",
+   "must": [
+    "\\bidor\\b",
+    "\\bbola\\b",
+    "(?=.*\\buser\\b)(?=.*编号)",
+    "(?=.*换成)(?=.*别人的)"
+   ],
+   "exclude": [
+    "\\.\\./",
+    "\\bsqli\\b"
+   ],
+   "evidence": "IDOR and broken object authorization testing playbook.",
+   "evidence_kind": "record",
+   "note": "The record is the object-level authorization playbook: swap one identifier for another and the server hands over someone else's object. Nothing in the frontmatter says IDOR or BOLA, and a caller who describes the symptom in prose - change the user number, the returned data changes - produces zero tokens the name or description can match, so the record never enters the candidate set at all."
+  },
+  {
+   "id": "community-hack-skills-104",
+   "must": [
+    "\\blfi\\b",
+    "path traversal",
+    "(?=.*跳目录)(?=.*不该读)",
+    "(?=.*目录)(?=.*不该读)"
+   ],
+   "exclude": [
+    "\\bxxe\\b",
+    "\\bssrf\\b"
+   ],
+   "evidence": "Path traversal and LFI playbook.",
+   "evidence_kind": "record",
+   "note": "The body is the traversal and local-file-include material, but the routing text only says file paths and download endpoints. A caller reports the observation instead of the technique - put a parent-directory symbol in the parameter and an unintended file comes back - and none of those words survive tokenisation into the record."
+  },
+  {
+   "id": "community-hack-skills-128",
+   "must": [
+    "upload-to-RCE",
+    "(?=.*上传)(?=.*后缀)(?=.*脚本)",
+    "(?=.*上传)(?=.*脚本)",
+    "(?=.*\\bfile\\b)(?=.*上传)"
+   ],
+   "exclude": [
+    "\\bapk\\b",
+    "\\bsmali\\b"
+   ],
+   "evidence": "Insecure file upload playbook.",
+   "evidence_kind": "record",
+   "note": "The record covers upload validation, storage paths and the upload-to-RCE chain. The description never carries the everyday way a caller states it - the upload only checked the extension, and a renamed file was executed as a script - so the two words that actually decide the record, upload and extension, are the only retrievable handle and the frontmatter does not use them together."
+  },
+  {
+   "id": "community-hack-skills-130",
+   "must": [
+    "\\bwaf\\b",
+    "web application firewall",
+    "(?=.*\\bpayload\\b)(?=.*拦)",
+    "(?=.*防护)(?=.*编码)"
+   ],
+   "exclude": [
+    "\\bapt\\b",
+    "\\bwafw00f\\b"
+   ],
+   "evidence": "WAF bypass methodology and generic evasion techniques.",
+   "evidence_kind": "record",
+   "note": "The playbook is built on encoding, protocol-level tricks and firewall-specific weaknesses, which is exactly the vocabulary a caller uses after a payload is blocked. The record's own description already names the firewall, so the gap is that the caller's sentence names only the symptom - the filter intercepted it, a different encoding or a split request got through - and neither half appears in the routable text."
+  },
+  {
+   "id": "community-hack-skills-086",
+   "must": [
+    "\\bjndi\\b",
+    "\\blog4j2?\\b",
+    "InitialContext\\.lookup",
+    "(?=.*日志)(?=.*解析)"
+   ],
+   "exclude": [
+    "\\bxxe\\b",
+    "\\blog forging\\b"
+   ],
+   "evidence": "JNDI injection playbook.",
+   "evidence_kind": "record",
+   "note": "JNDI lookup abuse is the deepest Java-specific material in the corpus and the frontmatter does name JNDI, but a caller almost never types it: they describe a logging component that fetched and ran something from a remote address using the platform's own resolver. The two observable nouns in that sentence, the log sink and the name resolution, are the retrievable handle."
+  },
+  {
+   "id": "community-hack-skills-073",
+   "must": [
+    "\\bprintf\\b",
+    "format string",
+    "(?=.*格式化)(?=.*符号)",
+    "(?=.*格式化)(?=.*行为)"
+   ],
+   "exclude": [
+    "\\blog4j2?\\b",
+    "\\bcrlf\\b"
+   ],
+   "evidence": "Format string exploitation playbook.",
+   "evidence_kind": "record",
+   "note": "The record is the printf-family exploitation material with the %p/%s/%n write primitives. The frontmatter wording is generic enough that a caller describing the symptom - the formatted-output site misbehaves once special specifiers go in - shares no token with it, so the whole playbook is unreachable from the only phrasing people actually use."
+  },
+  {
+   "id": "community-hack-skills-092",
+   "must": [
+    "\\bsuid\\b",
+    "cron abuse",
+    "(?=.*定时)(?=.*提)",
+    "(?=.*定时)(?=.*权限)"
+   ],
+   "exclude": [
+    "\\bmimikatz\\b",
+    "\\bbloodhound\\b"
+   ],
+   "evidence": "Linux privilege escalation playbook.",
+   "evidence_kind": "record",
+   "note": "The body walks SUID/SGID binaries, capabilities and cron abuse, which is the scheduled-task-with-high-privilege case. A caller states it as an observation about a periodically executed thing on the box and what it points at, using none of the record's own words, so the record never becomes a candidate."
+  },
+  {
+   "id": "community-hack-skills-093",
+   "must": [
+    "\\brbash\\b",
+    "\\bnoexec\\b",
+    "\\bapparmor\\b|\\bseccomp\\b|\\bselinux\\b",
+    "(?=.*命令)(?=.*拦)"
+   ],
+   "exclude": [
+    "\\bmacos\\b",
+    "\\bmimikatz\\b"
+   ],
+   "evidence": "Linux security mechanism bypass playbook.",
+   "evidence_kind": "record",
+   "note": "The record is the post-exploitation evasion material for restricted shells, read-only filesystems and MAC filters. Its frontmatter names the mechanisms, never the experience, so the caller sentence - several layers of restriction are installed, command execution is blocked, another invocation style runs anyway - matches nothing and the record stays invisible."
+  },
+  {
+   "id": "community-hack-skills-124",
+   "must": [
+    "\\bpcap\\b",
+    "\\bwireshark\\b",
+    "\\btshark\\b",
+    "(?=.*流量)(?=.*会话)"
+   ],
+   "exclude": [
+    "\\bwifi\\b",
+    "\\bnetcat\\b"
+   ],
+   "evidence": "Traffic analysis and PCAP forensics playbook.",
+   "evidence_kind": "record",
+   "note": "The record is the Wireshark/tshark capture-forensics material. Nothing in the routable text says capture or pcap, so a caller who describes the artefact - a mirrored traffic dump on the switch is too large, pull the few anomalous sessions out of it - has traffic and session words that the record's description never uses together."
+  },
+  {
+   "id": "community-ai-fullstack-delivery-159",
+   "must": [
+    "\\be2e\\b",
+    "\\bplaywright\\b",
+    "(?=.*链路)(?=.*失败)",
+    "(?=.*失败)(?=.*从头)"
+   ],
+   "exclude": [
+    "\\bjunit\\b",
+    "\\bunit test\\b"
+   ],
+   "evidence": "e2e-testing",
+   "evidence_kind": "record",
+   "note": "The record is the end-to-end suite material; its adapted description carries only the upstream path, so the two tokens that carry the capability, e2e and the browser driver, never reach the router. A caller reports the failure mode instead - the whole chain takes hours, a red step means rerunning from the start - and the record has no word for either."
+  }
+ ]
+}

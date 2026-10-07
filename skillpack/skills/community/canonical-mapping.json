@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1.0",
+  "policy": "Map source capabilities to existing canonical skills before adding a new top-level route.",
+  "mappings": [
+    {"source": "ctf-reverse", "canonical": ["reverse-engineering", "ida-reverse", "radare2", "apk-reverse", "firmware-pentest"]},
+    {"source": "ctf-pwn", "canonical": ["pwn-chain"]},
+    {"source": "ctf-web", "canonical": ["api-security", "pentest-tools", "browser-automation"]},
+    {"source": "ctf-forensics", "canonical": ["digital-forensics", "protocol-reverse"]},
+    {"source": "ctf-malware", "canonical": ["malware-analysis"]},
+    {"source": "ctf-osint", "canonical": ["threat-intelligence"]},
+    {"source": "hack-api", "canonical": ["api-security", "identity-federation"]},
+    {"source": "hack-ad", "canonical": ["windows-ad", "attack-chain", "edr-bypass-re"]},
+    {"source": "hack-cloud", "canonical": ["cloud-k8s"]},
+    {"source": "hack-injection", "canonical": ["pentest-tools", "code-audit"]},
+    {"source": "hack-mobile", "canonical": ["apk-reverse", "mobile-reverse"]},
+    {"source": "ai-delivery-security", "canonical": ["case-review", "docs-generator", "security-engineer"]}
+  ]
+}

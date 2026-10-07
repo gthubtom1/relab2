@@ -1,0 +1,1 @@
+{"drive_parts": ["C", ":", "\\", "Windows", "\\", "System32"], "expect": {"exit": 20, "verdict": "DENY"}, "id": "F6-drive", "masked_sample": "C[DRIVE]Windows[SEP]System32 while root sits on another drive", "morphology": "drive-letter escape", "status": "verified"}

@@ -1,0 +1,110 @@
+{
+  "flow": "cli-tool",
+  "note": "标准阶段身份和顺序不可删除、改名或重排；可以在标准阶段之间增加自定义阶段。每条必须有 requires，禁止空 confirm。不要套二开四停点。退出码 0 ≠ 业务成功。能交给别人用的停点必须有 build。边做边留下以后还能用的记录；还在做不拦，要点「做成了、进下一阶段」时账本里必须已有这些记录。领域含义在 .agents/skills/cli-tool/SKILL.md。",
+  "phases": [
+    {
+      "id": "0-spec",
+      "name": "需求与验收",
+      "stop_point": "需求合同确认",
+      "goal": "先讨论再记，禁止一句话开写。谁来用/核心命令/输入输出与退出码。问接不接自己的收费授权不要提前到本格，等到核心能用、改完命令体验之后当面问。record --kind spec 须 acceptance。",
+      "requires": [
+        "spec"
+      ]
+    },
+    {
+      "id": "1-arch",
+      "name": "架构与地基",
+      "stop_point": "架构确认",
+      "goal": "命令结构、配置/数据存放、分发形态；record --kind arch 须 decision。",
+      "requires": [
+        "arch"
+      ]
+    },
+    {
+      "id": "2-impl",
+      "name": "分阶段实现",
+      "stop_point": "核心命令实现确认",
+      "goal": "可跑候选 + 真实输入到真实输出；改完须复验已记下的旧命令/选项还在；核心能用之后先改命令体验并问接不接自己的收费授权，不要直接进分发包；test 须 product|human。",
+      "requires": [
+        "candidate",
+        "test"
+      ],
+      "physical_checks": [
+        "command_flow"
+      ]
+    },
+    {
+      "id": "3-build",
+      "name": "构建候选",
+      "stop_point": "构建候选确认",
+      "goal": "须已当面问过接不接自己的收费授权（实现后写入 spec/arch；开场/架构格不算）。与源码同源的分发产物，落哈希，candidate --bless。没问不要打 zip。",
+      "requires": [
+        "candidate"
+      ],
+      "require_bless": true,
+      "physical_checks": [
+        "command_flow"
+      ]
+    },
+    {
+      "id": "4-package",
+      "name": "打包与跨平台",
+      "stop_point": "分发包与跨平台确认",
+      "goal": "须已问过接不接自己的收费授权：不接（已写入 spec/arch）仍打包；若接：不要为过关造页、造窗、造启动器；三种基础是对才放行主命令、错不放行、到期停主命令。接了则本格起须 license_dataflow 机器观察（这场不接不套）。过关不要靠后来加窗。作废/断网按这场要不要测，不是每场必测。再须一段未连正式的孪生/先测，另记已连正式，一句合成不算。不要为过关硬接。本格起产品根 FEATURES.md 须有真实行（功能名+作用），并有定档冻本对照；空表头不算记得。声称跨平台（跨平台/Linux/macOS/Darwin）时磁盘须有不止一份分发包；一份本机包不能点绿。其它平台未真装未真跑须对人说未验证。build 须 artifact 为已有文件。",
+      "requires": [
+        "build"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "package_install",
+        "command_flow"
+      ]
+    },
+    {
+      "id": "5-install",
+      "name": "干净安装与首次运行",
+      "stop_point": "干净环境首次运行确认",
+      "goal": "只验一台无开发环境的机器跑通主命令；其它声称平台未装未跑须对人说未验证。本阶段新 test。当前候选必须仍是 4-package 打进包的那份哈希。",
+      "requires": [
+        "test"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "clean_install",
+        "command_flow"
+      ]
+    },
+    {
+      "id": "6-update",
+      "name": "更新与回滚",
+      "stop_point": "更新回滚演练确认",
+      "goal": "v1→v2、配置保留、回滚后同一主命令对同一真实输入复验；本阶段新 test + build。须 follow 三句和客户路径 cover（已装旧命令升包，不能 SKIP）。",
+      "requires": [
+        "build",
+        "test",
+        "follow",
+        "cover"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "update_rollback",
+        "command_flow"
+      ]
+    },
+    {
+      "id": "7-handoff",
+      "name": "交付与验收",
+      "stop_point": "交付验收确认",
+      "goal": "分发包交到手上；真实机器主命令点头；当前候选须仍是更新格那份哈希。本阶段新 test + 最终 build。",
+      "requires": [
+        "build",
+        "test"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "handoff",
+        "command_flow"
+      ]
+    }
+  ]
+}

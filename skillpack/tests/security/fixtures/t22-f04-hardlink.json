@@ -1,0 +1,1 @@
+{"construct": "os.link(<lab-outside>\\orig.bin, <lab-case>\\hard.bin); guard sees st_nlink=2", "expect": {"exit": 20, "verdict": "DENY"}, "id": "F4-hardlink", "masked_sample": "hard.bin with nlink=2 aliasing outside file", "morphology": "hardlink aliasing a file outside the root", "status": "verified"}

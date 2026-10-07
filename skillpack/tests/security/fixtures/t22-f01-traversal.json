@@ -1,0 +1,1 @@
+{"candidate_parts": ["..", "..", "Windows", "System32", "calc.exe"], "expect": {"exit": 20, "verdict": "DENY"}, "id": "F1-traversal", "masked_sample": "..[SEP]..[SEP]Windows[SEP]System32[SEP]calc.exe", "morphology": "path traversal via dot-dot segments", "status": "verified"}

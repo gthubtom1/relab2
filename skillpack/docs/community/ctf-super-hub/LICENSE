@@ -1,0 +1,69 @@
+# Mixed License Notice
+
+This repository contains a mixture of original and third-party content.
+
+## 1. Original repository additions and integrations
+
+Unless otherwise noted, the repository-level additions and newly created integration content authored for this repository are provided under the MIT License.
+
+These include, for example:
+
+- `ctf-super-hub/`
+- `ctf-beginner-hub/references/*`
+- `README.md`
+- `START-HERE.md`
+- `SKILL-INDEX.md`
+- `docs/*`
+- `.github/*`
+- `scripts/validate_skills.py`
+- `scripts/install_ctf_tools.sh`（integrated/supplemented version）
+- `install-to-codex.sh`
+- repository-level documentation files
+
+Copyright (c) 2026 asdfgh1445
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of these original repository additions and associated documentation files (the
+"Software"), to deal in the Software without restriction, including without
+limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom
+the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+## 2. Imported third-party content
+
+This repository also includes imported third-party content under their own
+licenses.
+
+### `brainstorming/`
+- Source: `https://github.com/foryourhealth111-pixel/Vibe-Skills`
+- License: Apache License 2.0
+- Local copy of referenced license: `third_party/Vibe-Skills-LICENSE`
+
+### `ctf-ai-ml/` `ctf-crypto/` `ctf-forensics/` `ctf-malware/` `ctf-misc/` `ctf-osint/` `ctf-pwn/` `ctf-reverse/` `ctf-web/` `ctf-writeup/` `solve-challenge/`
+- Source: `https://github.com/ljagiello/ctf-skills`
+- License: treated according to their upstream licensing and the corresponding notices recorded in `THIRD_PARTY_NOTICES.md`
+
+### `strix-*` and `strix-beginner-hub`
+- Source: imported from the local Strix skill set; see `THIRD_PARTY_NOTICES.md` for attribution status and follow-up verification notes
+- License: treat according to their upstream licensing and the corresponding notices recorded in `THIRD_PARTY_NOTICES.md`
+
+## 3. Precedence
+
+For any third-party imported content, the original upstream license terms take precedence over the MIT terms above.
+
+## 4. Additional notices
+
+Please read:
+- `THIRD_PARTY_NOTICES.md`
+- `third_party/Vibe-Skills-LICENSE`

@@ -1,0 +1,1 @@
+{"construct": "mklink /J <lab-case>\\link <lab-outside>", "expect": {"exit": 20, "verdict": "DENY"}, "id": "F3-junction", "link_rel": ["link", "secret.txt"], "masked_sample": "junction link[SEP]secret.txt -> outside root", "morphology": "Windows junction/reparse point planted under case root", "status": "verified"}

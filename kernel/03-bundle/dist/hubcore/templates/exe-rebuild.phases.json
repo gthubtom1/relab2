@@ -1,0 +1,123 @@
+{
+  "flow": "exe-rebuild",
+  "note": "对人八个停点：目标、核心（含第二道门）、产品边界、界面回归、授权页启动器、给别人的包、覆盖/官方更新、交付。已 init 的七格合同不静默加交付格；更新做成了不等于交到人手里。隔离/工具/实验连续做，不逐步索要“继续”。state 只做顺序、使命修订、候选血缘、哈希和最小制品门，不判断逆向结论真假。故事 A–G 见 workflows/exe-rebuild.md。顺序是核心→主人定边界→改界面并回归→再授权页→打包→覆盖更新→交付。已 init 的产品合同里若仍是旧四格（1-access 下一格 2-license），合同文件不静默改成七格或八格；授权/出货格作废、不要执行、不要 confirm 出货。旧四格合同不要 force 重建。边做边留下以后还能用的记录；还在做不拦，要点「做成了、进下一阶段」时账本里必须已有这些记录。记下的是当时那件事以后还用得上的东西，不是所有产品都去抄授权页。",
+  "phases": [
+    {
+      "id": "0-discover-plan",
+      "name": "目标与访问路线",
+      "stop_point": "目标与访问路线确认",
+      "goal": "AI自行完成身份/baseline/隔离启动/依赖、可见拒绝初探；壳/类型只当约束。用 state plan 锁定当前访问目标、可观察成功标准、主路线和备路线。用户只确认目标/范围/路线。「可以跑」只覆盖这一次启动，不是已经隔离。",
+      "requires": [
+        "mission",
+        "baseline"
+      ]
+    },
+    {
+      "id": "1-access",
+      "name": "核心可用（含第二道门）",
+      "stop_point": "核心可用确认",
+      "goal": "同一access候选真实进入核心并可供测试；入口门与动作门分开取证；function-map.authorization_boundaries含entry/action/public/prereq。access须method/outcome/evidence/evidence_level(product|human)/entry_gate/action_gate/direct_launch/revert。静态串/窗口/原始EXE/launcher-only/UNKNOWN动作门不算。写动作以主功能为准。第二道门reopen回1-access。",
+      "requires": [
+        "access",
+        "function-map"
+      ],
+      "candidate_role": "access",
+      "artifact_phase": true,
+      "physical_checks": [
+        "core_entry"
+      ]
+    },
+    {
+      "id": "2-boundary",
+      "name": "产品边界",
+      "stop_point": "产品边界确认",
+      "goal": "主人点头三选一：逻辑分离 / 物理分离 / 这场只换皮。只换皮必须把 SKIP 写进 arch.decision。AI只摆代价，不得代决物理拆。「测中枢/随便改」不能当分离完成。record --kind arch 须 decision。未点头不准改核心UI，更不准先做授权页。",
+      "requires": [
+        "arch"
+      ],
+      "artifact_phase": true
+    },
+    {
+      "id": "3-ui",
+      "name": "界面与核心回归",
+      "stop_point": "界面与核心回归确认",
+      "goal": "按已点头的边界改窗口标题/网页/PE图标/任务栏/托盘图/托盘字，改一层验一层。ui须outcome+逐条mapping。用这一份新候选再测核心：本阶段新test（product|human），禁止沿用1-access旧证据。换皮后主功能坏了reopen，不要接着做授权或打包。",
+      "requires": [
+        "ui",
+        "test"
+      ],
+      "candidate_role": "ui",
+      "artifact_phase": true,
+      "physical_checks": [
+        "ui_regression"
+      ]
+    },
+    {
+      "id": "4-license",
+      "name": "授权页启动器",
+      "stop_point": "授权页启动器确认",
+      "goal": "没有「可以不接」，不要问接不接，走授权页启动器。写成这场不接不能过本格。界面回归之后才接自有授权。先把通用授权页改成这个产品的样子，主人看过再接线。授权页就是启动器。三种基础须真跑：有效才开核心；无效或一进来就过期不开核心；用到一半过期则关核心且授权页一起退。藏页/关页是附加，仍要测，不能顶第一种。作废/断网按这场合同，不是每场必测。挡住对方页。license须topology/outcome/updater_treatment/evidence_level(product|human)；真跑须走启动器；须有本阶段新test。脚本直开核心不能当闭环。开发探针不得留在出货候选。",
+      "requires": [
+        "license",
+        "test"
+      ],
+      "candidate_role": "licensed",
+      "artifact_phase": true,
+      "physical_checks": [
+        "core_closed",
+        "license_dataflow"
+      ]
+    },
+    {
+      "id": "5-pack",
+      "name": "给别人的包",
+      "stop_point": "给别人的包确认",
+      "goal": "须已经过授权页启动器、须已经有license记录。没有「可以不接」，写成这场不接不能出货。打客户能装的包：build.artifact+candidate_sha(=当前release候选)+install_receipt（干净安装+首次启动）。覆盖更新不在这一格一次吞掉。桩启动器包不能冒充release。包内主程序哈希=刚验过的那一版。",
+      "requires": [
+        "build"
+      ],
+      "candidate_role": "release",
+      "artifact_phase": true,
+      "require_bless": true,
+      "physical_checks": [
+        "package_install",
+        "core_closed",
+        "license_dataflow"
+      ]
+    },
+    {
+      "id": "6-update",
+      "name": "覆盖更新与官方更新",
+      "stop_point": "覆盖更新与官方更新确认",
+      "goal": "覆盖=软件里下、有进度、弹出安装、默认旧路径盖成同一个软件，或该项SKIP。官方更新失败或进自有三条通道。平台能下ZIP≠软件里立即更新；另装文件夹≠覆盖。缺测对人说未验证，不要写进confirm证据。当前release必须仍是5-pack打进包的那份哈希。dossier记下下次怎么重做（上游版本/运输方式/授权链/补丁点/自己的页/官方更新/打包/双门/replay_steps：边界→UI→授权→打包→覆盖更新分开）。一版一个工作目录。本阶段新test。",
+      "requires": [
+        "test",
+        "dossier",
+        "cover"
+      ],
+      "candidate_role": "release",
+      "artifact_phase": true,
+      "physical_checks": [
+        "update_flow",
+        "core_closed",
+        "license_dataflow"
+      ]
+    },
+    {
+      "id": "7-handoff",
+      "name": "交付与验收",
+      "stop_point": "交付验收确认",
+      "goal": "包交到用户手上；真实环境主流程点头；冻本和改动图还对得上这一版。本阶段新 test + 最终 build。更新做成了不等于已经交到人手里。",
+      "requires": [
+        "build",
+        "test"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "handoff",
+        "core_closed",
+        "license_dataflow"
+      ]
+    }
+  ]
+}

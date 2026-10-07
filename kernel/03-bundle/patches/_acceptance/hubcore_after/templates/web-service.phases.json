@@ -1,0 +1,111 @@
+{
+  "flow": "web-service",
+  "note": "标准阶段身份和顺序不可删除、改名或重排；可以在标准阶段之间增加自定义阶段。每条必须有 requires，禁止空 confirm。不要套二开四停点。接口 200 ≠ 业务成功。能交给别人用的停点必须有 build。边做边留下以后还能用的记录；还在做不拦，要点「做成了、进下一阶段」时账本里必须已有这些记录。领域含义在 .agents/skills/web-service/SKILL.md。",
+  "phases": [
+    {
+      "id": "0-spec",
+      "name": "需求与验收",
+      "stop_point": "需求合同确认",
+      "goal": "先讨论再记，禁止一句话开写、禁止先写页面。受众/核心用户主流程/可观察成功标准；登录鉴权本格问清。登录鉴权≠自己的收费授权。问接不接自己的收费授权不要提前到本格，等到核心能用、改完页面之后当面问。record --kind spec 须 acceptance。",
+      "requires": [
+        "spec"
+      ]
+    },
+    {
+      "id": "1-arch",
+      "name": "架构与地基",
+      "stop_point": "架构确认",
+      "goal": "前后端边界、数据 schema、API 契约、安全地基；record --kind arch 须 decision。",
+      "requires": [
+        "arch"
+      ]
+    },
+    {
+      "id": "2-impl",
+      "name": "分阶段实现",
+      "stop_point": "核心接口与页面实现确认",
+      "goal": "可跑候选 + 真实 HTTP 主流程；改完须复验已记下的旧功能/页面组件还在；核心能用之后先改页面并问接不接自己的收费授权，不要直接进预发/上线；test 须 product|human。",
+      "requires": [
+        "candidate",
+        "test"
+      ],
+      "physical_checks": [
+        "business_flow"
+      ]
+    },
+    {
+      "id": "3-build",
+      "name": "构建候选",
+      "stop_point": "构建候选确认",
+      "goal": "须已当面问过接不接自己的收费授权（实现后写入 spec/arch；开场/架构格不算）。与源码同源的可复现产物（容器镜像/发布包），落哈希，candidate --bless。没问不要打镜像包。",
+      "requires": [
+        "candidate"
+      ],
+      "require_bless": true,
+      "physical_checks": [
+        "business_flow"
+      ]
+    },
+    {
+      "id": "4-staging",
+      "name": "预发部署与冒烟",
+      "stop_point": "预发环境冒烟确认",
+      "goal": "须已问过接不接自己的收费授权（实现后写入 spec/arch；开场/架构格不算）：不接仍预发；若接：网站自己的收费门已改成这个产品的样子（主人看过；站点页面或接口门，不要做成桌面授权页、不要造启动器）且三种基础真跑（对才提供服务；错不提供；到期停服务访问。不要关软件、不要藏授权页。作废/断网按这场要不要测，不是每场必测）。接了则本格起须 license_dataflow 机器观察（这场不接不套）。再须一段未连正式的孪生/先测，另记已连正式，一句合成不算。不要为过关硬接。本格起产品根 FEATURES.md 须有真实行（功能名+作用），并有定档冻本对照；空表头不算记得。预发真实网络冒烟；本阶段新 test + build。",
+      "requires": [
+        "build",
+        "test"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "staging_business"
+      ]
+    },
+    {
+      "id": "5-data",
+      "name": "数据迁移与备份",
+      "stop_point": "数据迁移与备份确认",
+      "goal": "迁移向前+备份+失败回滚并复验数据；本阶段新 test。当前候选必须仍是 4-staging 打进预发的那份哈希。",
+      "requires": [
+        "test",
+        "follow"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "migration_backup",
+        "business_flow"
+      ]
+    },
+    {
+      "id": "6-release",
+      "name": "上线与回滚演练",
+      "stop_point": "上线回滚演练确认",
+      "goal": "生产部署 + 回滚演练 + 回滚后主流程；本阶段新 test + build。须 follow 三句和客户路径 cover（生产租户还在用的那份，不能 SKIP）。",
+      "requires": [
+        "build",
+        "test",
+        "follow",
+        "cover"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "release_rollback",
+        "business_flow"
+      ]
+    },
+    {
+      "id": "7-ops",
+      "name": "交付与运维",
+      "stop_point": "交付验收确认",
+      "goal": "运维手册交到手上；生产主流程点头；当前候选须仍是上线格那份哈希。本阶段新 test + 最终 build。",
+      "requires": [
+        "build",
+        "test"
+      ],
+      "artifact_phase": true,
+      "physical_checks": [
+        "handoff",
+        "business_flow"
+      ]
+    }
+  ]
+}

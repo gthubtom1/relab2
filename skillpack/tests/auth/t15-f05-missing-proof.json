@@ -1,0 +1,1 @@
+{"allow_host_labels": ["target-05", "t15", "local"], "omit": "auth-profile.json", "note": "no auth proof file at all; scope.md alone (even granted+ready) must exit 20"}

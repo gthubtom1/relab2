@@ -1,0 +1,27 @@
+# ── 运行时产物 ──
+__pycache__/
+*.pyc
+*.pyo
+node_modules/
+
+# OS
+Thumbs.db
+.DS_Store
+Desktop.ini
+
+# 运行时工作目录（每次跑路由都会重建）
+skillpack/work/
+kernel/state/
+*.pid
+
+# 可能含 token / 主人隐私的快照，绝不进版本库
+kernel/04-console/safebox/
+kernel/04-console/hostlist/
+kernel/safebox/
+safebox/
+
+# 敏感：别把凭据带进仓库
+*.env
+.env.*
+mcp-auth.json
+mcp_config.json

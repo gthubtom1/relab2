@@ -1,0 +1,1 @@
+{"allow_host_labels": ["allowed", "example"], "expect": {"exit": 20, "verdict": "DENY"}, "host_labels": ["allowed", "example"], "id": "F10-port", "masked_sample": "allowed[.]example:8443 over https while only 443 is allowed", "morphology": "port out of scope (and cleartext scheme when only https allowed)", "port": 8443, "scheme_parts": ["https", "://"], "status": "verified"}

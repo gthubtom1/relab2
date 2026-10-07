@@ -1,0 +1,1401 @@
+{
+  "generated_at": "2026-09-26T22:47:25Z",
+  "product": "D:\\临时项目\\hub-dock",
+  "files": [
+    {
+      "src": "hub/.agents/skills/desktop-product/SKILL.md",
+      "dst": "workflows/desktop-product.md",
+      "before_bytes": 23693,
+      "after_bytes": 22976,
+      "dropped_lines": 5,
+      "ledger": [
+        {
+          "line": 67,
+          "action": "fixup",
+          "detail": "（不要换成 `github`）"
+        },
+        {
+          "line": 68,
+          "action": "fixup",
+          "detail": "| 发 Release / 打 tag | `github`（真要发、主人点名了才换；一次只开一本；发前须有答句） |"
+        },
+        {
+          "line": 71,
+          "action": "drop_line",
+          "detail": "| 喊渗透自己的站 / 风控 / 爆破 / 卡密会不会被偷 | `security-audit`；深度按 `../README.md` 开一本 |"
+        },
+        {
+          "line": 74,
+          "action": "drop_line",
+          "detail": "| 需要领域深度（代码审计/API/数据库/协议/取证…） | 去 vendored 库：见 `../README.md` 的\"能力→深库\"表 |"
+        },
+        {
+          "line": 76,
+          "action": "drop_line",
+          "detail": "按 `use_when` 匹配，一次只加载当前最需要的那一个。产品任务去用户技能目录读中枢技能，不要在产品夹里建或找这套技能。完善中枢才改这份源仓的 `.agents/skills"
+        }
+      ],
+      "tag": "workflow",
+      "name": "desktop-product"
+    },
+    {
+      "src": "hub/.agents/skills/web-service/SKILL.md",
+      "dst": "workflows/web-service.md",
+      "before_bytes": 22544,
+      "after_bytes": 21857,
+      "dropped_lines": 5,
+      "ledger": [
+        {
+          "line": 69,
+          "action": "fixup",
+          "detail": "（不要换成 `github`）"
+        },
+        {
+          "line": 70,
+          "action": "fixup",
+          "detail": "| 发 Release / 打 tag | `github`（真要发、主人点名了才换；一次只开一本；发前须有答句） |"
+        },
+        {
+          "line": 73,
+          "action": "drop_line",
+          "detail": "| 喊渗透自己的站 / 风控 / 爆破 / 卡密会不会被偷 | `security-audit`；深度按 `../README.md` 开一本 |"
+        },
+        {
+          "line": 78,
+          "action": "drop_line",
+          "detail": "| 需要领域深度（代码审计/API/数据库/协议/取证…） | 去 vendored 库：见 `../README.md` 的\"能力→深库\"表 |"
+        },
+        {
+          "line": 80,
+          "action": "drop_line",
+          "detail": "按 `use_when` 匹配，一次只加载当前最需要的那一个；原生深度不够就按上表去 vendored 库开一个（用它的方法，证据仍回 `state`/`INVARIANTS`）。"
+        }
+      ],
+      "tag": "workflow",
+      "name": "web-service"
+    },
+    {
+      "src": "hub/.agents/skills/cli-tool/SKILL.md",
+      "dst": "workflows/cli-tool.md",
+      "before_bytes": 21564,
+      "after_bytes": 20939,
+      "dropped_lines": 6,
+      "ledger": [
+        {
+          "line": 68,
+          "action": "fixup",
+          "detail": "不要换成 `github`"
+        },
+        {
+          "line": 69,
+          "action": "fixup",
+          "detail": "（不要换成 `github`）"
+        },
+        {
+          "line": 70,
+          "action": "fixup",
+          "detail": "| 发 Release / 打 tag | `github`（真要发、主人点名了才换；一次只开一本；发前须有答句） |"
+        },
+        {
+          "line": 72,
+          "action": "drop_line",
+          "detail": "| 喊渗透 / 风控 / 爆破 / 卡密会不会被偷 | `security-audit`；深度按 `../README.md` 开一本 |"
+        },
+        {
+          "line": 74,
+          "action": "drop_line",
+          "detail": "| 需要领域深度（代码审计/API/数据库/协议/取证…） | 去 vendored 库：见 `../README.md` 的\"能力→深库\"表 |"
+        },
+        {
+          "line": 76,
+          "action": "drop_line",
+          "detail": "按 `use_when` 匹配，一次只加载当前最需要的那一个；原生深度不够就按上表去 vendored 库开一个（用它的方法，证据仍回 `state`/`INVARIANTS`）。"
+        }
+      ],
+      "tag": "workflow",
+      "name": "cli-tool"
+    },
+    {
+      "src": "hub/.agents/skills/source-takeover/SKILL.md",
+      "dst": "workflows/source-takeover.md",
+      "before_bytes": 23642,
+      "after_bytes": 23028,
+      "dropped_lines": 5,
+      "ledger": [
+        {
+          "line": 72,
+          "action": "drop_line",
+          "detail": "| 喊渗透自己的站 / 风控 / 爆破 / 卡密会不会被偷 | `security-audit`；深度按 `../README.md` 开一本 |"
+        },
+        {
+          "line": 76,
+          "action": "fixup",
+          "detail": "（不要换成 `github`；后半段走完才换）"
+        },
+        {
+          "line": 77,
+          "action": "fixup",
+          "detail": "| 发 Release / 打 tag | `github`（真要发、主人点名了才换；一次只开一本；发前须有答句） |"
+        },
+        {
+          "line": 81,
+          "action": "drop_line",
+          "detail": "| 需要领域深度（代码审计/协议/取证/二进制…） | 去 vendored 库：见 `../README.md` 的\"能力→深库\"表 |"
+        },
+        {
+          "line": 85,
+          "action": "drop_line",
+          "detail": "按 `use_when` 匹配，一次只加载当前最需要的那一个；原生深度不够就按上表去 vendored 库开一个（用它的方法，证据仍回 `state`/`INVARIANTS`）。"
+        }
+      ],
+      "tag": "workflow",
+      "name": "source-takeover"
+    },
+    {
+      "src": "hub/.agents/skills/exe-rebuild/SKILL.md",
+      "dst": "workflows/exe-rebuild.md",
+      "before_bytes": 43866,
+      "after_bytes": 42466,
+      "dropped_lines": 3,
+      "ledger": [
+        {
+          "line": 132,
+          "action": "drop_line",
+          "detail": "连续完成：锁 baseline、做工作拷贝、补真实运行依赖（安装包载荷/sidecar 要能跑完退出，缺的写明未抽）；先记下可见拒绝（起来之前还是某个动作之后），壳/类型只当约束，"
+        },
+        {
+          "line": 223,
+          "action": "drop_line",
+          "detail": "| 进核心 / 找门 | 找门细活交给副插件或主人自加技能；中枢只登记 `access` / `anchor` / `function-map`。`reverse-engineer"
+        },
+        {
+          "line": 232,
+          "action": "drop_line",
+          "detail": "分析默认用客人细技能；`HUB-INDEX` / vendor 叶子不是第二套默认入口。需要具体框架/壳/工具时，先开副插件或主人自加的专业技能；没有副插件才按 `../READM"
+        }
+      ],
+      "tag": "workflow",
+      "name": "exe-rebuild"
+    },
+    {
+      "src": "hub/.agents/skills/protocol-automation/SKILL.md",
+      "dst": "workflows/protocol-automation.md",
+      "before_bytes": 14953,
+      "after_bytes": 14553,
+      "dropped_lines": 1,
+      "ledger": [
+        {
+          "line": 178,
+          "action": "drop_line",
+          "detail": "**表里写的是「要哪一类能力」，不是具体卡名。** 本机当场挂上哪本就用哪本；缺哪一类就去控制台装（副插件）或加（自己的技能），不要照着名字去找一本本机没有的书。"
+        }
+      ],
+      "tag": "workflow",
+      "name": "protocol-automation"
+    },
+    {
+      "src": "hub/.agents/skills/security-audit/SKILL.md",
+      "dst": "docs/methods/security-audit.md",
+      "before_bytes": 6653,
+      "after_bytes": 5587,
+      "dropped_lines": 1,
+      "ledger": [
+        {
+          "line": 14,
+          "action": "drop_line",
+          "detail": "> 需要更深时（代码审计 / API / 数据库 / 供应链 / 身份联合 / AD / 云 / LLM 安全），去 vendored 库对应 skill——见 `../READM"
+        }
+      ],
+      "tag": "method-required",
+      "name": "security-audit"
+    },
+    {
+      "src": "hub/.agents/skills/review/SKILL.md",
+      "dst": "docs/methods/review.md",
+      "before_bytes": 16324,
+      "after_bytes": 16288,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "review"
+    },
+    {
+      "src": "hub/.agents/skills/packaging/SKILL.md",
+      "dst": "docs/methods/packaging.md",
+      "before_bytes": 15010,
+      "after_bytes": 14977,
+      "dropped_lines": 1,
+      "ledger": [
+        {
+          "line": 20,
+          "action": "fixup",
+          "detail": "不要从本书跳到 `github`。"
+        }
+      ],
+      "tag": "method-required",
+      "name": "packaging"
+    },
+    {
+      "src": "hub/.agents/skills/data-storage/SKILL.md",
+      "dst": "docs/methods/data-storage.md",
+      "before_bytes": 2934,
+      "after_bytes": 2928,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "data-storage"
+    },
+    {
+      "src": "hub/.agents/skills/debugging-troubleshooting/SKILL.md",
+      "dst": "docs/methods/debugging-troubleshooting.md",
+      "before_bytes": 1878,
+      "after_bytes": 1872,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "debugging-troubleshooting"
+    },
+    {
+      "src": "hub/.agents/skills/ui-design/SKILL.md",
+      "dst": "docs/methods/ui-design.md",
+      "before_bytes": 4935,
+      "after_bytes": 4929,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "ui-design"
+    },
+    {
+      "src": "hub/.agents/skills/windows-environment/SKILL.md",
+      "dst": "docs/methods/windows-environment.md",
+      "before_bytes": 2257,
+      "after_bytes": 2251,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "windows-environment"
+    },
+    {
+      "src": "hub/.agents/skills/performance-optimization/SKILL.md",
+      "dst": "docs/methods/performance-optimization.md",
+      "before_bytes": 1760,
+      "after_bytes": 1754,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "performance-optimization"
+    },
+    {
+      "src": "hub/.agents/skills/research-reuse/SKILL.md",
+      "dst": "docs/methods/research-reuse.md",
+      "before_bytes": 1724,
+      "after_bytes": 1718,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "research-reuse"
+    },
+    {
+      "src": "hub/.agents/skills/project-init/SKILL.md",
+      "dst": "docs/methods/project-init.md",
+      "before_bytes": 2733,
+      "after_bytes": 2733,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "project-init"
+    },
+    {
+      "src": "hub/.agents/skills/software-integration/SKILL.md",
+      "dst": "docs/methods/software-integration.md",
+      "before_bytes": 2524,
+      "after_bytes": 2518,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "software-integration"
+    },
+    {
+      "src": "hub/.agents/skills/release-readiness/SKILL.md",
+      "dst": "docs/methods/release-readiness.md",
+      "before_bytes": 7264,
+      "after_bytes": 7017,
+      "dropped_lines": 3,
+      "ledger": [
+        {
+          "line": 14,
+          "action": "fixup",
+          "detail": "不要自动换成 `github`"
+        },
+        {
+          "line": 25,
+          "action": "drop_line",
+          "detail": "- 发前 `state gate --product` 须退出 0（拦账本，拦不住终端 `gh`；二开 `gate` 不走原创答句门，仍须授权格已点头）。完善中枢戴本帽不要跑产品 "
+        },
+        {
+          "line": 31,
+          "action": "fixup",
+          "detail": "不要自动换成 `github`"
+        }
+      ],
+      "tag": "method-required",
+      "name": "release-readiness"
+    },
+    {
+      "src": "hub/.agents/skills/reverse-engineering/SKILL.md",
+      "dst": "docs/methods/reverse-engineering.md",
+      "before_bytes": 12226,
+      "after_bytes": 10548,
+      "dropped_lines": 4,
+      "ledger": [
+        {
+          "line": 19,
+          "action": "drop_line",
+          "detail": "2. `NOW`：自己用一句话锁层（起来之前还是某个动作之后？改的是展示还是判定？工具在场变不变？对端撤走变不变？）。这句是笔记，不是对主人交差。说不出层，仍禁止打补丁、禁止 co"
+        },
+        {
+          "line": 32,
+          "action": "drop_line",
+          "detail": "开工具/补丁前，同一问可同时开 3–4 本副插件或自加技能，各自写层、切入、相反预测、是否绕路；不是投票同一叙事。没区分性实验禁止打补丁。两轮无新证据就停。子代理说没问题 ≠ 层已"
+        },
+        {
+          "line": 46,
+          "action": "drop_line",
+          "detail": "本 skill 管**要交什么证据**：`entry_gate` / `action_gate` 分开，且写动作必须自己触发。怎么找门用副插件或主人自加的专业技能，同一问最多 3–"
+        },
+        {
+          "line": 52,
+          "action": "drop_line",
+          "detail": "没有副插件才读 `HUB-INDEX.md` 当后备。不要在本技能里用类型名（.NET / APK / Go）当开手册条件。看见 IP ≠ `protocol-reverse`。内"
+        }
+      ],
+      "tag": "method-required",
+      "name": "reverse-engineering"
+    },
+    {
+      "src": "hub/.agents/skills/browser-testing/SKILL.md",
+      "dst": "docs/methods/browser-testing.md",
+      "before_bytes": 1900,
+      "after_bytes": 1894,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "browser-testing"
+    },
+    {
+      "src": "hub/.agents/skills/project-integration/SKILL.md",
+      "dst": "docs/methods/project-integration.md",
+      "before_bytes": 1799,
+      "after_bytes": 1793,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "project-integration"
+    },
+    {
+      "src": "hub/.agents/skills/planning/SKILL.md",
+      "dst": "docs/methods/planning.md",
+      "before_bytes": 3256,
+      "after_bytes": 3250,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-on-demand",
+      "name": "planning"
+    },
+    {
+      "src": "hub/.agents/skills/anti-crack-build/SKILL.md",
+      "dst": "docs/methods/anti-crack-build.md",
+      "before_bytes": 6200,
+      "after_bytes": 6176,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-on-demand",
+      "name": "anti-crack-build"
+    },
+    {
+      "src": "hub/.agents/skills/browser-automation/SKILL.md",
+      "dst": "docs/methods/browser-automation.md",
+      "before_bytes": 8022,
+      "after_bytes": 7974,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-on-demand",
+      "name": "browser-automation"
+    },
+    {
+      "src": "hub/.agents/skills/mobile-reverse/SKILL.md",
+      "dst": "docs/methods/mobile-reverse.md",
+      "before_bytes": 5024,
+      "after_bytes": 4938,
+      "dropped_lines": 1,
+      "ledger": [
+        {
+          "line": 42,
+          "action": "drop_line",
+          "detail": "- 抓包：跑 `start-mitmweb.bat`，浏览器开 `http://127.0.0.1:8081`"
+        }
+      ],
+      "tag": "method-on-demand",
+      "name": "mobile-reverse"
+    },
+    {
+      "src": "hub/.agents/skills/INVARIANTS.md",
+      "dst": "docs/methods/INVARIANTS.md",
+      "before_bytes": 8475,
+      "after_bytes": 7950,
+      "dropped_lines": 2,
+      "ledger": [
+        {
+          "line": 41,
+          "action": "drop_line",
+          "detail": "1. 先锁层（这次拒绝在哪一层），再开工具/补丁。锁层后应开副插件或自加专业技能；vendor 不是默认放大器。"
+        },
+        {
+          "line": 46,
+          "action": "drop_line",
+          "detail": "开工具/补丁前的互攻：3–4 路派专业细技能（副插件或自加），独立写层和相反预测，不是投票，也不是只开中枢逆向互攻叙事。**分析第一步就要派。** 子代理说没问题 ≠ 层已锁。不是"
+        }
+      ],
+      "tag": "invariants",
+      "name": "INVARIANTS"
+    },
+    {
+      "src": "hub/docs/PHYSICAL-GATES.md",
+      "dst": "docs/PHYSICAL-GATES.md",
+      "before_bytes": 21873,
+      "after_bytes": 21794,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "doc-required",
+      "name": "PHYSICAL-GATES.md"
+    },
+    {
+      "src": "hub/docs/RESPONSIBILITY-PROTOCOL.md",
+      "dst": "docs/RESPONSIBILITY-PROTOCOL.md",
+      "before_bytes": 9170,
+      "after_bytes": 9170,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "doc-required",
+      "name": "RESPONSIBILITY-PROTOCOL.md"
+    },
+    {
+      "src": "hub/docs/PROJECT-MEMORY.md",
+      "dst": "docs/PROJECT-MEMORY.md",
+      "before_bytes": 8216,
+      "after_bytes": 8144,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "doc-required",
+      "name": "PROJECT-MEMORY.md"
+    },
+    {
+      "src": "hub/docs/ENGINEERING-CONTINUITY.md",
+      "dst": "docs/ENGINEERING-CONTINUITY.md",
+      "before_bytes": 12503,
+      "after_bytes": 12482,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "doc-required",
+      "name": "ENGINEERING-CONTINUITY.md"
+    },
+    {
+      "src": "hub/docs/VOCABULARY.md",
+      "dst": "docs/VOCABULARY.md",
+      "before_bytes": 27591,
+      "after_bytes": 24129,
+      "dropped_lines": 7,
+      "ledger": [
+        {
+          "line": 33,
+          "action": "drop_line",
+          "detail": "| 一刀复核 | 刚改完一截立刻由主对话打三问，四顶帽子都碰到即可，再走批评手：按方案改了吗、达到要求了吗、改坏了吗。禁止为这一刀开审查子代理 | 完善中枢每刀；产品高风险改完；标"
+        },
+        {
+          "line": 36,
+          "action": "drop_line",
+          "detail": "| 最终审查 | 对施工副本整份中枢找洞：主对话按层打，像读别人的代码，批评手打报告。禁止每层派一路审查子代理 | **只**完善中枢；入口、技能、运行核、五条产品线都要看 | 产"
+        },
+        {
+          "line": 63,
+          "action": "drop_line",
+          "detail": "| 卡住开会 | 干活中间卡住，能并行就并行，先试几路换视角把原因谈开；路数当场加减（先试 3–4，不是每次必须 4；被拒收成 2 并补没交的路，通了再加；空回复/429 不算交卷"
+        },
+        {
+          "line": 64,
+          "action": "drop_line",
+          "detail": "| 多步出口 | 四步循环：审查 → 复核（批评手打报告，不开子代理）→ 有真洞才改 → 再审这一截；一轮一件。四顶帽子仍是同一本 review：一刀碰到即可；只有出口才按顺序走完"
+        },
+        {
+          "line": 66,
+          "action": "drop_line",
+          "detail": "| 副插件底模 | 垫在底下让模型少拒绝、少误解；一直开、不改原文。冷咖啡只是现在这一张，下一张认它自己的说明书 | 外置中枢 / 卡带安装 | 中枢做不动才借；关底模；改对方原文"
+        },
+        {
+          "line": 67,
+          "action": "drop_line",
+          "detail": "| 专业细技能 | 副插件的、主人自己加的对口细活书；分析、逆向、以后的界面专项用更对口的那本。同一件事可以开 3–4 本 | 锁层后的分析/逆向/专项 | 默认去 vendor；"
+        },
+        {
+          "line": 68,
+          "action": "drop_line",
+          "detail": "| 两个技能夹 | 中枢技能夹和客人/指定技能夹分开：客人不进中枢夹，中枢不进客人夹。自加技能放指定夹即可，不要求进 `.agents/skills` 才算数 | 加技能、挂副插件"
+        }
+      ],
+      "tag": "doc-required",
+      "name": "VOCABULARY.md"
+    },
+    {
+      "src": "hub/docs/OPERATING-MODEL.md",
+      "dst": "docs/OPERATING-MODEL.md",
+      "before_bytes": 28690,
+      "after_bytes": 28586,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "doc-required",
+      "name": "OPERATING-MODEL.md"
+    }
+  ],
+  "workflows": [
+    {
+      "src": "hub/.agents/skills/desktop-product/SKILL.md",
+      "dst": "workflows/desktop-product.md",
+      "before_bytes": 23693,
+      "after_bytes": 22976,
+      "dropped_lines": 5,
+      "ledger": [
+        {
+          "line": 67,
+          "action": "fixup",
+          "detail": "（不要换成 `github`）"
+        },
+        {
+          "line": 68,
+          "action": "fixup",
+          "detail": "| 发 Release / 打 tag | `github`（真要发、主人点名了才换；一次只开一本；发前须有答句） |"
+        },
+        {
+          "line": 71,
+          "action": "drop_line",
+          "detail": "| 喊渗透自己的站 / 风控 / 爆破 / 卡密会不会被偷 | `security-audit`；深度按 `../README.md` 开一本 |"
+        },
+        {
+          "line": 74,
+          "action": "drop_line",
+          "detail": "| 需要领域深度（代码审计/API/数据库/协议/取证…） | 去 vendored 库：见 `../README.md` 的\"能力→深库\"表 |"
+        },
+        {
+          "line": 76,
+          "action": "drop_line",
+          "detail": "按 `use_when` 匹配，一次只加载当前最需要的那一个。产品任务去用户技能目录读中枢技能，不要在产品夹里建或找这套技能。完善中枢才改这份源仓的 `.agents/skills"
+        }
+      ],
+      "tag": "workflow",
+      "name": "desktop-product"
+    },
+    {
+      "src": "hub/.agents/skills/web-service/SKILL.md",
+      "dst": "workflows/web-service.md",
+      "before_bytes": 22544,
+      "after_bytes": 21857,
+      "dropped_lines": 5,
+      "ledger": [
+        {
+          "line": 69,
+          "action": "fixup",
+          "detail": "（不要换成 `github`）"
+        },
+        {
+          "line": 70,
+          "action": "fixup",
+          "detail": "| 发 Release / 打 tag | `github`（真要发、主人点名了才换；一次只开一本；发前须有答句） |"
+        },
+        {
+          "line": 73,
+          "action": "drop_line",
+          "detail": "| 喊渗透自己的站 / 风控 / 爆破 / 卡密会不会被偷 | `security-audit`；深度按 `../README.md` 开一本 |"
+        },
+        {
+          "line": 78,
+          "action": "drop_line",
+          "detail": "| 需要领域深度（代码审计/API/数据库/协议/取证…） | 去 vendored 库：见 `../README.md` 的\"能力→深库\"表 |"
+        },
+        {
+          "line": 80,
+          "action": "drop_line",
+          "detail": "按 `use_when` 匹配，一次只加载当前最需要的那一个；原生深度不够就按上表去 vendored 库开一个（用它的方法，证据仍回 `state`/`INVARIANTS`）。"
+        }
+      ],
+      "tag": "workflow",
+      "name": "web-service"
+    },
+    {
+      "src": "hub/.agents/skills/cli-tool/SKILL.md",
+      "dst": "workflows/cli-tool.md",
+      "before_bytes": 21564,
+      "after_bytes": 20939,
+      "dropped_lines": 6,
+      "ledger": [
+        {
+          "line": 68,
+          "action": "fixup",
+          "detail": "不要换成 `github`"
+        },
+        {
+          "line": 69,
+          "action": "fixup",
+          "detail": "（不要换成 `github`）"
+        },
+        {
+          "line": 70,
+          "action": "fixup",
+          "detail": "| 发 Release / 打 tag | `github`（真要发、主人点名了才换；一次只开一本；发前须有答句） |"
+        },
+        {
+          "line": 72,
+          "action": "drop_line",
+          "detail": "| 喊渗透 / 风控 / 爆破 / 卡密会不会被偷 | `security-audit`；深度按 `../README.md` 开一本 |"
+        },
+        {
+          "line": 74,
+          "action": "drop_line",
+          "detail": "| 需要领域深度（代码审计/API/数据库/协议/取证…） | 去 vendored 库：见 `../README.md` 的\"能力→深库\"表 |"
+        },
+        {
+          "line": 76,
+          "action": "drop_line",
+          "detail": "按 `use_when` 匹配，一次只加载当前最需要的那一个；原生深度不够就按上表去 vendored 库开一个（用它的方法，证据仍回 `state`/`INVARIANTS`）。"
+        }
+      ],
+      "tag": "workflow",
+      "name": "cli-tool"
+    },
+    {
+      "src": "hub/.agents/skills/source-takeover/SKILL.md",
+      "dst": "workflows/source-takeover.md",
+      "before_bytes": 23642,
+      "after_bytes": 23028,
+      "dropped_lines": 5,
+      "ledger": [
+        {
+          "line": 72,
+          "action": "drop_line",
+          "detail": "| 喊渗透自己的站 / 风控 / 爆破 / 卡密会不会被偷 | `security-audit`；深度按 `../README.md` 开一本 |"
+        },
+        {
+          "line": 76,
+          "action": "fixup",
+          "detail": "（不要换成 `github`；后半段走完才换）"
+        },
+        {
+          "line": 77,
+          "action": "fixup",
+          "detail": "| 发 Release / 打 tag | `github`（真要发、主人点名了才换；一次只开一本；发前须有答句） |"
+        },
+        {
+          "line": 81,
+          "action": "drop_line",
+          "detail": "| 需要领域深度（代码审计/协议/取证/二进制…） | 去 vendored 库：见 `../README.md` 的\"能力→深库\"表 |"
+        },
+        {
+          "line": 85,
+          "action": "drop_line",
+          "detail": "按 `use_when` 匹配，一次只加载当前最需要的那一个；原生深度不够就按上表去 vendored 库开一个（用它的方法，证据仍回 `state`/`INVARIANTS`）。"
+        }
+      ],
+      "tag": "workflow",
+      "name": "source-takeover"
+    },
+    {
+      "src": "hub/.agents/skills/exe-rebuild/SKILL.md",
+      "dst": "workflows/exe-rebuild.md",
+      "before_bytes": 43866,
+      "after_bytes": 42466,
+      "dropped_lines": 3,
+      "ledger": [
+        {
+          "line": 132,
+          "action": "drop_line",
+          "detail": "连续完成：锁 baseline、做工作拷贝、补真实运行依赖（安装包载荷/sidecar 要能跑完退出，缺的写明未抽）；先记下可见拒绝（起来之前还是某个动作之后），壳/类型只当约束，"
+        },
+        {
+          "line": 223,
+          "action": "drop_line",
+          "detail": "| 进核心 / 找门 | 找门细活交给副插件或主人自加技能；中枢只登记 `access` / `anchor` / `function-map`。`reverse-engineer"
+        },
+        {
+          "line": 232,
+          "action": "drop_line",
+          "detail": "分析默认用客人细技能；`HUB-INDEX` / vendor 叶子不是第二套默认入口。需要具体框架/壳/工具时，先开副插件或主人自加的专业技能；没有副插件才按 `../READM"
+        }
+      ],
+      "tag": "workflow",
+      "name": "exe-rebuild"
+    },
+    {
+      "src": "hub/.agents/skills/protocol-automation/SKILL.md",
+      "dst": "workflows/protocol-automation.md",
+      "before_bytes": 14953,
+      "after_bytes": 14553,
+      "dropped_lines": 1,
+      "ledger": [
+        {
+          "line": 178,
+          "action": "drop_line",
+          "detail": "**表里写的是「要哪一类能力」，不是具体卡名。** 本机当场挂上哪本就用哪本；缺哪一类就去控制台装（副插件）或加（自己的技能），不要照着名字去找一本本机没有的书。"
+        }
+      ],
+      "tag": "workflow",
+      "name": "protocol-automation"
+    }
+  ],
+  "methods": [
+    {
+      "src": "hub/.agents/skills/security-audit/SKILL.md",
+      "dst": "docs/methods/security-audit.md",
+      "before_bytes": 6653,
+      "after_bytes": 5587,
+      "dropped_lines": 1,
+      "ledger": [
+        {
+          "line": 14,
+          "action": "drop_line",
+          "detail": "> 需要更深时（代码审计 / API / 数据库 / 供应链 / 身份联合 / AD / 云 / LLM 安全），去 vendored 库对应 skill——见 `../READM"
+        }
+      ],
+      "tag": "method-required",
+      "name": "security-audit"
+    },
+    {
+      "src": "hub/.agents/skills/review/SKILL.md",
+      "dst": "docs/methods/review.md",
+      "before_bytes": 16324,
+      "after_bytes": 16288,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "review"
+    },
+    {
+      "src": "hub/.agents/skills/packaging/SKILL.md",
+      "dst": "docs/methods/packaging.md",
+      "before_bytes": 15010,
+      "after_bytes": 14977,
+      "dropped_lines": 1,
+      "ledger": [
+        {
+          "line": 20,
+          "action": "fixup",
+          "detail": "不要从本书跳到 `github`。"
+        }
+      ],
+      "tag": "method-required",
+      "name": "packaging"
+    },
+    {
+      "src": "hub/.agents/skills/data-storage/SKILL.md",
+      "dst": "docs/methods/data-storage.md",
+      "before_bytes": 2934,
+      "after_bytes": 2928,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "data-storage"
+    },
+    {
+      "src": "hub/.agents/skills/debugging-troubleshooting/SKILL.md",
+      "dst": "docs/methods/debugging-troubleshooting.md",
+      "before_bytes": 1878,
+      "after_bytes": 1872,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "debugging-troubleshooting"
+    },
+    {
+      "src": "hub/.agents/skills/ui-design/SKILL.md",
+      "dst": "docs/methods/ui-design.md",
+      "before_bytes": 4935,
+      "after_bytes": 4929,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "ui-design"
+    },
+    {
+      "src": "hub/.agents/skills/windows-environment/SKILL.md",
+      "dst": "docs/methods/windows-environment.md",
+      "before_bytes": 2257,
+      "after_bytes": 2251,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "windows-environment"
+    },
+    {
+      "src": "hub/.agents/skills/performance-optimization/SKILL.md",
+      "dst": "docs/methods/performance-optimization.md",
+      "before_bytes": 1760,
+      "after_bytes": 1754,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "performance-optimization"
+    },
+    {
+      "src": "hub/.agents/skills/research-reuse/SKILL.md",
+      "dst": "docs/methods/research-reuse.md",
+      "before_bytes": 1724,
+      "after_bytes": 1718,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "research-reuse"
+    },
+    {
+      "src": "hub/.agents/skills/project-init/SKILL.md",
+      "dst": "docs/methods/project-init.md",
+      "before_bytes": 2733,
+      "after_bytes": 2733,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "project-init"
+    },
+    {
+      "src": "hub/.agents/skills/software-integration/SKILL.md",
+      "dst": "docs/methods/software-integration.md",
+      "before_bytes": 2524,
+      "after_bytes": 2518,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "software-integration"
+    },
+    {
+      "src": "hub/.agents/skills/release-readiness/SKILL.md",
+      "dst": "docs/methods/release-readiness.md",
+      "before_bytes": 7264,
+      "after_bytes": 7017,
+      "dropped_lines": 3,
+      "ledger": [
+        {
+          "line": 14,
+          "action": "fixup",
+          "detail": "不要自动换成 `github`"
+        },
+        {
+          "line": 25,
+          "action": "drop_line",
+          "detail": "- 发前 `state gate --product` 须退出 0（拦账本，拦不住终端 `gh`；二开 `gate` 不走原创答句门，仍须授权格已点头）。完善中枢戴本帽不要跑产品 "
+        },
+        {
+          "line": 31,
+          "action": "fixup",
+          "detail": "不要自动换成 `github`"
+        }
+      ],
+      "tag": "method-required",
+      "name": "release-readiness"
+    },
+    {
+      "src": "hub/.agents/skills/reverse-engineering/SKILL.md",
+      "dst": "docs/methods/reverse-engineering.md",
+      "before_bytes": 12226,
+      "after_bytes": 10548,
+      "dropped_lines": 4,
+      "ledger": [
+        {
+          "line": 19,
+          "action": "drop_line",
+          "detail": "2. `NOW`：自己用一句话锁层（起来之前还是某个动作之后？改的是展示还是判定？工具在场变不变？对端撤走变不变？）。这句是笔记，不是对主人交差。说不出层，仍禁止打补丁、禁止 co"
+        },
+        {
+          "line": 32,
+          "action": "drop_line",
+          "detail": "开工具/补丁前，同一问可同时开 3–4 本副插件或自加技能，各自写层、切入、相反预测、是否绕路；不是投票同一叙事。没区分性实验禁止打补丁。两轮无新证据就停。子代理说没问题 ≠ 层已"
+        },
+        {
+          "line": 46,
+          "action": "drop_line",
+          "detail": "本 skill 管**要交什么证据**：`entry_gate` / `action_gate` 分开，且写动作必须自己触发。怎么找门用副插件或主人自加的专业技能，同一问最多 3–"
+        },
+        {
+          "line": 52,
+          "action": "drop_line",
+          "detail": "没有副插件才读 `HUB-INDEX.md` 当后备。不要在本技能里用类型名（.NET / APK / Go）当开手册条件。看见 IP ≠ `protocol-reverse`。内"
+        }
+      ],
+      "tag": "method-required",
+      "name": "reverse-engineering"
+    },
+    {
+      "src": "hub/.agents/skills/browser-testing/SKILL.md",
+      "dst": "docs/methods/browser-testing.md",
+      "before_bytes": 1900,
+      "after_bytes": 1894,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "browser-testing"
+    },
+    {
+      "src": "hub/.agents/skills/project-integration/SKILL.md",
+      "dst": "docs/methods/project-integration.md",
+      "before_bytes": 1799,
+      "after_bytes": 1793,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-required",
+      "name": "project-integration"
+    },
+    {
+      "src": "hub/.agents/skills/planning/SKILL.md",
+      "dst": "docs/methods/planning.md",
+      "before_bytes": 3256,
+      "after_bytes": 3250,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-on-demand",
+      "name": "planning"
+    },
+    {
+      "src": "hub/.agents/skills/anti-crack-build/SKILL.md",
+      "dst": "docs/methods/anti-crack-build.md",
+      "before_bytes": 6200,
+      "after_bytes": 6176,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-on-demand",
+      "name": "anti-crack-build"
+    },
+    {
+      "src": "hub/.agents/skills/browser-automation/SKILL.md",
+      "dst": "docs/methods/browser-automation.md",
+      "before_bytes": 8022,
+      "after_bytes": 7974,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-on-demand",
+      "name": "browser-automation"
+    },
+    {
+      "src": "hub/.agents/skills/mobile-reverse/SKILL.md",
+      "dst": "docs/methods/mobile-reverse.md",
+      "before_bytes": 5024,
+      "after_bytes": 4938,
+      "dropped_lines": 1,
+      "ledger": [
+        {
+          "line": 42,
+          "action": "drop_line",
+          "detail": "- 抓包：跑 `start-mitmweb.bat`，浏览器开 `http://127.0.0.1:8081`"
+        }
+      ],
+      "tag": "method-on-demand",
+      "name": "mobile-reverse"
+    },
+    {
+      "src": "hub/.agents/skills/review/hunt.md",
+      "dst": "docs/methods/review/hunt.md",
+      "before_bytes": 6114,
+      "after_bytes": 6114,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-appendix",
+      "name": "review/hunt.md"
+    },
+    {
+      "src": "hub/.agents/skills/review/review-table.md",
+      "dst": "docs/methods/review/review-table.md",
+      "before_bytes": 3892,
+      "after_bytes": 3884,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-appendix",
+      "name": "review/review-table.md"
+    },
+    {
+      "src": "hub/.agents/skills/review/runtime-skins.md",
+      "dst": "docs/methods/review/runtime-skins.md",
+      "before_bytes": 3248,
+      "after_bytes": 3228,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-appendix",
+      "name": "review/runtime-skins.md"
+    },
+    {
+      "src": "hub/.agents/skills/browser-automation/actions.md",
+      "dst": "docs/methods/browser-automation/actions.md",
+      "before_bytes": 3137,
+      "after_bytes": 3137,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-appendix",
+      "name": "browser-automation/actions.md"
+    },
+    {
+      "src": "hub/.agents/skills/browser-automation/auth.md",
+      "dst": "docs/methods/browser-automation/auth.md",
+      "before_bytes": 2566,
+      "after_bytes": 2554,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-appendix",
+      "name": "browser-automation/auth.md"
+    },
+    {
+      "src": "hub/.agents/skills/browser-automation/catalog.md",
+      "dst": "docs/methods/browser-automation/catalog.md",
+      "before_bytes": 6327,
+      "after_bytes": 6000,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-appendix",
+      "name": "browser-automation/catalog.md"
+    },
+    {
+      "src": "hub/.agents/skills/browser-automation/contract.md",
+      "dst": "docs/methods/browser-automation/contract.md",
+      "before_bytes": 4507,
+      "after_bytes": 4375,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-appendix",
+      "name": "browser-automation/contract.md"
+    },
+    {
+      "src": "hub/.agents/skills/browser-automation/env.md",
+      "dst": "docs/methods/browser-automation/env.md",
+      "before_bytes": 2680,
+      "after_bytes": 2670,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-appendix",
+      "name": "browser-automation/env.md"
+    },
+    {
+      "src": "hub/.agents/skills/browser-automation/extract.md",
+      "dst": "docs/methods/browser-automation/extract.md",
+      "before_bytes": 2358,
+      "after_bytes": 2348,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-appendix",
+      "name": "browser-automation/extract.md"
+    },
+    {
+      "src": "hub/.agents/skills/browser-automation/files.md",
+      "dst": "docs/methods/browser-automation/files.md",
+      "before_bytes": 2939,
+      "after_bytes": 2929,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-appendix",
+      "name": "browser-automation/files.md"
+    },
+    {
+      "src": "hub/.agents/skills/browser-automation/forms.md",
+      "dst": "docs/methods/browser-automation/forms.md",
+      "before_bytes": 2583,
+      "after_bytes": 2571,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-appendix",
+      "name": "browser-automation/forms.md"
+    },
+    {
+      "src": "hub/.agents/skills/browser-automation/network.md",
+      "dst": "docs/methods/browser-automation/network.md",
+      "before_bytes": 2070,
+      "after_bytes": 2070,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-appendix",
+      "name": "browser-automation/network.md"
+    },
+    {
+      "src": "hub/.agents/skills/browser-automation/pitfalls.md",
+      "dst": "docs/methods/browser-automation/pitfalls.md",
+      "before_bytes": 9063,
+      "after_bytes": 8808,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-appendix",
+      "name": "browser-automation/pitfalls.md"
+    },
+    {
+      "src": "hub/.agents/skills/browser-automation/proof.md",
+      "dst": "docs/methods/browser-automation/proof.md",
+      "before_bytes": 3478,
+      "after_bytes": 3448,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-appendix",
+      "name": "browser-automation/proof.md"
+    },
+    {
+      "src": "hub/.agents/skills/browser-automation/recovery.md",
+      "dst": "docs/methods/browser-automation/recovery.md",
+      "before_bytes": 2795,
+      "after_bytes": 2759,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-appendix",
+      "name": "browser-automation/recovery.md"
+    },
+    {
+      "src": "hub/.agents/skills/browser-automation/windows.md",
+      "dst": "docs/methods/browser-automation/windows.md",
+      "before_bytes": 2373,
+      "after_bytes": 2361,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "method-appendix",
+      "name": "browser-automation/windows.md"
+    },
+    {
+      "src": "hub/.agents/skills/INVARIANTS.md",
+      "dst": "docs/methods/INVARIANTS.md",
+      "before_bytes": 8475,
+      "after_bytes": 7950,
+      "dropped_lines": 2,
+      "ledger": [
+        {
+          "line": 41,
+          "action": "drop_line",
+          "detail": "1. 先锁层（这次拒绝在哪一层），再开工具/补丁。锁层后应开副插件或自加专业技能；vendor 不是默认放大器。"
+        },
+        {
+          "line": 46,
+          "action": "drop_line",
+          "detail": "开工具/补丁前的互攻：3–4 路派专业细技能（副插件或自加），独立写层和相反预测，不是投票，也不是只开中枢逆向互攻叙事。**分析第一步就要派。** 子代理说没问题 ≠ 层已锁。不是"
+        }
+      ],
+      "tag": "invariants",
+      "name": "INVARIANTS"
+    }
+  ],
+  "docs": [
+    {
+      "src": "hub/docs/PHYSICAL-GATES.md",
+      "dst": "docs/PHYSICAL-GATES.md",
+      "before_bytes": 21873,
+      "after_bytes": 21794,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "doc-required",
+      "name": "PHYSICAL-GATES.md"
+    },
+    {
+      "src": "hub/docs/RESPONSIBILITY-PROTOCOL.md",
+      "dst": "docs/RESPONSIBILITY-PROTOCOL.md",
+      "before_bytes": 9170,
+      "after_bytes": 9170,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "doc-required",
+      "name": "RESPONSIBILITY-PROTOCOL.md"
+    },
+    {
+      "src": "hub/docs/PROJECT-MEMORY.md",
+      "dst": "docs/PROJECT-MEMORY.md",
+      "before_bytes": 8216,
+      "after_bytes": 8144,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "doc-required",
+      "name": "PROJECT-MEMORY.md"
+    },
+    {
+      "src": "hub/docs/ENGINEERING-CONTINUITY.md",
+      "dst": "docs/ENGINEERING-CONTINUITY.md",
+      "before_bytes": 12503,
+      "after_bytes": 12482,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "doc-required",
+      "name": "ENGINEERING-CONTINUITY.md"
+    },
+    {
+      "src": "hub/docs/VOCABULARY.md",
+      "dst": "docs/VOCABULARY.md",
+      "before_bytes": 27591,
+      "after_bytes": 24129,
+      "dropped_lines": 7,
+      "ledger": [
+        {
+          "line": 33,
+          "action": "drop_line",
+          "detail": "| 一刀复核 | 刚改完一截立刻由主对话打三问，四顶帽子都碰到即可，再走批评手：按方案改了吗、达到要求了吗、改坏了吗。禁止为这一刀开审查子代理 | 完善中枢每刀；产品高风险改完；标"
+        },
+        {
+          "line": 36,
+          "action": "drop_line",
+          "detail": "| 最终审查 | 对施工副本整份中枢找洞：主对话按层打，像读别人的代码，批评手打报告。禁止每层派一路审查子代理 | **只**完善中枢；入口、技能、运行核、五条产品线都要看 | 产"
+        },
+        {
+          "line": 63,
+          "action": "drop_line",
+          "detail": "| 卡住开会 | 干活中间卡住，能并行就并行，先试几路换视角把原因谈开；路数当场加减（先试 3–4，不是每次必须 4；被拒收成 2 并补没交的路，通了再加；空回复/429 不算交卷"
+        },
+        {
+          "line": 64,
+          "action": "drop_line",
+          "detail": "| 多步出口 | 四步循环：审查 → 复核（批评手打报告，不开子代理）→ 有真洞才改 → 再审这一截；一轮一件。四顶帽子仍是同一本 review：一刀碰到即可；只有出口才按顺序走完"
+        },
+        {
+          "line": 66,
+          "action": "drop_line",
+          "detail": "| 副插件底模 | 垫在底下让模型少拒绝、少误解；一直开、不改原文。冷咖啡只是现在这一张，下一张认它自己的说明书 | 外置中枢 / 卡带安装 | 中枢做不动才借；关底模；改对方原文"
+        },
+        {
+          "line": 67,
+          "action": "drop_line",
+          "detail": "| 专业细技能 | 副插件的、主人自己加的对口细活书；分析、逆向、以后的界面专项用更对口的那本。同一件事可以开 3–4 本 | 锁层后的分析/逆向/专项 | 默认去 vendor；"
+        },
+        {
+          "line": 68,
+          "action": "drop_line",
+          "detail": "| 两个技能夹 | 中枢技能夹和客人/指定技能夹分开：客人不进中枢夹，中枢不进客人夹。自加技能放指定夹即可，不要求进 `.agents/skills` 才算数 | 加技能、挂副插件"
+        }
+      ],
+      "tag": "doc-required",
+      "name": "VOCABULARY.md"
+    },
+    {
+      "src": "hub/docs/OPERATING-MODEL.md",
+      "dst": "docs/OPERATING-MODEL.md",
+      "before_bytes": 28690,
+      "after_bytes": 28586,
+      "dropped_lines": 0,
+      "ledger": [],
+      "tag": "doc-required",
+      "name": "OPERATING-MODEL.md"
+    },
+    {
+      "name": "HUB-OWNER-NEED.md",
+      "ok": false,
+      "why": "旧项目的元工作流，不属于本独立系统"
+    },
+    {
+      "name": "HUB-优化怎么走.md",
+      "ok": false,
+      "why": "旧项目的元工作流，不属于本独立系统"
+    },
+    {
+      "name": "HUB-优化执行计划.md",
+      "ok": false,
+      "why": "旧项目的元工作流，不属于本独立系统"
+    },
+    {
+      "name": "HUB-真测漏洞.md",
+      "ok": false,
+      "why": "旧项目的元工作流，不属于本独立系统"
+    },
+    {
+      "name": "HUB-综述-为什么总做不好.md",
+      "ok": false,
+      "why": "旧项目的元工作流，不属于本独立系统"
+    },
+    {
+      "name": "HUB-综述-穷举模拟为什么不够.md",
+      "ok": false,
+      "why": "旧项目的元工作流，不属于本独立系统"
+    },
+    {
+      "name": "OPT-一次一项.md",
+      "ok": false,
+      "why": "旧项目的元工作流，不属于本独立系统"
+    },
+    {
+      "name": "OPT-历次总结目录.md",
+      "ok": false,
+      "why": "旧项目的元工作流，不属于本独立系统"
+    },
+    {
+      "name": "怎样修好中枢.md",
+      "ok": false,
+      "why": "旧项目的元工作流，不属于本独立系统"
+    },
+    {
+      "name": "HUB-需求验收.md",
+      "ok": false,
+      "why": "旧项目的元工作流，不属于本独立系统"
+    }
+  ],
+  "parked": [
+    {
+      "name": "github",
+      "reason": "云端发布工具；本系统不联网（6 线只在「发 Release」一行点名，主人在场时手动做）"
+    },
+    {
+      "name": "own-skill",
+      "reason": "技能系统；本任务明确排除 Skill"
+    }
+  ],
+  "templates": [
+    {
+      "name": "checklist.v1.example.json",
+      "bytes": 311
+    },
+    {
+      "name": "cli-tool.phases.json",
+      "bytes": 4708
+    },
+    {
+      "name": "desktop-product.phases.json",
+      "bytes": 4815
+    },
+    {
+      "name": "dossier.v1.example.json",
+      "bytes": 1864
+    },
+    {
+      "name": "exe-rebuild.phases.json",
+      "bytes": 6777
+    },
+    {
+      "name": "physical-gates.protocol-automation.example.json",
+      "bytes": 2269
+    },
+    {
+      "name": "physical-gates.v1.example.json",
+      "bytes": 1439
+    },
+    {
+      "name": "protocol-automation.owner-stops.example.md",
+      "bytes": 2331
+    },
+    {
+      "name": "protocol-automation.phases.json",
+      "bytes": 3935
+    },
+    {
+      "name": "requirements.v1.example.jsonl",
+      "bytes": 600
+    },
+    {
+      "name": "source-takeover.phases.json",
+      "bytes": 5156
+    },
+    {
+      "name": "web-service.phases.json",
+      "bytes": 4784
+    },
+    {
+      "name": "WORK-HANDOFF.md",
+      "bytes": 1306
+    }
+  ],
+  "post_patches": [
+    {
+      "target": "workflows/protocol-automation.md",
+      "script": "03-bundle/patches/apply_matrix_fix.py",
+      "rc": 0,
+      "status": "ok",
+      "out": "[定位] 旧矩阵：第 176 行 → 第 189 行（共 14 行）\n[结果] 替换了 14 行 → 51 行\n[统计] 字节 14742 → 20594（+5852）\n[统计] 总行 189 → 226（+37）\n[已写] D:\\临时项目\\hub-dock\\work\\context-isolation\\02-hubcore\\workflows\\protocol-automation.md"
+    }
+  ]
+}

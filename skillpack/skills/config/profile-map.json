@@ -1,0 +1,272 @@
+{
+  "schemaVersion": "1.0",
+  "authority": "docs/INTEGRATION-IMPLEMENTATION-SPEC.md#46-统一-context-profile唯一事实源",
+  "owner": "T02",
+  "scope": "Machine-readable form of the frozen 4.6 context-profile table, the frozen legacy-value migration table, and the deterministic single-profile resolution rule used by skills/community/registry.json.",
+  "profiles": {
+    "offline_sample": {
+      "network_mode": "offline",
+      "auth_rule": "sample_present_and_caller_owned",
+      "allowed_action": "static_read_only"
+    },
+    "offline_ctf": {
+      "network_mode": "offline",
+      "auth_rule": "no_external_target",
+      "allowed_action": "local_challenge_files"
+    },
+    "authorized_lab": {
+      "network_mode": "lab_only",
+      "auth_rule": "explicit_lab_authorization_and_in_scope_assets",
+      "allowed_action": "lab_actions"
+    },
+    "authorized_target_only": {
+      "network_mode": "authorized_target_only",
+      "auth_rule": "target_level_authorization_and_allowlist",
+      "allowed_action": "allowlisted_targets"
+    },
+    "defensive_review": {
+      "network_mode": "offline",
+      "auth_rule": "owner_approval_loopback_requires_explicit_declaration",
+      "allowed_action": "review_only"
+    },
+    "local_project": {
+      "network_mode": "project_local",
+      "auth_rule": "project_owner",
+      "allowed_action": "build_test_project_files"
+    }
+  },
+  "network_modes": [
+    "offline",
+    "lab_only",
+    "authorized_target_only",
+    "unrestricted_lab",
+    "project_local"
+  ],
+  "legacy_aliases": {
+    "offline-sample": {"resolution": "profile", "profile": "offline_sample"},
+    "offline-ctf": {"resolution": "profile", "profile": "offline_ctf"},
+    "authorized-lab": {"resolution": "profile", "profile": "authorized_lab"},
+    "authorized-repository": {
+      "resolution": "profile",
+      "profile": "authorized_target_only",
+      "target_kind": "repository_allowlist"
+    },
+    "authorized-device": {
+      "resolution": "profile",
+      "profile": "authorized_target_only",
+      "target_kind": "device_identifier"
+    },
+    "defensive": {"resolution": "profile", "profile": "defensive_review"},
+    "defensive_review": {"resolution": "profile", "profile": "defensive_review"},
+    "defensive-review": {"resolution": "profile", "profile": "defensive_review"},
+    "local-project": {"resolution": "profile", "profile": "local_project"},
+    "local_project": {"resolution": "profile", "profile": "local_project"},
+    "lab": {"resolution": "profile", "profile": "authorized_lab"},
+    "lab_only": {"resolution": "profile", "profile": "authorized_lab"},
+    "authorized": {"resolution": "profile", "profile": "authorized_target_only"},
+    "auth": {"resolution": "profile", "profile": "authorized_target_only"},
+    "authorized_target_only": {"resolution": "profile", "profile": "authorized_target_only"},
+    "offline": {
+      "resolution": "needs_review_if_no_sample",
+      "conditional": {"predicate": "sample_present", "then": "offline_sample"},
+      "otherwise": "needs_review"
+    },
+    "offline_only": {
+      "resolution": "needs_review_if_no_sample",
+      "conditional": {"predicate": "sample_present", "then": "offline_sample"},
+      "otherwise": "needs_review"
+    },
+    "unrestricted_lab": {
+      "resolution": "unsupported",
+      "status": "needs_review",
+      "reason": "4.6: unrestricted_lab is a case-init value that must never be silently mapped to authorized_lab; if the concrete scope cannot be determined the record stays needs_review"
+    }
+  },
+  "unknown_alias_policy": {
+    "status": "needs_review",
+    "reason": "4.6: legacy values that are not listed here must not be guessed; they are reported for review"
+  },
+  "resolution": {
+    "policy": "one_canonical_profile_per_record",
+    "rule": "expand every legacy allowed_context value through legacy_aliases, then keep the single canonical profile with the highest precedence; a record must never keep two profiles (4.2/4.6)",
+    "precedence": [
+      "offline_sample",
+      "offline_ctf",
+      "defensive_review",
+      "local_project",
+      "authorized_lab",
+      "authorized_target_only"
+    ],
+    "precedence_axis": "narrowest network egress first (offline < project_local < lab_only < authorized_target_only); ties inside one network mode break on the narrower allowed action",
+    "precedence_note": "fail-closed: the selected value never grants more egress or more action than every mapped value would. No current registry record collides inside a single network mode, so the in-mode tie-break is declared but not exercised by real data.",
+    "cannot_decide": "needs_review",
+    "rejected_alternative": "widest-egress-first would have mapped 103 hack-skills records to authorized_lab and 154 delivery records to authorized_target_only; rejected because it widens the declared context of untrusted vendor references without per-record evidence"
+  },
+  "migration_evidence": {
+    "measured_on": "pre-T02 registry.json (schemaVersion 1.0, 293 skills, 4 sources, commit 93a0a4f working tree)",
+    "measured_at": "2026-09-29T13:57:39Z",
+    "legacy_value_counts": {
+      "authorized-repository": 154,
+      "local-project": 154,
+      "authorized-lab": 139,
+      "defensive": 103,
+      "offline-ctf": 35,
+      "authorized-device": 1,
+      "offline-sample": 1
+    },
+    "rows": [
+      {
+        "legacy": "offline-sample",
+        "canonical": "offline_sample",
+        "legacy_records": 1,
+        "sample_record_id": "community-apk-reverse-community-293",
+        "evidence": "registry"
+      },
+      {
+        "legacy": "offline-ctf",
+        "canonical": "offline_ctf",
+        "legacy_records": 35,
+        "sample_record_id": "community-ctf-super-hub-001",
+        "evidence": "registry"
+      },
+      {
+        "legacy": "authorized-lab",
+        "canonical": "authorized_lab",
+        "legacy_records": 139,
+        "sample_record_id": "community-ctf-super-hub-001",
+        "evidence": "registry",
+        "note": "35 ctf-super-hub + 103 hack-skills + 1 apk-reverse-community; all 139 records were also resolved to a higher-precedence profile, so no record carries authorized_lab after migration"
+      },
+      {
+        "legacy": "authorized-repository",
+        "canonical": "authorized_target_only",
+        "legacy_records": 154,
+        "sample_record_id": "community-ai-fullstack-delivery-139",
+        "evidence": "registry"
+      },
+      {
+        "legacy": "authorized-device",
+        "canonical": "authorized_target_only",
+        "legacy_records": 1,
+        "sample_record_id": "community-apk-reverse-community-293",
+        "evidence": "registry"
+      },
+      {
+        "legacy": "defensive",
+        "canonical": "defensive_review",
+        "legacy_records": 103,
+        "sample_record_id": "community-hack-skills-036",
+        "evidence": "registry"
+      },
+      {
+        "legacy": "local-project",
+        "canonical": "local_project",
+        "legacy_records": 154,
+        "sample_record_id": "community-ai-fullstack-delivery-139",
+        "evidence": "registry"
+      },
+      {
+        "legacy": "defensive_review",
+        "canonical": "defensive_review",
+        "legacy_records": 0,
+        "sample_record_id": null,
+        "evidence": "fixture",
+        "fixture": "alias_is_already_canonical"
+      },
+      {
+        "legacy": "defensive-review",
+        "canonical": "defensive_review",
+        "legacy_records": 0,
+        "sample_record_id": null,
+        "evidence": "fixture",
+        "fixture": "kebab_variant_of_defensive_review"
+      },
+      {
+        "legacy": "local_project",
+        "canonical": "local_project",
+        "legacy_records": 0,
+        "sample_record_id": null,
+        "evidence": "fixture",
+        "fixture": "alias_is_already_canonical"
+      },
+      {
+        "legacy": "lab",
+        "canonical": "authorized_lab",
+        "legacy_records": 0,
+        "sample_record_id": null,
+        "evidence": "fixture",
+        "fixture": "lab_shorthand_maps_to_authorized_lab"
+      },
+      {
+        "legacy": "lab_only",
+        "canonical": "authorized_lab",
+        "legacy_records": 0,
+        "sample_record_id": null,
+        "evidence": "fixture",
+        "fixture": "case_guard_network_mode_name"
+      },
+      {
+        "legacy": "authorized",
+        "canonical": "authorized_target_only",
+        "legacy_records": 0,
+        "sample_record_id": null,
+        "evidence": "fixture",
+        "fixture": "authorized_shorthand"
+      },
+      {
+        "legacy": "auth",
+        "canonical": "authorized_target_only",
+        "legacy_records": 0,
+        "sample_record_id": null,
+        "evidence": "fixture",
+        "fixture": "auth_shorthand"
+      },
+      {
+        "legacy": "authorized_target_only",
+        "canonical": "authorized_target_only",
+        "legacy_records": 0,
+        "sample_record_id": null,
+        "evidence": "fixture",
+        "fixture": "alias_is_already_canonical"
+      },
+      {
+        "legacy": "offline",
+        "canonical": "offline_sample_or_needs_review",
+        "legacy_records": 0,
+        "sample_record_id": null,
+        "evidence": "fixture",
+        "fixture": "sample_present_yields_offline_sample_else_needs_review"
+      },
+      {
+        "legacy": "offline_only",
+        "canonical": "offline_sample_or_needs_review",
+        "legacy_records": 0,
+        "sample_record_id": null,
+        "evidence": "fixture",
+        "fixture": "sample_present_yields_offline_sample_else_needs_review"
+      },
+      {
+        "legacy": "unrestricted_lab",
+        "canonical": null,
+        "legacy_records": 0,
+        "sample_record_id": null,
+        "evidence": "fixture",
+        "fixture": "unsupported_must_report_needs_review",
+        "status": "needs_review"
+      }
+    ],
+    "unsupported": [
+      {
+        "legacy": "unrestricted_lab",
+        "status": "needs_review",
+        "reason": "4.6/17.22: never silently mapped to authorized_lab"
+      }
+    ]
+  },
+  "record_result": {
+    "offline_ctf": 35,
+    "defensive_review": 103,
+    "local_project": 154,
+    "offline_sample": 1
+  }
+}

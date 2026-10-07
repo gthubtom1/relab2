@@ -1,0 +1,292 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reverse-skill.local/schemas/community-handoff-input.json",
+  "title": "CommunityHandoffInput",
+  "description": "Frozen community handoff input contract, spec section 4.4 (schema version 1.0). Field names are camelCase per 4.0. The document is untrusted caller input: every field is size-bounded and every enum is closed. network_profile is deliberately NOT a property: the network mode is derived from profile through skills/config/profile-map.json (spec 4.6/17.22), so passing network_profile is a schema violation instead of a second source of truth.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "route_id",
+    "wrapper_id",
+    "hint",
+    "project_root",
+    "case_root",
+    "intent",
+    "target",
+    "auth",
+    "profile",
+    "execution_profile",
+    "in_scope",
+    "out_of_scope",
+    "requested_downstream",
+    "tool_requirements",
+    "provenance"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "description": "Frozen contract version.",
+      "const": "1.0"
+    },
+    "route_id": {
+      "description": "Canonical master route id that selected the wrapper (for example R47).",
+      "type": "string",
+      "pattern": "^R[0-9]{1,2}$",
+      "maxLength": 8
+    },
+    "wrapper_id": {
+      "description": "Wrapper record id from registry.json.wrappers[].id.",
+      "type": "string",
+      "pattern": "^wrapper-[a-z0-9-]+$",
+      "maxLength": 72
+    },
+    "hint": {
+      "description": "Untrusted natural-language hint. Spec-frozen length bound 1-4096 characters (4.4).",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "project_root": {
+      "description": "Project root; resolved by the 17.16 canonical path resolver before use.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "case_root": {
+      "description": "Must resolve to work/<case> below project_root (4.4/17.16).",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "intent": {
+      "description": "Caller intent, spec-frozen enum (4.4).",
+      "enum": ["recon", "reverse", "exploit", "audit", "build", "review", "report"]
+    },
+    "target": {
+      "description": "Declared target. kind is a closed enum; digest is optional and, when present, must be an algorithm-prefixed sha256 digest.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": {
+          "enum": ["url", "host", "device", "repo", "file", "sample"]
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "auth": {
+      "description": "Authorization attestation. All eight fields from 17.4 are required; a missing field is a blocked handoff, not a default. Timestamps are UTC RFC 3339.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "auth_source",
+        "approver",
+        "issued_at",
+        "expires_at",
+        "target_allowlist",
+        "allowed_actions",
+        "evidence_reference",
+        "revocation_status"
+      ],
+      "properties": {
+        "auth_source": {
+          "enum": ["scope_file", "case_attestation", "owner_statement", "ticket", "none"]
+        },
+        "approver": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "issued_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$"
+        },
+        "expires_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$"
+        },
+        "target_allowlist": {
+          "description": "Explicit target allowlist; empty is only acceptable for offline profiles and is checked by the policy layer, not by the shape.",
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "allowed_actions": {
+          "description": "Closed action vocabulary; free-text commands are not representable.",
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "enum": [
+              "read_only",
+              "static_analysis",
+              "local_build",
+              "local_test",
+              "lab_execution",
+              "target_request",
+              "device_action",
+              "write_artifact"
+            ]
+          }
+        },
+        "evidence_reference": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "revocation_status": {
+          "enum": ["active", "revoked", "unknown"]
+        }
+      }
+    },
+    "profile": {
+      "description": "Single policy input. Canonical profiles only (4.6); network mode, auth rule and allowed action are derived from it through skills/config/profile-map.json. Legacy kebab aliases must be migrated before handoff.",
+      "enum": [
+        "offline_sample",
+        "offline_ctf",
+        "authorized_lab",
+        "authorized_target_only",
+        "defensive_review",
+        "local_project"
+      ]
+    },
+    "execution_profile": {
+      "description": "Execution budget and allowlists. The nine execution fields of 17.4 are this object plus its eight properties (17.4 lists the object name itself as the first item). Budget values are T02-proposed upper bounds; the numeric budget is owned by T11/17.25.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filesystem_allowlist",
+        "network_egress_allowlist",
+        "credential_policy",
+        "max_runtime",
+        "max_retries",
+        "max_requests",
+        "max_artifact_size",
+        "requires_human_confirmation"
+      ],
+      "properties": {
+        "filesystem_allowlist": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "network_egress_allowlist": {
+          "description": "Must be empty for network_mode=offline; consistency with profile is enforced by the policy layer.",
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "credential_policy": {
+          "enum": ["none", "read_only_no_persist", "scoped_ephemeral", "explicit_owner_approval"]
+        },
+        "max_runtime": {
+          "description": "Seconds.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "max_retries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "max_requests": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "max_artifact_size": {
+          "description": "Bytes.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10737418240
+        },
+        "requires_human_confirmation": {
+          "type": "boolean"
+        }
+      }
+    },
+    "in_scope": {
+      "description": "Non-empty in-scope declaration (4.4).",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      }
+    },
+    "out_of_scope": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      }
+    },
+    "requested_downstream": {
+      "description": "Canonical skill ids the caller asks for. Existence in the canonical skill set is checked by the policy layer (17.23).",
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]{1,63}$"
+      }
+    },
+    "tool_requirements": {
+      "description": "tool-index capability ids, not executable paths. Version, exit code, timeout and output bound are tool-index fields (17.23).",
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_.-]{1,63}$"
+      }
+    },
+    "provenance": {
+      "description": "Provenance binding for the handoff (4.4).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_commit", "registry_digest", "input_digest"],
+      "properties": {
+        "source_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "registry_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "input_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "extensions": {
+      "description": "Only extension slot (4.0 rule 4). Keys must be lower snake_case, values must be JSON-serializable, and the whole serialized object must stay at or below 4096 bytes. The byte bound and the key pattern are enforced by the contract test because JSON Schema cannot express them.",
+      "type": "object",
+      "maxProperties": 32
+    }
+  }
+}

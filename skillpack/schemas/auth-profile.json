@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schemas/auth-profile.json",
+  "title": "Case authorization fact (T15, spec 17.4)",
+  "description": "Machine-readable authorization fact for one case. Lives at work/<case>/auth-profile.json next to scope.md. skills/scripts/verify-auth-profile.py enforces every rule below with the standard library: proof present, unexpired, non-empty target allowlist, action in scope, dangerous actions human-confirmed, filesystem/network egress declared and consistent with network_profile.mode, all numeric limits present and positive. No defaults are ever filled in: a missing field exits 20 (blocked), never silently passes.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "case_id",
+    "approver",
+    "issued_at",
+    "expires_at",
+    "target_allowlist",
+    "allowed_actions",
+    "evidence_reference",
+    "revocation_status",
+    "execution_profile",
+    "human_confirmations"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "case_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Must equal scope.md meta case_id; a foreign file never matches."
+    },
+    "approver": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human (or role id) that granted the authorization. Identity itself is enforced by the approval process; this record carries the claim the gate checks."
+    },
+    "issued_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z$",
+      "description": "UTC RFC 3339 issue time (17.26)."
+    },
+    "expires_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z$",
+      "description": "UTC RFC 3339 expiry. expires_at <= now exits 20 (expired)."
+    },
+    "target_allowlist": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Empty allowlist exits 20. Every ACT target must be covered by this list."
+    },
+    "allowed_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Action vocabulary is open, but the gate's DANGEROUS set always needs human confirmation."
+    },
+    "evidence_reference": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Ticket, contract path, or preset receipt proving the grant. Placeholder values (FILL_ME, TODO, none, null) exit 20."
+    },
+    "revocation_status": {
+      "type": "string",
+      "const": "active",
+      "description": "Any other value (revoked, suspended, missing) exits 20."
+    },
+    "execution_profile": {
+      "type": "object",
+      "required": [
+        "filesystem_allowlist",
+        "network_egress_allowlist",
+        "credential_policy",
+        "max_runtime_s",
+        "max_retries",
+        "max_requests",
+        "max_artifact_bytes",
+        "requires_human_confirmation"
+      ],
+      "properties": {
+        "filesystem_allowlist": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "network_egress_allowlist": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Must be empty when scope network_profile.mode is offline; otherwise every entry must resolve inside target_allowlist."
+        },
+        "credential_policy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "max_runtime_s": { "type": "integer", "minimum": 1 },
+        "max_retries": { "type": "integer", "minimum": 0 },
+        "max_requests": { "type": "integer", "minimum": 1 },
+        "max_artifact_bytes": { "type": "integer", "minimum": 1 },
+        "requires_human_confirmation": { "type": "boolean" }
+      }
+    },
+    "human_confirmations": {
+      "type": "object",
+      "description": "Map of dangerous action -> {by, at}. A dangerous --action without an entry exits 20.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["by", "at"],
+        "properties": {
+          "by": { "type": "string", "minLength": 1 },
+          "at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z$" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"expect": {"exit": 20, "verdict": "DENY"}, "id": "F5-unc", "masked_sample": "[UNC-PREFIX]srv[.]example[SEP]share", "morphology": "UNC and device-namespace path", "prefix_parts": ["\\", "\\"], "server_labels": ["srv", "example"], "share": "share", "status": "verified"}

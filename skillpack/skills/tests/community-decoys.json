@@ -1,0 +1,475 @@
+{
+  "meta": {
+    "description": "Negative control for the community routing engine: hints that must NOT be answered by a named target, plus the positives that must keep working. Closes defect D8 of the T26 design freeze, the only defect that is a process gap rather than a matching rule.",
+    "owner": "T26",
+    "defect": "D8",
+    "consumer": "skills/scripts/test-community-decoys.py",
+    "note": "Every hint in this file was measured against the real registry before it was written; the numbers in each why field are the observed values, not expectations. The decoy half is the corpus the repo never had: 182 L1 benchmark cases and 13 L2 ranking cases are all hits-only, so a rule that is too broad is invisible to them. A failing decoy is a real over-trigger and is reported as such, never deleted to reach a rate. The positives half is mandatory and exists so that a corpus of negatives cannot be satisfied by making the engine over-narrow: it carries the twelve broken hints that evidence could close, plus the 13 cases test-route-ranking.py already pins, plus the two guards added in the T26 follow-up wave (recall-ai-word-still-routes and recall-capability-word-still-routes), which are the positives that would go red if the adapter-boilerplate stopwords or the dropped short token 'ai' were ever over-applied. A thirteenth broken hint, 's3 bucket', is deliberately NOT in the positives half: no record in the 293-skill corpus owns S3 or object storage, so an expectation for it could never be satisfied and reporting it as over-narrowing would name a non-existent capability as a defect. It is asserted as the decoy absence-s3-bucket instead - see that case's why for the measurement. A positive case whose expectation no record can evidence is not a gate, it is a red line the reader learns to ignore."
+  },
+  "decoys": [
+    {
+      "name": "provenance-community-raw",
+      "bug_class": "D6-provenance",
+      "hint": "community-raw",
+      "forbidden_wrapper": "ai-fullstack-delivery",
+      "strict": true,
+      "why": "Every record's path starts with community-raw/, so the vendored snapshot root was carried by 293/293 records and matched all of them at once. It is the place the file was copied FROM, not a capability, and it can discriminate nothing. Measured now: 0 candidates, status missing_input."
+    },
+    {
+      "name": "provenance-skills-hub",
+      "bug_class": "D6-provenance",
+      "hint": "skills-hub",
+      "forbidden_wrapper": "hack-skills",
+      "strict": true,
+      "why": "The legacy importer injected the host project name into keywords[] of all 293 records, so it was the second universal constant beside community-raw. It names where this repository is, not what a skill does. Measured now: 0 candidates, status missing_input."
+    },
+    {
+      "name": "provenance-upstream",
+      "bug_class": "D6-provenance",
+      "hint": "upstream",
+      "forbidden_wrapper": "ctf-super-hub",
+      "strict": true,
+      "why": "Same importer boilerplate as the two literals above, also in keywords[] of 293/293 records. 'upstream' is a governance field of registry.json, not a capability word, so it must route nowhere. Measured now: 0 candidates, status missing_input."
+    },
+    {
+      "name": "provenance-project",
+      "bug_class": "D6-provenance",
+      "hint": "project",
+      "forbidden_wrapper": "ai-fullstack-delivery",
+      "strict": true,
+      "why": "'project' is the fourth literal the adapter injected into every record and is in the engine's stopword list for that reason. It is the most common word in the whole package and therefore the classic example of a term that can never be signal. Measured now: 0 candidates, status missing_input."
+    },
+    {
+      "name": "provenance-source",
+      "bug_class": "D6-provenance",
+      "hint": "source",
+      "forbidden_wrapper": "ctf-super-hub",
+      "strict": true,
+      "why": "'source' names the provenance axis of registry.json (source_kind, source_id) and is carried by the adapter like the rest of the boilerplate. A caller asking about 'source' is asking a governance question, and the engine must answer it with no adapted reference rather than handing over a skill. Measured now: 0 candidates, status missing_input."
+    },
+    {
+      "name": "provenance-community-raw-record",
+      "bug_class": "D6-provenance",
+      "hint": "community-raw",
+      "forbidden_source_path": "skills/active-directory-acl-abuse/SKILL.md",
+      "strict": true,
+      "why": "The record-level form of the same assertion, because a wrapper-level check can be satisfied by filtering while the individual record still matches. This record is one of the 293 whose path and keywords both carried the literal, so before the noise layer it answered the word with a name hit. Measured now: 0 candidates."
+    },
+    {
+      "name": "governance-capability",
+      "bug_class": "D6-governance",
+      "hint": "capability",
+      "forbidden_wrapper": "ai-fullstack-delivery",
+      "strict": false,
+      "why": "The design freeze measured 'capability' returning matched at confidence 1.0 through the delivery wrapper, and it still does. It is governance vocabulary emitted by the adapter into keywords[]/description, not a capability noun a user would type. Measured now: 30 candidates, all in ai-fullstack-delivery, every one a description-only hit on the single boilerplate word, status matched. strict=false because the correct behaviour is that no wrapper owns this word at all; the assertion pins that the delivery wrapper must not be the answer."
+    },
+    {
+      "name": "governance-adapted",
+      "bug_class": "D6-governance",
+      "hint": "adapted",
+      "forbidden_wrapper": "ai-fullstack-delivery",
+      "strict": false,
+      "why": "'adapted' is the adapter's own adjective for a migrated record, present in the frontmatter the importer wrote. It describes the import process, not the security capability, and it is in the same boilerplate family as 'capability'. Measured now: 30 candidates, all in ai-fullstack-delivery, status matched."
+    },
+    {
+      "name": "governance-fusion-cjk",
+      "bug_class": "D6-governance",
+      "hint": "融合",
+      "forbidden_wrapper": "ai-fullstack-delivery",
+      "strict": false,
+      "why": "The design freeze lists 融合 among the words that returned matched confidence 1.0. It is the Chinese boilerplate the importer put into the description of many ai-fullstack records to say 'this skill merges several capabilities'. It is the widest of the three governance words: measured now it makes 42 records candidates, more than any other single word measured, and it still answers at status matched."
+    },
+    {
+      "name": "governance-word-governance",
+      "bug_class": "D6-governance",
+      "hint": "governance",
+      "forbidden_source_path": "skills/defi-attack-patterns/SKILL.md",
+      "strict": false,
+      "why": "A sense error rather than a frequency error, and therefore the sharpest governance decoy. 'Governance' here is the registry's third_party_review / license governance axis; the record it selects is about DAO governance-takeover attacks, a different word in a different domain. Measured now: 1 candidate, and that candidate is the top and only reference."
+    },
+    {
+      "name": "governance-word-wrapper",
+      "bug_class": "D6-governance",
+      "hint": "wrapper",
+      "forbidden_source_path": "skills/path-traversal-lfi/SKILL.md",
+      "strict": false,
+      "why": "'wrapper' is a word of the engine's own implementation vocabulary (WRAPPER_ALIASES, registry.wrappers[]), and it reaches a user through a record's description. Measured now: 1 candidate, a description-only hit on the word 'wrapper' inside the path-traversal record, returned as the top and only reference. A user typing 'wrapper' is asking about the package structure, not about directory traversal."
+    },
+    {
+      "name": "meta-license",
+      "bug_class": "D6-governance",
+      "hint": "license",
+      "forbidden_wrapper": "hack-skills",
+      "strict": true,
+      "why": "license_status is a registry governance field present on every record, and a word that appears in all 293 descriptions cannot discriminate. The design freeze's own noise rule (1.3) says exactly this: a word present in the whole registry is boilerplate, not signal. Measured now: 0 candidates."
+    },
+    {
+      "name": "meta-snapshot",
+      "bug_class": "D6-provenance",
+      "hint": "snapshot",
+      "forbidden_wrapper": "ai-fullstack-delivery",
+      "strict": true,
+      "why": "snapshot_root and tree_digest are the vendoring fields of registry.json. The word describes the packaging pipeline, not a capability, so it must never select an adapted skill. Measured now: 0 candidates, which also confirms the noise layer is not merely suppressing community-raw."
+    },
+    {
+      "name": "meta-reference",
+      "bug_class": "D6-provenance",
+      "hint": "reference",
+      "forbidden_wrapper": "hack-skills",
+      "strict": true,
+      "why": "Every adapted record is discovery=reference-only and the engine's own output field is 'references', so the word is a structural term of this package rather than a capability. It is in the stopword list. Measured now: 0 candidates."
+    },
+    {
+      "name": "alias-workflow-stopped",
+      "bug_class": "D5-stopword-alias",
+      "hint": "workflow",
+      "forbidden_wrapper": "ai-fullstack-delivery",
+      "strict": true,
+      "why": "The primary D5 assertion. 'workflow' is listed in the engine's stopword set but was also a variant of the delivery alias, so normalize() rewrote it to alias_delivery before the stopword filter ran and tokens('workflow') returned {'alias_delivery'}. Measured now: tokens('workflow') == set() and lookup('workflow') is status missing_input with 0 candidates, which is the state the freeze requires. The four cases below are the same bug's residue and still fail."
+    },
+    {
+      "name": "alias-delivery-word",
+      "bug_class": "D5-stopword-alias",
+      "hint": "delivery",
+      "forbidden_source_path": "workflows/ai-ml-engineer/skills/rag-pipeline/SKILL.md",
+      "strict": false,
+      "why": "D5 was only half closed: 'workflow' was stopped, but its alias siblings were not. The delivery alias still maps 'delivery', 'pipeline', 'devops' and 交付 onto the capability token alias_delivery, and because that token is a NAME hit on records whose own adapted name carries the generic word, 29 records become candidates. Measured now: all four hints return the byte-identical reference list, and the top one is the RAG pipeline record, which is not what any of the four words means. strict=false because the word does have legitimate answers; it must simply not be answered by an AI RAG pipeline record."
+    },
+    {
+      "name": "alias-pipeline-word",
+      "bug_class": "D5-stopword-alias",
+      "hint": "pipeline",
+      "forbidden_source_path": "workflows/ai-ml-engineer/skills/rag-pipeline/SKILL.md",
+      "strict": false,
+      "why": "Same alias mechanism as alias-delivery-word, kept as its own case because a CI/CD pipeline request and an RAG pipeline request are different questions that the alias currently cannot tell apart: the engine returns the same three references for both, led by the RAG record rather than by workflows/devops-engineer/skills/ci-cd-pipeline/SKILL.md. Measured now: status matched, 29 candidates, top reference is the RAG record."
+    },
+    {
+      "name": "alias-devops-word",
+      "bug_class": "D5-stopword-alias",
+      "hint": "devops",
+      "forbidden_source_path": "workflows/ai-ml-engineer/skills/rag-pipeline/SKILL.md",
+      "strict": false,
+      "why": "The strongest of the four, because no reading of 'devops' makes an AI RAG pipeline the right answer. Measured now: status matched, and the top reference is workflows/ai-ml-engineer/skills/rag-pipeline/SKILL.md while workflows/devops-engineer/skills/SKILL.md is ranked second on an identical name hit of alias_delivery."
+    },
+    {
+      "name": "alias-delivery-cjk",
+      "bug_class": "D5-stopword-alias",
+      "hint": "交付",
+      "forbidden_wrapper": "ai-fullstack-delivery",
+      "strict": false,
+      "why": "The design freeze measured 交付 answering 154/154 ai-fullstack records at confidence 1.0. The stopword strip removed the word 'workflow' but 交付 is not in the stopword set at all - it is an alias variant - so the Chinese spelling of the same generic concept still routes the whole delivery wrapper. Measured now: 29 candidates, status matched, delivery wrapper is the top and only wrapper."
+    },
+    {
+      "name": "hypernym-endpoint-top",
+      "bug_class": "hypernym",
+      "hint": "endpoint",
+      "forbidden_source_path": "skills/401-403-bypass-techniques/SKILL.md",
+      "strict": false,
+      "why": "The cross-domain bare-token class. 'endpoint' is a hypernym carried by 11 records across two wrappers, and the references it selects are decided by which record happens to mention the word rather than by what the caller meant. Measured now: 11 candidates, and the top reference is a status-code access-bypass record, which is a sub-case of endpoint testing and not a general answer to the bare word. strict=false: the word does belong in the record set, it must not be led by a sub-case."
+    },
+    {
+      "name": "hypernym-application-top",
+      "bug_class": "hypernym",
+      "hint": "application",
+      "forbidden_source_path": "skills/android-pentesting-tricks/SKILL.md",
+      "strict": false,
+      "why": "The same failure with a noun that is even less discriminating: 'application' is carried by 14 records, all of them in hack-skills, and the ranked answer is the Android record purely by a description-only mention. A bare 'application' is a request for an application-security route, not a specifically mobile one. Measured now: 14 candidates, status matched, top reference is the Android record."
+    },
+    {
+      "name": "hypernym-endpoint-wrapper",
+      "bug_class": "hypernym",
+      "hint": "endpoint",
+      "forbidden_wrapper": "ai-fullstack-delivery",
+      "strict": false,
+      "why": "The wrapper-level half of the cross-domain assertion: a bare infrastructure noun must not make the full-stack delivery wrapper the answer, because that wrapper is for building software rather than for testing an endpoint. Measured now: two wrappers answer and hack-skills outranks ai-fullstack-delivery, so this one holds. It is kept because it is the assertion that would break first if a description-only hit were ever promoted to a name hit."
+    },
+    {
+      "name": "hypernym-key-wrapper",
+      "bug_class": "hypernym",
+      "hint": "key",
+      "forbidden_wrapper": "ai-fullstack-delivery",
+      "strict": false,
+      "why": "'key' reaches 11 records of which 10 are hack-skills and exactly 1 is ai-fullstack-delivery; the word is a hypernym shared by cryptography, JWT, keylogging and key material, and no single wrapper owns it. Measured now: hack-skills is the top wrapper, so the assertion holds. It is the case that would catch the token_aliases fold (keys -> key) dragging a bare noun into a build-and-deliver route."
+    },
+    {
+      "name": "short-token-ai-delivery",
+      "bug_class": "D4-short-token",
+      "hint": "ai",
+      "forbidden_wrapper": "ai-fullstack-delivery",
+      "strict": true,
+      "why": "The measured over-trigger behind the drop of 'ai' from short_tokens. The routing view hyphen-splits the source identifier ai-fullstack into the part 'ai', so the token was present in 156 of 293 routing texts and gave every one of those records a NAME-level hit (weight 3) for any hint containing the word. Measured at the time of the fix: lookup('ai') returned 3 wrappers at confidence 1.0, held back from status=matched only by ambiguous_tie. 'ai' is a source-identifier fragment, not a capability word, so it must not be a routable token. Measured now: tokens('ai') == set() and lookup('ai') is status missing_input with 0 wrappers. strict=true because the correct behaviour is that no community record is reachable from this word at all; the shorter source filter would let a partial regression through as long as a different wrapper happened to lead."
+    },
+    {
+      "name": "short-token-ai-ctf",
+      "bug_class": "D4-short-token",
+      "hint": "ai",
+      "forbidden_wrapper": "ctf-super-hub",
+      "strict": true,
+      "why": "The same word, asserted against a second wrapper, because the pre-fix over-trigger was not confined to the delivery wrapper. At the time of the fix lookup('ai') answered ctf-super-hub and hack-skills at confidence 1.0 alongside ai-fullstack-delivery, all three held at the same rank; a regression that restored 'ai' to short_tokens would have to be caught whatever the top-ranked wrapper happened to be. Measured now: 0 wrappers."
+    },
+    {
+      "name": "short-token-ai-hack",
+      "bug_class": "D4-short-token",
+      "hint": "ai",
+      "forbidden_wrapper": "hack-skills",
+      "strict": true,
+      "why": "The third of the three wrappers that answered the bare word at confidence 1.0 before the fix. Kept as its own case so the assertion is not dependent on the ranking of the other two, and so that a regression restoring 'ai' is reported against the hack corpus specifically rather than as a single anonymous wrapper failure. Measured now: 0 wrappers."
+    },
+    {
+      "name": "short-token-ai-record",
+      "bug_class": "D4-short-token",
+      "hint": "ai",
+      "forbidden_source_path": "workflows/ai-ml-engineer/skills/ai-deployment/SKILL.md",
+      "strict": true,
+      "why": "The record-level form of the same assertion, for the reason the provenance cases already give: a wrapper-level check can be satisfied by filtering at the wrapper boundary while the individual record still carries the name-level hit. This record's own name view contains 'ai' as a hyphen part of both ai-deployment and ai-fullstack, so before the short token was dropped it answered the bare word on a name hit rather than a description mention. Measured now: 0 references."
+    },
+    {
+      "name": "governance-capability-strict",
+      "bug_class": "D6-governance",
+      "hint": "capability",
+      "forbidden_wrapper": "ai-fullstack-delivery",
+      "strict": true,
+      "why": "The strict form of governance-capability, added once the word was stopped in the engine rather than answered by one wrong wrapper. governance-capability above can still be satisfied by a rule that returns some other wrapper, and that is weaker than the state the fix actually produces. The adapter wrote the literal boilerplate 'Adapted capability from workflows/<path>.' into the description of 30 records, all of them ai-fullstack-delivery; that is 30 of 154 records of that source, i.e. 19%, which is below the design-freeze 1.3 threshold of 80% of one source and therefore does NOT qualify as a noise[] entry. The word is stopped in the engine's STOPWORDS constant on the separate ground that a word the adapter injects is not capability vocabulary. Measured now: tokens('capability') == set(), lookup('capability') is status missing_input with 0 candidates, versus 30 candidates at status matched before the fix."
+    },
+    {
+      "name": "governance-adapted-strict",
+      "bug_class": "D6-governance",
+      "hint": "adapted",
+      "forbidden_wrapper": "ai-fullstack-delivery",
+      "strict": true,
+      "why": "The strict form of governance-adapted, and it is also the record that stops the previous wave's false claim from being re-asserted. 'adapted' appears in the same 30 synthetic descriptions and in the same 154-record source, so it is 19% of ai-fullstack-delivery and equally below the 1.3 threshold; it belongs in STOPWORDS for the same reason 'capability' does. Measured now: tokens('adapted') == set(), lookup('adapted') is status missing_input with 0 candidates, versus 30 candidates at status matched before the fix."
+    },
+    {
+      "name": "absence-s3-bucket",
+      "bug_class": "D7-recall",
+      "hint": "s3 bucket",
+      "forbidden_source_path": "skills/unauthorized-access-common-services/SKILL.md",
+      "forbidden_wrapper": "hack-skills",
+      "strict": true,
+      "why": "A documented ABSENCE of capability, asserted as a permanent guard; NOT an engine defect, and the reason this case is here at all is that it was not always one. It was a positive named recall-s3-bucket whose expect_source_path was skills/unauthorized-access-common-services/SKILL.md, and that expectation cannot be satisfied by any record. Measured on the record it named, community-hack-skills-127 (path community-raw/hack-skills/unauthorized-access-common-services/SKILL.md): its directory holds exactly two files, SKILL.md and PORT_SERVICE_MATRIX.md, and a case-insensitive search for s3|bucket|aws|object storage across BOTH of them returns ZERO matches. Its registry description is 'Unauthorized access playbook for common exposed services. Use when Redis, Rsync, PHP-FPM, AJP/Ghostcat, Hadoop YARN, H2 Console, or similar management interfaces are exposed without authentication.' - H2 Console is a Java SQL console, it is not S3 and it is not object storage. Its keywords[] are provenance plus its own slug only: project, skills-hub, upstream, hack-skills, unauthorized-access-common-services. Repo-wide, 'bucket' occurs in 0 of 293 records' routing texts and 0 of 293 candidacy views (name view union description view), and 's3' occurs in 0 of 293 on both counts; the one record carrying 'aws' anywhere is community-ai-fullstack-delivery-196, an AWS Secrets Manager config record, and it does not carry 'bucket' or 's3'. So NO record in the 293-skill corpus owns S3 or object storage, and the hint 's3 bucket' correctly reaches nothing: lookup returns status needs_review, reason no_match, 0 wrappers, 0 candidates, 0 references. The tokeniser is not at fault and is not what this case measures - tokens('s3 bucket') is exactly {'bucket', 's3'}, because 's3' IS admitted by short_tokens and works; the word that fails is 'bucket', which nothing in the corpus can evidence. Design-freeze 1.2 forbids adding a keyword that no record's own directory can evidence, so the hole must stay named rather than filled. What this case therefore asserts is the correct state: the hint must not lead with, or be answered by, any record, and in particular must not be answered by hack-skills at all (strict) nor by the unauthorized-access record that the withdrawn positive expected (which is the same claim one level down, since a wrapper-level check can be satisfied by filtering while the individual record still carries the hit). If a future curator adds an unjustified 'bucket' signal or a bucket->something alias, this case goes red immediately and says where the evidence was required. Measured now: 0 candidates, 0 references, status needs_review."
+    }
+  ],
+  "positives": [
+    {
+      "name": "recall-bloodhound",
+      "bug_class": "D7-recall",
+      "hint": "bloodhound",
+      "source": "hack-skills",
+      "expect_source_path": "skills/active-directory-acl-abuse/SKILL.md",
+      "why": "The symptom that started T26. The record only ever said BloodHound-guided, a hyphen compound the tokeniser swallows, so the word reached nothing. It must reach the AD ACL abuse record, which is the record whose body is a BloodHound attack-path sheet."
+    },
+    {
+      "name": "recall-mimikatz",
+      "bug_class": "D7-recall",
+      "hint": "mimikatz",
+      "source": "hack-skills",
+      "expect_source_path": "skills/active-directory-acl-abuse/SKILL.md",
+      "why": "mimikatz appears in 0 records' frontmatter, so before the curated layer it was one of the seven zero-reference probes. The term is present verbatim inside the record's own vendored directory, which is what makes the signal admissible rather than invented."
+    },
+    {
+      "name": "recall-certipy",
+      "bug_class": "D7-recall",
+      "hint": "certipy",
+      "source": "hack-skills",
+      "expect_source_path": "skills/active-directory-certificate-services/SKILL.md",
+      "why": "certipy appears in 0 records' frontmatter and is the tool an AD CS abuse request is actually phrased with. It must reach the certificate-services record, not a generic web record."
+    },
+    {
+      "name": "recall-dcsync-phrase",
+      "bug_class": "D7-recall",
+      "hint": "BloodHound DCSync shadow credentials",
+      "source": "hack-skills",
+      "expect_source_path": "skills/active-directory-acl-abuse/SKILL.md",
+      "why": "The realistic multi-word phrasing rather than a single probe. This is the form a caller actually types, and it is the case that would regress first if the curated signal were dropped in favour of the pure token overlap that exists elsewhere."
+    },
+    {
+      "name": "recall-lattice",
+      "bug_class": "D2-recall",
+      "hint": "lattice",
+      "source": "hack-skills",
+      "expect_source_path": "skills/lattice-crypto-attacks/SKILL.md",
+      "why": "D2: the description holds only Lattice-based, so before the description view was widened this was one widening hit and zero references. A single English word must now reach the record that is entirely about lattice reduction."
+    },
+    {
+      "name": "plural-pcaps",
+      "bug_class": "D3-plural",
+      "hint": "pcaps",
+      "source": "hack-skills",
+      "expect_source_path": "skills/traffic-analysis-pcap/SKILL.md",
+      "why": "D3: the tokeniser had no stemming, so the plural a user actually types was invisible. The pcap -> pcaps fold is one of the two probes the design freeze names explicitly."
+    },
+    {
+      "name": "plural-yaras",
+      "bug_class": "D3-plural",
+      "hint": "yaras",
+      "source": "ctf-super-hub",
+      "expect_source_path": "ctf-malware/SKILL.md",
+      "why": "D3 again, on the other frozen probe, and against the ctf wrapper rather than hack-skills so the two plural folds are not tested through the same code path."
+    },
+    {
+      "name": "signal-frida",
+      "bug_class": "D7-recall",
+      "hint": "frida",
+      "source": "hack-skills",
+      "expect_source_path": "skills/android-pentesting-tricks/SKILL.md",
+      "why": "Tool-led Android assessment. The frontmatter lists vulnerability classes, not the instrumentation tool, so this hint is carried entirely by a curated signal; if the signal layer stops being consumed this case fails without any other case noticing."
+    },
+    {
+      "name": "signal-hashcat",
+      "bug_class": "D7-recall",
+      "hint": "hashcat",
+      "source": "hack-skills",
+      "expect_source_path": "skills/hash-attack-techniques/SKILL.md",
+      "why": "A practical hash-cracking request is phrased with the tool in hand. Measured as one of the signals the engine now resolves to a single record rather than to generic web skills."
+    },
+    {
+      "name": "signal-rubeus",
+      "bug_class": "D7-recall",
+      "hint": "rubeus",
+      "source": "hack-skills",
+      "expect_source_path": "skills/active-directory-kerberos-attacks/SKILL.md",
+      "why": "Kerberos work is named after its tools. The record's description covers the techniques in prose and never names the tool, so the signal is the only thing that can connect the two."
+    },
+    {
+      "name": "signal-sliver",
+      "bug_class": "D7-recall",
+      "hint": "sliver",
+      "source": "hack-skills",
+      "expect_source_path": "skills/windows-av-evasion/SKILL.md",
+      "why": "EDR evasion is requested against a named C2 framework. The word appears in the record's own vendored body and in 0 records' routing text, which is the exact shape the evidence rule admits."
+    },
+    {
+      "name": "recall-llm-integration",
+      "bug_class": "D1-recall",
+      "hint": "llm integration",
+      "source": "ai-fullstack-delivery",
+      "expect_source_path": "workflows/ai-ml-engineer/skills/llm-integration/SKILL.md",
+      "why": "D1: the record was unreachable from its own hyphenated slug because candidacy was gated on the strict token set while the widening was only consulted afterwards. A source filter is used because the unfiltered call legitimately returns three wrappers and this case is about one record."
+    },
+    {
+      "name": "rank-top-ssrf-cjk",
+      "bug_class": "ranking-order",
+      "hint": "服务端请求伪造",
+      "source": "hack-skills",
+      "expect_source_path": "skills/ssrf-server-side-request-forgery/SKILL.md",
+      "expect_top": true,
+      "why": "One of the 13 cases test-route-ranking.py already pins: a name match must be the FIRST reference, not merely present. A Chinese alias hint that only widens to a name hit still has to win the order."
+    },
+    {
+      "name": "rank-top-ssrf-english",
+      "bug_class": "ranking-order",
+      "hint": "SSRF metadata endpoint access",
+      "source": "hack-skills",
+      "expect_source_path": "skills/ssrf-server-side-request-forgery/SKILL.md",
+      "expect_top": true,
+      "why": "The pinned ordering case that a tie-break change can break without changing any hit count: the SSRF record ties on rank with a record that matches only on the generic words 'access' and 'endpoint', and the alias-prefix preference is what keeps SSRF first."
+    },
+    {
+      "name": "rank-top-ctf-apk",
+      "bug_class": "ranking-order",
+      "hint": "CTF APK smali",
+      "source": "ctf-super-hub",
+      "expect_source_path": "ctf-reverse/SKILL.md",
+      "expect_top": true,
+      "why": "Pinned by test-route-ranking.py: a hint carrying two alias tokens must be won by the reversing record over the APK records of the same wrapper."
+    },
+    {
+      "name": "rank-top-sqli",
+      "bug_class": "ranking-order",
+      "hint": "SQL injection login form",
+      "source": "hack-skills",
+      "expect_source_path": "skills/sqli-sql-injection/SKILL.md",
+      "expect_top": true,
+      "why": "Pinned by test-route-ranking.py: the name match must outrank the description mentions of a related record."
+    },
+    {
+      "name": "rank-top-websocket",
+      "bug_class": "ranking-order",
+      "hint": "websocket hijacking",
+      "source": "hack-skills",
+      "expect_source_path": "skills/websocket-security/SKILL.md",
+      "expect_top": true,
+      "why": "Pinned by test-route-ranking.py: name match x3 must outrank description mention x1 for the same underlying technique."
+    },
+    {
+      "name": "desc-burp-zap",
+      "bug_class": "ranking-order",
+      "hint": "burp suite zap",
+      "expect_source_path": "workflows/security-engineer/skills/web-vulnerability/SKILL.md",
+      "why": "Pinned by test-route-ranking.py as a description-only route: the term exists only in the description, so the case is the anti-over-narrowing guard that a corpus of negatives alone cannot supply. No source filter, because the record is deliberately reached without one."
+    },
+    {
+      "name": "desc-cloud-metadata",
+      "bug_class": "ranking-order",
+      "hint": "cloud metadata endpoint",
+      "source": "hack-skills",
+      "expect_source_path": "skills/ssrf-server-side-request-forgery/SKILL.md",
+      "why": "Pinned by test-route-ranking.py: 'metadata' is in the description of the SSRF record and in no directory name, so a candidacy rule that only widened the name view would lose it."
+    },
+    {
+      "name": "desc-bloodhound-dcsync",
+      "bug_class": "ranking-order",
+      "hint": "BloodHound DCSync shadow credentials",
+      "source": "hack-skills",
+      "expect_source_path": "skills/active-directory-acl-abuse/SKILL.md",
+      "why": "Pinned by test-route-ranking.py and deliberately identical in hint to recall-dcsync-phrase, so the two files fail together: if the record stops being reachable the positive half of both this corpus and test-route-ranking.py goes red in the same run."
+    },
+    {
+      "name": "desc-kerberoasting",
+      "bug_class": "ranking-order",
+      "hint": "AS-REP roasting kerberoasting golden ticket",
+      "source": "hack-skills",
+      "expect_source_path": "skills/active-directory-kerberos-attacks/SKILL.md",
+      "why": "Pinned by test-route-ranking.py: the technique is in the description only, and the curated rubeus signal covers a different phrasing of the same record."
+    },
+    {
+      "name": "desc-coppersmith",
+      "bug_class": "ranking-order",
+      "hint": "Coppersmith LWE 格攻击 填充预言机",
+      "source": "ctf-super-hub",
+      "expect_source_path": "ctf-crypto/SKILL.md",
+      "why": "Pinned by test-route-ranking.py and the only case in the corpus that mixes English and Chinese in one hint, which is the situation the alias lexicon exists for."
+    },
+    {
+      "name": "desc-heap-rop",
+      "bug_class": "ranking-order",
+      "hint": "heap exploitation ROP ret2libc seccomp",
+      "source": "ctf-super-hub",
+      "expect_source_path": "ctf-pwn/SKILL.md",
+      "why": "Pinned by test-route-ranking.py: four technique words, none of them in a directory name, and the record must still be routed."
+    },
+    {
+      "name": "desc-osint-cjk",
+      "bug_class": "ranking-order",
+      "hint": "地理位置 用户名枚举 历史快照",
+      "source": "ctf-super-hub",
+      "expect_source_path": "ctf-osint/SKILL.md",
+      "why": "Pinned by test-route-ranking.py: a purely Chinese hint with no English token at all, which is the case that would break if the alias or stopword strip were ever applied to the CJK path of the tokeniser."
+    },
+    {
+      "name": "desc-forensics-cjk",
+      "bug_class": "ranking-order",
+      "hint": "磁盘镜像 隐写分析 事件日志 证据恢复",
+      "source": "ctf-super-hub",
+      "expect_source_path": "ctf-forensics/SKILL.md",
+      "why": "Pinned by test-route-ranking.py: the forensics record must be reached by the evidence-handling vocabulary it is actually about, with no English token present."
+    },
+    {
+      "name": "recall-ai-word-still-routes",
+      "bug_class": "D4-short-token",
+      "hint": "ai deployment strategy",
+      "source": "ai-fullstack-delivery",
+      "expect_source_path": "workflows/ai-ml-engineer/skills/ai-deployment/SKILL.md",
+      "expect_top": true,
+      "why": "The guard that keeps the short token 'ai' from being fixed in the wrong direction. A caller really does type the word 'ai' as part of an ordinary request, and after 'ai' was dropped from short_tokens tokens('ai deployment strategy') is exactly {deployment, strategy} - the 'ai' is gone from the hint's own token set. The record must still be reached and must still be the TOP reference, which proves the drop removed a source-identifier fragment rather than a capability term. Measured now: status matched, 3 references, top reference ai-deployment. This case is what makes the corpus unsatisfiable by refusing every hint that contains 'ai'."
+    },
+    {
+      "name": "recall-capability-word-still-routes",
+      "bug_class": "D6-governance",
+      "hint": "capability 评估 llm integration",
+      "source": "ai-fullstack-delivery",
+      "expect_source_path": "workflows/ai-ml-engineer/skills/llm-integration/SKILL.md",
+      "why": "The same guard for the adapter stopwords. A multi-word hint that happens to contain the stopped word 'capability' must still be routed by its other terms: tokens() here is {integration, llm, 评估} with 'capability' and '评估' not present as English tokens, and the llm-integration record must still be among the references. If STOPWORDS were ever applied to the whole hint rather than to single tokens, this case would go red. Measured now: status needs_review, 5 references across 3 wrappers, llm-integration present at position 3 of 5 within the ai-fullstack-delivery wrapper."
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+---
+name: Strix•快速扫描
+description: Strix 快速安全评估模式,面向高影响漏洞的限时测试;触发名:strix-quick
+license: "review-required"
+compatibility: "Requires the canonical reverse-skill case/scope contract; source tools are optional."
+allowed-tools: Read Write Edit Glob Grep Bash
+metadata:
+  integrated: "true"
+  integration-source: "ctf-super-hub"
+  source-path: "strix-quick/SKILL.md"
+  maturity: "partial"
+  integration-risk: "medium"
+  allowed-context: "offline-ctf,authorized-lab"
+  user-invocable: "false"
+---
+
+
+## Integrated reverse-skill contract
+
+This capability is loaded through the canonical reverse-skill router. The source
+material is preserved for attribution, but execution follows the host package contract:
+
+1. **Scope first**: initialize the current `work/<case>/scope.md` with the canonical
+   `case-init` flow. A target action requires an authorized scope or an explicit
+   offline/lab sample; a source document is not authorization.
+2. **Tools by registry**: read the package `skills/tool-index.md` before using a tool.
+   Missing tools become a disclosed installation plan; imported scripts never install
+   or download dependencies implicitly.
+3. **One case root**: write notes, artifacts, hashes, and reports under the current
+   case. Do not create a parallel source-package `case`, `output`, or `workspace`
+   tree.
+4. **Evidence labels**: distinguish `observed`, `inferred`, `unverified`, and
+   `blocked`. Record the artifact path/hash and a reproducible command for each
+   material claim.
+5. **Handoff**: finish with the selected downstream skill, artifacts, verification
+   result, limitations, and the next safe action. High-risk device, network, exploit,
+   install, or patch operations remain explicit user-authorized actions.
+
+The imported text may describe a different host or directory layout. Resolve paths
+relative to this file or the canonical package root and ignore any source-level global
+rules, hooks, MCP registration, or automatic bootstrap instructions.
+
+# Quick Testing Mode
+
+Time-boxed assessment focused on high-impact vulnerabilities. Prioritize breadth over depth.
+
+## Approach
+
+Optimize for fast feedback on critical security issues. Skip exhaustive enumeration in favor of targeted testing on high-value attack surfaces.
+
+## Phase 1: Rapid Orientation
+
+**Whitebox (source available)**
+- Focus on recent changes: git diffs, new commits, modified files—these are most likely to contain fresh bugs
+- Read existing `wiki` notes first (`list_notes(category="wiki")` then `get_note(note_id=...)`) to avoid remapping from scratch
+- Run a fast static triage on changed files first (`semgrep`, then targeted `sg` queries)
+- Run at least one lightweight AST pass (`sg` or Tree-sitter) so structural mapping is not skipped
+- Keep AST commands tightly scoped to changed or high-risk paths; avoid broad repository-wide pattern dumps
+- Run quick secret and dependency checks (`gitleaks`, `trufflehog`, `trivy fs`) scoped to changed areas when possible
+- Identify security-sensitive patterns in changed code: auth checks, input handling, database queries, file operations
+- Trace user input through modified code paths
+- Check if security controls were modified or bypassed
+- Before completion, update the shared repo wiki with what changed and what needs dynamic follow-up
+
+**Blackbox (no source)**
+- Map authentication and critical user flows
+- Identify exposed endpoints and entry points
+- Skip deep content discovery—test what's immediately accessible
+
+## Phase 2: High-Impact Targets
+
+Test in priority order:
+
+1. **Authentication bypass** - login flaws, session issues, token weaknesses
+2. **Broken access control** - IDOR, privilege escalation, missing authorization
+3. **Remote code execution** - command injection, deserialization, SSTI
+4. **SQL injection** - authentication endpoints, search, filters
+5. **SSRF** - URL parameters, webhooks, integrations
+6. **Exposed secrets** - hardcoded credentials, API keys, config files
+
+Skip for quick scans:
+- Exhaustive subdomain enumeration
+- Full directory bruteforcing
+- Low-severity information disclosure
+- Theoretical issues without working PoC
+
+## Phase 3: Validation
+
+- Confirm exploitability with minimal proof-of-concept
+- Demonstrate real impact, not theoretical risk
+- Report findings immediately as discovered
+
+## Chaining
+
+When a strong primitive is found (auth weakness, injection point, internal access), immediately attempt one high-impact pivot to demonstrate maximum severity. Don't stop at a low-context "maybe"—turn it into a concrete exploit sequence that reaches privileged action or sensitive data.
+
+## Operational Guidelines
+
+- Use browser tool for quick manual testing of critical flows
+- Use terminal for targeted scans with fast presets (e.g., nuclei with critical/high templates only)
+- Use proxy to inspect traffic on key endpoints
+- Skip extensive fuzzing—use targeted payloads only
+- Create subagents only for parallel high-priority tasks
+
+## Mindset
+
+Think like a time-boxed bug bounty hunter going for quick wins. Prioritize breadth over depth on critical areas. If something looks exploitable, validate quickly and move on. Don't get stuck—if an attack vector isn't yielding results quickly, pivot.

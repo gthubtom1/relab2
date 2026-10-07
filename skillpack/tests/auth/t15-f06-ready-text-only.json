@@ -1,0 +1,1 @@
+{"allow_host_labels": ["target-06", "t15", "local"], "omit": "attestation.json", "note": "ready_for_act=true text with valid auth-profile but no attestation; copyable text alone must exit 20"}

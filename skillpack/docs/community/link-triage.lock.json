@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1.0",
+  "subject": "docs/community/link-triage.json",
+  "subject_digest": "sha256:684c8be22f8b9f4b3da5412670f30d3d85a606e403efcd69f4b6287e736b251c",
+  "entries_total": 342,
+  "counts": {
+    "broken_total": 342,
+    "by_class": {
+      "provenance": 341,
+      "wrapper": 1
+    },
+    "by_status": {
+      "fixed": 329,
+      "registered_open": 13
+    },
+    "by_disposition": {
+      "documented_not_distributed": 1,
+      "rewrite_path": 328,
+      "upstream_layout_unmappable": 13
+    },
+    "by_source": {
+      "ai-fullstack-delivery": 3,
+      "ctf-super-hub": 5,
+      "hack-skills": 334
+    },
+    "banner_files": [
+      "docs/community/ai-fullstack-delivery/README.md",
+      "docs/community/ctf-super-hub/README.md",
+      "docs/community/hack-skills/README.md",
+      "docs/community/hack-skills/README_CN.md"
+    ],
+    "needs_human_review": 0
+  },
+  "note": "Digest lock for the link-triage registry. Changing the registry without regenerating this lock fails verify-triage-lock.py. Regenerate with --write-lock after an accepted change, and require an independent review for both files (spec 17.21 / T24 CODEOWNERS)."
+}

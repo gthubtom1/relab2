@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>外置中枢 · 控制台</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="busy-bar" hidden></div>
+<div id="live-toast" hidden role="status" aria-live="polite"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="mark">◆</span>
+    <div>
+      <strong>外置中枢 · 工作台</strong>
+      <small>选一家 → 勾几样 → 写进去。不用了就卸回原样。</small>
+    </div>
+  </div>
+  <div class="top-tools">
+    <span id="top-state" class="chip">正在认本机智能体…</span>
+    <span id="top-counts" class="chip"></span>
+    <label class="chip chip-toggle"><input type="checkbox" id="show-all"> 名单里没装的也列出来</label>
+    <button type="button" id="btn-refresh" class="btn-ghost" title="重新读一遍状态">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13 2v3h-3"/></svg>刷新</button>
+  </div>
+</header>
+
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="side-head"><em class="step">1</em> 智能体</div>
+    <div class="side-tools">
+      <button type="button" id="btn-scan" class="btn-ghost" title="按家里的入口文件重扫一遍">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13 2v3h-3"/></svg>重扫</button>
+      <button type="button" id="btn-deep" class="btn-ghost" title="借 Everything 把整台盘按入口文件名兜一遍。慢，但漏的能捞回来">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.4"/><path d="M10.4 10.4 14 14M5 7h4M7 5v4"/></svg>深扫全盘</button>
+      <button type="button" id="btn-add-host" class="btn-ghost" title="扫不到就自己填家目录">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>加一家</button>
+    </div>
+    <div id="hosts" class="seats"></div>
+    <p class="side-hint" id="hosts-hint"></p>
+    <details class="scan-detail" id="scan-detail" hidden>
+      <summary>扫到了什么 / 跳过了什么</summary>
+      <div id="scan-report" class="scan-report"></div>
+    </details>
+  </aside>
+
+  <main class="board">
+    <section class="hero" id="hero">
+      <div class="hero-title">
+        <h1 id="hero-title">先在左边点一家智能体</h1>
+        <p id="hero-recipe">选中之后这里显示它的家目录、入口文件和运行状态。</p>
+      </div>
+      <dl class="facts">
+        <div><dt>家目录</dt><dd id="hero-home">—</dd></div>
+        <div><dt>入口文件</dt><dd id="hero-entry">—</dd></div>
+        <div><dt>运行</dt><dd id="hero-run">—</dd></div>
+        <div><dt>中枢</dt><dd id="hero-hub">—</dd></div>
+      </dl>
+      <div class="hero-ops">
+        <button type="button" id="btn-kill-host" class="btn-ghost btn-danger" hidden>强制关闭</button>
+        <button type="button" id="btn-hide-host" class="btn-ghost" hidden>别列这家</button>
+        <button type="button" id="btn-drop-host" class="btn-ghost" hidden>从名单拿掉</button>
+      </div>
+      <!-- 两件正交的事，各占各的位：智能体在不在（上面的家目录就是证据），
+           中枢写进去什么（这三枚标）。「装了哪些东西」逐段给答案。 -->
+      <div class="hero-seg" id="hero-seg" hidden>
+        <span class="seg-title">写进去的三段</span>
+        <div id="seg-row" class="seg-row"></div>
+        <p class="seg-note" id="seg-note"></p>
+      </div>
+    </section>
+
+    <section class="zone">
+      <div class="zone-head">勾几样写进入口文件（顺序固定）<span>只有左边那颗开关能开关，标题行点了不算</span></div>
+
+      <section class="slot" id="slot-hub">
+        <div class="slot-head">
+          <button type="button" class="switch" id="sw-hub" aria-pressed="true" title="中枢内核：开/关"><b></b></button>
+          <span class="slot-name">中枢内核（状态机）</span>
+          <button type="button" class="btn-new" id="new-hub" title="新建一张中枢卡（就建中枢，不问你别的）">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>新建中枢卡</button>
+          <span class="slot-tag" id="hub-tag">开着</span>
+        </div>
+        <div class="slot-body">
+          <div class="cards" id="tiles-hub"></div>
+          <p class="slot-note">底层执行内核与执行约束。可选敏捷攻坚、二开更新、协议自动化或全能工程。关掉它就只写下面两样。<b>只读 cards/hub/ 子夹</b>。</p>
+        </div>
+      </section>
+
+      <section class="slot" id="slot-base">
+        <div class="slot-head">
+          <button type="button" class="switch" id="sw-base" aria-pressed="false" title="底模：开/关"><b></b></button>
+          <span class="slot-name">底模（心智）</span>
+          <button type="button" class="btn-new" id="new-base" title="新建一张底模卡（就建底模，不问你别的）">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>新建底模卡</button>
+          <span class="slot-tag" id="base-tag">关着</span>
+        </div>
+        <div class="slot-body">
+          <div class="cards" id="tiles-base"></div>
+          <p class="slot-note">你自己写的一套心智，装进去在第 2 段（宿主原文之后）。同一时刻只用一张，点「用这张」换。<b>只读 cards/base/ 子夹</b>——不想用的卡挪出这个子夹就等于停用，卡不丢，挪回来就能用。</p>
+        </div>
+      </section>
+
+      <section class="slot" id="slot-guest">
+        <div class="slot-head">
+          <button type="button" class="switch" id="sw-guest" aria-pressed="false" title="客套指引：开/关"><b></b></button>
+          <span class="slot-name">客套指引（成品文本）</span>
+          <button type="button" class="btn-new" id="new-guest" title="新建一张客套指引卡（就建指引，不问你别的）">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>新建指引卡</button>
+          <span class="slot-tag" id="guest-tag">关着</span>
+        </div>
+        <div class="slot-body">
+          <div class="cards" id="tiles-guest"></div>
+          <p class="slot-note">别人的成品提示词，原样粘在最后，卸的时候按定界整块摘掉。同一时刻只用一张。<b>只读 cards/guest/ 子夹</b>。</p>
+        </div>
+      </section>
+
+      <section class="slot slot-origin" id="slot-origin">
+        <div class="slot-head">
+          <button type="button" class="switch" id="sw-origin" aria-pressed="true"
+                  title="宿主原文：覆盖/保留"><b></b></button>
+          <span class="slot-name">写法</span>
+          <span class="slot-tag" id="origin-tag">直写：整份替换</span>
+        </div>
+        <div class="slot-body">
+          <p class="slot-note">开着＝<b>直写</b>：把选中的几层（底模 → 指引 → 中枢）按顺序拼成一份，
+            整份替换这一家的系统规则文件；原来那份进保险箱，随时能退。不走打包器。
+            关掉＝<b>完整安装</b>：叫打包器，另外把 hub/ 那棵树（工具、工作流、文档）也写进去，
+            原文保留在最前面。</p>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <aside class="inspector">
+    <div class="insp-head">将写入</div>
+    <div class="pane"><ul class="file-list" id="plan"><li>先选一家智能体</li></ul></div>
+    <div class="insp-head">保险箱</div>
+    <div class="pane">
+      <div class="lock-state" id="lock-state">还没锁过</div>
+      <ul class="file-list" id="lock-detail"></ul>
+    </div>
+    <div class="insp-head">结果</div>
+    <div class="pane pane-out"><pre id="out" role="status" aria-live="polite">—</pre></div>
+  </aside>
+</div>
+
+<section class="actions">
+  <div class="dock">
+    <div class="command">
+      <span class="kicker"><em class="step">3</em> 写进去</span>
+      <button type="button" id="btn-load" class="go">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.4 6.6 12 13 4.6"/></svg>载入</button>
+      <button type="button" id="btn-unload" class="btn-ghost">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 5.5h9M6 5.5V4h4v1.5M5 5.5l.7 7h4.6l.7-7"/></svg>卸回</button>
+    </div>
+    <div class="quiet">
+      <span class="kicker">保险箱</span>
+      <button type="button" id="btn-lock" class="btn-ghost">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="4" y="7" width="8" height="6" rx="1.2"/><path d="M6 7V5.4a2 2 0 0 1 4 0V7"/></svg>锁定</button>
+      <button type="button" id="btn-verify" class="btn-ghost">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M3 8h10M3 11.5h6"/></svg>比对</button>
+      <button type="button" id="btn-restore" class="btn-warn">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.6-3.6M3 2.6v3h3"/></svg>恢复</button>
+    </div>
+    <div class="quiet note-box">
+      <p id="action-note" role="status" aria-live="polite">左边点一家、中间勾几样，再按载入。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 每种卡片一个弹层。种类写死在 data-kind 上：点哪个按钮进来，就只能存哪种，
+     不会因为上一次开的是另一种就存错。 -->
+<div class="modal hidden" id="card-modal" data-kind="base" data-mode="new" data-edit="">
+  <div class="modal-card">
+    <div class="modal-head">
+      <strong id="modal-title">新建底模卡</strong>
+      <button type="button" id="btn-close-card" class="btn-ghost">关掉</button>
+    </div>
+    <p class="modal-kind" id="modal-kind"></p>
+    <label class="field"><span>卡名</span>
+      <input id="card-name" maxlength="40" placeholder="如：冷静审查官">
+    </label>
+    <label class="field"><span>适用谁（可空，只是给自己看的备注）</span>
+      <input id="card-hosts" maxlength="200" placeholder="留空就行">
+    </label>
+    <label class="field"><span>正文</span>
+      <textarea id="card-content" rows="10" placeholder="原样粘进来，我们一个字都不改。"></textarea>
+    </label>
+    <div class="modal-foot">
+      <button type="button" id="btn-save-card" class="btn-next">保存卡片</button>
+      <span id="card-msg" class="slot-note" role="status" aria-live="polite"></span>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="view-modal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <strong id="view-title">看卡</strong>
+      <button type="button" id="btn-close-view" class="btn-ghost">关掉</button>
+    </div>
+    <p class="modal-kind" id="view-kind"></p>
+    <pre id="view-body" class="card-body"></pre>
+  </div>
+</div>
+
+<div class="modal hidden" id="host-modal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <strong>自己加一家智能体</strong>
+      <button type="button" id="btn-close-host" class="btn-ghost">关掉</button>
+    </div>
+    <p class="modal-kind">扫不到的时候用这个。填这家智能体在你机器上的家目录绝对路径，写完它就和扫到的一样能用。</p>
+    <label class="field"><span>名字</span>
+      <input id="host-name" maxlength="40" placeholder="如：某某助手">
+    </label>
+    <label class="field"><span>家目录（完整路径）</span>
+      <input id="host-path" maxlength="400" placeholder="D:\Tools\某智能体">
+    </label>
+    <div class="modal-foot">
+      <button type="button" id="btn-save-host" class="btn-next">加进名单</button>
+      <span id="host-msg" class="slot-note" role="status" aria-live="polite"></span>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

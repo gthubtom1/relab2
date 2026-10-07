@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schemas/canonical-base-lock.json",
+  "title": "Canonical base lock record (T21, spec 17.15 / 17.28 / 17.29)",
+  "description": "Extension of the T02 SourceRecord for the single source_kind=canonical-base entry (reverse-skill mother framework). All 17 T02 SourceRecord fields stay required with their frozen enums; this schema only adds the T21 base-lock fields. scripts/verify-canonical-base-lock.py enforces the required subset with the standard library.",
+  "type": "object",
+  "required": [
+    "id",
+    "source_kind",
+    "source_url",
+    "commit",
+    "tree_digest",
+    "source_manifest",
+    "snapshot_root",
+    "source_root",
+    "license_declared",
+    "license_status",
+    "third_party_review",
+    "notice_file",
+    "maturity",
+    "distribution",
+    "adaptation_status",
+    "importer_version",
+    "last_verified_at",
+    "baseline_commit",
+    "integration_commit",
+    "signature"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "const": "reverse-skill",
+      "description": "The canonical base has exactly one record id."
+    },
+    "source_kind": {
+      "type": "string",
+      "const": "canonical-base"
+    },
+    "source_url": {
+      "type": "string",
+      "pattern": "^https://",
+      "description": "Honest origin URL read from the snapshot remote (snapshot remote.origin.url carried a .git suffix; the record follows the registry convention without it). Never invented: if the snapshot has no remote, this field must be null and the verifier reports the gap instead of passing."
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Baseline commit of the mother framework; must equal baseline_commit and registry baseline.commit."
+    },
+    "tree_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Frozen contract skills-hub/importer-digest/1 over scan root '.', .git included (same convention T12 measured for the four community sources; verified byte-identical by recomputation)."
+    },
+    "source_manifest": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Pointer to the offline-verifiable manifest section, currently docs/community/CANONICAL-BASE-LOCK.md#attestation. No second manifest copy is stored, so the record and the document cannot drift apart."
+    },
+    "snapshot_root": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Relative snapshot path resolved as <repo>/snapshot_root, else <repo>/../snapshot_root (the snapshot lives outside the fusion repo per spec 1.4)."
+    },
+    "baseline_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "integration_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Fusion-repo commit this base record is pinned against; must resolve via git cat-file -e where .git is present."
+    },
+    "signature": {
+      "type": "object",
+      "required": ["present", "status"],
+      "properties": {
+        "present": {
+          "type": "boolean",
+          "description": "False today: no verifiable signature exists for any candidate. Claiming true without one is forbidden."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["unsigned", "signed-unverified", "signed-verified"],
+          "description": "unsigned today. signed-verified additionally requires signer, trust_root, key_id, signed_at plus rotation/revocation records."
+        },
+        "signer": {
+          "type": ["string", "null"]
+        },
+        "trust_root": {
+          "type": ["string", "null"],
+          "description": "Null today: no trust root is implemented or distributed."
+        },
+        "key_id": {
+          "type": ["string", "null"]
+        },
+        "signed_at": {
+          "type": ["string", "null"]
+        },
+        "key_rotation": {
+          "type": "string",
+          "description": "Rotation procedure reference, or the literal 'unimplemented'."
+        },
+        "revocation": {
+          "type": "string",
+          "description": "Revocation procedure reference, or the literal 'unimplemented'."
+        }
+      }
+    },
+    "distribution": {
+      "type": "string",
+      "enum": ["local-only", "redistributable"],
+      "description": "local-only while signature.present is false (17.15 digest-only local-only rule). A redistributable claim without a verifiable signature is refused with exit 20."
+    }
+  }
+}

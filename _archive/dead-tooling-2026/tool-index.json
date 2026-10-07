@@ -1,0 +1,2618 @@
+{
+  "TOOLINDEX_PLACEHOLDER_NOTICE": "上一台机器的生成物快照；所有 <TOOLS> 为未探测占位符，不是真实路径。本项目不含 toolreg/ 注册层，没有 registry.py resolve；真实路径请本机探测 Get-Command / Test-Path，禁止拼猜测目录。",
+ "generated": "2026-10-07 06:57:02",
+ "tools": [
+  {
+   "tool": "diec",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>PEtools\\DIE_win64_portable_3.11_x64\\diec.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "detect_compiler",
+    "detect_packer",
+    "detect_protector",
+    "identify_filetype"
+   ],
+   "how": "cli:<TOOLS>PEtools\\DIE_win64_portable_3.11_x64\\diec.exe -d -j {sample}",
+   "kind": "cli"
+  },
+  {
+   "tool": "capa",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>bin\\capa.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "behavior_analysis",
+    "capability_detection"
+   ],
+   "how": "cli:<TOOLS>bin\\capa.exe -r <TOOLS>capa\\rules -j",
+   "kind": "cli"
+  },
+  {
+   "tool": "pefile",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "2024.8.26",
+   "health": "ok",
+   "capabilities": [
+    "pe_imports",
+    "pe_parse",
+    "pe_sections"
+   ],
+   "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python314\\python.exe -c import pefile",
+   "kind": "pylib"
+  },
+  {
+   "tool": "FLOSS",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>bin\\floss.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "deobfuscate_strings",
+    "extract_strings"
+   ],
+   "how": "cli:<TOOLS>bin\\floss.exe --language dotnet {sample}",
+   "kind": "cli"
+  },
+  {
+   "tool": "Ghidra-headless",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Disassemblers\\ghidra_12.0.2_PUBLIC\\support\\analyzeHeadless.bat",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "batch_analysis",
+    "decompile_native",
+    "disassemble_native",
+    "mcp_endpoint"
+   ],
+   "how": "mcp:Ghidra-headless(20 tools,stdio)",
+   "kind": "cli"
+  },
+  {
+   "tool": "radare2",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>bin\\radare2.cmd",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "analyze_binary",
+    "disassemble_native",
+    "extract_strings_cli"
+   ],
+   "how": "cli:<TOOLS>bin\\radare2.cmd -q -e scr.color=0",
+   "kind": "cli"
+  },
+  {
+   "tool": "dnSpy.Console",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>NET\\dnSpy-net-win32\\dnSpy.Console.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "decompile_dotnet",
+    "extract_il"
+   ],
+   "how": "cli:<TOOLS>NET\\dnSpy-net-win32\\dnSpy.Console.exe --help",
+   "kind": "cli"
+  },
+  {
+   "tool": "ilspycmd",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>NET\\ILSpy_binaries_8.2.0.7535-x64\\ILSpy.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "decompile_dotnet"
+   ],
+   "how": "cli:<TOOLS>NET\\ILSpy_binaries_8.2.0.7535-x64\\ILSpy.exe --version",
+   "kind": "cli"
+  },
+  {
+   "tool": "dotnet",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>dotnet8\\dotnet.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "build_dotnet",
+    "run_dotnet_tools"
+   ],
+   "how": "cli:<TOOLS>dotnet8\\dotnet.exe --version",
+   "kind": "compiler"
+  },
+  {
+   "tool": "jadx",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Android_Tools\\jadx-1.5.3\\bin\\jadx.bat",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "decompile_android"
+   ],
+   "how": "cli:<TOOLS>Android_Tools\\jadx-1.5.3\\bin\\jadx.bat --version",
+   "kind": "cli"
+  },
+  {
+   "tool": "apktool",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Android_Tools\\apktool_2.12.1.jar",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "rebuild_apk",
+    "unpack_apk"
+   ],
+   "how": "cli:C:\\Program Files\\Java\\jre1.8.0_481\\bin\\java.exe -jar <TOOLS>apktool\\apktool.jar --version",
+   "kind": "cli"
+  },
+  {
+   "tool": "IDA-idat(headless)",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Disassemblers\\IDA_Pro_v8.3_Portable\\idat.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "batch_analysis",
+    "decompile_native",
+    "disassemble_native"
+   ],
+   "how": "cli:<TOOLS>Disassemblers\\IDA_Pro_v8.3_Portable\\idat.exe",
+   "kind": "cli"
+  },
+  {
+   "tool": "PE-bear",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>PEtools\\PE-bear_0.7.1_qt5_x64_win_vs19\\PE-bear.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "pe_inspect_gui"
+   ],
+   "how": "cli:<TOOLS>PEtools\\PE-bear_0.7.1_qt5_x64_win_vs19\\PE-bear.exe",
+   "kind": "gui"
+  },
+  {
+   "tool": "ImHex",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Editors\\010 Editor\\010Editor.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "hex_inspect_gui"
+   ],
+   "how": "cli:<TOOLS>Editors\\010 Editor\\010Editor.exe",
+   "kind": "gui"
+  },
+  {
+   "tool": "x64dbg-headless",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Debuggers\\x64dbg\\release\\x96dbg.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "dynamic_debug",
+    "mcp_endpoint",
+    "read_memory",
+    "registers",
+    "set_breakpoint",
+    "step"
+   ],
+   "how": "mcp:x64dbg-headless(80 tools,http)",
+   "kind": "cli"
+  },
+  {
+   "tool": "x64dbg-MCP-plugin",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "mcp_dynamic_debug"
+   ],
+   "how": "pylib:x64dbg-MCP-plugin",
+   "kind": "mcp"
+  },
+  {
+   "tool": "x64dbg-mcp-daemon",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "start_mcp_debugger"
+   ],
+   "how": "pylib:x64dbg-mcp-daemon",
+   "kind": "cli"
+  },
+  {
+   "tool": "ScyllaHide",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>scyllahide\\v1.4\\InjectorCLIx64.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "anti_anti_debug"
+   ],
+   "how": "cli:<TOOLS>scyllahide\\v1.4\\InjectorCLIx64.exe",
+   "kind": "cli"
+  },
+  {
+   "tool": "cdb",
+   "skill": "",
+   "available": true,
+   "path": "C:\\Program Files\\Windows Kits\\10\\Debuggers\\x64\\cdb.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "crash_analysis",
+    "dump_analysis",
+    "kernel_debug"
+   ],
+   "how": "cli:C:\\Program Files\\Windows Kits\\10\\Debuggers\\x64\\cdb.exe -version",
+   "kind": "cli"
+  },
+  {
+   "tool": "Frida",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "api_trace",
+    "instrumentation",
+    "runtime_hook"
+   ],
+   "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python314\\python.exe -c import frida",
+   "kind": "pylib"
+  },
+  {
+   "tool": "objection",
+   "skill": "",
+   "available": true,
+   "path": "C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\Scripts\\objection.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "mobile_instrumentation",
+    "runtime_hook"
+   ],
+   "how": "cli:C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\Scripts\\objection.exe -c import objection;print('OBJECTION OK')",
+   "kind": "pylib"
+  },
+  {
+   "tool": "CheatEngine",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Debuggers\\CE_6.4.3_风叶人加强版\\csrss.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "memory_scan_gui",
+    "value_find"
+   ],
+   "how": "cli:<TOOLS>Debuggers\\CE_6.4.3_风叶人加强版\\csrss.exe",
+   "kind": "gui"
+  },
+  {
+   "tool": "UPX",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>PackerAndUnpackers\\Unpackers\\upxfix\\upx.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "pack_executable",
+    "unpack_executable"
+   ],
+   "how": "cli:<TOOLS>PackerAndUnpackers\\Unpackers\\upxfix\\upx.exe --version",
+   "kind": "cli"
+  },
+  {
+   "tool": "pe-sieve",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>bin\\pe-sieve.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "detect_hooks",
+    "detect_injection",
+    "memory_dump"
+   ],
+   "how": "cli:<TOOLS>bin\\pe-sieve.exe",
+   "kind": "cli"
+  },
+  {
+   "tool": "Scylla-x64",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>PEtools\\Scylla.v.0.9.8\\Scylla_x64.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "iat_rebuild",
+    "unpack_gui"
+   ],
+   "how": "cli:<TOOLS>PEtools\\Scylla.v.0.9.8\\Scylla_x64.exe",
+   "kind": "gui"
+  },
+  {
+   "tool": "de4dot",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>NET\\de4dot\\de4dot.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "deobfuscate_dotnet",
+    "unpack_dotnet"
+   ],
+   "how": "cli:<TOOLS>NET\\de4dot\\de4dot.exe --help",
+   "kind": "cli"
+  },
+  {
+   "tool": "ConfuserEx",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "obfuscate_dotnet",
+    "protect_dotnet"
+   ],
+   "how": "pylib:ConfuserEx",
+   "kind": "cli"
+  },
+  {
+   "tool": "unicorn",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>mingw64\\mingw64\\bin\\doxygen.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "cpu_emulation"
+   ],
+   "how": "cli:<TOOLS>mingw64\\mingw64\\bin\\doxygen.exe -c import unicorn;print('UNICORN',unicorn.__version__)",
+   "kind": "pylib"
+  },
+  {
+   "tool": "capstone",
+   "skill": "",
+   "available": true,
+   "path": "C:\\Program Files\\Pure Codec\\madVR\\madHcCtrl.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "disassembly_lib"
+   ],
+   "how": "cli:C:\\Program Files\\Pure Codec\\madVR\\madHcCtrl.exe -c import capstone;print('CAPSTONE',capstone.__version__)",
+   "kind": "pylib"
+  },
+  {
+   "tool": "lief",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "binary_patch",
+    "pe_modify"
+   ],
+   "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python314\\python.exe -c import lief",
+   "kind": "pylib"
+  },
+  {
+   "tool": "qiling",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>.venv-tools\\Scripts\\qltui.py",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "os_emulation"
+   ],
+   "how": "cli:<TOOLS>.venv-tools\\Scripts\\qltui.py -c import qiling;print('QILING ok')",
+   "kind": "pylib"
+  },
+  {
+   "tool": "angr",
+   "skill": "",
+   "available": true,
+   "path": "C:\\Users\\Administrator\\Desktop\\飞秋互传.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "symbolic_execution"
+   ],
+   "how": "cli:C:\\Users\\Administrator\\Desktop\\飞秋互传.exe -c import angr;print('ANGR ok')",
+   "kind": "pylib"
+  },
+  {
+   "tool": "z3",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>bin\\fd.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "constraint_solving"
+   ],
+   "how": "cli:<TOOLS>bin\\fd.exe -c import z3;print('Z3',z3.get_version_string())",
+   "kind": "pylib"
+  },
+  {
+   "tool": "yara",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Anti Rootkit\\WKE32\\WindowsKernelExplorer.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "pattern_match",
+    "signature_scan"
+   ],
+   "how": "cli:<TOOLS>Anti Rootkit\\WKE32\\WindowsKernelExplorer.exe -c import yara;print('YARA ok')",
+   "kind": "pylib"
+  },
+  {
+   "tool": "construct",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "binary_struct_parse"
+   ],
+   "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python314\\python.exe -c import construct",
+   "kind": "pylib"
+  },
+  {
+   "tool": "triton",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "python_library"
+   ],
+   "how": "pylib:triton",
+   "kind": "pylib"
+  },
+  {
+   "tool": "pwntools",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "python_library"
+   ],
+   "how": "pylib:pwntools",
+   "kind": "pylib"
+  },
+  {
+   "tool": "tshark",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Network_Analyzer\\WiresharkPortable64\\WiresharkPortable64.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "pcap_read",
+    "protocol_analysis",
+    "traffic_capture"
+   ],
+   "how": "cli:<TOOLS>Network_Analyzer\\WiresharkPortable64\\WiresharkPortable64.exe -v",
+   "kind": "cli"
+  },
+  {
+   "tool": "Wireshark(iflist)",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "list_capture_interfaces"
+   ],
+   "how": "pylib:Wireshark(iflist)",
+   "kind": "cli"
+  },
+  {
+   "tool": "nmap",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>mingw64\\mingw64\\bin\\ctags.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "port_scan",
+    "service_detect"
+   ],
+   "how": "cli:<TOOLS>mingw64\\mingw64\\bin\\ctags.exe --version",
+   "kind": "cli"
+  },
+  {
+   "tool": "mitmproxy",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Network_Analyzer\\mitmproxy\\bin\\run.ps1",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "https_mitm",
+    "traffic_intercept"
+   ],
+   "how": "cli:<TOOLS>Network_Analyzer\\mitmproxy\\bin\\run.ps1 -m mitmproxy.version",
+   "kind": "pylib"
+  },
+  {
+   "tool": "curl(git)",
+   "skill": "",
+   "available": true,
+   "path": "C:\\Users\\Administrator\\.pi\\agent\\win-git-bash\\ucrt64\\bin\\curl.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "http_request"
+   ],
+   "how": "cli:C:\\Users\\Administrator\\.pi\\agent\\win-git-bash\\ucrt64\\bin\\curl.exe --version",
+   "kind": "cli"
+  },
+  {
+   "tool": "gcc",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>mingw64\\mingw64\\bin\\gcc.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "compile_c",
+    "compile_native"
+   ],
+   "how": "cli:<TOOLS>mingw64\\mingw64\\bin\\gcc.exe --version",
+   "kind": "compiler"
+  },
+  {
+   "tool": "g++",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>mingw64\\mingw64\\bin\\g++.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "compile_cpp"
+   ],
+   "how": "cli:<TOOLS>mingw64\\mingw64\\bin\\g++.exe --version",
+   "kind": "compiler"
+  },
+  {
+   "tool": "make",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>go\\go\\src\\make.bat",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "build_make"
+   ],
+   "how": "cli:<TOOLS>mingw64\\mingw64\\bin\\make.exe --version",
+   "kind": "compiler"
+  },
+  {
+   "tool": "go",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>go\\go\\bin\\go.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "compile_go"
+   ],
+   "how": "cli:<TOOLS>go\\go\\bin\\go.exe version",
+   "kind": "compiler"
+  },
+  {
+   "tool": "cmake",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>mingw64\\mingw64\\bin\\cmake.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "build_system"
+   ],
+   "how": "cli:<TOOLS>mingw64\\mingw64\\bin\\cmake.exe --version",
+   "kind": "compiler"
+  },
+  {
+   "tool": "rustc",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "compile_rust"
+   ],
+   "how": "pylib:rustc",
+   "kind": "compiler"
+  },
+  {
+   "tool": "cargo",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "build_rust"
+   ],
+   "how": "pylib:cargo",
+   "kind": "compiler"
+  },
+  {
+   "tool": "git",
+   "skill": "",
+   "available": true,
+   "path": "C:\\Users\\Administrator\\.pi\\agent\\win-git-bash\\bin\\sh.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "version_control"
+   ],
+   "how": "cli:C:\\Users\\Administrator\\.pi\\agent\\win-git-bash\\bin\\sh.exe --version",
+   "kind": "cli"
+  },
+  {
+   "tool": "python",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>.venv-tools\\Scripts\\python.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "pylib_host",
+    "scripting"
+   ],
+   "how": "cli:<TOOLS>.venv-tools\\Scripts\\python.exe -V",
+   "kind": "cli"
+  },
+  {
+   "tool": "node",
+   "skill": "",
+   "available": true,
+   "path": "C:\\Users\\Administrator\\AppData\\Local\\pi-node\\current\\node.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "scripting_js"
+   ],
+   "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\pi-node\\current\\node.exe -v",
+   "kind": "cli"
+  },
+  {
+   "tool": "java",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>jdk21\\jdk-21.0.12.1+1\\bin\\java.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "run_jar"
+   ],
+   "how": "cli:<TOOLS>jdk21\\jdk-21.0.12.1+1\\bin\\java.exe -version",
+   "kind": "cli"
+  },
+  {
+   "tool": "javac",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>jdk21\\jdk-21.0.12.1+1\\bin\\javac.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "compile_java"
+   ],
+   "how": "cli:<TOOLS>jdk21\\jdk-21.0.12.1+1\\bin\\javac.exe -version",
+   "kind": "compiler"
+  },
+  {
+   "tool": "7-Zip",
+   "skill": "",
+   "available": true,
+   "path": "C:\\Program Files\\7-Zip\\7z.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "archive_pack",
+    "archive_unpack"
+   ],
+   "how": "cli:C:\\Program Files\\7-Zip\\7z.exe",
+   "kind": "cli"
+  },
+  {
+   "tool": "bash",
+   "skill": "",
+   "available": true,
+   "path": "C:\\Users\\Administrator\\.pi\\agent\\win-git-bash\\bin\\bash.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "shell_scripting"
+   ],
+   "how": "cli:C:\\Users\\Administrator\\.pi\\agent\\win-git-bash\\bin\\bash.exe -c echo COCKPIT_OK",
+   "kind": "cli"
+  },
+  {
+   "tool": "PowerShell",
+   "skill": "",
+   "available": true,
+   "path": "C:\\Program Files\\PowerShell\\7\\powershell.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "cli:C:\\Program Files\\PowerShell\\7\\powershell.exe -NoProfile -Command $PSVersionTable.PSVersion.ToString()",
+   "kind": "cli"
+  },
+  {
+   "tool": "MCP:pyghidra-mcp",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>.venv-tools\\Scripts\\pyghidra-mcp.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "mcp_tool"
+   ],
+   "how": "pylib:MCP:pyghidra-mcp",
+   "kind": "mcp"
+  },
+  {
+   "tool": "MCP:x64dbg",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "mcp_tool"
+   ],
+   "how": "pylib:MCP:x64dbg",
+   "kind": "mcp"
+  },
+  {
+   "tool": "pi:mcp.json",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "mcp_tool"
+   ],
+   "how": "pylib:pi:mcp.json",
+   "kind": "mcp"
+  },
+  {
+   "tool": "nuclei",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:nuclei",
+   "kind": "cli"
+  },
+  {
+   "tool": "httpx",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>.venv-tools\\Scripts\\httpx.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "cli:C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\Scripts\\httpx.exe",
+   "kind": "cli"
+  },
+  {
+   "tool": "katana",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:katana",
+   "kind": "cli"
+  },
+  {
+   "tool": "ffuf",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:ffuf",
+   "kind": "cli"
+  },
+  {
+   "tool": "gobuster",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:gobuster",
+   "kind": "cli"
+  },
+  {
+   "tool": "naabu",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:naabu",
+   "kind": "cli"
+  },
+  {
+   "tool": "dnsx",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:dnsx",
+   "kind": "cli"
+  },
+  {
+   "tool": "subfinder",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:subfinder",
+   "kind": "cli"
+  },
+  {
+   "tool": "sqlmap",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:sqlmap",
+   "kind": "cli"
+  },
+  {
+   "tool": "Fiddler",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Network_Analyzer\\Fiddler\\uninst.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "cli:<TOOLS>Network_Analyzer\\Fiddler\\uninst.exe",
+   "kind": "cli"
+  },
+  {
+   "tool": "NSIS",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:NSIS",
+   "kind": "cli"
+  },
+  {
+   "tool": "innoextract",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:innoextract",
+   "kind": "cli"
+  },
+  {
+   "tool": "innounp",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:innounp",
+   "kind": "cli"
+  },
+  {
+   "tool": "ResourceHacker",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Editors\\Resource_Hacker_v5.2.7\\ResourceHacker.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "cli:<TOOLS>Editors\\Resource_Hacker_v5.2.7\\ResourceHacker.exe",
+   "kind": "cli"
+  },
+  {
+   "tool": "Platform-tools",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:Platform-tools",
+   "kind": "cli"
+  },
+  {
+   "tool": "InnoSetup",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:InnoSetup",
+   "kind": "cli"
+  },
+  {
+   "tool": "Protector",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:Protector",
+   "kind": "cli"
+  },
+  {
+   "tool": "VMProtect",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>PackerAndUnpackers\\Packers\\VMP 系列\\VMProtect_3.9.4.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "cli:<TOOLS>PackerAndUnpackers\\Packers\\VMP 系列\\VMProtect_3.9.4.exe",
+   "kind": "cli"
+  },
+  {
+   "tool": "adb",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Android_Tools\\搞机工具箱11.0.1\\adb.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "cli:<TOOLS>Android_Tools\\搞机工具箱11.0.1\\adb.exe version",
+   "kind": "cli"
+  },
+  {
+   "tool": "apksigner",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:apksigner",
+   "kind": "cli"
+  },
+  {
+   "tool": "zipalign",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Android_Tools\\ApkIDE_v3.3\\ApkIDE\\zipalign.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "cli:<TOOLS>Android_Tools\\ApkIDE_v3.3\\ApkIDE\\zipalign.exe",
+   "kind": "cli"
+  },
+  {
+   "tool": "idalib-mcp",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "mcp_tool"
+   ],
+   "how": "pylib:idalib-mcp",
+   "kind": "mcp"
+  },
+  {
+   "tool": "ida-pro-mcp",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "mcp_tool"
+   ],
+   "how": "pylib:ida-pro-mcp",
+   "kind": "mcp"
+  },
+  {
+   "tool": "ida",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Disassemblers\\IDA_Pro_v8.3_Portable\\ida.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "gui_manual_only"
+   ],
+   "how": "cli:<TOOLS>Disassemblers\\IDA_Pro_v8.3_Portable\\ida.exe",
+   "kind": "gui"
+  },
+  {
+   "tool": "dnSpy",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>NET\\dnSpy-net-win32\\dnSpy.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "gui_manual_only"
+   ],
+   "how": "cli:<TOOLS>NET\\dnSpy-net-win32\\dnSpy.exe",
+   "kind": "gui"
+  },
+  {
+   "tool": "binaryninja",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "gui_manual_only"
+   ],
+   "how": "pylib:binaryninja",
+   "kind": "gui"
+  },
+  {
+   "tool": "die",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>PEtools\\DIE_win64_portable_3.11_x64\\die.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "gui_manual_only"
+   ],
+   "how": "cli:<TOOLS>PEtools\\DIE_win64_portable_3.11_x64\\die.exe",
+   "kind": "gui"
+  },
+  {
+   "tool": "wireshark",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Network_Analyzer\\WiresharkPortable64\\App\\Wireshark\\Wireshark.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "gui_manual_only"
+   ],
+   "how": "cli:<TOOLS>Network_Analyzer\\WiresharkPortable64\\App\\Wireshark\\Wireshark.exe",
+   "kind": "gui"
+  },
+  {
+   "tool": "x64dbg",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Debuggers\\x64dbg\\release\\x64\\x64dbg.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "gui_manual_only"
+   ],
+   "how": "cli:<TOOLS>Debuggers\\x64dbg\\release\\x64\\x64dbg.exe",
+   "kind": "gui"
+  },
+  {
+   "tool": "7zFM",
+   "skill": "",
+   "available": true,
+   "path": "C:\\Program Files\\7-Zip\\7zFM.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "gui_manual_only"
+   ],
+   "how": "cli:C:\\Program Files\\7-Zip\\7zFM.exe",
+   "kind": "gui"
+  },
+  {
+   "tool": "ghidraRun",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>Disassemblers\\ghidra_12.0.2_PUBLIC\\ghidraRun.bat",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "gui_manual_only"
+   ],
+   "how": "cli:<TOOLS>Disassemblers\\ghidra_12.0.2_PUBLIC\\ghidraRun.bat",
+   "kind": "gui"
+  },
+  {
+   "tool": "r2gui",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "gui_manual_only"
+   ],
+   "how": "pylib:r2gui",
+   "kind": "gui"
+  },
+  {
+   "tool": "Npcap",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:Npcap",
+   "kind": "cli"
+  },
+  {
+   "tool": "frida-ps",
+   "skill": "",
+   "available": true,
+   "path": "C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\Scripts\\frida.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "cli:C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\Scripts\\frida.exe --version",
+   "kind": "cli"
+  },
+  {
+   "tool": "rabin2",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\rabin2.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "cli:<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\rabin2.exe -v",
+   "kind": "cli"
+  },
+  {
+   "tool": "rasm2",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\rasm2.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "cli:<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\rasm2.exe -v",
+   "kind": "cli"
+  },
+  {
+   "tool": "radiff2",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\radiff2.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "cli:<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\radiff2.exe",
+   "kind": "cli"
+  },
+  {
+   "tool": "rahash2",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\rahash2.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "cli:<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\rahash2.exe",
+   "kind": "cli"
+  },
+  {
+   "tool": "rax2",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\rax2.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "cli:<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\rax2.exe",
+   "kind": "cli"
+  },
+  {
+   "tool": "r2pm",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\r2pm.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "cli:<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\r2pm.exe -v",
+   "kind": "cli"
+  },
+  {
+   "tool": "r2xsql",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:r2xsql",
+   "kind": "cli"
+  },
+  {
+   "tool": "r2xsql-full",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:r2xsql-full",
+   "kind": "cli"
+  },
+  {
+   "tool": "r2mcp",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "mcp_tool"
+   ],
+   "how": "pylib:r2mcp",
+   "kind": "mcp"
+  },
+  {
+   "tool": "radius2",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:radius2",
+   "kind": "cli"
+  },
+  {
+   "tool": "pip",
+   "skill": "",
+   "available": true,
+   "path": "<TOOLS>.venv-tools\\Scripts\\pip.exe",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "cli:<TOOLS>.venv-tools\\Scripts\\pip.exe --version",
+   "kind": "cli"
+  },
+  {
+   "tool": "npx",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:npx",
+   "kind": "cli"
+  },
+  {
+   "tool": "jshookmcp",
+   "skill": "",
+   "available": true,
+   "path": "C:\\Users\\Administrator\\AppData\\Local\\pi-node\\current\\npx.cmd",
+   "version": "",
+   "health": "ok",
+   "capabilities": [
+    "mcp_tool"
+   ],
+   "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\pi-node\\current\\npx.cmd",
+   "kind": "mcp"
+  },
+  {
+   "tool": "reqable-mcp",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "mcp_tool"
+   ],
+   "how": "pylib:reqable-mcp",
+   "kind": "mcp"
+  },
+  {
+   "tool": "xquik-mcp",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "mcp_tool"
+   ],
+   "how": "pylib:xquik-mcp",
+   "kind": "mcp"
+  },
+  {
+   "tool": "agent-browser",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "mcp_tool"
+   ],
+   "how": "pylib:agent-browser",
+   "kind": "mcp"
+  },
+  {
+   "tool": "pyghidra-mcp",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "mcp_tool"
+   ],
+   "how": "pylib:pyghidra-mcp",
+   "kind": "mcp"
+  },
+  {
+   "tool": "jeb-pro",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "gui_manual_only"
+   ],
+   "how": "pylib:jeb-pro",
+   "kind": "gui"
+  },
+  {
+   "tool": "playwright",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "mcp_tool"
+   ],
+   "how": "pylib:playwright",
+   "kind": "mcp"
+  },
+  {
+   "tool": "proxycat",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:proxycat",
+   "kind": "cli"
+  },
+  {
+   "tool": "seclists",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:seclists",
+   "kind": "cli"
+  },
+  {
+   "tool": "pentestswarm",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "mcp_tool"
+   ],
+   "how": "pylib:pentestswarm",
+   "kind": "mcp"
+  },
+  {
+   "tool": "binwalk",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:binwalk",
+   "kind": "cli"
+  },
+  {
+   "tool": "bkcrack",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:bkcrack",
+   "kind": "cli"
+  },
+  {
+   "tool": "git-bash-timeout",
+   "skill": "",
+   "available": false,
+   "path": "",
+   "version": "",
+   "health": "no-path",
+   "capabilities": [
+    "cli_tool"
+   ],
+   "how": "pylib:git-bash-timeout",
+   "kind": "cli"
+  }
+ ],
+ "mcp_endpoints": {
+  "x64dbg": {
+   "type": "http",
+   "url": "http://127.0.0.1:9094/mcp",
+   "tools": 80,
+   "token_env": "X64DBG_MCP_TOKEN",
+   "requires": "x64dbg GUI 必须在运行（插件活在被调试进程里，端口才监听）",
+   "config": "<TOOLS>Debuggers\\x64dbg\\release\\x64\\mcp_config.json",
+   "plugin": "<TOOLS>Debuggers\\x64dbg\\release\\x64\\plugins\\x64dbg-MCP-Server.dp64",
+   "launcher": null,
+   "status": "ready"
+  },
+  "ghidra": {
+   "type": "stdio",
+   "command": "<TOOLS>bin\\ghidra-mcp.cmd",
+   "args": [],
+   "package_path": "<TOOLS>.venv-tools\\Lib\\site-packages\\pyghidra_mcp",
+   "tools": 20,
+   "requires": "JAVA_HOME 指向 JDK21+（Ghidra 12 要求），GHIDRA_INSTALL_DIR 指向 Ghidra",
+   "status": "ready"
+  }
+ },
+ "capability_index": {
+  "analyze_binary": [
+   {
+    "tool": "radare2",
+    "how": "cli:<TOOLS>bin\\radare2.cmd -q -e scr.color=0",
+    "status": "ready"
+   }
+  ],
+  "anti_anti_debug": [
+   {
+    "tool": "ScyllaHide",
+    "how": "cli:<TOOLS>scyllahide\\v1.4\\InjectorCLIx64.exe",
+    "status": "ready"
+   }
+  ],
+  "api_trace": [
+   {
+    "tool": "Frida",
+    "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python314\\python.exe -c import frida",
+    "status": "ready"
+   }
+  ],
+  "archive_pack": [
+   {
+    "tool": "7-Zip",
+    "how": "cli:C:\\Program Files\\7-Zip\\7z.exe",
+    "status": "ready"
+   }
+  ],
+  "archive_unpack": [
+   {
+    "tool": "7-Zip",
+    "how": "cli:C:\\Program Files\\7-Zip\\7z.exe",
+    "status": "ready"
+   }
+  ],
+  "batch_analysis": [
+   {
+    "tool": "Ghidra-headless",
+    "how": "mcp:Ghidra-headless(20 tools,stdio)",
+    "status": "ready"
+   },
+   {
+    "tool": "IDA-idat(headless)",
+    "how": "cli:<TOOLS>Disassemblers\\IDA_Pro_v8.3_Portable\\idat.exe",
+    "status": "ready"
+   }
+  ],
+  "behavior_analysis": [
+   {
+    "tool": "capa",
+    "how": "cli:<TOOLS>bin\\capa.exe -r <TOOLS>capa\\rules -j",
+    "status": "ready"
+   }
+  ],
+  "binary_patch": [
+   {
+    "tool": "lief",
+    "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python314\\python.exe -c import lief",
+    "status": "ready"
+   }
+  ],
+  "binary_struct_parse": [
+   {
+    "tool": "construct",
+    "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python314\\python.exe -c import construct",
+    "status": "ready"
+   }
+  ],
+  "build_dotnet": [
+   {
+    "tool": "dotnet",
+    "how": "cli:<TOOLS>dotnet8\\dotnet.exe --version",
+    "status": "ready"
+   }
+  ],
+  "build_make": [
+   {
+    "tool": "make",
+    "how": "cli:<TOOLS>mingw64\\mingw64\\bin\\make.exe --version",
+    "status": "ready"
+   }
+  ],
+  "build_rust": [
+   {
+    "tool": "cargo",
+    "how": "pylib:cargo",
+    "status": "degraded"
+   }
+  ],
+  "build_system": [
+   {
+    "tool": "cmake",
+    "how": "cli:<TOOLS>mingw64\\mingw64\\bin\\cmake.exe --version",
+    "status": "ready"
+   }
+  ],
+  "capability_detection": [
+   {
+    "tool": "capa",
+    "how": "cli:<TOOLS>bin\\capa.exe -r <TOOLS>capa\\rules -j",
+    "status": "ready"
+   }
+  ],
+  "cli_tool": [
+   {
+    "tool": "PowerShell",
+    "how": "cli:C:\\Program Files\\PowerShell\\7\\powershell.exe -NoProfile -Command $PSVersionTable.PSVersion.ToString()",
+    "status": "ready"
+   },
+   {
+    "tool": "nuclei",
+    "how": "pylib:nuclei",
+    "status": "degraded"
+   },
+   {
+    "tool": "httpx",
+    "how": "cli:C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\Scripts\\httpx.exe",
+    "status": "ready"
+   },
+   {
+    "tool": "katana",
+    "how": "pylib:katana",
+    "status": "degraded"
+   },
+   {
+    "tool": "ffuf",
+    "how": "pylib:ffuf",
+    "status": "degraded"
+   },
+   {
+    "tool": "gobuster",
+    "how": "pylib:gobuster",
+    "status": "degraded"
+   },
+   {
+    "tool": "naabu",
+    "how": "pylib:naabu",
+    "status": "degraded"
+   },
+   {
+    "tool": "dnsx",
+    "how": "pylib:dnsx",
+    "status": "degraded"
+   },
+   {
+    "tool": "subfinder",
+    "how": "pylib:subfinder",
+    "status": "degraded"
+   },
+   {
+    "tool": "sqlmap",
+    "how": "pylib:sqlmap",
+    "status": "degraded"
+   },
+   {
+    "tool": "Fiddler",
+    "how": "cli:<TOOLS>Network_Analyzer\\Fiddler\\uninst.exe",
+    "status": "ready"
+   },
+   {
+    "tool": "NSIS",
+    "how": "pylib:NSIS",
+    "status": "degraded"
+   },
+   {
+    "tool": "innoextract",
+    "how": "pylib:innoextract",
+    "status": "degraded"
+   },
+   {
+    "tool": "innounp",
+    "how": "pylib:innounp",
+    "status": "degraded"
+   },
+   {
+    "tool": "ResourceHacker",
+    "how": "cli:<TOOLS>Editors\\Resource_Hacker_v5.2.7\\ResourceHacker.exe",
+    "status": "ready"
+   },
+   {
+    "tool": "Platform-tools",
+    "how": "pylib:Platform-tools",
+    "status": "degraded"
+   },
+   {
+    "tool": "InnoSetup",
+    "how": "pylib:InnoSetup",
+    "status": "degraded"
+   },
+   {
+    "tool": "Protector",
+    "how": "pylib:Protector",
+    "status": "degraded"
+   },
+   {
+    "tool": "VMProtect",
+    "how": "cli:<TOOLS>PackerAndUnpackers\\Packers\\VMP 系列\\VMProtect_3.9.4.exe",
+    "status": "ready"
+   },
+   {
+    "tool": "adb",
+    "how": "cli:<TOOLS>Android_Tools\\搞机工具箱11.0.1\\adb.exe version",
+    "status": "ready"
+   },
+   {
+    "tool": "apksigner",
+    "how": "pylib:apksigner",
+    "status": "degraded"
+   },
+   {
+    "tool": "zipalign",
+    "how": "cli:<TOOLS>Android_Tools\\ApkIDE_v3.3\\ApkIDE\\zipalign.exe",
+    "status": "ready"
+   },
+   {
+    "tool": "Npcap",
+    "how": "pylib:Npcap",
+    "status": "degraded"
+   },
+   {
+    "tool": "frida-ps",
+    "how": "cli:C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\Scripts\\frida.exe --version",
+    "status": "ready"
+   },
+   {
+    "tool": "rabin2",
+    "how": "cli:<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\rabin2.exe -v",
+    "status": "ready"
+   },
+   {
+    "tool": "rasm2",
+    "how": "cli:<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\rasm2.exe -v",
+    "status": "ready"
+   },
+   {
+    "tool": "radiff2",
+    "how": "cli:<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\radiff2.exe",
+    "status": "ready"
+   },
+   {
+    "tool": "rahash2",
+    "how": "cli:<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\rahash2.exe",
+    "status": "ready"
+   },
+   {
+    "tool": "rax2",
+    "how": "cli:<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\rax2.exe",
+    "status": "ready"
+   },
+   {
+    "tool": "r2pm",
+    "how": "cli:<TOOLS>radare2\\radare2-6.2.4-w64\\bin\\r2pm.exe -v",
+    "status": "ready"
+   },
+   {
+    "tool": "r2xsql",
+    "how": "pylib:r2xsql",
+    "status": "degraded"
+   },
+   {
+    "tool": "r2xsql-full",
+    "how": "pylib:r2xsql-full",
+    "status": "degraded"
+   },
+   {
+    "tool": "radius2",
+    "how": "pylib:radius2",
+    "status": "degraded"
+   },
+   {
+    "tool": "pip",
+    "how": "cli:<TOOLS>.venv-tools\\Scripts\\pip.exe --version",
+    "status": "ready"
+   },
+   {
+    "tool": "npx",
+    "how": "pylib:npx",
+    "status": "degraded"
+   },
+   {
+    "tool": "proxycat",
+    "how": "pylib:proxycat",
+    "status": "degraded"
+   },
+   {
+    "tool": "seclists",
+    "how": "pylib:seclists",
+    "status": "degraded"
+   },
+   {
+    "tool": "binwalk",
+    "how": "pylib:binwalk",
+    "status": "degraded"
+   },
+   {
+    "tool": "bkcrack",
+    "how": "pylib:bkcrack",
+    "status": "degraded"
+   },
+   {
+    "tool": "git-bash-timeout",
+    "how": "pylib:git-bash-timeout",
+    "status": "degraded"
+   }
+  ],
+  "compile_c": [
+   {
+    "tool": "gcc",
+    "how": "cli:<TOOLS>mingw64\\mingw64\\bin\\gcc.exe --version",
+    "status": "ready"
+   }
+  ],
+  "compile_cpp": [
+   {
+    "tool": "g++",
+    "how": "cli:<TOOLS>mingw64\\mingw64\\bin\\g++.exe --version",
+    "status": "ready"
+   }
+  ],
+  "compile_go": [
+   {
+    "tool": "go",
+    "how": "cli:<TOOLS>go\\go\\bin\\go.exe version",
+    "status": "ready"
+   }
+  ],
+  "compile_java": [
+   {
+    "tool": "javac",
+    "how": "cli:<TOOLS>jdk21\\jdk-21.0.12.1+1\\bin\\javac.exe -version",
+    "status": "ready"
+   }
+  ],
+  "compile_native": [
+   {
+    "tool": "gcc",
+    "how": "cli:<TOOLS>mingw64\\mingw64\\bin\\gcc.exe --version",
+    "status": "ready"
+   }
+  ],
+  "compile_rust": [
+   {
+    "tool": "rustc",
+    "how": "pylib:rustc",
+    "status": "degraded"
+   }
+  ],
+  "constraint_solving": [
+   {
+    "tool": "z3",
+    "how": "cli:<TOOLS>bin\\fd.exe -c import z3;print('Z3',z3.get_version_string())",
+    "status": "ready"
+   }
+  ],
+  "cpu_emulation": [
+   {
+    "tool": "unicorn",
+    "how": "cli:<TOOLS>mingw64\\mingw64\\bin\\doxygen.exe -c import unicorn;print('UNICORN',unicorn.__version__)",
+    "status": "ready"
+   }
+  ],
+  "crash_analysis": [
+   {
+    "tool": "cdb",
+    "how": "cli:C:\\Program Files\\Windows Kits\\10\\Debuggers\\x64\\cdb.exe -version",
+    "status": "ready"
+   }
+  ],
+  "decompile_android": [
+   {
+    "tool": "jadx",
+    "how": "cli:<TOOLS>Android_Tools\\jadx-1.5.3\\bin\\jadx.bat --version",
+    "status": "ready"
+   }
+  ],
+  "decompile_dotnet": [
+   {
+    "tool": "dnSpy.Console",
+    "how": "cli:<TOOLS>NET\\dnSpy-net-win32\\dnSpy.Console.exe --help",
+    "status": "ready"
+   },
+   {
+    "tool": "ilspycmd",
+    "how": "cli:<TOOLS>NET\\ILSpy_binaries_8.2.0.7535-x64\\ILSpy.exe --version",
+    "status": "ready"
+   }
+  ],
+  "decompile_native": [
+   {
+    "tool": "Ghidra-headless",
+    "how": "mcp:Ghidra-headless(20 tools,stdio)",
+    "status": "ready"
+   },
+   {
+    "tool": "IDA-idat(headless)",
+    "how": "cli:<TOOLS>Disassemblers\\IDA_Pro_v8.3_Portable\\idat.exe",
+    "status": "ready"
+   }
+  ],
+  "deobfuscate_dotnet": [
+   {
+    "tool": "de4dot",
+    "how": "cli:<TOOLS>NET\\de4dot\\de4dot.exe --help",
+    "status": "ready"
+   }
+  ],
+  "deobfuscate_strings": [
+   {
+    "tool": "FLOSS",
+    "how": "cli:<TOOLS>bin\\floss.exe --language dotnet {sample}",
+    "status": "ready"
+   }
+  ],
+  "detect_compiler": [
+   {
+    "tool": "diec",
+    "how": "cli:<TOOLS>PEtools\\DIE_win64_portable_3.11_x64\\diec.exe -d -j {sample}",
+    "status": "ready"
+   }
+  ],
+  "detect_hooks": [
+   {
+    "tool": "pe-sieve",
+    "how": "cli:<TOOLS>bin\\pe-sieve.exe",
+    "status": "ready"
+   }
+  ],
+  "detect_injection": [
+   {
+    "tool": "pe-sieve",
+    "how": "cli:<TOOLS>bin\\pe-sieve.exe",
+    "status": "ready"
+   }
+  ],
+  "detect_packer": [
+   {
+    "tool": "diec",
+    "how": "cli:<TOOLS>PEtools\\DIE_win64_portable_3.11_x64\\diec.exe -d -j {sample}",
+    "status": "ready"
+   }
+  ],
+  "detect_protector": [
+   {
+    "tool": "diec",
+    "how": "cli:<TOOLS>PEtools\\DIE_win64_portable_3.11_x64\\diec.exe -d -j {sample}",
+    "status": "ready"
+   }
+  ],
+  "disassemble_native": [
+   {
+    "tool": "Ghidra-headless",
+    "how": "mcp:Ghidra-headless(20 tools,stdio)",
+    "status": "ready"
+   },
+   {
+    "tool": "radare2",
+    "how": "cli:<TOOLS>bin\\radare2.cmd -q -e scr.color=0",
+    "status": "ready"
+   },
+   {
+    "tool": "IDA-idat(headless)",
+    "how": "cli:<TOOLS>Disassemblers\\IDA_Pro_v8.3_Portable\\idat.exe",
+    "status": "ready"
+   }
+  ],
+  "disassembly_lib": [
+   {
+    "tool": "capstone",
+    "how": "cli:C:\\Program Files\\Pure Codec\\madVR\\madHcCtrl.exe -c import capstone;print('CAPSTONE',capstone.__version__)",
+    "status": "ready"
+   }
+  ],
+  "dump_analysis": [
+   {
+    "tool": "cdb",
+    "how": "cli:C:\\Program Files\\Windows Kits\\10\\Debuggers\\x64\\cdb.exe -version",
+    "status": "ready"
+   }
+  ],
+  "dynamic_debug": [
+   {
+    "tool": "x64dbg-headless",
+    "how": "mcp:x64dbg-headless(80 tools,http)",
+    "status": "ready"
+   }
+  ],
+  "extract_il": [
+   {
+    "tool": "dnSpy.Console",
+    "how": "cli:<TOOLS>NET\\dnSpy-net-win32\\dnSpy.Console.exe --help",
+    "status": "ready"
+   }
+  ],
+  "extract_strings": [
+   {
+    "tool": "FLOSS",
+    "how": "cli:<TOOLS>bin\\floss.exe --language dotnet {sample}",
+    "status": "ready"
+   }
+  ],
+  "extract_strings_cli": [
+   {
+    "tool": "radare2",
+    "how": "cli:<TOOLS>bin\\radare2.cmd -q -e scr.color=0",
+    "status": "ready"
+   }
+  ],
+  "gui_manual_only": [
+   {
+    "tool": "ida",
+    "how": "cli:<TOOLS>Disassemblers\\IDA_Pro_v8.3_Portable\\ida.exe",
+    "status": "ready"
+   },
+   {
+    "tool": "dnSpy",
+    "how": "cli:<TOOLS>NET\\dnSpy-net-win32\\dnSpy.exe",
+    "status": "ready"
+   },
+   {
+    "tool": "binaryninja",
+    "how": "pylib:binaryninja",
+    "status": "degraded"
+   },
+   {
+    "tool": "die",
+    "how": "cli:<TOOLS>PEtools\\DIE_win64_portable_3.11_x64\\die.exe",
+    "status": "ready"
+   },
+   {
+    "tool": "wireshark",
+    "how": "cli:<TOOLS>Network_Analyzer\\WiresharkPortable64\\App\\Wireshark\\Wireshark.exe",
+    "status": "ready"
+   },
+   {
+    "tool": "x64dbg",
+    "how": "cli:<TOOLS>Debuggers\\x64dbg\\release\\x64\\x64dbg.exe",
+    "status": "ready"
+   },
+   {
+    "tool": "7zFM",
+    "how": "cli:C:\\Program Files\\7-Zip\\7zFM.exe",
+    "status": "ready"
+   },
+   {
+    "tool": "ghidraRun",
+    "how": "cli:<TOOLS>Disassemblers\\ghidra_12.0.2_PUBLIC\\ghidraRun.bat",
+    "status": "ready"
+   },
+   {
+    "tool": "r2gui",
+    "how": "pylib:r2gui",
+    "status": "degraded"
+   },
+   {
+    "tool": "jeb-pro",
+    "how": "pylib:jeb-pro",
+    "status": "degraded"
+   }
+  ],
+  "hex_inspect_gui": [
+   {
+    "tool": "ImHex",
+    "how": "cli:<TOOLS>Editors\\010 Editor\\010Editor.exe",
+    "status": "ready"
+   }
+  ],
+  "http_request": [
+   {
+    "tool": "curl(git)",
+    "how": "cli:C:\\Users\\Administrator\\.pi\\agent\\win-git-bash\\ucrt64\\bin\\curl.exe --version",
+    "status": "ready"
+   }
+  ],
+  "https_mitm": [
+   {
+    "tool": "mitmproxy",
+    "how": "cli:<TOOLS>Network_Analyzer\\mitmproxy\\bin\\run.ps1 -m mitmproxy.version",
+    "status": "ready"
+   }
+  ],
+  "iat_rebuild": [
+   {
+    "tool": "Scylla-x64",
+    "how": "cli:<TOOLS>PEtools\\Scylla.v.0.9.8\\Scylla_x64.exe",
+    "status": "ready"
+   }
+  ],
+  "identify_filetype": [
+   {
+    "tool": "diec",
+    "how": "cli:<TOOLS>PEtools\\DIE_win64_portable_3.11_x64\\diec.exe -d -j {sample}",
+    "status": "ready"
+   }
+  ],
+  "instrumentation": [
+   {
+    "tool": "Frida",
+    "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python314\\python.exe -c import frida",
+    "status": "ready"
+   }
+  ],
+  "kernel_debug": [
+   {
+    "tool": "cdb",
+    "how": "cli:C:\\Program Files\\Windows Kits\\10\\Debuggers\\x64\\cdb.exe -version",
+    "status": "ready"
+   }
+  ],
+  "list_capture_interfaces": [
+   {
+    "tool": "Wireshark(iflist)",
+    "how": "pylib:Wireshark(iflist)",
+    "status": "degraded"
+   }
+  ],
+  "mcp_dynamic_debug": [
+   {
+    "tool": "x64dbg-MCP-plugin",
+    "how": "pylib:x64dbg-MCP-plugin",
+    "status": "degraded"
+   }
+  ],
+  "mcp_endpoint": [
+   {
+    "tool": "Ghidra-headless",
+    "how": "mcp:Ghidra-headless(20 tools,stdio)",
+    "status": "ready"
+   },
+   {
+    "tool": "x64dbg-headless",
+    "how": "mcp:x64dbg-headless(80 tools,http)",
+    "status": "ready"
+   }
+  ],
+  "mcp_tool": [
+   {
+    "tool": "MCP:pyghidra-mcp",
+    "how": "pylib:MCP:pyghidra-mcp",
+    "status": "degraded"
+   },
+   {
+    "tool": "MCP:x64dbg",
+    "how": "pylib:MCP:x64dbg",
+    "status": "degraded"
+   },
+   {
+    "tool": "pi:mcp.json",
+    "how": "pylib:pi:mcp.json",
+    "status": "degraded"
+   },
+   {
+    "tool": "idalib-mcp",
+    "how": "pylib:idalib-mcp",
+    "status": "degraded"
+   },
+   {
+    "tool": "ida-pro-mcp",
+    "how": "pylib:ida-pro-mcp",
+    "status": "degraded"
+   },
+   {
+    "tool": "r2mcp",
+    "how": "pylib:r2mcp",
+    "status": "degraded"
+   },
+   {
+    "tool": "jshookmcp",
+    "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\pi-node\\current\\npx.cmd",
+    "status": "ready"
+   },
+   {
+    "tool": "reqable-mcp",
+    "how": "pylib:reqable-mcp",
+    "status": "degraded"
+   },
+   {
+    "tool": "xquik-mcp",
+    "how": "pylib:xquik-mcp",
+    "status": "degraded"
+   },
+   {
+    "tool": "agent-browser",
+    "how": "pylib:agent-browser",
+    "status": "degraded"
+   },
+   {
+    "tool": "pyghidra-mcp",
+    "how": "pylib:pyghidra-mcp",
+    "status": "degraded"
+   },
+   {
+    "tool": "playwright",
+    "how": "pylib:playwright",
+    "status": "degraded"
+   },
+   {
+    "tool": "pentestswarm",
+    "how": "pylib:pentestswarm",
+    "status": "degraded"
+   }
+  ],
+  "memory_dump": [
+   {
+    "tool": "pe-sieve",
+    "how": "cli:<TOOLS>bin\\pe-sieve.exe",
+    "status": "ready"
+   }
+  ],
+  "memory_scan_gui": [
+   {
+    "tool": "CheatEngine",
+    "how": "cli:<TOOLS>Debuggers\\CE_6.4.3_风叶人加强版\\csrss.exe",
+    "status": "ready"
+   }
+  ],
+  "mobile_instrumentation": [
+   {
+    "tool": "objection",
+    "how": "cli:C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\Scripts\\objection.exe -c import objection;print('OBJECTION OK')",
+    "status": "ready"
+   }
+  ],
+  "obfuscate_dotnet": [
+   {
+    "tool": "ConfuserEx",
+    "how": "pylib:ConfuserEx",
+    "status": "degraded"
+   }
+  ],
+  "os_emulation": [
+   {
+    "tool": "qiling",
+    "how": "cli:<TOOLS>.venv-tools\\Scripts\\qltui.py -c import qiling;print('QILING ok')",
+    "status": "ready"
+   }
+  ],
+  "pack_executable": [
+   {
+    "tool": "UPX",
+    "how": "cli:<TOOLS>PackerAndUnpackers\\Unpackers\\upxfix\\upx.exe --version",
+    "status": "ready"
+   }
+  ],
+  "pattern_match": [
+   {
+    "tool": "yara",
+    "how": "cli:<TOOLS>Anti Rootkit\\WKE32\\WindowsKernelExplorer.exe -c import yara;print('YARA ok')",
+    "status": "ready"
+   }
+  ],
+  "pcap_read": [
+   {
+    "tool": "tshark",
+    "how": "cli:<TOOLS>Network_Analyzer\\WiresharkPortable64\\WiresharkPortable64.exe -v",
+    "status": "ready"
+   }
+  ],
+  "pe_imports": [
+   {
+    "tool": "pefile",
+    "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python314\\python.exe -c import pefile",
+    "status": "ready"
+   }
+  ],
+  "pe_inspect_gui": [
+   {
+    "tool": "PE-bear",
+    "how": "cli:<TOOLS>PEtools\\PE-bear_0.7.1_qt5_x64_win_vs19\\PE-bear.exe",
+    "status": "ready"
+   }
+  ],
+  "pe_modify": [
+   {
+    "tool": "lief",
+    "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python314\\python.exe -c import lief",
+    "status": "ready"
+   }
+  ],
+  "pe_parse": [
+   {
+    "tool": "pefile",
+    "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python314\\python.exe -c import pefile",
+    "status": "ready"
+   }
+  ],
+  "pe_sections": [
+   {
+    "tool": "pefile",
+    "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python314\\python.exe -c import pefile",
+    "status": "ready"
+   }
+  ],
+  "port_scan": [
+   {
+    "tool": "nmap",
+    "how": "cli:<TOOLS>mingw64\\mingw64\\bin\\ctags.exe --version",
+    "status": "ready"
+   }
+  ],
+  "protect_dotnet": [
+   {
+    "tool": "ConfuserEx",
+    "how": "pylib:ConfuserEx",
+    "status": "degraded"
+   }
+  ],
+  "protocol_analysis": [
+   {
+    "tool": "tshark",
+    "how": "cli:<TOOLS>Network_Analyzer\\WiresharkPortable64\\WiresharkPortable64.exe -v",
+    "status": "ready"
+   }
+  ],
+  "pylib_host": [
+   {
+    "tool": "python",
+    "how": "cli:<TOOLS>.venv-tools\\Scripts\\python.exe -V",
+    "status": "ready"
+   }
+  ],
+  "python_library": [
+   {
+    "tool": "triton",
+    "how": "pylib:triton",
+    "status": "degraded"
+   },
+   {
+    "tool": "pwntools",
+    "how": "pylib:pwntools",
+    "status": "degraded"
+   }
+  ],
+  "read_memory": [
+   {
+    "tool": "x64dbg-headless",
+    "how": "mcp:x64dbg-headless(80 tools,http)",
+    "status": "ready"
+   }
+  ],
+  "rebuild_apk": [
+   {
+    "tool": "apktool",
+    "how": "cli:C:\\Program Files\\Java\\jre1.8.0_481\\bin\\java.exe -jar <TOOLS>apktool\\apktool.jar --version",
+    "status": "ready"
+   }
+  ],
+  "registers": [
+   {
+    "tool": "x64dbg-headless",
+    "how": "mcp:x64dbg-headless(80 tools,http)",
+    "status": "ready"
+   }
+  ],
+  "run_dotnet_tools": [
+   {
+    "tool": "dotnet",
+    "how": "cli:<TOOLS>dotnet8\\dotnet.exe --version",
+    "status": "ready"
+   }
+  ],
+  "run_jar": [
+   {
+    "tool": "java",
+    "how": "cli:<TOOLS>jdk21\\jdk-21.0.12.1+1\\bin\\java.exe -version",
+    "status": "ready"
+   }
+  ],
+  "runtime_hook": [
+   {
+    "tool": "Frida",
+    "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python314\\python.exe -c import frida",
+    "status": "ready"
+   },
+   {
+    "tool": "objection",
+    "how": "cli:C:\\Users\\Administrator\\AppData\\Roaming\\Python\\Python314\\Scripts\\objection.exe -c import objection;print('OBJECTION OK')",
+    "status": "ready"
+   }
+  ],
+  "scripting": [
+   {
+    "tool": "python",
+    "how": "cli:<TOOLS>.venv-tools\\Scripts\\python.exe -V",
+    "status": "ready"
+   }
+  ],
+  "scripting_js": [
+   {
+    "tool": "node",
+    "how": "cli:C:\\Users\\Administrator\\AppData\\Local\\pi-node\\current\\node.exe -v",
+    "status": "ready"
+   }
+  ],
+  "service_detect": [
+   {
+    "tool": "nmap",
+    "how": "cli:<TOOLS>mingw64\\mingw64\\bin\\ctags.exe --version",
+    "status": "ready"
+   }
+  ],
+  "set_breakpoint": [
+   {
+    "tool": "x64dbg-headless",
+    "how": "mcp:x64dbg-headless(80 tools,http)",
+    "status": "ready"
+   }
+  ],
+  "shell_scripting": [
+   {
+    "tool": "bash",
+    "how": "cli:C:\\Users\\Administrator\\.pi\\agent\\win-git-bash\\bin\\bash.exe -c echo COCKPIT_OK",
+    "status": "ready"
+   }
+  ],
+  "signature_scan": [
+   {
+    "tool": "yara",
+    "how": "cli:<TOOLS>Anti Rootkit\\WKE32\\WindowsKernelExplorer.exe -c import yara;print('YARA ok')",
+    "status": "ready"
+   }
+  ],
+  "start_mcp_debugger": [
+   {
+    "tool": "x64dbg-mcp-daemon",
+    "how": "pylib:x64dbg-mcp-daemon",
+    "status": "degraded"
+   }
+  ],
+  "step": [
+   {
+    "tool": "x64dbg-headless",
+    "how": "mcp:x64dbg-headless(80 tools,http)",
+    "status": "ready"
+   }
+  ],
+  "symbolic_execution": [
+   {
+    "tool": "angr",
+    "how": "cli:C:\\Users\\Administrator\\Desktop\\飞秋互传.exe -c import angr;print('ANGR ok')",
+    "status": "ready"
+   }
+  ],
+  "traffic_capture": [
+   {
+    "tool": "tshark",
+    "how": "cli:<TOOLS>Network_Analyzer\\WiresharkPortable64\\WiresharkPortable64.exe -v",
+    "status": "ready"
+   }
+  ],
+  "traffic_intercept": [
+   {
+    "tool": "mitmproxy",
+    "how": "cli:<TOOLS>Network_Analyzer\\mitmproxy\\bin\\run.ps1 -m mitmproxy.version",
+    "status": "ready"
+   }
+  ],
+  "unpack_apk": [
+   {
+    "tool": "apktool",
+    "how": "cli:C:\\Program Files\\Java\\jre1.8.0_481\\bin\\java.exe -jar <TOOLS>apktool\\apktool.jar --version",
+    "status": "ready"
+   }
+  ],
+  "unpack_dotnet": [
+   {
+    "tool": "de4dot",
+    "how": "cli:<TOOLS>NET\\de4dot\\de4dot.exe --help",
+    "status": "ready"
+   }
+  ],
+  "unpack_executable": [
+   {
+    "tool": "UPX",
+    "how": "cli:<TOOLS>PackerAndUnpackers\\Unpackers\\upxfix\\upx.exe --version",
+    "status": "ready"
+   }
+  ],
+  "unpack_gui": [
+   {
+    "tool": "Scylla-x64",
+    "how": "cli:<TOOLS>PEtools\\Scylla.v.0.9.8\\Scylla_x64.exe",
+    "status": "ready"
+   }
+  ],
+  "value_find": [
+   {
+    "tool": "CheatEngine",
+    "how": "cli:<TOOLS>Debuggers\\CE_6.4.3_风叶人加强版\\csrss.exe",
+    "status": "ready"
+   }
+  ],
+  "version_control": [
+   {
+    "tool": "git",
+    "how": "cli:C:\\Users\\Administrator\\.pi\\agent\\win-git-bash\\bin\\sh.exe --version",
+    "status": "ready"
+   }
+  ]
+ }
+}
