@@ -10,6 +10,10 @@ Thumbs.db
 Desktop.ini
 
 # 运行时工作目录（每次跑路由都会重建）
+# 注意要写 /work/ 而不是 work/：不带前导斜杠的话这条规则会同时命中 skillpack/work/，
+# 而仓根的 work/ 反而漏掉 —— 实测跑完测试留下的 work/master-route-<时间戳>/
+# 会被 git add -A 顺手带进仓库（本次已发生，已从版本库移除）。
+/work/
 skillpack/work/
 kernel/state/
 *.pid
