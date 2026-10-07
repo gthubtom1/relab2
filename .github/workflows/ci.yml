@@ -1,0 +1,445 @@
+# reverse-skill CI：路由回归 + 结构一致性 + 供应链 pin gate + 冒烟 + 集成门（T10）
+# 矩阵：windows-latest（原生 powershell 5.1） + ubuntu-latest（pwsh + powershell shim）
+# 触发：所有分支（含 fork 的改进分支），PR 也触发
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Spec 17.31: read-only by default. No gate job in this file needs a write scope,
+# a secret, or network egress; anything that later does must be an independent
+# review record plus a job-level override, not a widened workflow default.
+# skills/tests/verify-gate-wiring.py enforces this block's presence.
+permissions:
+  contents: read
+
+jobs:
+  routing-tests:
+    name: routing tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # 脚本内部以 `powershell` 调用子进程；Linux runner 只有 pwsh，做个 shim
+      - name: powershell shim (linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: sudo ln -sf "$(command -v pwsh)" /usr/local/bin/powershell
+
+      - name: Routing regression (benchmark)
+        shell: pwsh
+        run: ./skillpack/skills/scripts/test-routing.ps1
+
+      - name: Routing coherence + supply-chain pin gate
+        shell: pwsh
+        run: ./skillpack/skills/scripts/verify-routing-coherence.ps1
+
+      - name: Bootstrap supply-chain regression
+        shell: pwsh
+        run: ./skillpack/skills/scripts/test-bootstrap-supply-chain.ps1
+
+      - name: Bootstrap supply-chain regression (Windows PowerShell 5.1)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: ./skillpack/skills/scripts/test-bootstrap-supply-chain.ps1
+
+      - name: Parse contracts (route-scope + IDA lock)
+        shell: pwsh
+        run: ./skillpack/skills/scripts/test-parse-contracts.ps1
+
+      - name: Journal PR title safety
+        shell: pwsh
+        run: ./skillpack/skills/scripts/test-workflow-title-safety.ps1
+
+      - name: P0 friction regression (Windows PowerShell 5.1)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: ./skillpack/skills/scripts/test-p0-friction.ps1
+
+      - name: Client-neutral bootstrap/discovery (Windows PowerShell 5.1)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: ./skillpack/skills/scripts/test-client-neutral-bootstrap.ps1
+
+      - name: Codex config encoding (Windows PowerShell 5.1)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: ./skillpack/skills/scripts/test-bootstrap-codex-encoding.ps1
+
+      - name: Evidence consolidation py/ps1 parity (Windows PowerShell 5.1)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: ./skillpack/skills/scripts/test-consolidate-evidence.ps1
+
+      - name: Offline sample case contract (Windows PowerShell 5.1)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $scratch = Join-Path $env:RUNNER_TEMP ("reverse-skill-offline-" + [guid]::NewGuid().ToString('n'))
+          New-Item -ItemType Directory -Force -Path $scratch | Out-Null
+          $sample = Join-Path $scratch 'sample.apk'
+          Set-Content -Path $sample -Value 'fixture' -Encoding ASCII
+
+          ./skillpack/skills/scripts/case-init.ps1 `
+            -Hint "offline apk" `
+            -CaseName "offline-sample" `
+            -ProjectRoot $scratch `
+            -Preset offline-sample `
+            -Sample $sample
+          $scope = Join-Path $scratch 'work/offline-sample/scope.md'
+          $raw = Get-Content $scope -Raw
+          if ($raw -notmatch '(?m)^- mode: offline\r?$') { throw 'offline sample did not keep offline network mode' }
+          if ($raw -notmatch '(?m)^- ready_for_act: true\r?$') { throw 'offline sample did not become ready_for_act' }
+          ./skillpack/skills/scripts/case-guard.ps1 -CaseRoot (Join-Path $scratch 'work/offline-sample')
+
+          try {
+            ./skillpack/skills/scripts/case-init.ps1 `
+              -Hint "missing offline apk" `
+              -CaseName "missing-sample" `
+              -ProjectRoot $scratch `
+              -Preset offline-sample `
+              -Sample (Join-Path $scratch 'missing.apk')
+            throw 'missing offline sample was accepted'
+          } catch {
+            if ($_.Exception.Message -eq 'missing offline sample was accepted') { throw }
+          }
+
+          ./skillpack/skills/scripts/case-init.ps1 `
+            -Hint "pending offline apk" `
+            -CaseName "force-auth" `
+            -ProjectRoot $scratch `
+            -Sample $sample
+          & powershell -NoProfile -ExecutionPolicy Bypass -File ./skillpack/skills/scripts/case-guard.ps1 `
+            -CaseRoot (Join-Path $scratch 'work/force-auth') `
+            -Force
+          $guardExit = $LASTEXITCODE
+          if ($guardExit -eq 0) { throw '-Force bypassed auth.status hard gate' }
+          $global:LASTEXITCODE = 0
+
+      - name: Smoke (verify + parse + quick route)
+        shell: pwsh
+        run: ./skillpack/skills/scripts/smoke.ps1
+
+      - name: INDEX.md up-to-date check
+        shell: pwsh
+        run: ./skillpack/skills/scripts/extract-summaries.ps1 -Check
+
+      - name: All JSON manifests valid
+        shell: pwsh
+        run: |
+          Get-Content skillpack/skills/scripts/bootstrap-manifest.json -Raw -Encoding UTF8 | ConvertFrom-Json | Out-Null
+          Get-Content skillpack/kali/scripts/bootstrap-manifest.json -Raw -Encoding UTF8 | ConvertFrom-Json | Out-Null
+          Get-Content skillpack/skills/config/routing.json -Raw -Encoding UTF8 | ConvertFrom-Json | Out-Null
+          Get-Content skillpack/skills/tests/routing-benchmark.json -Raw -Encoding UTF8 | ConvertFrom-Json | Out-Null
+          Get-Content skillpack/plugins/reverse-skill/.codex-plugin/plugin.json -Raw -Encoding UTF8 | ConvertFrom-Json | Out-Null
+          Write-Host "All JSON valid"
+
+      - name: Doc fact tables vs manifest (verify-doc-facts)
+        shell: pwsh
+        run: ./skillpack/skills/scripts/verify-doc-facts.ps1
+
+  integration-gates:
+    name: integration gates (spec + community)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Spec 17.31: no `with:` entries. This job reads the repository as data and
+      # runs repository-owned gates. It never installs a package, never runs a
+      # script under community-raw/ / skills/community/ / docs/community/, and
+      # needs no secret. verify-gate-wiring.py re-checks all four properties.
+      - name: Interpreter and fixture baseline (spec 17.20)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -VV
+          pwd
+          test -f skillpack/skills/tests/ci-gates.json
+          test -f skillpack/skills/scripts/verify-routing-signals.py
+          test -f skillpack/skills/scripts/test-routing-signals.py
+          test -f skillpack/skills/scripts/test-community-decoys.py
+          echo "cwd/runtime pinned; no dependency install is needed (standard library only)"
+
+      # Single entrypoint for the integration gate set. Before T10 these gates
+      # had no caller at all (WORK-BOARD U10): the three T26 gates were green only
+      # when a human typed them. The manifest is skills/tests/ci-gates.json.
+      #
+      # Exit semantics are preserved exactly, not normalised:
+      #   * verify-community-banner exit 10 is a REGISTERED non-blocking item
+      #     (WORK-BOARD U1: 15 vendored documents still lack the reference-only
+      #     banner). The runner classifies it as non-blocking and prints it as a
+      #     warning. Treating it as a failure would block every PR on a known,
+      #     already-registered item; treating it as a pass without the warning
+      #     would hide it. Both are wrong, so it is reported as a warning.
+      #   * verify-triage-lock exit 10 is also expected here: the read-only
+      #     upstream snapshots live outside the repository, so a clean checkout
+      #     cannot machine-verify upstream_layout_unmappable claims. That
+      #     degradation is documented in the script itself (line 33).
+      #   * test-adapt-community is SKIPPED here for the same physical reason:
+      #     one of its 87 checks reads ../upstream, which a clean checkout does
+      #     not have (measured 86/87 exit 30). The skip is loud, never silent.
+      #   * verify-release-gate exits 0 here (local-only mode, provenance
+      #     findings are warnings); only structural defects exit 20 and block.
+      #   * Everything else must be exit 0. Blocking codes and any unclassified
+      #     non-zero code fail the job.
+      #
+      # Wired since wave 5 (card K): scripts/verify-release-gate.py in its default
+      # local-only form (exit 0 on the real tree; structural defects exit 20 and
+      # block), and scripts/test-adapt-community.py (exit 0 at 87/87, exit 30
+      # blocks; the runner skips it loudly when ../upstream is absent instead of
+      # keeping a clean clone red). `validate-integration.py --release` and
+      # `verify-release-gate.py --release` stay human promotion gates: both exit
+      # 20 by design on the current registry, so wiring them would keep CI red.
+      # validate-integration is run in its local-only form.
+      - name: Run the integration gate set
+        shell: bash
+        run: python3 skillpack/skills/tests/run-ci-gates.py --runner python
+
+      # Proves the wiring itself: every gate in the manifest is named by a
+      # workflow, no workflow runs vendor code, every workflow is read-only, and
+      # every action is SHA-pinned. This is the gate that would have caught U10.
+      - name: Verify the gates are actually wired into CI
+        shell: bash
+        run: python3 skillpack/skills/tests/verify-gate-wiring.py
+
+  sh-syntax:
+    name: shell script syntax check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: bash -n all .sh
+        shell: bash
+        run: |
+          set -e
+          while IFS= read -r f; do
+            bash -n "$f"
+            echo "syntax OK: $f"
+          done < <(git ls-files '*.sh')
+
+      - name: Kali pwntools discovery regression
+        shell: bash
+        run: bash skillpack/kali/scripts/test-pwntools-discovery.sh
+
+      - name: Client-neutral bootstrap/discovery (Bash)
+        shell: bash
+        run: bash skillpack/skills/scripts/test-client-neutral-bootstrap.sh
+
+      - name: Structured routing parity (Bash)
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash skillpack/skills/scripts/test-routing.sh
+          bash skillpack/skills/scripts/test-bootstrap-manifest.sh
+          bash skillpack/skills/scripts/test-bash-workflow.sh
+
+          scratch="$(mktemp -d)"
+          trap 'rm -rf "$scratch"' EXIT
+
+          # Fresh Linux journey: no pwsh required, artifacts stay in caller project.
+          caller="$scratch/caller-project"
+          mkdir -p "$caller"
+          printf 'fixture' > "$scratch/sample.apk"
+          (
+            cd "$caller"
+            bash "$GITHUB_WORKSPACE/skills/scripts/master-route.sh" --hint "offline apk"
+            bash "$GITHUB_WORKSPACE/skills/scripts/case-init.sh" \
+              --hint "offline apk" \
+              --case-name "caller-default" \
+              --preset offline-sample \
+              --sample "$scratch/sample.apk"
+          )
+          test -f "$caller/work/caller-default/scope.md"
+          grep -Eq '^- project_root: .*/caller-project$' "$caller/work/caller-default/scope.md"
+          grep -Eq '^- mode: offline$' "$caller/work/caller-default/scope.md"
+          grep -Eq '^- ready_for_act: true$' "$caller/work/caller-default/scope.md"
+          bash skillpack/skills/scripts/case-guard.sh --case-root "$caller/work/caller-default"
+          test ! -e "$GITHUB_WORKSPACE/work/caller-default"
+
+          if bash skillpack/skills/scripts/case-init.sh \
+              --hint "missing offline apk" \
+              --case-name "missing-sample" \
+              --project-root "$caller" \
+              --preset offline-sample \
+              --sample "$scratch/missing.apk"; then
+            echo "missing offline sample was accepted" >&2
+            exit 1
+          fi
+
+          # Compatibility: legacy --package-root still pins the work root.
+          bash skillpack/skills/scripts/case-init.sh \
+            --hint "authorized web review" \
+            --case-name "network-default" \
+            --package-root "$scratch/project" \
+            --auth-granted \
+            --target-url "https://example.test/"
+          grep -Eq '^- mode: authorized_target_only$' "$scratch/project/work/network-default/scope.md"
+          grep -Eq '^- ready_for_act: true$' "$scratch/project/work/network-default/scope.md"
+          bash skillpack/skills/scripts/case-guard.sh --case-root "$scratch/project/work/network-default"
+
+          if bash skillpack/skills/scripts/case-init.sh \
+              --hint "offline apk" \
+              --case-name "../case-escape" \
+              --package-root "$scratch/project" \
+              --preset offline-sample \
+              --sample "$scratch/sample.apk"; then
+            echo "case-init accepted an unsafe case name" >&2
+            exit 1
+          fi
+
+          if bash skillpack/skills/scripts/case-init.sh \
+              --hint "authorized web review" \
+              --case-name "invalid-network" \
+              --package-root "$scratch/project" \
+              --auth-granted \
+              --network-profile "internet" \
+              --target-url "https://example.test/"; then
+            echo "case-init accepted an unsupported network profile" >&2
+            exit 1
+          fi
+
+          bash skillpack/skills/scripts/case-init.sh \
+            --hint "authorized web review" \
+            --case-name "uppercase-network" \
+            --package-root "$scratch/project" \
+            --auth-granted \
+            --network-profile "AUTHORIZED_TARGET_ONLY" \
+            --target-url "https://example.test/"
+          grep -Eq '^- mode: authorized_target_only$' "$scratch/project/work/uppercase-network/scope.md"
+
+          bash skillpack/skills/scripts/case-init.sh \
+            --hint "pending review" \
+            --case-name "guard-section" \
+            --package-root "$scratch/project" \
+            --target-url "https://example.test/"
+          cat >> "$scratch/project/work/guard-section/scope.md" <<'FAKE_FIELDS'
+
+          ## notes
+          - status: granted
+          - mode: authorized_target_only
+          - ready_for_act: true
+          FAKE_FIELDS
+          if bash skillpack/skills/scripts/case-guard.sh --case-root "$scratch/project/work/guard-section"; then
+            echo "case-guard accepted fields outside their contract sections" >&2
+            exit 1
+          fi
+
+          # --force is compatibility-only and must not bypass the hard auth gate.
+          (
+            cd "$caller"
+            bash "$GITHUB_WORKSPACE/skills/scripts/case-init.sh" \
+              --hint "pending offline apk" \
+              --case-name "force-auth" \
+              --sample "$scratch/sample.apk"
+          )
+          if bash skillpack/skills/scripts/case-guard.sh --case-root "$caller/work/force-auth" --force; then
+            echo "case-guard --force bypassed auth.status hard gate" >&2
+            exit 1
+          fi
+
+      - name: PowerShell syntax check (PSParser, all tracked .ps1)
+        shell: pwsh
+        run: |
+          $files = git ls-files '*.ps1'
+          if (-not $files) { Write-Host 'No .ps1 files tracked'; exit 0 }
+          $failed = 0
+          foreach ($f in $files) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $f), [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors -and $errors.Count -gt 0) {
+              $failed++
+              Write-Host "::error file=$f::$($errors.Count) parse error(s)"
+              foreach ($e in $errors) {
+                Write-Host ("  L{0}:{1} {2}" -f $e.Extent.StartLineNumber, $e.Extent.StartColumnNumber, $e.Message)
+              }
+            } else {
+              Write-Host "syntax OK: $f"
+            }
+          }
+          if ($failed -gt 0) { exit 1 }
+
+      - name: Non-ASCII .ps1 must carry a UTF-8 BOM (Windows PowerShell 5.1 safety)
+        shell: pwsh
+        run: |
+          # PS 5.1 parses a BOM-less .ps1 as the system ANSI codepage, garbling
+          # Chinese/em-dash string literals. Every non-ASCII script MUST have a BOM.
+          $files = git ls-files '*.ps1'
+          if (-not $files) { Write-Host 'No .ps1 files tracked'; exit 0 }
+          $bad = 0
+          foreach ($f in $files) {
+            $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path $f))
+            $hasNonAscii = $false
+            foreach ($b in $bytes) { if ($b -ge 0x80) { $hasNonAscii = $true; break } }
+            if (-not $hasNonAscii) { continue }
+            $hasBom = $bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF
+            if ($hasBom) {
+              Write-Host "BOM OK: $f"
+            } else {
+              $bad++
+              Write-Host "::error file=$f::non-ASCII .ps1 lacks a UTF-8 BOM; add one so literals survive Windows PowerShell 5.1"
+            }
+          }
+          if ($bad -gt 0) { Write-Host "$bad file(s) need a UTF-8 BOM"; exit 1 }
+          Write-Host 'All non-ASCII .ps1 carry a UTF-8 BOM'
+
+  leak-scan:
+    name: field-journal leak scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Scan field-journal for un-anonymized secrets
+        shell: pwsh
+        run: ./skillpack/skills/scripts/scan-leaks.ps1 -Path skillpack/skills/field-journal
+
+  case-contract:
+    name: case contract test (ctf-demo)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Review examples/ctf-demo under strict contract
+        shell: bash
+        run: python3 skillpack/skills/case-review/scripts/review_case.py skillpack/examples/ctf-demo --verify-hashes --strict
+
+      - name: review_case.py unit tests
+        shell: bash
+        run: python3 skillpack/skills/case-review/tests/test_review_case.py
+
+      - name: Internal Markdown links resolve
+        shell: bash
+        run: python3 skillpack/skills/scripts/verify-doc-links.py
+
+      - name: Repository executable/reference boundaries
+        shell: bash
+        run: python3 skillpack/skills/scripts/verify-repository-security.py
+
+  gradle-wrapper-validation:
+    name: Gradle wrapper validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: gradle/actions/wrapper-validation@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+  version-check:
+    name: version consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: VERSION matches latest CHANGELOG release
+        shell: pwsh
+        run: |
+          $v = (Get-Content VERSION -Raw).Trim()
+          $cl = Get-Content CHANGELOG.md -Raw
+          $m = [regex]::Match($cl, '(?m)^## \[(\d+\.\d+\.\d+)\]')
+          if (-not $m.Success) { Write-Error 'No version header found in CHANGELOG'; exit 1 }
+          $latest = $m.Groups[1].Value
+          if ($v -ne $latest) {
+            Write-Error "VERSION ($v) does not match latest CHANGELOG release ($latest)"
+            exit 1
+          }
+          Write-Host "Version OK: $v"

@@ -1,0 +1,81 @@
+# Release pipeline (T16, spec 17.15 / 17.21 / 17.29).
+# Manual only: workflow_dispatch. No push/tag trigger on purpose -- a tag
+# must never start a release by itself.
+# Single environment-gated job: the `release-approval` environment holds the
+# required human reviewer(s), so the job does not even start unapproved.
+# Inside the job, verify-release-approval.py re-checks the approval RECORD
+# (decision, two humans, candidate content_id, gate pins, rollback) with
+# exit 20 on any defect -- the platform approval and the record check are
+# two independent halves, neither trusts the other.
+# This file is NEW in T16; .github/workflows/ci.yml is untouched (card K
+# owns the gate list in parallel).
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      requester:
+        description: Handle of the human requesting this release
+        required: true
+        type: string
+      approval:
+        description: Path to the approval record (under release-approvals/)
+        required: true
+        type: string
+
+# Spec 17.31: read-only by default. No step below needs a write scope, a
+# secret, or network egress. skills/tests/verify-gate-wiring.py enforces
+# this block, the SHA pin on every action, and the absence of secrets.
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: build, gate and approve (local-only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: release-approval
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Interpreter baseline (spec 17.20)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -VV
+          test -f skillpack/scripts/build-release-candidate.py
+          test -f skillpack/scripts/verify-release-approval.py
+      - name: Build candidate (refuses redistributable, refuses in-tree out)
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="${RUNNER_TEMP}/t16-candidate"
+          python3 skillpack/scripts/build-release-candidate.py build \
+            --out-dir "$out" \
+            --requester "${{ inputs.requester }}"
+          python3 skillpack/scripts/build-release-candidate.py check \
+            --candidate-dir "$out"
+          echo "T16_CANDIDATE=$out" >> "$GITHUB_ENV"
+      - name: Local-only gates must pass
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 skillpack/scripts/validate-integration.py
+          python3 skillpack/scripts/verify-release-gate.py
+      - name: Release-mode gates must stay blocking (expected red)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if python3 skillpack/scripts/validate-integration.py --release; then
+            echo "release gate unexpectedly green" >&2; exit 1
+          fi
+          if python3 skillpack/scripts/verify-release-gate.py --release; then
+            echo "release gate unexpectedly green" >&2; exit 1
+          fi
+          echo "both release-mode gates block as designed (exit 20)"
+      - name: Approval record must validate (fails closed when absent)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 skillpack/scripts/verify-release-approval.py \
+            --candidate-dir "$T16_CANDIDATE" \
+            --approval "${{ inputs.approval }}"

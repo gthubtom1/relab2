@@ -3,19 +3,27 @@ param([string] $WorkflowPath = '')
 
 $ErrorActionPreference = 'Stop'
 
+# 往上逐层找 .github/workflows/auto-merge-journal.yml，最多找 5 层。
+# 原来写死「上两层」→ 落在 skillpack/ 下，而 workflow 实际在**仓根** .github/，
+# 于是这个守卫从来没守到过任何文件：找不到就 Get-Content 抛错，整个测试永远红。
+# 现在改成「找到为止」，仓根 / skillpack/ 两种摆法都能找到。
 if ([string]::IsNullOrWhiteSpace($WorkflowPath)) {
-    $WorkflowPath = Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) '.github\workflows\auto-merge-journal.yml'
+    $probe = 'auto-merge-journal.yml'
+    $dir = $PSScriptRoot
+    for ($i = 0; $i -lt 5 -and -not $WorkflowPath; $i++) {
+        $candidate = Join-Path $dir ".github\workflows\$probe"
+        if (Test-Path -LiteralPath $candidate) { $WorkflowPath = $candidate }
+        else { $dir = Split-Path -Parent $dir }
+    }
 }
 
-# 被测对象不存在就跳过，不要硬红。
-# 这个测试防的是 auto-merge-journal.yml 里 PR 标题被直接插进 `gh pr merge` 命令的注入问题。
-# 那个 workflow 不属于本项目（仓库里从来没有 .github/ 目录，field-journal 只出现在
-# 第三方 community-raw/ 里），所以这个测试从写下来那天起就永远失败 ——
-# 一条永远红的测试等于没有测试，它只会训练人忽略红色。
-# 哪天真把这个 workflow 加回来，守卫会自动重新生效，不用改这个文件。
-if (-not (Test-Path -LiteralPath $WorkflowPath)) {
-    Write-Host "[SKIP] 被测对象不存在：$WorkflowPath" -ForegroundColor Yellow
-    Write-Host "       这个 workflow 不属于本项目；本测试守的是它的 PR 标题注入风险。" -ForegroundColor DarkGray
+# 找不到就跳过，不要硬红：一条永远红的测试等于没有测试，它只会训练人忽略红色。
+# 这个 workflow 是 field-journal PR 的自动合并 + 安全扫描门（PR 标题注入防护）。
+# 本项目当前没有 field-journal 目录，所以平时不装这个 workflow —— 守卫留着，
+# 哪天真启用了 field-journal 自动合并，守卫立刻生效。
+if (-not $WorkflowPath) {
+    Write-Host "[SKIP] 找不到 auto-merge-journal.yml（往上找了 5 层）" -ForegroundColor Yellow
+    Write-Host "       本测试守的是该 workflow 里 PR 标题被直接插进 gh pr merge 的注入风险。" -ForegroundColor DarkGray
     exit 0
 }
 

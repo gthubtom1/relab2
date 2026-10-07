@@ -1,0 +1,35 @@
+# CODEOWNERS — 受保护评审路径声明（T24，依据规范 17.21）
+
+# 注意：本文件是"意图声明 + 离线可验证的一半"。
+# 分支保护 / required checks 是 GitHub 平台侧配置，离线无法验证，
+# 不得声称已生效（见 docs/CI-TRUST-BOUNDARY.md §7）。
+# 接入真实 GitHub 前，把 @REPO-MAINTAINER 替换为真实 maintainer handle，
+# 并在平台侧启用 §7 列出的 required checks。
+
+# Gate 脚本、门清单与 digest 锁：改动需独立审查，删门即红（锁见 ci-gates.lock.json）
+/skills/tests/ci-gates.json                @REPO-MAINTAINER
+/skills/tests/ci-gates.lock.json           @REPO-MAINTAINER
+/skills/tests/verify-gate-wiring.py        @REPO-MAINTAINER
+/skills/tests/run-ci-gates.py              @REPO-MAINTAINER
+/skills/scripts/verify-*.py               @REPO-MAINTAINER
+/skills/scripts/test-*.py                 @REPO-MAINTAINER
+
+# CI workflow：权限放宽 / 去 pin / 加 secret 必须走独立审查（17.31）
+/.github/workflows/                       @REPO-MAINTAINER
+
+# 规范与协调板：冻结合同，改动需独立审查
+/docs/INTEGRATION-IMPLEMENTATION-SPEC.md   @REPO-MAINTAINER
+/docs/WORK-BOARD.md                        @REPO-MAINTAINER
+/HANDOFF.md                                @REPO-MAINTAINER
+
+# 信任边界文档本身：改动即边界改动，需独立审查
+/docs/CI-TRUST-BOUNDARY.md                 @REPO-MAINTAINER
+
+# 登记表与来源证明：自我豁免类攻击面，改动需独立审查
+# P1-1：登记表与锁必须同改才能伪造（双文件攻击），故三个文件同属一个评审单元；
+# verify-triage-lock.py 的 --snapshot-root 默认行为与降级语义（10/20 划分）同属此门。
+# 17.21 protected gate：以下任一文件的 PR 都需独立审查，删门即红。
+/skills/scripts/verify-triage-lock.py         @REPO-MAINTAINER
+/docs/community/link-triage.json           @REPO-MAINTAINER
+/docs/community/link-triage.lock.json      @REPO-MAINTAINER
+/skills/community/registry.json            @REPO-MAINTAINER
