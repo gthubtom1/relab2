@@ -128,7 +128,7 @@ if ($primary -eq $fallbackId -and (($Hint -replace '\s+', '').Length -ge 10)) {
         # Windows 上 python/python3 常是 Microsoft Store 占位符（Get-Command 能命中但 exit 9009）。
         # 全部不可用时 $pyExe 为空，整块静默跳过（维持 R0，不抛错、不改 3s 超时）。
         $pyExe = ''
-        foreach ($cand in @($env:REVERSE_SKILL_PYTHON, 'D:\EXE\python\python.exe')) {
+        foreach ($cand in @($env:REVERSE_SKILL_PYTHON)) {   # 只认主人显式指定的；其余交给下面的探测
             if (-not $cand) { continue }
             if (Test-Path -LiteralPath $cand) { $pyExe = $cand; break }
             $c = Get-Command $cand -ErrorAction SilentlyContinue

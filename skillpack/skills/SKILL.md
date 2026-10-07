@@ -23,7 +23,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 
 ## COMMAND DISCIPLINE（命令执行纪律，与路由契约同级 MUST）
 
-> 来源：`<本仓库>/kernel/04-console/cards/guest/全能专精指引.md` §4 —— 仓库内**唯一权威**卡片，`指引卡.md` 只是它的指针文件。
+> 来源：`<本仓库>/kernel/04-console/cards/guest/全能专精指引.md` —— 仓库内**唯一权威**卡片，`指引卡.md` 只是它的指针文件。
 > 如与该卡片源冲突，**以卡片源为准**。`<本仓库>` = 仓库根目录。
 > ⚠️ 不要再去引`D:\Project\hubcore\04-console\cards\guest\全能专精指引.md`：那是仓库外的旧副本，§1 写的是「必须在隔离虚拟机执行，严禁在宿主机拉起」，与权威卡的「单机·无跨机假设」**完全相反**，两份并存就是口径分裂的根源。
 > 事故背景：2026-10-04 会话 `01a107ea` 两次无响应停顿，根因是本包 `die.exe` 漏登记导致拉起 GUI 版（弹窗、零 stdout、进程不退）。工具执行是**同步阻塞**的：命令不返回，模型不会运行、不会有任何 token 产出，终端计时器继续走。**没有模型能察觉自己的命令卡住**，因此约束必须前置到命令本身。
