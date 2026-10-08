@@ -35,7 +35,7 @@ clone 完就**在这个目录下开一个新的智能体会话** —— 之后�
 | 层 | 解决什么 | 入口 | 必需 |
 |---|---|---|---|
 | **① 行为卡片层** | agent **怎么做事** —— 身份、纪律、输出契约 | `kernel/04-console/cards/guest/全能专精指引.md` | 是 |
-| **② 能力路由层** | agent **会做什么** —— 43 个技能的方法论与工具用法 | `skillpack/skills/SKILL.md` | 是 |
+| **② 能力路由层** | agent **会做什么** —— 48 个技能的方法论与工具用法 | `skillpack/skills/SKILL.md` | 是 |
 | **③ 物理兜底层** | agent **卡住时有人拉它一把** —— 补 timeout、拦 GUI 二进制 | `extensions/pi/cmd-guard/README.md` | 否（仅 pi 宿主） |
 
 ③ 是 **pi 专有扩展**，换别的宿主就没有这层，①②照样完整可用 ——
@@ -48,14 +48,14 @@ clone 完就**在这个目录下开一个新的智能体会话** —— 之后�
 
 ```text
 ① 读 skillpack/skills/SKILL.md          ← 主入口，含路由契约与命令纪律
-② 跑 scripts/master-route.ps1 选当前阶段的技能（PRIMARY）
+② 跑 .\skillpack\skills\scripts\master-route.ps1 选当前阶段的技能（PRIMARY）
 ③ 打开 PRIMARY 的 SKILL.md，照它的 ACTION REQUIRED 做
 ④ **每推进到一个阶段，重新跑一遍 ②** —— 一个程序各阶段要的东西不同（有没有壳决定走脱壳还是直接静态、
    静态看不出东西就转动态），别在第一个阶段选定的技能里死磕到底
 ⑤ 报告用 Evidence → Finding → Path
 ```
 
-Windows：`powershell -ExecutionPolicy Bypass -File .\skillpack\skills\scripts\master-route.ps1`
+Windows：`powershell -ExecutionPolicy Bypass -File .\skillpack\skills\scripts\master-route.ps1 -Hint "<任务描述>"`
 Linux/macOS/Kali：`./skillpack/skills/scripts/master-route.sh`
 
 ---

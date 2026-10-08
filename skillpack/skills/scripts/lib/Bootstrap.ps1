@@ -27,9 +27,16 @@ function Get-ReverseSkillRoot {
     [CmdletBinding()]
     param()
 
-    # 技能包相对自己的位置找资源，$PSScriptRoot 自推导是最稳的探测 —— 不需要任何手写配置。
+    # 技能包相对自己的位置找资源：支持直接传入技能包根或仓库根，自动解析出 skills/ 目录
     if (-not [string]::IsNullOrWhiteSpace($env:REVERSE_SKILL_ROOT)) {
         $override = [System.IO.Path]::GetFullPath($env:REVERSE_SKILL_ROOT)
+        if (Test-Path -LiteralPath (Join-Path $override 'scripts\bootstrap-manifest.json')) {
+            return $override
+        }
+        $subSkills = Join-Path $override 'skillpack\skills'
+        if (Test-Path -LiteralPath (Join-Path $subSkills 'scripts\bootstrap-manifest.json')) {
+            return [System.IO.Path]::GetFullPath($subSkills)
+        }
         if (Test-Path -LiteralPath $override -PathType Container) { return $override }
         Write-Warning "REVERSE_SKILL_ROOT 指向的目录不存在，已忽略并改用自推导：$override"
     }

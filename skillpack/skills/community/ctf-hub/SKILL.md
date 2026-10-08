@@ -23,8 +23,8 @@ description: CTF 任务的友好分诊与教学适配层。把自动分流、头
 
 | 题型 | canonical downstream | 社区参考 |
 |---|---|---|
-| Reverse / APK / WASM / 固件 | `reverse-engineering`, `apk-reverse`, `firmware-pentest` | `skills/community/ctf-super-hub/ctf-reverse/` |
-| Pwn / ROP / heap | `pwn-chain` | `skills/community/ctf-super-hub/ctf-pwn/` |
+| Reverse / APK / WASM / 固件 | `reverse-engineering`, `apk-reverse`, `firmware-pentest` | `skillpack/community-raw/ctf-super-hub/ctf-reverse/` |
+| Pwn / ROP / heap | `pwn-chain` | `skillpack/community-raw/ctf-super-hub/ctf-pwn/` |
 | Web / API | `api-security`, `pentest-tools`, `browser-automation` | `ctf-web` 与 `strix-*` |
 | Crypto | CTF sandbox 或本地 Python/Sage 能力 | `ctf-crypto` |
 | Forensics / PCAP | `digital-forensics`, `protocol-reverse` | `ctf-forensics` |

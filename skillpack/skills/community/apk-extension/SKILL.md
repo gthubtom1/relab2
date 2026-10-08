@@ -9,8 +9,8 @@ description: APK 逆向能力扩展入口。把新版 apk-reverse 的 doctor、c
 
 1. `NOW`: 确认 APK、设备/ABI、root/Frida/ADB、目标行为和交付形态，先走
    `skills/apk-reverse/SKILL.md` 的 scope 与 control-build gates。
-2. `NEXT`: 读取 `skills/community/apk-reverse-source/evidence/capability-matrix.json`
-   和 `skills/community/apk-reverse-source/evidence/known-limitations.md`；`partial`
+2. `NEXT`: 读取 `skillpack/community-raw/apk-reverse-source/evidence/capability-matrix.json`
+   和 `skillpack/community-raw/apk-reverse-source/evidence/known-limitations.md`；`partial`
    要先声明缺口，`blocked` 直接停在边界说明。
 3. `NEXT`: 通过 canonical `skillpack/skills/TOOLS.md` 和 doctor/preflight 检查工具状态。
    不执行源仓库的隐式安装、固定机器路径、debug keystore 或未授权设备命令。
@@ -23,13 +23,13 @@ description: APK 逆向能力扩展入口。把新版 apk-reverse 的 doctor、c
 
 | 组 | 适配目录 |
 |---|---|
-| baseline / doctor | `skills/community/apk-reverse-source/` |
-| DEX / Dart | `skills/community/apk-reverse-source/` |
-| packaging / install | `skills/community/apk-reverse-source/` |
-| native / ELF | `skills/community/apk-reverse-source/` |
-| Frida / dynamic | `skills/community/apk-reverse-source/` |
-| protocol / service | `skills/community/apk-reverse-source/` |
-| governance / leak scan | `skills/community/apk-reverse-source/` |
+| baseline / doctor | `skillpack/community-raw/apk-reverse-source/` |
+| DEX / Dart | `skillpack/community-raw/apk-reverse-source/` |
+| packaging / install | `skillpack/community-raw/apk-reverse-source/` |
+| native / ELF | `skillpack/community-raw/apk-reverse-source/` |
+| Frida / dynamic | `skillpack/community-raw/apk-reverse-source/` |
+| protocol / service | `skillpack/community-raw/apk-reverse-source/` |
+| governance / leak scan | `skillpack/community-raw/apk-reverse-source/` |
 
 这只是新版能力的适配入口；普通 APK 任务仍优先由 `R1` canonical `apk-reverse`
 承载，避免两个 APK 主入口争抢同一提示。

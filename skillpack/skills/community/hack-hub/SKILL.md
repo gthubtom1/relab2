@@ -33,7 +33,7 @@ description: Web、API、主机和应用安全专题适配层。将 hack-skills 
 | binary / anti-debug / pwn | `reverse-engineering` / `pwn-chain` |
 | LLM / AI-ML | `llm-security` |
 
-`skills/community/hack-skills/` 只保存适配后的参考正文和 provenance；其 `hack` 主
+`skillpack/community-raw/hack-skills/` 只保存适配后的参考正文和 provenance；其 `hack` 主
 入口、Yak 安装流程和类别索引不作为第二套 router。
 
 需要机器辅助初筛时，可只读运行：

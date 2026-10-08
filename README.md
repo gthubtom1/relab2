@@ -44,7 +44,7 @@ C:\relab2\
 │  └─ 07-kernel-sweep\          提示词实测与调优工具链
 │
 ├─ skillpack\              ② 能力层 —— agent 会做什么
-│  ├─ skills\                   ★ 43 个技能模块，主入口 SKILL.md
+│  ├─ skills\                   ★ 48 个技能模块，主入口 SKILL.md
 │  │  ├─ TOOLS.md               ★ 工具清单与装法（机器无关）
 │  │  ├─ references\tool-registry.md   MCP 通道登记模板
 │  │  └─ scripts\lib\Bootstrap.ps1    探测层（纯测量）
@@ -127,7 +127,7 @@ $r.Via         # 从哪找到的：env / PATH / map / scan
 notepad .\START-HERE.md
 
 # 2. 跑路由，选 PRIMARY 技能
-powershell -ExecutionPolicy Bypass -File .\skillpack\skills\scripts\master-route.ps1
+powershell -ExecutionPolicy Bypass -File .\skillpack\skills\scripts\master-route.ps1 -Hint "<任务描述>"
 
 # 3. 打开 PRIMARY 技能照做
 notepad .\skillpack\skills\<技能名>\SKILL.md
@@ -142,7 +142,7 @@ notepad .\skillpack\skills\<技能名>\SKILL.md
 
 | 项 | 数量 |
 |---|---|
-| 技能模块 | 43 |
+| 技能模块 | 48 |
 | 行为卡片 | 42 |
 | 本仓库 | ~2500 文件 / ~25 MB |
 | 工具根 `D:\Tools` | ~1.3 GB（商业工具，便携版，**不随本仓库分发**） |

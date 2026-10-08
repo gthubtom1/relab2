@@ -11,7 +11,7 @@ description: 全栈软件交付编排适配层。按目标、输入、角色工�
    关键输入先列出阻塞项，不猜工具或环境。
 2. `NEXT`: 选择单一 role workflow 或有序协同链（产品→计划→设计→API/数据→实现→
    QA→安全→DevOps/SRE→文档），记录每次 handoff 的输入和输出。
-3. `NEXT`: 从 `skills/community/ai-fullstack/workflows/` 读取对应 `WORKFLOW.md`、
+3. `NEXT`: 从 `skillpack/community-raw/ai-fullstack/workflows/` 读取对应 `WORKFLOW.md`、
    templates、`TOOLS.md` 和 pitfalls；这些路径已被适配到当前包，不使用源仓库的
    全局 hooks、private nested checkout 或自动 bootstrap。
 4. `ACT`: 安全、逆向、渗透、真实部署和外部发布动作必须交给 canonical route，遵循
