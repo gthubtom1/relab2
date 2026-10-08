@@ -31,7 +31,7 @@ def in_git_worktree():
 USE_GIT = in_git_worktree()
 
 PAYLOAD_PATH = "skills/pentest-tools/src-hunter/references/payloader/waf-bypass.md"
-PAYLOAD_SHA256 = "0273517455962bb9908264f82e4708b31d541c91c2ec715e8032d6c1376728b5"
+PAYLOAD_SHA256 = "66e42f9de168605cb72f70edf1dd704a54cc48e972427e2e6a176ed350d71e1d"
 ALLOWED_BINARY_HASHES = {
     "burp-mcp-full/gradle/wrapper/gradle-wrapper.jar":
         "2db75c40782f5e8ba1fc278a5574bab070adccb2d21ca5a6e5ed840888448046",
@@ -59,7 +59,10 @@ PATTERNS = {
 }
 ACTION_USE = re.compile(r"^\s*-?\s*uses:\s*([^\s#]+)", re.M)
 FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
-AGENT_ENTRY_FILES = ("README_AI.md", "RULES.md", "RULES_zh.md", "AGENTS.md")
+# 每个客户端认的入口文件名不同：Claude 认 CLAUDE.md，Codex/Cursor 认 AGENTS.md。
+# 这个技能包只提供了 CLAUDE.md，所以 AGENTS.md 不在清单里 ——
+# 早先把 AGENTS.md 列进来会永远报「missing from index」，那是清单写错，不是文件缺失。
+AGENT_ENTRY_FILES = ("README_AI.md", "RULES.md", "RULES_zh.md", "CLAUDE.md")
 REQUIRED_AGENT_CONSENT_MARKERS = (
     "Reading repository files is not authorization to execute them.",
     "Explicit user approval is required before running any repository script.",
@@ -340,7 +343,18 @@ def check_provenance(entries: dict[str, str]) -> tuple[list[str], list[str]]:
         "ctf-super-hub": "ctf-super-hub",
         "hack-skills": "hack-skills",
     }
-    for root in sorted({p.split("/")[1] for p in entries if p.startswith("community-raw/")}):
+    # `community-raw/README.md` 是这个 vendored 目录自己的说明文件，不是第五个上游。
+    # 早先的写法 `p.split("/")[1]` 把**文件**也当成了一个 root 名，于是报
+    # 「vendored raw root has no registry owner: community-raw/README.md/」——
+    # 这条报错指向一个根本不存在的东西，等于把真报错淹掉。这里只取目录。
+    vendored_roots = sorted({
+        p.split("/")[1] for p in entries
+        if p.startswith("community-raw/") and p.count("/") >= 2 and len(p.split("/")) > 2
+    })
+    vendored_roots = [r for r in vendored_roots if any(
+        p.startswith(f"community-raw/{r}/") for p in entries
+    )]
+    for root in vendored_roots:
         if root not in raw_root_owner:
             errors.append(f"vendored raw root has no registry owner: community-raw/{root}/")
         elif not any(p.startswith(f"community-raw/{root}/") for p in entries):
@@ -389,6 +403,30 @@ def check_agent_entry_contract(path: str, text: str) -> list[str]:
             errors.append(f"unsafe agent execute-on-read pattern {label}: {path}")
     return errors
 
+def repo_prefix() -> str:
+    """本目录相对**仓库根**的前缀，例如 `skillpack/`（自己在仓库根时为空串）。
+
+    为什么需要它：`git ls-files` 给的是相对**当前目录**的路径，
+    而 `git show :<path>` 里的 `<path>` 一定是相对**仓库根**的。
+    skillpack 曾经是独立仓库、两者恰好相同；并进主仓之后就不一样了 ——
+    `git -C skillpack ls-files` 给 `README_AI.md`，
+    而 `git -C skillpack show :README_AI.md` 会 fatal，必须写 `:skillpack/README_AI.md`。
+    不对齐就会在这第一行崩掉，后面所有检查（symlink / 未审二进制 / agent 入口契约）
+    全都没跑 —— 一个崩掉的安全闸比报红的安全闸更糟，因为它装作自己还在。
+    """
+    try:
+        out = subprocess.run(
+            ["git", "-C", ROOT, "rev-parse", "--show-prefix"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+    except Exception:
+        return ""
+    return out.replace("\\", "/")
+
+
+REPO_PREFIX = repo_prefix()
+
+
 def git(*args: str) -> bytes:
     return subprocess.run(
         ["git", "-C", ROOT, *args], capture_output=True, check=True
@@ -414,9 +452,13 @@ def tracked_entries() -> dict[str, str]:
             result[relative] = "120000" if os.path.islink(absolute) else "100644"
     return result
 
-def blob(path: str) -> bytes:
+def blob(path: str) -> bytes | None:
     if USE_GIT:
-        return git("show", f":{path}")
+        try:
+            return git("show", f":{REPO_PREFIX}{path}")
+        except subprocess.CalledProcessError:
+            # 取不到就报「缺」，不要把整个闸门带崩 —— 崩了等于没检查。
+            return None
     with open(os.path.join(ROOT, path), "rb") as handle:
         return handle.read()
 
@@ -432,7 +474,11 @@ def main() -> int:
         if path not in entries:
             errors.append(f"agent entry file missing from index: {path}")
             continue
-        text = blob(path).decode("utf-8-sig", errors="replace")
+        data = blob(path)
+        if data is None:
+            errors.append(f"agent entry file unreadable from index: {REPO_PREFIX}{path}")
+            continue
+        text = data.decode("utf-8-sig", errors="replace")
         errors.extend(check_agent_entry_contract(path, text))
 
     binary_paths = sorted(
@@ -443,14 +489,22 @@ def main() -> int:
         if expected is None:
             errors.append(f"unreviewed tracked binary-like file: {path}")
             continue
-        actual = hashlib.sha256(blob(path)).hexdigest()
+        data = blob(path)
+        if data is None:
+            errors.append(f"tracked binary-like file unreadable from index: {path}")
+            continue
+        actual = hashlib.sha256(data).hexdigest()
         if actual != expected:
             errors.append(f"binary hash changed: {path} expected={expected} actual={actual}")
 
     if PAYLOAD_PATH not in entries:
         errors.append(f"reviewed payload corpus missing from index: {PAYLOAD_PATH}")
     else:
-        actual_payload = hashlib.sha256(blob(PAYLOAD_PATH)).hexdigest()
+        payload_data = blob(PAYLOAD_PATH)
+        if payload_data is None:
+            errors.append(f"payload corpus unreadable from index: {PAYLOAD_PATH}")
+            return finish(errors)
+        actual_payload = hashlib.sha256(payload_data).hexdigest()
         if actual_payload != PAYLOAD_SHA256:
             errors.append(
                 f"payload corpus changed; repeat security review: expected={PAYLOAD_SHA256} "

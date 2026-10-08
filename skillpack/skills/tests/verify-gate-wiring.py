@@ -60,7 +60,24 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "skills" / "tests" / "ci-gates.json"
 LOCK = ROOT / "skills" / "tests" / "ci-gates.lock.json"
-WORKFLOWS = ROOT / ".github" / "workflows"
+
+
+def _repo_root() -> Path:
+    """往上找带 `.github/workflows` 的那一层 —— 那才是 CI 真正读工作流的地方。
+
+    早先写死 `ROOT / ".github" / "workflows"`，而 ROOT 是 `skillpack/`：
+    技能包曾经是独立仓库、`.github` 就在它自己下面。并进主仓之后 `.github`
+    上移到了仓库根，于是这里恒定报「workflows directory missing」——
+    闸门自己瞎了，却报成别人的目录缺。两边都试，取真的存在的那个。
+    """
+    for base in (ROOT, *ROOT.parents):
+        if (base / ".github" / "workflows").is_dir():
+            return base
+    return ROOT
+
+
+REPO_ROOT = _repo_root()
+WORKFLOWS = REPO_ROOT / ".github" / "workflows"
 
 # A gate may be invoked directly, or indirectly: CI runs skills/tests/run-ci-gates.py,
 # which reads the manifest and runs each gate itself. So "is this gate wired?" has to
