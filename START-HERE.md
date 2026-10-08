@@ -48,9 +48,11 @@ clone 完就**在这个目录下开一个新的智能体会话** —— 之后�
 
 ```text
 ① 读 skillpack/skills/SKILL.md          ← 主入口，含路由契约与命令纪律
-② 跑 scripts/master-route.ps1 选 PRIMARY 技能
+② 跑 scripts/master-route.ps1 选当前阶段的技能（PRIMARY）
 ③ 打开 PRIMARY 的 SKILL.md，照它的 ACTION REQUIRED 做
-④ 报告用 Evidence → Finding → Path
+④ **每推进到一个阶段，重新跑一遍 ②** —— 一个程序各阶段要的东西不同（有没有壳决定走脱壳还是直接静态、
+   静态看不出东西就转动态），别在第一个阶段选定的技能里死磕到底
+⑤ 报告用 Evidence → Finding → Path
 ```
 
 Windows：`powershell -ExecutionPolicy Bypass -File .\skillpack\skills\scripts\master-route.ps1`
@@ -63,16 +65,27 @@ Linux/macOS/Kali：`./skillpack/skills/scripts/master-route.sh`
 **本包没有工具注册表。路径只能现场探测。**
 
 ```powershell
-# 最省事：用探测层（env -> PATH -> D:\Tools\_map.json 别名 -> 工具根递归）
-. 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
-$r = Resolve-ReverseToolSpec -Name 'idat'
-$r.Available   # 有没有
-$r.Command     # 在哪（用完整路径调用，不要依赖 cwd）
-$r.Via         # 从哪找到的：env / PATH / map / scan
+# ★ 载入探测层必须带 -ExecutionPolicy Bypass
+#   （全新 Windows 默认 Get-ExecutionPolicy = Restricted，不带必被拒 —— 这不是工具缺失）
+powershell -NoProfile -ExecutionPolicy Bypass -Command ". 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'; Resolve-ReverseToolSpec -Name 'idat'"
+
+# 若本会话里已经 dot-source 过，就直接调（用「不带扩展名」的工具 id）：
+#   $r = Resolve-ReverseToolSpec -Name 'idat'
+# $r.Available   # 有没有
+# $r.Command     # 在哪（用完整路径调用，不要依赖 cwd）
+# $r.Via         # 从哪找到的：env / PATH / map / scan
 
 # 只想快速问一句「装没装」：
 (Get-Command <工具id> -ErrorAction SilentlyContinue).Source
 ```
+
+**★ 换机必踩的三个坑**（都实测复现过，不是理论）：
+
+| 现象 | 真因 | 怎么办 |
+|---|---|---|
+| 「在此系统上禁止运行脚本」 | 执行策略 `Restricted` | 加 `-ExecutionPolicy Bypass`，**别当成工具缺失** |
+| 明明装了却报 `Available=False` | 用了 `-Name 'xxx.exe'` | 用不带扩展名的 id：`'idat'`→True，`'idat.exe'`→False |
+| `Via=PATH` 指向一个陌生/废弃目录 | 第 2 级 `Get-Command` 会返回 PATH 里任何东西 | **当它不存在**，继续走第 3、4 级 |
 
 **为什么不能只靠 `Get-Command`**：商业工具（IDA / JEB）躺在
 `D:\Tools\disasm\IDA_Pro_v8.3_Portable\` 里，目录名不等于工具名，不在 PATH 上。

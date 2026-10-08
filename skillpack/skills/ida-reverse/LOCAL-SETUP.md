@@ -17,7 +17,15 @@
 ## 安装
 
 ```powershell
-setx IDADIR "<你的 IDA 安装目录>"
+# ★ 先探测、再设 —— 不要凭印象填路径
+powershell -NoProfile -ExecutionPolicy Bypass -Command ". '<技能包根>\skillpack\skills\scripts\lib\Bootstrap.ps1'; Resolve-ReverseToolSpec -Name 'idat'"
+# 把返回的 Command 去掉末尾的 \idat.exe，那才是 IDADIR：
+#   返回 D:\Tools\disasm\IDA_Pro_v8.3_Portable\idat.exe  →  IDADIR = D:\Tools\disasm\IDA_Pro_v8.3_Portable
+
+setx IDADIR "<上面探测出来的目录>"
+
+# 没探测到但你自己知道在哪：start.ps1 只认几个写死的旧路径（IDA Pro 9.4 时代），
+# 你的版本目录名几乎一定不在其中 —— 所以 IDADIR 是**必须设**的，不是可选的。
 
 # 必须用 mrexodia/ida-pro-mcp，不要装 PyPI 的 ida-mcp
 python -m pip install "git+https://github.com/mrexodia/ida-pro-mcp.git"

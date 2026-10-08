@@ -35,12 +35,17 @@
 ## 2. 工具定位：四级递进（固定规则，不用改）
 
 ```powershell
-. <包根>\skillpack\skills\scripts\lib\Bootstrap.ps1
-$r = Resolve-ReverseToolSpec -Name '<工具id>'
+# ★ 载入探测层必须用这一行（写成 `. <路径>` 会被执行策略直接拒 —— 全新 Windows 默认 Restricted）
+powershell -NoProfile -ExecutionPolicy Bypass -Command ". '<包根>\skillpack\skills\scripts\lib\Bootstrap.ps1'; Resolve-ReverseToolSpec -Name '<工具id>'"
+
+# 返回值：
 $r.Available   # 有没有
 $r.Command     # 在哪（用完整路径调用，不要依赖当前目录）
-$r.Via         # 从哪找到的
+$r.Via         # 从哪找到的：env / PATH / map / scan
 ```
+
+> **若你在同一条命令里已经 dot-source 过了，就直接调 `Resolve-ReverseToolSpec` 即可，
+> 不用再套一层 `-Command`。** 首次载入必须带 `-ExecutionPolicy Bypass`。
 
 | 级 | 手段 | Via | 可信度 |
 |---|---|---|---|
@@ -61,11 +66,19 @@ $r.Via         # 从哪找到的
 这是给**任何**接手的智能体看的。不需要认识这个工具，照做即可：
 
 ```powershell
-. <包根>\skillpack\skills\scripts\lib\Bootstrap.ps1
-
 # 1) 确认真的没有（换个名字再试，有时别名不同）
+#    ★ 用「不带扩展名」的工具 id（idat / die / jadx），不要写成 'idat.exe' ——
+#    带扩展名时探测层会当精确键去找，返回 Available=False，属**假缺失**。
+#    实测：'idat' → True/map，'idat.exe' → False。
+#    换名字的正确做法是试同义词/别名（die↔diec、ida↔idat↔ida64），不是加 .exe。
+#    想知道它认哪些名字、登记在哪：直接读 D:\Tools\_map.json 的 aliases 段（-Encoding UTF8）。
 Resolve-ReverseToolSpec -Name '<工具id>'
-Resolve-ReverseToolSpec -Name '<工具id>.exe'
+
+# 1b) ★ 别被「PATH 命中」骗了
+#    探测层第 2 级是 Get-Command，它会返回 PATH 里任何东西 ——
+#    包括别的项目留下的、主人已声明废弃的目录。看到 Via=PATH 却指向一个
+#    陌生或废弃的路径时，当它不存在，继续走第 3、4 级（_map.json 别名 → 工具根递归）。
+Resolve-ReverseToolSpec -Name '<工具id>' | Select-Object Available,Via,Command
 
 # 2) 找它的官方来源
 #    GitHub releases > 官网 > winget > choco > pip

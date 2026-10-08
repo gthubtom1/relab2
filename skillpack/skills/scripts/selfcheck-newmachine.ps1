@@ -1,0 +1,130 @@
+﻿#Requires -Version 5.1
+<#
+.SYNOPSIS
+  换机部署自检。跑一遍，全过才算装好。
+.DESCRIPTION
+  为什么会需要它：全新 Windows 默认 Get-ExecutionPolicy = Restricted，任何 .ps1 都跑不了；
+  再加上工具根/技能包根没设、代码页是 936 —— 这三样合起来会产生**大量假 MISSING**
+  （「工具不存在」「文件不存在」），而真因其实是环境没通。
+
+  本脚本**只测量、不修改**：不装任何东西，不改环境变量，不改执行策略。
+  它自己用 -ExecutionPolicy Bypass 绕策略，所以策略是 Restricted 也能跑。
+
+.EXAMPLE
+  powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\scripts\selfcheck-newmachine.ps1
+#>
+[CmdletBinding()]
+param(
+  [string] $SkillRoot = '',
+  [string] $ToolRoot  = ''
+)
+
+$ErrorActionPreference = 'Continue'
+$pass = 0; $fail = 0; $warn = 0
+function Ok   ($m) { $script:pass++; Write-Host ("  [OK]   " + $m) -ForegroundColor Green }
+function Bad  ($m) { $script:fail++; Write-Host ("  [FAIL] " + $m) -ForegroundColor Red }
+function Warn ($m) { $script:warn++; Write-Host ("  [WARN] " + $m) -ForegroundColor Yellow }
+
+# ── 定位技能包根：本文件在 <根>\skillpack\skills\scripts\ 下，往上三层 ──
+$here = $PSScriptRoot
+if (-not $SkillRoot) { $SkillRoot = (Resolve-Path (Join-Path $here '..\..\..')).Path }
+if (-not $ToolRoot) {
+  $ToolRoot = if ($env:REVERSE_TOOL_ROOT) { $env:REVERSE_TOOL_ROOT }
+             elseif (Test-Path 'D:\Tools')      { 'D:\Tools' }
+             else                               { '' }
+}
+
+Write-Host ''
+Write-Host '=== 换机部署自检（只测量，不修改） ===' -ForegroundColor Cyan
+Write-Host ("技能包根: " + $SkillRoot)
+Write-Host ("工具根  : " + $(if ($ToolRoot) { $ToolRoot } else { '(未找到)' }))
+Write-Host ''
+
+Write-Host '--- 1. 执行策略 ---' -ForegroundColor Cyan
+$ep = (Get-ExecutionPolicy)
+if ($ep -eq 'Restricted') {
+  Warn ("当前策略 = Restricted。本脚本靠 -ExecutionPolicy Bypass 绕过了，")
+  Warn ("但你直接跑别的 .ps1 会失败 —— 调用时一律加 -ExecutionPolicy Bypass。")
+  $pass++
+} else {
+  Ok ("当前策略 = " + $ep)
+}
+
+Write-Host '--- 2. 环境变量 ---' -ForegroundColor Cyan
+if ($env:REVERSE_SKILL_ROOT) { Ok ("REVERSE_SKILL_ROOT = " + $env:REVERSE_SKILL_ROOT) }
+else { Warn "REVERSE_SKILL_ROOT 未设 —— 技能包位置只能靠当前目录猜，建议设上（见 环境初始化.md 0-②）" }
+if ($env:REVERSE_TOOL_ROOT) { Ok ("REVERSE_TOOL_ROOT = " + $env:REVERSE_TOOL_ROOT) }
+else { Warn "REVERSE_TOOL_ROOT 未设 —— 工具探测退化成只看 PATH，商业工具全找不到" }
+
+Write-Host '--- 3. 编码（936 机器读 UTF-8 不加参数会读出乱码）---' -ForegroundColor Cyan
+$probe = Join-Path $SkillRoot 'START-HERE.md'
+if (Test-Path $probe) {
+  $raw = Get-Content $probe -Raw -ErrorAction SilentlyContinue
+  $u8  = Get-Content $probe -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
+  if ($u8 -match 'START-HERE') { Ok '加 -Encoding UTF8 能读出正确内容' }
+  elseif ($raw -match 'START-HERE') { Warn '本机默认编码恰好是 UTF-8，但建议仍显式加 -Encoding UTF8' }
+  else { Bad "读 START-HERE.md 两种读法都不对 —— 先解决编码再往下走" }
+} else {
+  Bad ("找不到 START-HERE.md（试了 " + $probe + "）")
+}
+
+Write-Host '--- 4. 探测层（一次验证策略+路径+探测层本身）---' -ForegroundColor Cyan
+$boot = Join-Path $SkillRoot 'skillpack\skills\scripts\lib\Bootstrap.ps1'
+if (-not (Test-Path $boot)) {
+  Bad ("找不到探测层: " + $boot)
+} else {
+  try {
+    # 在本进程里载入；同进程已载入则直接调
+    if (-not (Get-Command Resolve-ReverseToolSpec -ErrorAction SilentlyContinue)) {
+      . $boot
+    }
+    $r = Resolve-ReverseToolSpec -Name 'idat'
+    if ($r.Available) { Ok ("探测层可用，且能找到 idat（Via=" + $r.Via + "）") }
+    else              { Warn "探测层能跑，但 idat 没找到 —— IDA 可能没装，见 TOOL-CHAIN.md 第 3 节" }
+
+    # ★ 验证 -Name 'xxx.exe' 的假缺失行为（这是探测层的已知特性，不是你用错了）
+    $r2 = Resolve-ReverseToolSpec -Name 'idat.exe'
+    if ($r.Available -and -not $r2.Available) {
+      Warn "确认：'idat' 能找到、'idat.exe' 找不到 —— 带扩展名是假缺失。用不带扩展名的 id。"
+    }
+  } catch {
+    Bad ("探测层载入失败: " + $_.Exception.Message)
+    Bad "若报「禁止运行脚本」，是执行策略 —— 用 -ExecutionPolicy Bypass 启动本脚本"
+  }
+}
+
+Write-Host '--- 5. 路由器 ---' -ForegroundColor Cyan
+$route = Join-Path $SkillRoot 'skillpack\skills\scripts\master-route.ps1'
+if (-not (Test-Path $route)) {
+  Bad ("找不到路由器: " + $route)
+} else {
+  $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ('selfcheck-' + [guid]::NewGuid().ToString('n'))
+  try {
+    # 不解析 stdout —— master-route 用 Write-Host 输出（信息流，不进 2>&1）。
+    # 直接读它真正产出的 route-scope.md，这才是判据。
+    $null = & $route -Hint 'APK 闪退' -OutDir $tmp 2>&1
+    $scope = Join-Path $tmp 'route-scope.md'
+    if (Test-Path $scope) {
+      $m = [regex]::Match((Get-Content $scope -Raw -Encoding UTF8), '(?m)^- primary:\s*(\S+)')
+      if ($m.Success) { Ok ("路由器可用，选中 " + $m.Groups[1].Value) }
+      else { Bad ("route-scope.md 生成但读不出 primary 字段: " + $scope) }
+    } else {
+      Bad ("路由器没产出 route-scope.md（试了 " + $scope + "）")
+    }
+  } finally {
+    Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
+  }
+}
+
+Write-Host ''
+Write-Host ("=== 通过 $pass / 失败 $fail / 提醒 $warn ===") -ForegroundColor Cyan
+if ($fail -gt 0) {
+  Write-Host '有 FAIL —— 按上面的提示逐条处理，处理完重跑本脚本。' -ForegroundColor Red
+  exit 1
+}
+if ($warn -gt 0) {
+  Write-Host '无 FAIL，但有 WARN —— 建议按提示补上，否则换盘/换目录后会再次失效。' -ForegroundColor Yellow
+  exit 0
+}
+Write-Host '全部通过。' -ForegroundColor Green
+exit 0
