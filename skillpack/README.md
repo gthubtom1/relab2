@@ -245,7 +245,6 @@ Platform-specific docs:
 | [skills/scripts/test-routing.ps1](skills/scripts/test-routing.ps1) | Routing regression runner (182 benchmark cases) |
 | [skills/scripts/verify-routing-coherence.ps1](skills/scripts/verify-routing-coherence.ps1) | Structure + supply-chain pin gate checks |
 | [skills/scripts/extract-summaries.ps1](skills/scripts/extract-summaries.ps1) | Regenerates INDEX.md from skill frontmatter |
-| [AGENTS.md](AGENTS.md) | Platform-neutral repository instructions |
 | [skills/ops/](skills/ops/) | Scope, Evidence chain, roles, timeline (skill-router form) |
 
 ### Testing (run after any routing/config change)

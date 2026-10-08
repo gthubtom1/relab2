@@ -32,7 +32,7 @@ pi 的 `bash` / `powershell` 工具的 `timeout` 是可选的，不传就无限�
 
 ## ★ 它和本包的关系：读 `TOOL-CHAIN.md`，不改代码
 
-GUI 拦截清单**不是硬编码在插件里的**，是从本包根目录的 [`TOOL-CHAIN.md`](../../../TOOL-CHAIN.md) 派生的：
+GUI 拦截清单**不是硬编码在插件里的**，是从本包里的 [`TOOL-CHAIN.md`](../../../skillpack/TOOL-CHAIN.md) 派生的：
 
 ```
 TOOL-CHAIN.md 里写   `foo.exe`→`foo-cli`
@@ -83,7 +83,7 @@ node extensions\pi\cmd-guard\smoke-cmd-guard.mjs
 
 ## 与本包的纪律对应
 
-| [`TOOL-CHAIN.md`](../../../TOOL-CHAIN.md) 纪律 | 本插件怎么落地 |
+| [`TOOL-CHAIN.md`](../../../skillpack/TOOL-CHAIN.md) 纪律 | 本插件怎么落地 |
 |---|---|
 | 不许猜路径 | 拦截理由里直接给出 `Get-Command` 与四级递进的查法 |
 | 工具链是协议不是清单 | 拦截名单从文档派生，加工具不用改代码 |

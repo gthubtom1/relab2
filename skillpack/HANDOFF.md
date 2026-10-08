@@ -313,7 +313,6 @@ test-routing-natural.ps1         # 76/86    exit 1（脚本语义：有失败即
 | [INTEGRATION-IMPLEMENTATION-SPEC.md](docs/INTEGRATION-IMPLEMENTATION-SPEC.md) | 冻结合同 + 任务卡 T00–T26 + 发布门 |
 | [docs/community/ROUTING-SIGNAL-DEFECTS.md](docs/community/ROUTING-SIGNAL-DEFECTS.md) | **本轮新增**。D1–D9 缺陷登记 + 前后实测对照 + 仍未关闭项 |
 | [docs/community/ROUTE-RANKING.md](docs/community/ROUTE-RANKING.md) | **本轮新增**。排序模型、归一化、信号层契约、诱饵方法论 |
-| [AGENTS.md](AGENTS.md) | **子代理派发规则**（见第 6 节） |
 
 规范结构：0–21 节，17.1–17.32 共 32 个补充硬门，**27 张任务卡**。
 用 `verify-spec-structure.py` 校验，改规范后必跑。
