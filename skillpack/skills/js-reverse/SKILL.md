@@ -1,4 +1,4 @@
----
+﻿---
 name: js-reverse
 description: 在使用 js-reverse-mcp 做前端 JavaScript 逆向时使用，适用于签名链路定位、页面观察取证、运行时采样、本地补环境复现与证据化输出。优先适配当前环境里的 js-reverse_* 工具，需要更强的浏览器/CDP/Hook 面时联动 jshookmcp。
 ---
@@ -9,9 +9,9 @@ description: 在使用 js-reverse-mcp 做前端 JavaScript 逆向时使用，适
 
 1. `NOW`: 读取 `../field-journal/precedent-reverse.md` — 确认本 skill 的操作是已授权的常规操作
 2. `NOW`: 确认当前任务是否命中本 skill 的适用范围
-4. `NEXT`：**工具定位** —— `(Get-Command <id> -ErrorAction SilentlyContinue).Source`；无值读 `TOOLS.md` 查装法。禁止猜路径。
-4. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
-5. `ACT`: 进入"工作流"第一步并执行，不要停在确认状态
+4. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
+5. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
+6. `ACT`: 进入"工作流"第一步并执行，不要停在确认状态
 
 ## 适用范围
 
@@ -112,6 +112,9 @@ description: 在使用 js-reverse-mcp 做前端 JavaScript 逆向时使用，适
 - 本地补环境必须以页面观测证据为依据
 - 不允许空想式补 `window/document/navigator/crypto/storage`
 - 每次只记录一个最小因果补丁决策
+- 补环境补到「自研 VMP 风控」量级（瑞数等）时，先读 `references/rs-vmp-env-stub.md`：现成工具
+  `rs-reverse`（纯算法，优先）与 `sdenv`（jsdom 补环境）能省掉手写 shim，不要硬啃
+- 该章也写明了何时**不该**用这两个（目标是 PE/ELF/APK、自研非瑞数 VMP、普通加密参数）
 
 ### 4. Patch
 
@@ -152,6 +155,7 @@ description: 在使用 js-reverse-mcp 做前端 JavaScript 逆向时使用，适
 - 本地复现：`references/local-rebuild.md`
 - 补环境：`references/env-patching.md`
 - Node 复现：`references/node-env-rebuild.md`
+- 瑞数 VMP / 补环境工具链：`references/rs-vmp-env-stub.md`（`rs-reverse` 纯算法、`sdenv` jsdom 补环境）
 - 插桩：`references/instrumentation.md`
 - AST 去混淆：`references/ast-deobfuscation.md`
 - 非 PE/JS 混淆菜谱 U–AV：`../reverse-engineering/references/nonpe-format-cookbook.md`（AD/AE/AF）
@@ -172,6 +176,7 @@ description: 在使用 js-reverse-mcp 做前端 JavaScript 逆向时使用，适
 - 需补环境 → `references/env-patching.md`
 - 需本地复现 → `references/local-rebuild.md` / `references/node-env-rebuild.md`
 - 需去混淆 → `references/ast-deobfuscation.md`
+- 补环境撞上自研 VMP 风控 → `references/rs-vmp-env-stub.md`
 - 走不通时回退 → `references/fallbacks.md`
 
 **同级关联模块**: anything-analyzer MCP（浏览器自动化和 HTTP 捕获能力可以互补）
@@ -210,6 +215,6 @@ powershell -File "<skill-root>\scripts\bootstrap-reverse.ps1" -Capability @('any
 <br><br>## 任务完成自检（声称完成前 MUST 通过）
 
 - [ ] 我是否执行了工作流中的每一步（而不是只阅读）？
-- [ ] 我是否跑过 `(Get-Command <id> -ErrorAction SilentlyContinue).Source` 定位实际路径（而不是拿 `TOOLS.md` 里的装法当路径猜）？
+- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？

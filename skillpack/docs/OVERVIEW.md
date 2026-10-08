@@ -63,8 +63,8 @@ Report + field journal
 |---|---|---|
 | Windows | Full primary path | `README.md`, PowerShell scripts |
 | Kali Linux | Specialized support | `kali/README-kali.md` |
-| Ubuntu / Debian Linux | Generic support | `platforms/linux.md`, `skills/scripts/bootstrap-reverse.sh`, `skills/scripts/refresh-tool-index.sh` |
-| macOS | Generic support | `platforms/macos.md`, `skills/scripts/bootstrap-reverse.sh`, `skills/scripts/refresh-tool-index.sh` |
+| Ubuntu / Debian Linux | Generic support | `platforms/linux.md`, `skills/scripts/bootstrap-reverse.sh` |
+| macOS | Generic support | `platforms/macos.md`, `skills/scripts/bootstrap-reverse.sh` |
 
 See [PLATFORMS.md](PLATFORMS.md) for the full platform matrix. Ordinary Linux and macOS users can list bootstrap capabilities with:
 
@@ -72,11 +72,7 @@ See [PLATFORMS.md](PLATFORMS.md) for the full platform matrix. Ordinary Linux an
 bash skills/scripts/bootstrap-reverse.sh --list
 ```
 
-For index refresh only, run:
-
-```bash
-
-```
+Tool availability is determined on the machine at task time, not by an index: walk four levels and stop at the first hit — environment variables → what the current shell resolves (`command -v` / `Get-Command` / `where`) → the tool root (`REVERSE_TOOL_ROOT`) → a full-disk search. There is nothing to refresh or generate.
 
 ## Supported Agent clients
 
@@ -88,7 +84,7 @@ For index refresh only, run:
 - Kiro
 - Other code Agents that support project rules, system prompts, MCP, or external tools
 
-The repository is not tied to one client. Its core assets are `RULES.md`, `skills/SKILL.md`, `skills/routing.md`, tool indexes, sub-skills, and MCP/script entry points.
+The repository is not tied to one client. Its core assets are `RULES.md`, `skills/SKILL.md`, `skills/routing.md`, sub-skills, and MCP/script entry points.
 
 ## Supported scenarios
 
@@ -177,7 +173,7 @@ A prompt pack usually gives the model advice. This project emphasizes executable
 - scenario routing: different targets enter different Skills;
 - execution surfaces: MCP, scripts, and local toolchains;
 - experience feedback: completed tasks update reusable knowledge;
-- migration support: rescan tool indexes and recover the workflow on a new machine.
+- migration support: re-probe local tool availability on a new machine and recover the workflow.
 
 It is designed to make the Agent guess less, skip less, and execute more reliably.
 

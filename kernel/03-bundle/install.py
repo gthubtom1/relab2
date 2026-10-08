@@ -88,6 +88,9 @@ def read_card(path: Path, want_kind: str):
         raise InstallError("卡片正文含 NUL 字节，拒绝装：%s" % path)
     if not content:
         raise InstallError("卡片正文是空的，拒绝装：%s" % path)
+    bad_line = delimiter_in_text(content)
+    if bad_line:
+        raise InstallError("卡片正文含定界行（%s），拒绝装：%s" % (bad_line, path))
     size = len(content.encode("utf-8"))
     if size > L.BASE_BUDGET:
         raise InstallError("卡片 %d 字节 > 上限 %d 字节（每轮都注入，太大拖上下文），拆小再装。"
@@ -282,29 +285,66 @@ def self_check(pkg_root: Path, manifest: dict, workdir: Path) -> list:
 
 def rollback(pkg_root_live: Path, host_home: Path, entry_path: Path,
              entry_before: bytes, entry_existed: bool, old_tree, stage: Path, why: str):
+    """自检没过 -> 整体回滚。**永不抛异常**。
+
+    回滚失败必须如实报出来 —— 不许打「已删掉 hub/，没有半装残留」这种假话。
+    2026-10-09 实测：`rmtree(ignore_errors=True)` 删不干净时（杀软、索引器、
+    编辑器占用），紧接着 `os.rename(old_tree, ...)` 必抛 FileExistsError；
+    旧实现让这个异常逃到 CLI 变成裸 traceback，并把旧树和 ~1 MB 的 stage
+    副本留成孤儿，全仓没有任何代码回收它们。
+    """
     print()
     print("自检没过 -> 整体回滚：%s" % why)
-    # 1. 包树删净
+    ok = True
+
+    # 1. 包树删净 —— 删没删干净要**验证**，不能声明
     L.rmtree_quiet(pkg_root_live)
+    if pkg_root_live.exists():
+        ok = False
+        print("  · [失败] %s/ 没删干净（多半被占用：杀软实时扫描、索引器、还开着的编辑器）"
+              % PKG_DIRNAME)
+        print("      残留路径：%s" % pkg_root_live)
+
     # 2. 装前的旧树搬回来（如果有）
     if old_tree is not None and old_tree.exists():
-        os.rename(old_tree, host_home / PKG_DIRNAME)
-        print("  · 已把装前的 %s/ 搬回来" % PKG_DIRNAME)
+        if pkg_root_live.exists():
+            ok = False
+            print("  · [失败] %s/ 还在，旧树搬不回去。旧树仍留在：%s"
+                  % (PKG_DIRNAME, old_tree))
+        else:
+            try:
+                os.rename(old_tree, host_home / PKG_DIRNAME)
+                print("  · 已把装前的 %s/ 搬回来" % PKG_DIRNAME)
+            except OSError as exc:
+                ok = False
+                print("  · [失败] 旧树搬运失败：%s" % exc)
+                print("      旧树仍留在：%s" % old_tree)
     else:
         print("  · 已删掉 %s/，没有半装残留" % PKG_DIRNAME)
+
     # 3. 入口文件还原
-    if entry_existed:
-        L.atomic_write_bytes(entry_path, entry_before)
-        print("  · 入口文件已按装前字节还原：%s" % entry_path)
-    elif entry_path.exists():
-        entry_path.unlink()
-        print("  · 装前不存在入口文件，已删掉新建的：%s" % entry_path)
+    try:
+        if entry_existed:
+            L.atomic_write_bytes(entry_path, entry_before)
+            print("  · 入口文件已按装前字节还原：%s" % entry_path)
+        elif entry_path.exists():
+            entry_path.unlink()
+            print("  · 装前不存在入口文件，已删掉新建的：%s" % entry_path)
+    except OSError as exc:
+        ok = False
+        print("  · [失败] 入口文件还原失败：%s" % exc)
+
     L.rmtree_quiet(stage)
     print("  · 临时目录已清：%s" % stage.name)
     now = L.sha256_bytes(entry_path.read_bytes()) if entry_path.is_file() else ""
     want = L.sha256_bytes(entry_before) if entry_existed else ""
     print("  · 入口文件当前 sha256=%s 装前 sha256=%s -> %s"
           % (now[:16] or "(不存在)", want[:16] or "(不存在)", "一致" if now == want else "不一致！"))
+    if ok:
+        print("  · 回滚完成，家目录已回到装前状态。")
+    else:
+        print("  · ⚠ 回滚**没有完全成功** —— 上面标 [失败] 的项需要人工处理。")
+        print("    请把这段输出连同 [失败] 行原样交给用户，不要复述成「已还原」。")
     return 1
 
 
@@ -399,6 +439,18 @@ def _install_unlocked(source: Path, host_home: Path, dry_run: bool = False,
         backup_bytes = entry_before
         origin_dropped = False
 
+    # 卸回时要拿「摘完块的结果」和 backup_bytes 逐字节比，才敢判定主人没改过。
+    # 但装的时候（_bundle_lib.insert_marker）会在原文后面补一个分隔换行——
+    # 原文不以换行收尾时就得补，否则标记块的首行会粘在主人最后一行上，摘块按行锚点就失效。
+    # 补的这一个换行是我们自己加的，卸的时候必须认出来并还回去，
+    # 否则「没结尾换行的入口文件」装完再卸完会多出一个字节，
+    # 而更糟的是：这个字节差会被误判成「主人自己改过」，于是走「只摘块不覆盖」，
+    # 把我们改出来的那一个换行永久留在主人的文件里（探针宿主 B 实测复现）。
+    # 光看字节分辨不出来：「abc」+「\n」+块 与 「abc\n」+块 装完长得一模一样。
+    # 所以这里必须把「备份原文是否以换行收尾」记进清单，卸的时候据此判。
+    _bb = backup_bytes[len(L.BOM):] if backup_bytes.startswith(L.BOM) else backup_bytes
+    origin_ends_with_nl = (not _bb) or _bb.endswith(b"\n")
+
     print("=" * 68)
     print("装 hubcore 进 %s" % host_home)
     print("=" * 68)
@@ -470,6 +522,7 @@ def _install_unlocked(source: Path, host_home: Path, dry_run: bool = False,
         raise InstallError("写包树失败：%s\n  已还原，没有半装。" % exc)
 
     live = host_home / PKG_DIRNAME
+    rollback_reason = ""
     try:
         # 4. 入口文件最前面插标记块
         # 必须走 L.decode：它会把 BOM 摘成「没有 BOM 的文本」，
@@ -501,6 +554,7 @@ def _install_unlocked(source: Path, host_home: Path, dry_run: bool = False,
                 "marker_written": bool(with_marker),
                 "marker_body_sha256": L.marker_body_fingerprint(block) if with_marker else "",
                 "origin_dropped": bool(origin_dropped),
+                "origin_ends_with_nl": bool(origin_ends_with_nl),
                 "marker_begin": L.MARKER_BEGIN,
                 "marker_end": L.MARKER_END,
                 "backup": backup_rel,
@@ -558,11 +612,17 @@ def _install_unlocked(source: Path, host_home: Path, dry_run: bool = False,
         finally:
             L.rmtree_quiet(workdir)
         if problems:
-            return rollback(live, host_home, entry_path, entry_before,
-                            entry_existed, old_tree, stage, "；".join(problems))
+            rollback_reason = "；".join(problems)
     except BaseException as exc:
+        rollback_reason = "写盘被拒：%s" % exc
+
+    # 回滚只在这里发生一次 —— **绝不能放回上面的 try 里**。
+    # 放进去会在「回滚自身出错」时被同一个 except 再抓一次，造成二次调用：
+    # 第二次 old_tree 已经不存在，于是打出「已删掉 hub/，没有半装残留」的假话，
+    # 而真正的异常一路逃到 CLI，变成裸 traceback（2026-10-09 实测复现）。
+    if rollback_reason:
         return rollback(live, host_home, entry_path, entry_before,
-                        entry_existed, old_tree, stage, "写盘被拒：%s" % exc)
+                        entry_existed, old_tree, stage, rollback_reason)
 
     if old_tree is not None and old_tree.exists():
         L.rmtree_quiet(old_tree)

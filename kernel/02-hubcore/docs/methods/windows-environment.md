@@ -3,7 +3,7 @@ name: windows-environment
 description: 处理 Windows 特有的中文空格路径、权限/UAC、编码乱码、服务/注册表、进程坑。在 Windows 上遇到这些问题时用。
 purpose: Windows 特有的路径/权限/编码/服务/注册表 坑的处理
 use_when: 在 Windows 上遇到中文空格路径、权限/UAC、编码乱码、服务/注册表、进程相关问题
-phase: exe-rebuild, desktop-product, web-service, cli-tool, source-takeover
+phase: exe-rebuild, desktop-product, web-service, cli-tool, source-takeover, reverse-engineering, protocol-automation
 needs: [PowerShell 或宿主提供的等价系统能力]
 ---
 
@@ -25,10 +25,19 @@ needs: [PowerShell 或宿主提供的等价系统能力]
 
 - 需要管理员的操作先说明、要用户确认；改注册表/服务先备份、能还原。
 
-## 找工具 / 文件
+## 找工具 / 文件（本节是唯一真源）
 
-- 按 `<hub>/TOOLING.md`：tools.local.json 优先，其次源树 tools.json；再查宿主工具、PATH、已知安装位置，已有 Everything 时可用它。先做无副作用能力检查，不能因一个工具缺失就让主人接手机械调查。
+工具探测只有下面这个顺序，别的文件不许另写一套。按顺序往下走，命中即停；四级全空才叫「本机没有」。
 
-## 别假装
+1. **环境变量**：工具自己约定的变量（如 `JAVA_HOME`、`GOROOT`、`DOTNET_ROOT`、`<TOOL>_ROOT`）。
+2. **当前会话能调到的命令**：用宿主给的调用方式实跑一次**无副作用**的能力检查（`--version` / `-h`）。
+3. **已知安装位置**：工具根目录里递归找。
+4. **全盘检索工具**（如 Everything）：1–3 全空才用。
 
-- PATH 里有 ≠ 真能调用；装了 ≠ 当前会话/宿主能用。
+规矩：
+
+- **单级命中不算命中。** 只查 PATH、只 `Test-Path`、只看注册表，都可能被过期快照骗过：工具搬过目录而当前进程仍持旧值，命令解析会返回空，工具其实在。
+- **查到路径还要实跑一次才算数。** 文件存在 ≠ 能调用；「PATH 里有」「装过」同样不算。
+- **禁止伪造路径。** 全空就报缺，写清工具名 + 已试过的四级，让主人决定装不装、装哪、什么来源。不要静默下载安装。
+- 找到的新位置记进本机工具清单（产品根 `.hub/tools.local.json`，没有就首次建），下次直接从那里读。但清单是**缓存不是真源**，每次仍要走完 1–4。
+- 先做无副作用能力检查，不能因一个工具缺失就让主人接手机械调查。

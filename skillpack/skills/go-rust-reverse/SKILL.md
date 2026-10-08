@@ -57,7 +57,7 @@ description: Go/Rust逆向 — 当目标是Go或Rust编译的、符号被剥了�
 
 - `references/go-rust-notes.md`
 - `../reverse-engineering/go-reverse.md` `../ida-reverse/` `../ghidra-reverse/`
-- seed: `field-journal/seed-002_go-malware-stripped.md`
+- seed: `../field-journal/seed-002_go-malware-stripped.md`
 
 ## 路由上下文
 

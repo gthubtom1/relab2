@@ -77,7 +77,7 @@ MUST NOT 在未明确允许时：
 ## 参考
 
 - `references/ot-safe-assessment.md`
-- `../firmware-pentest/` `../protocol-reverse/` `../network` via pentest-tools
+- `../firmware-pentest/` `../protocol-reverse/` `../pentest-tools/references/network-attack-defense.md`
 
 ## 路由上下文
 

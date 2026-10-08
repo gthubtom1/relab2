@@ -46,6 +46,33 @@ def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def same_as_origin(stripped: bytes, backup: bytes, origin_ends_with_nl) -> bool:
+    """摘完块之后的正文，是不是就是装前那份原文（逐字节）。
+
+    装的时候（_bundle_lib.insert_marker）会在原文后面补一个分隔换行：
+    原文不以换行收尾时必须补，否则标记块首行会粘在主人最后一行上，
+    摘块按行锚点匹配就会失效。所以补的这一个换行是**我们加的**，不是主人的。
+
+    不把它认出来会有两个后果，都很坏：
+      1. 「装完再卸完」比原文多一个字节；
+      2. 更糟的是这一个字节差会被当成「主人自己改过」，于是走「只摘块不覆盖」，
+         把我们改出来的换行永久留在主人的文件里，还报告成「属正常」。
+
+    光看字节分辨不出来：「abc」+「\\n」+块 与 「abc\\n」+块 装完长得一模一样。
+    所以 install.py 把「备份原文是否以换行收尾」记进了清单，这里据此判。
+
+    origin_ends_with_nl 为 None = 老版本清单没这项（那时还没记）：按「可能补过」处理，
+    只在备份确实不以换行收尾、且差异恰好是那一个换行时才认。这样老装的也能干净卸回去。
+    """
+    if stripped == backup:
+        return True
+    if origin_ends_with_nl is False or origin_ends_with_nl is None:
+        body = backup[len(BOM):] if backup.startswith(BOM) else backup
+        if body and not body.endswith(b"\n") and stripped == backup + b"\n":
+            return True
+    return False
+
+
 def atomic_write_bytes(path: Path, data: bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.parent / (path.name + ".tmp-%d-%s-%s" % (
@@ -440,6 +467,8 @@ def _uninstall_unlocked(pkg_root: Path, assume_yes: bool = False) -> int:
         want_base = bool((entry.get("base") or {}).get("name"))
         want_guest = bool((entry.get("guest") or {}).get("name"))
         want_marker = bool(entry.get("marker_written", True))
+        # 装的时候有没有给原文补过分隔换行（install.py 记的；老清单没这项 -> None）
+        origin_nl = entry.get("origin_ends_with_nl")
         if count == 0 and base_removed == 0 and guest_removed == 0:
             actions.append("入口文件里本来就没有标记块/底模块/指引块，未改动：%s" % entry_path)
         else:
@@ -466,7 +495,7 @@ def _uninstall_unlocked(pkg_root: Path, assume_yes: bool = False) -> int:
                     note = "主人装完之后没动过 -> 直接还原原文"
                 atomic_write_bytes(entry_path, (BOM if bom else b"") + _join)
                 actions.append("覆盖模式（%s）-> 已还原：%s" % (note, entry_path))
-            elif backup_bytes is not None and stripped_bytes == backup_bytes:
+            elif backup_bytes is not None and same_as_origin(stripped_bytes, backup_bytes, origin_nl):
                 atomic_write_bytes(entry_path, backup_bytes)
                 extra = "".join(x for x in
                                 [(" + %d 个底模块" % base_removed) if base_removed else "",
@@ -508,11 +537,25 @@ def _uninstall_unlocked(pkg_root: Path, assume_yes: bool = False) -> int:
     if pre.get("backed_up"):
         pre_rel = pre.get("backup", "")
         pre_path = _safe_child(pkg_root, pre_rel) if pre_rel else None
-        if pre_path and pre_path.is_dir():
-            restore_to = host_home / PKG_DIRNAME
+        restore_to = host_home / PKG_DIRNAME
+        if not (pre_path and pre_path.is_dir()):
+            actions.append("⚠ 清单说装前就有 %s/，但备份找不到（%s）—— 请人工核对"
+                           % (PKG_DIRNAME, pre_rel or "(未记录路径)"))
+            _remove_managed(pkg_root, manifest, actions)
+        else:
+            # 备份就躺在 pkg_root 里面（.backups/…）。直接 rmtree(pkg_root) 会把备份
+            # 一起删掉，紧接着 copytree/copytree 必抛 FileNotFoundError，主人的目录
+            # 永远回不到原位（2026-10-09 实测复现）。所以先把备份搬到 pkg_root **外面**
+            # 再动手，最后搬回来 —— 与 install.swap_into_place 同一套「失败就搬回来」。
+            saved = host_home / (".hubcore-restore-" + uuid.uuid4().hex[:8])
+            shutil.move(str(pre_path), str(saved))
             shutil.rmtree(restore_to, ignore_errors=True)
-            shutil.copytree(pre_path, restore_to)
-            actions.append("还原装前已存在的 %s/（装前就在，不属于本系统）" % PKG_DIRNAME)
+            if restore_to.exists():
+                actions.append("⚠ %s/ 没删干净（多半被占用），装前的目录暂存在：%s"
+                               % (PKG_DIRNAME, saved))
+            else:
+                shutil.move(str(saved), str(restore_to))
+                actions.append("还原装前已存在的 %s/（装前就在，不属于本系统）" % PKG_DIRNAME)
     else:
         _remove_managed(pkg_root, manifest, actions)
 

@@ -1,4 +1,4 @@
----
+﻿---
 name: docs-generator
 description: Write technical docs and reports — 当用户做完逆向或渗透要落盘成报告，或说“帮我写份渗透测试报告”“出个CTF writeup”“补个README和API文档”时使用。Use when write report, documentation, writeup.
 ---
@@ -12,7 +12,7 @@ description: Write technical docs and reports — 当用户做完逆向或渗透
 3. `NEXT`：缺工具时调用 bootstrap，不要猜路径
 4. `ACT`：进入"工作流"第一步并执行，不要停在确认状态
 
-For writing style, tone, and voice guidance, use `Skill(ce:writer)` with **The Engineer** persona.
+For writing style, tone, and voice guidance, follow the in-repo rules in `references/vendor-report-rules.md` and the templates in `references/security-report-templates.md`.
 
 ## 安全/逆向任务文档输出
 
@@ -145,8 +145,8 @@ For README, API endpoint, and file organization templates, see [references/templ
 
 ## Related Skills
 
-- `Skill(ce:writer)` - Writing style, tone, and voice (load The Engineer persona)
-- `Skill(ce:visualizing-with-mermaid)` - Architecture and flow diagrams
+- `references/vendor-report-rules.md` - Writing style, tone, and voice rules
+- `../diagram-generator/` - Architecture and flow diagrams (Mermaid)
 
 ---
 
@@ -180,7 +180,7 @@ For README, API endpoint, and file organization templates, see [references/templ
 ## 任务完成自检（声称完成前 MUST 通过）
 
 - [ ] 我是否执行了工作流中的每一步（而不是只阅读）？
-- [ ] 我是否跑过 `(Get-Command <id> -ErrorAction SilentlyContinue).Source` 定位实际路径（而不是拿 `TOOLS.md` 里的装法当路径猜）？
+- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 报告是否含 Evidence / Finding / Path（ops 契约）？
 - [ ] 是否完成并回写了 RULES 要求的 Checklist 项？

@@ -253,17 +253,32 @@ def _pool_of(path: Path) -> str:
 
 
 def _card_path(card_id: str, kind: str = "") -> Path | None:
-    """卡片 id 就是文件名（不带 .md）。指名了哪一层就先找哪一层，再按三个池子找。
-    只认三个池子：根目录和 _park/ 里的卡等于停用。越界的一律当没有，绝不跟出去。"""
+    """卡片 id 就是文件名（不带 .md）。
+
+    指名了 kind 就**只查那一个池子**：层与池子必须严格对应。以前的「找不到就
+    去另外两个池子接着找」会让中枢卡被当底模装进去，同一张卡还能同时装成
+    两段，而报错文案还说「池里没有这张卡」—— 文案与行为相反。
+
+    没指名 kind 时才按三个池子顺序找（`_card_body_sha` 这类用途）；命中多于
+    一个池子说明池子分家坏了，此时报警，不再静默取第一个。
+
+    只认三个池子：根目录和 _park/ 里的卡等于停用。越界的一律当没有，绝不跟出去。
+    """
     if not is_valid_card_name(card_id):
         return None
-    order = ([kind] if kind in CARD_POOLS else []) + [k for k in CARD_POOLS if k != kind]
-    for k in order:
+    pools = [kind] if kind in CARD_POOLS else list(CARD_POOLS)
+    hits = []
+    for k in pools:
         pool = _pool_dir(k)
         cand = (pool / (card_id + ".md")).resolve()
         if pool.resolve() in cand.parents and cand.is_file():
-            return cand
-    return None
+            hits.append(cand)
+    if not hits:
+        return None
+    if len(hits) > 1:
+        print("[warn] 卡片 %r 在多个池子里都存在：%s —— 池子分家坏了，本次取第一个。"
+              % (card_id, "、".join(str(h) for h in hits)), flush=True)
+    return hits[0]
 
 
 def parked_cards() -> int:
@@ -393,8 +408,13 @@ def save_card(name: str, hosts_note: str, content: str, kind: str = "base") -> d
         return {"ok": False, "error": "正文是空的，不存。"}
     if "\x00" in content:
         return {"ok": False, "error": "正文含 NUL 字节，不存。"}
-    # 不拦正文内容：NUL 和大小这两条留着的理由不是格式，是「空卡没意义」
-    # 和「每轮都注入，太大拖上下文」。除此之外正文一个字都不审。
+    _bad_delim = _delimiter_in(content)
+    if _bad_delim:
+        return {"ok": False,
+                "error": "正文含中枢定界行（%s），不存：卸回时会把这一段只截一半，"
+                         "卡片后半截会留在主人的原文里被当指令读。" % _bad_delim}
+    # 除上面三条（NUL / 空 / 定界行）和大小上限外，正文一个字都不审。
+    # 定界行这条不是格式洁癖：它会真的损坏宿主入口文件，所以必须挡。
     size = len(content.encode("utf-8"))
     if size > CARD_MAX_BYTES:
         return {"ok": False, "error": "正文 %d 字节，超过上限 %d 字节（每轮都注入，"

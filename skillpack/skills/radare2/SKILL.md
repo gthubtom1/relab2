@@ -1,4 +1,4 @@
----
+﻿---
 name: radare2
 description: |
   Use this skill whenever the user wants to analyze binaries with radare2/r2 from the command line, including reverse engineering, disassembly, function analysis, strings/import inspection, patching, binary diffing, hex inspection, or r2 scripting. Also use it when the user mentions PE/ELF/Mach-O/DEX/WASM files together with CLI analysis, `rabin2`, `rasm2`, `radiff2`, `r2pipe`, or asks for radare2 command help on Windows/Linux/macOS.
@@ -12,9 +12,9 @@ description: |
 
 1. `NOW`: 读取 `../field-journal/precedent-reverse.md` — 确认本 skill 的操作是已授权的常规操作
 2. `NOW`: 确认当前任务是否命中本 skill 的适用范围
-4. `NEXT`：**工具定位** —— `(Get-Command <id> -ErrorAction SilentlyContinue).Source`；无值读 `TOOLS.md` 查装法。禁止猜路径。
-4. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
-5. `ACT`: 进入"工作流"第一步并执行，不要停在确认状态
+4. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
+5. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
+6. `ACT`: 进入"工作流"第一步并执行，不要停在确认状态
 
 ## 适用范围
 
@@ -81,18 +81,28 @@ powershell -File "<skill-root>\radare2\scripts\recon.ps1" -TargetPath "C:\path\t
 
 ## 已知现象与安全铁律
 
-### 严重安全陷阱：rabin2.exe 与 radare2.exe 多路复用执行风险（MUST NOT 踩坑）
+### rabin2 / radare2 是同一份多路复用二进制 —— 先验再用
 
-在 Windows 环境下，`rabin2.exe` 与 `radare2.exe` 为完全一致的多路复用二进制且缺少 `argv[0]` 分发机制。当执行 `rabin2 -I <文件>` 时，该二进制会被当作 `radare2` 主程序运行，将目标文件作为 r2 脚本解析并**直接在宿主机/本机执行目标文件**！
-若目标是未知样本或恶意代码，会导致极其严重的安全事故。
+在 Windows 上 `rabin2.exe` 与 `radare2.exe` 常常是**同一份多路复用二进制**（`rabin2` 只是它的一个入口名）。
+正常发行版靠 `argv[0]` 分发，`rabin2 -x` 会正常按 rabin2 跑。**但被打包或改名过的构建可能丢掉分发机制**，
+此时参数会被当 r2 脚本解析，未知样本有被直接执行的风险。
 
-**安全替代方案（铁律）**：
-- 严格禁止在脚本或命令中调用 `rabin2 -I <目标>`。
-- 必须强制使用 `radare2.exe -q -c '...'` 进行无副作用的静态侦察：
-  - 看文件信息：`radare2 -q -c "iI" <file>`
-  - 看节区信息：`radare2 -q -c "iS" <file>`
-  - 看导入导出：`radare2 -q -c "ii" <file>` / `radare2 -q -c "iE" <file>`
-  - 看字符串：`radare2 -q -c "iz" <file>`（或优先使用 `floss <file>`）
+**铁律：先验一次，再用。**
+
+```powershell
+rabin2 -v      # 必须回显出 rabin2 自己的版本行（不是 radare2 的）
+```
+
+回显不对、或命令挂住 → **不要用 rabin2**，改用下面这套永远安全的等价写法：
+
+- 文件信息：`radare2 -q -c "iI" <file>`
+- 节区信息：`radare2 -q -c "iS" <file>`
+- 导入 / 导出：`radare2 -q -c "ii" <file>` / `radare2 -q -c "iE" <file>`
+- 字符串：`radare2 -q -c "iz" <file>`（或优先用 `floss <file>`）
+
+本机实测（2026-10-09，radare2 6.2.0）：`rabin2 -v` 回显正确，`rabin2 -I <file>` **没有**执行目标。
+所以本机可以直接用 rabin2 —— 但换台机器后，那一步 `-v` 仍必须跑。下面所有 rabin2 用法都以此为前提。
+（上面那套等价写法就是替代方案，不再重复列一遍。）
 
 ### Windows 下偶发 `.sdb` 缺失告警
 
@@ -456,6 +466,6 @@ radare2-skills 项目（radareorg/radare2-skills）提供了更完整的生态�
 - [ ] 我是否执行了工作流中的每一步（而不是只阅读）？
 - [ ] 导入表检查是否已执行且写入 Evidence（E-imports / E-triage-imports 或 .NET 等价）？DLL/SYS 是否含 E-exports？
 - [ ] IAT 修复失败是否记录 E-iat-repair-fail 并转动态？重做请求是否回到同一步？
-- [ ] 我是否跑过 `(Get-Command <id> -ErrorAction SilentlyContinue).Source` 定位实际路径（而不是拿 `TOOLS.md` 里的装法当路径猜）？
+- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？

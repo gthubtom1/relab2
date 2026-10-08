@@ -1,4 +1,4 @@
-# Reverse Engineering Skill Routing Matrix
+﻿# Reverse Engineering Skill Routing Matrix
 
 > **Advisory only.** PRIMARY comes from `config/routing.json` via `scripts/master-route.ps1`. This file is a 3-axis disambiguation view. If a row here disagrees with JSON, JSON wins.
 
@@ -671,4 +671,4 @@ Web Pentest + BurpSuite MCP Path:
 - [ ] 我是否完成了路由三轴匹配（目标类型 + 用户意图 + 工具链）？
 - [ ] 我是否在路由成功后读取了目标 skill 的 SKILL.md？
 - [ ] 路由未命中时，我是否提议了新增 skill 而非强行匹配？
-- [ ] 我是否跑过 `(Get-Command <id> -ErrorAction SilentlyContinue).Source` 定位实际路径（而不是拿 `TOOLS.md` 里的装法当路径猜）？
+- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `TOOLS.md` 里的装法当路径猜）？

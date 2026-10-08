@@ -171,11 +171,9 @@ bash kali/scripts/bootstrap-reverse.sh sstimap xsstrike wpprobe nuclei
 
 支持的全部能力名：jadx、apktool、frida、idalib-mcp、jshookmcp、xquik-mcp、anything-analyzer、idapro、r2、rabin2、adb、agent-browser、ghidra-mcp、nmap、sqlmap、hashcat、hydra、gobuster、ffuf、msfconsole、nuclei、seclists、proxycat、mcp-kali-server、metasploitmcp、hexstrike-ai、pentestswarm、adaptixc2、atomic-operator、sstimap、xsstrike、wpprobe、fluxion、gef、evil-winrm-py、coercer、netexec、responder、crackmapexec、bloodhound、certipy、wfuzz、aircrack-ng
 
-## 刷新工具索引
+## 工具状态探测（无索引可刷新）
 
-```bash
-
-```
+本仓库没有工具索引，也没有刷新脚本；工具在不在按四级递推、命中即停：环境变量 → 当前 shell 能否解析到（`command -v` / `Get-Command` / `where`）→ 工具根（`REVERSE_TOOL_ROOT`）→ 全盘搜索。单级查空不代表没装。
 
 ---
 
@@ -360,4 +358,4 @@ AI 在 Kali 2026.1 环境下应该知道：
 
 路径：`<本包根目录>/skills/CONTRIBUTING.md`
 
-新增后必须同步更新：routing.md、kali/scripts/bootstrap-manifest.json、kali/scripts/lib/tool-discovery.sh、kali/scripts/（工具索引已废止）。
+新增后必须同步更新：routing.md、kali/scripts/bootstrap-manifest.json、kali/scripts/lib/tool-discovery.sh（无工具索引，工具状态按四级探测现场确定）。

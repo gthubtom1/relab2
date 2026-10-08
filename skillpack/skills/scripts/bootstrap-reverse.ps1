@@ -1155,7 +1155,8 @@ foreach ($name in $expandedCapabilities) {
 }
 
 # 注：原先此处会调用 refresh-tool-index 刷新工具索引。
-# 该索引已废止 —— 工具定位改为运行时按需探测（Get-Command），不落盘、不缓存，故无需刷新。
+# 该索引已废止 —— 工具定位改为运行时按需探测（四级递进：环境变量 → 当前 shell → 工具根 → 全盘搜），
+# 不落盘、不缓存，故无需刷新。注意：单级 Get-Command 只是其中第 2 级，返回空不等于缺工具。
 
 $results | ConvertTo-Json -Depth 5
 if (-not (Test-BootstrapResultsSucceeded -Results $results)) {

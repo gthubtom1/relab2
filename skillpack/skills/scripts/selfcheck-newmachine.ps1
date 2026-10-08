@@ -11,7 +11,12 @@
   它自己用 -ExecutionPolicy Bypass 绕策略，所以策略是 Restricted 也能跑。
 
 .EXAMPLE
-  powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\scripts\selfcheck-newmachine.ps1
+  # 推荐：走仓库根封装入口（自动解析技能包根/工具根再调本脚本）
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\selfcheck.ps1
+
+.EXAMPLE
+  # 直接调本脚本（仅在需要显式传根时；相对路径要求 cwd == 仓库根）
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\skillpack\skills\scripts\selfcheck-newmachine.ps1
 #>
 [CmdletBinding()]
 param(
@@ -28,6 +33,8 @@ function Warn ($m) { $script:warn++; Write-Host ("  [WARN] " + $m) -ForegroundCo
 # ── 定位技能包根：本文件在 <根>\skillpack\skills\scripts\ 下，往上三层 ──
 $here = $PSScriptRoot
 if (-not $SkillRoot) { $SkillRoot = (Resolve-Path (Join-Path $here '..\..\..')).Path }
+# 固定根：仓库 C:\relab2、工具根 D:\Tools（主人定死，换机不变）。
+# 环境变量只是覆盖手段，不是必需 —— 都没设就用下面这两个固定值。
 if (-not $ToolRoot) {
   $ToolRoot = if ($env:REVERSE_TOOL_ROOT) { $env:REVERSE_TOOL_ROOT }
              elseif (Test-Path 'D:\Tools')      { 'D:\Tools' }
@@ -36,7 +43,7 @@ if (-not $ToolRoot) {
 
 Write-Host ''
 Write-Host '=== 换机部署自检（只测量，不修改） ===' -ForegroundColor Cyan
-Write-Host ("技能包根: " + $SkillRoot)
+Write-Host ("仓库根  : " + $SkillRoot + "   (固定 C:\relab2，自本文件位置推导)")
 Write-Host ("工具根  : " + $(if ($ToolRoot) { $ToolRoot } else { '(未找到)' }))
 Write-Host ''
 
@@ -51,10 +58,16 @@ if ($ep -eq 'Restricted') {
 }
 
 Write-Host '--- 2. 环境变量 ---' -ForegroundColor Cyan
-if ($env:REVERSE_SKILL_ROOT) { Ok ("REVERSE_SKILL_ROOT = " + $env:REVERSE_SKILL_ROOT) }
-else { Warn "REVERSE_SKILL_ROOT 未设 —— 技能包位置只能靠当前目录猜，建议设上（见 环境初始化.md 0-②）" }
-if ($env:REVERSE_TOOL_ROOT) { Ok ("REVERSE_TOOL_ROOT = " + $env:REVERSE_TOOL_ROOT) }
-else { Warn "REVERSE_TOOL_ROOT 未设 —— 工具探测退化成只看 PATH，商业工具全找不到" }
+if ($env:REVERSE_SKILL_ROOT) {
+  Ok ("REVERSE_SKILL_ROOT = " + $env:REVERSE_SKILL_ROOT)
+} else {
+  Ok "REVERSE_SKILL_ROOT 未设 —— 技能包位置由探测层相对自身推导，不必设（设了只是更快）"
+}
+if ($env:REVERSE_TOOL_ROOT) {
+  Ok ("REVERSE_TOOL_ROOT = " + $env:REVERSE_TOOL_ROOT)
+} else {
+  Ok "REVERSE_TOOL_ROOT 未设 —— 探测层用固定默认值 D:\Tools，不必设；设了只是换个工具根时用"
+}
 
 Write-Host '--- 3. 编码（936 机器读 UTF-8 不加参数会读出乱码）---' -ForegroundColor Cyan
 $probe = Join-Path $SkillRoot 'START-HERE.md'
@@ -69,7 +82,7 @@ if (Test-Path $probe) {
 }
 
 Write-Host '--- 4. 探测层（一次验证策略+路径+探测层本身）---' -ForegroundColor Cyan
-$boot = Join-Path $SkillRoot 'skillpack\skills\scripts\lib\Bootstrap.ps1'
+$boot = Join-Path $here 'lib\Bootstrap.ps1'   # 本文件就在 scripts\ 下，探测层在同级 lib\，不依赖任何盘符或目录名
 if (-not (Test-Path $boot)) {
   Bad ("找不到探测层: " + $boot)
 } else {
@@ -80,13 +93,20 @@ if (-not (Test-Path $boot)) {
     }
     $r = Resolve-ReverseToolSpec -Name 'idat'
     if ($r.Available) { Ok ("探测层可用，且能找到 idat（Via=" + $r.Via + "）") }
-    else              { Warn "探测层能跑，但 idat 没找到 —— IDA 可能没装，见 TOOL-CHAIN.md 第 3 节" }
+    else              { Warn "探测层能跑，但 idat 没找到 —— IDA 可能没装；装法见包根 TOOL-CHAIN.md" }
 
     # ★ 验证 -Name 'xxx.exe' 的假缺失行为（这是探测层的已知特性，不是你用错了）
     $r2 = Resolve-ReverseToolSpec -Name 'idat.exe'
     if ($r.Available -and -not $r2.Available) {
       Warn "确认：'idat' 能找到、'idat.exe' 找不到 —— 带扩展名是假缺失。用不带扩展名的 id。"
     }
+    # 工具根可能不是环境变量给的 —— 载入探测层后就知道真实值了，补报一次
+    try {
+      $realToolRoot = Get-ReverseToolRoot
+      if ($realToolRoot -and $realToolRoot -ne $ToolRoot) {
+        Ok ("工具根（探测层求得）= " + $realToolRoot)
+      }
+    } catch { }
   } catch {
     Bad ("探测层载入失败: " + $_.Exception.Message)
     Bad "若报「禁止运行脚本」，是执行策略 —— 用 -ExecutionPolicy Bypass 启动本脚本"
@@ -94,7 +114,7 @@ if (-not (Test-Path $boot)) {
 }
 
 Write-Host '--- 5. 路由器 ---' -ForegroundColor Cyan
-$route = Join-Path $SkillRoot 'skillpack\skills\scripts\master-route.ps1'
+$route = Join-Path $here 'master-route.ps1'   # 路由器与本文件同级
 if (-not (Test-Path $route)) {
   Bad ("找不到路由器: " + $route)
 } else {
@@ -116,6 +136,41 @@ if (-not (Test-Path $route)) {
   }
 }
 
+Write-Host '--- 6. 全机工具链就绪度与 MCP 探活扫描 ---' -ForegroundColor Cyan
+try {
+  if (-not (Get-Command Export-ReverseEnvironmentSnapshot -ErrorAction SilentlyContinue)) {
+    . $boot
+  }
+  $snapFile = Join-Path $SkillRoot '.hub\tools.local.json'
+  $snap = Export-ReverseEnvironmentSnapshot -OutFile $snapFile
+  # ★ Tools 是 OrderedDictionary，不是 PSCustomObject。
+  #   早先写成 $snap.Tools.PSObject.Properties，数到的是字典自身的
+  #   Count/Keys/Values/SyncRoot... 那 7 个属性，而不是工具数 ——
+  #   于是 24/25 就绪的机器被报成「1 / 7」，凭空造出一个不存在的假 MISSING。
+  $toolMap = $snap.Tools
+  $entries = @{}
+  if ($toolMap -is [System.Collections.IDictionary]) {
+    foreach ($k in $toolMap.Keys) { $entries[[string]$k] = $toolMap[$k] }
+  } else {
+    foreach ($p in $toolMap.PSObject.Properties) { $entries[$p.Name] = $p.Value }
+  }
+  $totalCount = $entries.Count
+  $missing = @($entries.GetEnumerator() | Where-Object { $_.Value.Available -ne $true } | ForEach-Object { $_.Key })
+  $availCount = $totalCount - $missing.Count
+  Ok ("核心逆向工具就绪: $availCount / $totalCount（已缓存至 $snapFile）")
+  if ($missing.Count) {
+    Write-Host ("      - 未就绪: " + ($missing -join ', ')) -ForegroundColor Yellow
+    Write-Host '        逐条核实：四级探测全失败才算真缺，见 references/env-selfcheck.md' -ForegroundColor Gray
+  }
+  foreach ($k in $snap.Mcp.Keys) {
+    $entry = $snap.Mcp[$k]
+    $status = if ($entry.Online) { '监听中 (READY)' } else { '未监听 (按需拉起)' }
+    Write-Host ("      - MCP $k [port $($entry.Port)]: $status") -ForegroundColor Gray
+  }
+} catch {
+  Warn ("工具链扫描警告: " + $_.Exception.Message)
+}
+
 Write-Host ''
 Write-Host ("=== 通过 $pass / 失败 $fail / 提醒 $warn ===") -ForegroundColor Cyan
 if ($fail -gt 0) {
@@ -123,7 +178,7 @@ if ($fail -gt 0) {
   exit 1
 }
 if ($warn -gt 0) {
-  Write-Host '无 FAIL，但有 WARN —— 建议按提示补上，否则换盘/换目录后会再次失效。' -ForegroundColor Yellow
+  Write-Host '无 FAIL，但有 WARN —— 按提示看一眼即可，都不是拦路的。' -ForegroundColor Yellow
   exit 0
 }
 Write-Host '全部通过。' -ForegroundColor Green

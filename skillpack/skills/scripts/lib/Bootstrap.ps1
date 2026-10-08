@@ -13,6 +13,98 @@
   4. 装法说明以 skillpack/skills/TOOLS.md 为准；bootstrap-manifest.json 是它的机器可读副本。
 #>
 
+# --------------------------------------------------------------------------
+# 进程环境自愈（不重启也能用）
+# --------------------------------------------------------------------------
+# 事故背景 2026-10-08：本机工具整体从 D:\HACKER\ 迁移到 D:\Tools\，注册表 User PATH
+# 已更新，但**已运行的进程树仍持有启动时的旧快照**（38 条 D:\HACKER\ 死条目，目录
+# 已不存在）。于是 Get-Command 对 diec/r2/idat/ghidraRun 全部返回空，而四级探测的
+# 第 2 级正是靠 Get-Command —— 智能体据此误判「本机缺工具」并直接停手。
+# 语义纪律：
+#   1) 只增不减：已在进程 PATH 里的条目保持原序在前（保住调用方刻意的临时覆盖），
+#      注册表新增的追加在后；不存在的目录直接丢弃（它不可能命中任何 exe）。
+#   2) 幂等：同进程只做一次，-Force 可强制重跑。
+#   3) 永不抛异常：本文件所有探测函数都受这条约束。
+#   4) 不写注册表：只改当前进程内存环境，不碰持久化配置。
+function Sync-ReverseProcessPath {
+    [CmdletBinding()]
+    param([switch]$Force)
+
+    if ($script:ReversePathSynced -and -not $Force) { return $false }
+    $script:ReversePathSynced = $true
+
+    try {
+        $current = @($env:PATH -split ';' | Where-Object { $_ })
+        $seen = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+        foreach ($e in $current) { [void]$seen.Add($e.TrimEnd('\')) }
+
+        $merged = New-Object 'System.Collections.Generic.List[string]'
+        foreach ($e in $current) {
+            if (Test-Path -LiteralPath $e -PathType Container -ErrorAction SilentlyContinue) {
+                $merged.Add($e)
+            }
+        }
+
+        foreach ($scope in @('Machine', 'User')) {
+            $registryPath = [Environment]::GetEnvironmentVariable('PATH', $scope)
+            if ([string]::IsNullOrWhiteSpace($registryPath)) { continue }
+            foreach ($e in ($registryPath -split ';')) {
+                if ([string]::IsNullOrWhiteSpace($e)) { continue }
+                $trimmed = $e.Trim().TrimEnd('\')
+                if ($seen.Contains($trimmed)) { continue }
+                [void]$seen.Add($trimmed)
+                if (Test-Path -LiteralPath $trimmed -PathType Container -ErrorAction SilentlyContinue) {
+                    $merged.Add($trimmed)
+                }
+            }
+        }
+
+        if ($merged.Count -eq 0) { return $false }
+        $env:PATH = ($merged -join ';')
+        return $true
+    } catch {
+        return $false
+    }
+}
+
+# DOTNET_ROOT 自愈：SDK 装在非默认位置（本机 D:\Tools\runtime\dotnet8）时，
+# dotnet tool install -g 装出的 apphost（ilspycmd.exe）找不到 runtime，直接报
+# "You must install .NET to run this application." —— 工具本身是好的。
+# 必须探测式取值（Get-Command dotnet 的所在目录），禁止写死任何盘符路径。
+function Sync-ReverseDotnetRoot {
+    [CmdletBinding()]
+    param([switch]$Force)
+
+    if ($script:ReverseDotnetRootDone -and -not $Force) { return $false }
+    $script:ReverseDotnetRootDone = $true
+
+    try {
+        if ($env:DOTNET_ROOT -and (Test-Path -LiteralPath $env:DOTNET_ROOT -PathType Container -ErrorAction SilentlyContinue)) {
+            return $false
+        }
+        $dotnet = Get-Command dotnet -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not ($dotnet -and $dotnet.Source)) { return $false }
+        $root = [System.IO.Path]::GetDirectoryName($dotnet.Source)
+        if (-not (Test-Path -LiteralPath $root -PathType Container -ErrorAction SilentlyContinue)) { return $false }
+        $env:DOTNET_ROOT = $root
+        return $true
+    } catch {
+        return $false
+    }
+}
+
+# 统一入口：探测层定位工具前调它，调用方无需关心环境是否刷新过。
+function Sync-ReverseEnvironment {
+    [CmdletBinding()]
+    param()
+    $pathFixed = Sync-ReverseProcessPath
+    $dotnetFixed = Sync-ReverseDotnetRoot
+    return [PSCustomObject]@{
+        PathSynced       = $pathFixed
+        DotnetRootSynced = $dotnetFixed
+    }
+}
+
 function Get-ReverseUserProfilePath {
     [CmdletBinding()]
     param()
@@ -27,18 +119,24 @@ function Get-ReverseSkillRoot {
     [CmdletBinding()]
     param()
 
-    # 技能包相对自己的位置找资源：支持直接传入技能包根或仓库根，自动解析出 skills/ 目录
+    # 返回的目录必须**真的含 scripts\bootstrap-manifest.json** —— 这是唯一的判据。
+    # 环境变量允许指向三种位置，逐个试：
+    #   ① skills 根（…\skills）            -> 直接命中
+    #   ② 包根 / 仓库根（…\ 、…\skillpack） -> 再试 <它>\skills
+    # 全都不含 manifest 时**不许**退回「只要目录存在就返回」——
+    # 那会让 Get-ReverseBootstrapManifestPath 拼出一个不存在的路径，
+    # 能力清单静默解析失败（2026-10-09 实测：REVERSE_SKILL_ROOT=<包根> 时踩到）。
     if (-not [string]::IsNullOrWhiteSpace($env:REVERSE_SKILL_ROOT)) {
         $override = [System.IO.Path]::GetFullPath($env:REVERSE_SKILL_ROOT)
-        if (Test-Path -LiteralPath (Join-Path $override 'scripts\bootstrap-manifest.json')) {
-            return $override
+        foreach ($cand in @($override,
+                            (Join-Path $override 'skills'),
+                            (Join-Path $override 'skillpack\skills'))) {
+            if (Test-Path -LiteralPath (Join-Path $cand 'scripts\bootstrap-manifest.json')) {
+                return [System.IO.Path]::GetFullPath($cand)
+            }
         }
-        $subSkills = Join-Path $override 'skillpack\skills'
-        if (Test-Path -LiteralPath (Join-Path $subSkills 'scripts\bootstrap-manifest.json')) {
-            return [System.IO.Path]::GetFullPath($subSkills)
-        }
-        if (Test-Path -LiteralPath $override -PathType Container) { return $override }
-        Write-Warning "REVERSE_SKILL_ROOT 指向的目录不存在，已忽略并改用自推导：$override"
+        Write-Warning ("REVERSE_SKILL_ROOT=$override 下面找不到 scripts\bootstrap-manifest.json，" +
+                       "已忽略并改用自推导（设成 skills 根、包根或仓库根都可以）。")
     }
 
     $derived = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
@@ -113,28 +211,39 @@ function Get-ReverseToolMap {
 
     $script:ReverseToolMap = $null
 
-    # 先验证根目录再用 —— 对不存在的盘符调 Join-Path 会往错误流写「找不到驱动器」，
-    # 在目标机没有 D 盘（或 REVERSE_TOOL_ROOT 填错）时污染调用方输出，
-    # 新 AI 会把这段噪声误读成故障。查不到就安静返回 null。
+    # 1. 优先加载本地工具根下的 _map.json（本机覆盖层）
     $root = Get-ReverseToolRoot
-    if ([string]::IsNullOrWhiteSpace($root)) { return $null }
-    if (-not (Test-Path -LiteralPath $root -PathType Container -ErrorAction SilentlyContinue)) {
-        return $null
+    $localMap = $null
+    if (-not [string]::IsNullOrWhiteSpace($root) -and (Test-Path -LiteralPath $root -PathType Container -ErrorAction SilentlyContinue)) {
+        $localPath = Join-Path $root '_map.json'
+        if (Test-Path -LiteralPath $localPath -PathType Leaf -ErrorAction SilentlyContinue) {
+            try {
+                $localMap = Get-Content -LiteralPath $localPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            } catch {
+                Write-Warning "_map.json 本地覆盖表解析失败: $localPath"
+            }
+        }
     }
 
-    $path = Join-Path $root '_map.json'
-    if (-not (Test-Path -LiteralPath $path -PathType Leaf -ErrorAction SilentlyContinue)) {
-        return $null
+    # 2. 仓内默认知识库 toolmap.default.json
+    $defaultPath = Join-Path $PSScriptRoot 'toolmap.default.json'
+    $defaultMap = $null
+    if (Test-Path -LiteralPath $defaultPath -PathType Leaf -ErrorAction SilentlyContinue) {
+        try {
+            $defaultMap = Get-Content -LiteralPath $defaultPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        } catch { }
     }
 
-    try {
-        $script:ReverseToolMap = Get-Content -LiteralPath $path -Raw -Encoding UTF8 | ConvertFrom-Json
+    # 3. 合并或择优：本地有则以本地为准（保留其 aliases/deny），默认垫底补充 twins 等知识
+    if ($null -ne $localMap) {
+        $script:ReverseToolMap = $localMap
+        if ($defaultMap -and $defaultMap.PSObject.Properties['twins'] -and -not $script:ReverseToolMap.PSObject.Properties['twins']) {
+            Add-Member -InputObject $script:ReverseToolMap -NotePropertyName 'twins' -NotePropertyValue $defaultMap.twins
+        }
+    } elseif ($null -ne $defaultMap) {
+        $script:ReverseToolMap = $defaultMap
     }
-    catch {
-        # 解析失败要看得见 —— 这是真故障，不能静默吞掉
-        Write-Warning "_map.json 解析失败，已忽略别名表（工具仍可走 PATH 与递归兜底）：$path"
-        Write-Warning ("  原因: " + $_.Exception.Message)
-    }
+
     return $script:ReverseToolMap
 }
 
@@ -215,6 +324,11 @@ function Resolve-ReverseToolSpec {
     # 本函数必须**永不抛异常**：调用方（recon.ps1 / decode.ps1 / bootstrap-reverse.ps1）
     # 全都设了 $ErrorActionPreference='Stop'，一次非终止错误就会冲出整个脚本。
     # 任何探测失败一律降级成 Available=$false，由调用方报错。
+    #
+    # 0) 环境自愈：进程可能持有启动时的旧 PATH 快照（本机 2026-10-08 事故：工具从
+    #    D:\HACKER\ 迁到 D:\Tools\，注册表已改但进程未刷新）。不刷新的话下面第 2 级
+    #    Get-Command 会全部返回空，进而让调用方误判「本机缺工具」。幂等且不抛异常。
+    try { [void](Sync-ReverseEnvironment) } catch { }
 
     # 1) 环境变量显式指定（设了但文件不在 -> 忽略，不静默沿用）
     $envKey = $Name.ToUpperInvariant().Replace('-', '_')
@@ -271,10 +385,7 @@ function Resolve-ReverseToolSpec {
             }
         }
     }
-
-    # 4) 工具根递归兜底（同名可执行文件）。这是**最低可信度**的一级：
-    #    命中多份时由 Select-ReverseNewestHit 按「浅→新→长」挑，调用方应把 Via=scan
-    #    当作待确认信号（实跑一次版本输出）。
+    # 4) 工具根递归兜底（同名可执行文件）
     foreach ($ext in @('exe', 'bat', 'cmd')) {
         $hits = @(Get-ChildItem -LiteralPath $root -Recurse -Filter "$Name.$ext" -File -ErrorAction SilentlyContinue |
                 Where-Object { -not (Test-ReverseToolDenied -ToolId $Name -FullPath $_.FullName) })
@@ -282,6 +393,17 @@ function Resolve-ReverseToolSpec {
             $pick = Select-ReverseNewestHit -Hits $hits
             $via = if ($hits.Count -gt 1) { 'scan-ambiguous' } else { 'scan' }
             return New-ReverseToolSpec -Name $Name -Command $pick.FullName -Via $via
+        }
+    }
+
+    # 5) 孪生推导兜底（知识库驱动）：如果查的是主程序/GUI 名，自动查其已知的 CLI/无头孪生
+    if ($map -and $map.PSObject.Properties['twins']) {
+        $twinEntry = $map.twins.PSObject.Properties[$Name.ToLowerInvariant()]
+        if ($twinEntry -and $twinEntry.Value.cliTwin -and ($twinEntry.Value.cliTwin -ne $Name)) {
+            $twinSpec = Resolve-ReverseToolSpec -Name $twinEntry.Value.cliTwin
+            if ($twinSpec.Available) {
+                return New-ReverseToolSpec -Name $Name -Command $twinSpec.Command -Via ('twin->' + $twinSpec.Via)
+            }
         }
     }
 
@@ -412,6 +534,12 @@ function Get-PiMcpConfigPath {
     if (-not [string]::IsNullOrWhiteSpace($env:PI_HOME)) { return Join-Path (Join-Path $env:PI_HOME 'agent') 'mcp.json' }
     return Join-Path (Join-Path (Get-ReverseUserProfilePath) '.pi\agent') 'mcp.json'
 }
+function Get-OmpMcpConfigPath {
+    [CmdletBinding()]
+    param()
+    if (-not [string]::IsNullOrWhiteSpace($env:OMP_AGENT_DIR)) { return Join-Path $env:OMP_AGENT_DIR 'mcp.json' }
+    return Join-Path (Join-Path (Get-ReverseUserProfilePath) '.omp\agent') 'mcp.json'
+}
 
 <#
   JSON -> 有序字典。用于读宿主 MCP 配置时保留字段顺序（回写时不打乱用户的文件）。
@@ -477,4 +605,61 @@ function Test-ReverseTcpPort {
     catch {
         return $false
     }
+}
+
+<#
+  全机逆向环境快照生成器（自适应与自愈枢纽）
+  扫描本机常用逆向工具可用性、CLI 孪生状态、MCP 服务探活状态，
+  输出结构化对象，并可选落盘保存为缓存。换机跑一次即可知晓全盘就绪度。
+#>
+function Export-ReverseEnvironmentSnapshot {
+    [CmdletBinding()]
+    param(
+        [string]$OutFile = '',
+        [string[]]$ToolList = @(
+            'ida', 'idat', 'ghidra', 'analyzeHeadless', 'x64dbg', 'x32dbg',
+            'die', 'diec', 'r2', 'radare2', 'wireshark', 'tshark',
+            'dnSpy', 'dnSpy.Console', 'de4dot', 'ilspycmd', 'upx',
+            'java', 'javac', 'dotnet', 'go', 'git', 'python', 'npm', 'npx'
+        )
+    )
+
+    $tools = [ordered]@{}
+    foreach ($t in $ToolList) {
+        $spec = Resolve-ReverseToolSpec -Name $t
+        $tools[$t] = [ordered]@{
+            Available = [bool]$spec.Available
+            Command   = $spec.Command
+            Via       = $spec.Via
+        }
+    }
+
+    $mcpStates = [ordered]@{}
+    $mcpChecks = @(
+        @{ Name = 'pyghidra-mcp'; Port = 9111 },
+        @{ Name = 'idalib-mcp';  Port = 13337 }
+    )
+    foreach ($m in $mcpChecks) {
+        $online = Test-ReverseTcpPort -Port $m.Port
+        $mcpStates[$m.Name] = [ordered]@{
+            Port   = $m.Port
+            Online = $online
+        }
+    }
+
+    $snapshot = [ordered]@{
+        GeneratedAt = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+        ToolRoot    = Get-ReverseToolRoot
+        SkillRoot   = Get-ReverseSkillRoot
+        Tools       = $tools
+        Mcp         = $mcpStates
+    }
+
+    if ($OutFile) {
+        $dir = Split-Path $OutFile -Parent
+        if ($dir -and -not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+        $snapshot | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $OutFile -Encoding UTF8
+    }
+
+    return [pscustomobject]$snapshot
 }

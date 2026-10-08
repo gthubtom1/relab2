@@ -30,19 +30,24 @@
 
 ## 全量体检（统筹亲自跑，非转述）
 
-| 项 | 结果 |
-|---|---|
-| 旧系统 34 个受控文件 | **逐字节未变** ✅ |
-| `git status --porcelain` | 只有 `?? work/context-isolation/`（1 项） ✅ |
-| 标记块 12 块底线 | 全部在位，**1,411 B / 预算 1,600**，写在入口文件**最末**（与底模无关的最终裁决）✅ |
-| 产物新鲜度 | **91/91 一致**，无漂移/无遗漏/打包工具未混入 ✅ |
-| hubcore 构建闸门 | 禁词 0 / 增长 0 / 死链 0 / 11 个补丁全过 / CORE.md 2,988≤3,000 ✅ |
-| 死链全量 | **真死链 0、无书可开的线 0** ✅ |
-| 九个必测场景 | **153/153，退出码 0** ✅（9.5m 错判据已修：出货件干净，残留是运行期产物） |
-| 控制台真打包器 | **三轮全过** ✅（`selftest.py --bundle real`，卸完指纹 `800a0fe8c9f12885` 一致） |
-| 真家目录 | **8 家入口 sha 全一致，非易失差异 0** ✅（`06-verify/host_fingerprint.py` 装前/装后） |
-| 双击启动 | **`start-console.bat` 已验** ✅（127.0.0.1:57494，首页/13家/ready/403 全对） |
-| 物理注入降幅 | **36,685 → 1,186 字节，降 96.8%** |
+> ⚠️ **这是某一时刻的快照，不是当前事实。** 下面每个数字都会在任何一次编辑后过期。
+> **不要引用这里的 ✅ 当结论** —— 照着「怎么重新验证」那一列跑一遍，才算验证过。
+> 下表最后一次实跑：2026-10-09。
+
+| 项 | 快照结果 | 怎么重新验证 |
+|---|---|---|
+| 旧系统 34 个受控文件 | 逐字节未变 ✅ | `06-verify/host_fingerprint.py` 装前/装后对比 |
+| `git status --porcelain` | 只有 `?? work/context-isolation/`（1 项） ✅ | `git status --porcelain` |
+| 标记块 12 块底线 | 全部在位，写在入口文件**最末** ✅ | `06-verify/probe_marker.py` |
+| 产物新鲜度 | 91/91 一致（2026-10-09 重跑后） | `cd kernel/02-hubcore && python check_dist_sync.py`（漂移就 exit 3，先跑 `03-bundle/pack.py`） |
+| hubcore 构建闸门 | 禁词 0 / 增长 0 / 死链 0 | `cd kernel/02-hubcore && python build_hubcore.py --product C:\relab2 --check` |
+| 死链全量 | 真死链 0 | `cd kernel/03-bundle/patches && python check_dead_refs.py` |
+| 九个必测场景 | 退出码 0 | `cd kernel/05-tests && python run_all.py` |
+| 控制台真打包器（验收 1–9） | `selftest.py` 跑一轮 | `cd kernel/04-console && python -B selftest.py` |
+
+| 真家目录 | 8 家入口 sha 全一致 | `06-verify/host_fingerprint.py` 装前/装后对比 |
+| 双击启动 | `start-console.bat` 可用 | 双击 `04-console/start-console.bat`，看首页/家数/ready/403 |
+| 物理注入降幅 | 36,685 → 1,186 字节 | `06-verify/probe_marker.py` + `01-design/当前实测基线.md` 的口径表 |
 
 ## 已成型的四道闸门（超了就是红，不是警告）
 

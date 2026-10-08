@@ -16,21 +16,28 @@
 
 ## 0. 定位规则（每次都适用）
 
-需要某工具时，按这三步走，**不要跳步，也不要跳过第 1 步直接装**：
+需要某工具时，按这三步走，**不要跳步，也不要因为第 1 步查空就断定没装**：
 
 ```powershell
-# 1. 先问操作系统「有没有、在哪」—— 这一条就够了，不需要任何注册表
-(Get-Command <工具id> -ErrorAction SilentlyContinue).Source
+# 1. 走探测层（唯一正确入口，内含四级递进 + PATH/DOTNET_ROOT 自愈）
+#    探测层自定位（本文件在 skills\ 下）：相对本文件载入，不需要任何环境变量
+. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1   # 本机固定路径；万一这台机器还没建好、该文件不存在，回退到本文件所在目录的 .\scripts\lib\Bootstrap.ps1
+$r = Resolve-ReverseToolSpec -Name <工具id>
+$r.Available; $r.Command; $r.Via
 
-# 2. 有值 → 直接用。没问题。
-# 3. 无值 → 查本文件的表，找到装法，装完回到第 1 步复验
+# 2. Available=True -> 用 $r.Command 的完整路径调用（别依赖 cwd）
+# 3. Available=False -> 查本文件的表找装法，装完回到第 1 步复验
 ```
 
-**三条硬规矩：**
+**四条硬规矩：**
 
-1. **不许猜路径。** 没查到就是没装，不是「可能在某个地方」。
+1. **不许猜路径。**
 2. **不许把探测到的路径写回本文件或任何文档。** 路径只活在当次会话里 —— 换台电脑它就不成立，写下来就是埋雷。
 3. **装完必须复验。** 装完不跑第 1 步，等于没装。
+4. **注意：`Get-Command <id>` 返回空 != 本机缺该工具。** 2026-10-08 实测事故：工具整体迁目录后注册表已更新，
+   但**已运行的进程仍持有启动时的旧 PATH 快照**（指向已删除目录），`Get-Command` 对 `diec`/`r2`/`idat`/
+   `ghidraRun` 全部返回空，据此误判「本机缺工具」并停手 —— 实际工具全都在。**单条 `Get-Command` 只是四级里的
+   第 2 级，必须走完探测层；环境自检见 `references/env-selfcheck.md`。**
 
 ### 工具根与四级定位
 
@@ -50,12 +57,24 @@
 脚本里直接用探测层，不要自己写查找：
 
 ```powershell
-. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1
+. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1   # 本机固定路径；万一这台机器还没建好、该文件不存在，回退到本文件所在目录的 .\scripts\lib\Bootstrap.ps1
 $r = Resolve-ReverseToolSpec -Name 'idat'
 $r.Available   # 有没有
 $r.Command     # 在哪（用完整路径调用，不要依赖 cwd）
 $r.Via         # 从哪找到的 —— scan 的要留意身份
 ```
+
+> **「探测到」不等于「能执行」—— 两类必须再确认的情况（2026-10-08 实测）：**
+>
+> - **环境变量错位**：工具装在非默认位置时 exe 找得到但跑不起来，症状多为**静默无输出**，看着像工具坏了。
+>   `IDADIR` 错位时 `idat.exe` 零输出；`DOTNET_ROOT` 错位时 ilspycmd 报「You must install .NET」。
+>   本机 .NET 根就是 `D:\Tools\runtime\dotnet8` —— 直接设 `$env:DOTNET_ROOT = 'D:\Tools\runtime\dotnet8'`。
+>   交叉验证：`Resolve-ReverseToolSpec -Name dotnet` 返回的 `Command` 就是 `D:\Tools\runtime\dotnet8\dotnet.exe`。
+> - **GUI 混入**：PATH 里 GUI 版与 CLI 版并存，**PATH 级（第 2 级）命中早于 `_map.json` 级（第 3 级）**，
+>   所以探测可能返回 GUI 而你毫无察觉。拿到 `Command` 后先看文件名是不是 CLI 孪生：
+>   `die`→`diec`、`ida`→`idat`、`Wireshark`→`tshark`、`x64dbg`→`headless`。
+>   机制是 `_map.json` 的 `deny` 段把 GUI 路径挡掉后才会回落；需要 GUI 的人工场景用
+>   `x64dbg-gui` / `x32dbg-gui` 显式键。
 
 **注意：这是约定，不是保证。** `winget` 装的进 `C:\Program Files\`，pip 的进用户 `Scripts\`，
 SDK 的进 `%LOCALAPPDATA%`。**第 1 步的探测对所有工具都必做**，包括「我记得它装在 D:\Tools\」的。
@@ -115,6 +134,22 @@ SDK 的进 `%LOCALAPPDATA%`。**第 1 步的探测对所有工具都必做**，�
 
 > **`DOTNET_ROOT` 铁律**：`ilspycmd` 是 .NET tool，跑之前必须先 `(Get-Command dotnet).Source` 取其所在目录赋给 `$env:DOTNET_ROOT`，否则它找不到 runtime 直接退出。**不要在文档里写死任何盘符。**
 
+> **★ 原生编译会死在两个隐蔽的坑（与装没装 SDK 无关，文件通常都在盘上）**：
+> 某些安装里 `vcvars64.bat` 设好的 `INCLUDE` **只含 MSVC 路径、不含 Windows SDK**，`rc.exe` 也不在 `PATH`。
+> 于是编译报 `fatal error C1083: 无法打开包括文件 "crtdbg.h"` 或 `LINK : fatal error LNK1158: 无法运行 "rc.exe"` ——
+> 看着像 SDK 缺失，实际是**编译环境没带上 SDK 路径**。处置：vcvars 之后手工补三样，再编。
+>
+> ```bat
+> set "SDKV=10.0.26100.0"   :: 换成你机器上实际的 SDK 版本号
+> set "SDK=C:\Program Files (x86)\Windows Kits\10"
+> set "PATH=%SDK%\bin\%SDKV%\x64;%PATH%"
+> set "INCLUDE=%INCLUDE%;%SDK%\Include\%SDKV%\ucrt;%SDK%\Include\%SDKV%\shared;%SDK%\Include\%SDKV%\um"
+> set "LIB=%LIB%;%SDK%\Lib\%SDKV%\ucrt\x64;%SDK%\Lib\%SDKV%\um\x64"
+> set "DISTUTILS_USE_SDK=1" & set "MSSdk=%SDKV%"
+> ```
+>
+> 版本号从 `dir "%SDK%\Include"` 现查，别照抄。校验：`where cl` 与 `where rc.exe` 都要有结果。
+
 ---
 
 ## 2. 逆向 · Windows / 原生
@@ -155,9 +190,14 @@ GUI 程序弹窗等输入、零 stdout、进程永不退出。**agent 不得经 
 
 | 工具 | 干什么 | 装法 | 许可 |
 |---|---|---|---|
-| **ilspycmd** | .NET 反编译主通道 | `dotnet tool install -g ilspycmd` | 🟢 |
+| **ilspycmd** | .NET 反编译主通道 | `dotnet tool install -g ilspycmd --version 9.1.0.7988`（**锁版本，见下**） | 🟢 |
 | **dnSpyEx** | IL 级调试/补丁 | GitHub dnSpyEx releases → `D:\Tools\dnSpyEx\`（含 `dnSpy.Console.exe`） | 🟢 |
 | **de4dot-cex** | .NET 脱混淆 | GitHub de4dot-cex → `D:\Tools\de4dot\` | 🟢 |
+
+> **★ ilspycmd 必须锁版本**：最新版（11.x）的 NuGet 包里**只有 `tools\net10.0\`**，需要 .NET 10。
+> 装在 .NET 8 上会报 `工具的 NuGet 包中的设置文件无效: 在包中找不到设置文件 "DotnetToolSettings.xml"` ——
+> **这个报错长得像下载损坏，其实是目标框架不匹配**，照着「清 NuGet 缓存重装」方向排查会白费时间。
+> 装之前先 `dotnet --version` 看 SDK 几，再对照包里的 `tools\net*.0\` 目录。升到 .NET 10 之前一直用 9.1。
 
 > **IL 模式铁律**：`dnSpy.Console` 在 `--il` 模式下**不支持 `-o`**（会抛异常）。必须用 `--md <token>` 输出到标准输出。
 
@@ -208,11 +248,16 @@ GUI 程序弹窗等输入、零 stdout、进程永不退出。**agent 不得经 
 | **qiling** | OS 级仿真（含 Windows rootfs） | `pip install qiling` | 🟢 |
 | **pwntools** | exp 编写、ROP | `pip install pwntools` | 🟢 |
 | **frida-tools** | 见 §4 | `pip install frida-tools` | 🟢 |
+| **sdenv** | jsdom 系补环境框架：伪造浏览器环境跑混淆 JS | `npm i sdenv`（需 Node ≥20.19.5 **+ node-gyp + MSVC C++ 生成工具**） | 🟢 |
+| **rs-reverse** | 瑞数 VMP 纯算法逆向：`makecode` 还原动态代码 / `makecookie` 复现 cookie | `npm i -g rs-reverse`（Node ≥18） | 🟢 |
 | **yara** | 规则匹配 | `winget install --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity VirusTotal.YARA` | 🟢 |
 | **binwalk** | 固件提取 | `cargo install binwalk`（无 winget 无预编译） | 🟡 |
 
 > **pip 类工具装进 venv**，别污染系统 Python。建议一个 `D:\Tools\pyrev-venv\`，`D:\Tools\pyrev-venv\Scripts\` 加 PATH。
 > **angr 会把 z3-solver 钉到 4.13**（从 5.x 降级，angr 硬依赖）。两者共存无冲突，别手动升 z3。
+> **sdenv 原生编译铁律**：sdenv 带 `binding.gyp`，`npm i` 会触发 `node-gyp rebuild`。Windows 上必须有
+> **Python + Visual Studio 的「使用 C++ 的桌面开发」工作负载**，否则安装直接失败 —— 这是先决条件，不是装完再补。
+> Node 版本按上游实测：`v20.19.5` / `v22` / `v23` / `v24` / `v25` 可用，`v21.7.3` 不支持。
 
 ---
 

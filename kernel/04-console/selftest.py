@@ -260,9 +260,24 @@ def main(argv: list[str] | None = None) -> int:
                 i=row["installed"], r=row["running"], p=row.get("pids", [])))
         present = [row for row in rows if row["exists"] and not row.get("fixture")]
         print(f"真实存在的家目录：{len(present)} 个 -> {[r['id'] for r in present]}")
-        if len(present) < 3:
-            failures.append("验收 2：真实家目录不足 3 个")
-        print("判定：", "通过" if len(present) >= 3 else "不通过")
+        # 这台机器上装了几个智能体宿主，是**事实**，不是判据。
+        # 原实现写死「不足 3 个就判红」—— 那让这条断言在任何少于 3 个宿主的机器上
+        # **永远红着**，于是所有人学会忽略它，等于没有这道门（2026-10-09 修）。
+        # 真正要验的不变量：扫描结果与注册表自洽、每行字段齐全。
+        REQUIRED_FIELDS = {"id", "exists", "entry", "installed", "running"}
+        missing_fields = [r.get("id", "?") for r in rows if not REQUIRED_FIELDS <= set(r)]
+        registry_ids = {h["id"] for h in (status.get("hosts") or [])}
+        unknown_ids = [r["id"] for r in rows if registry_ids and r["id"] not in registry_ids]
+        if not rows:
+            failures.append("验收 2：一个宿主都没扫到（扫描逻辑坏了）")
+        if len(present) < 1:
+            failures.append("验收 2：一个真实存在的家目录都没扫到")
+        if missing_fields:
+            failures.append("验收 2：这些宿主行缺字段：%s" % missing_fields)
+        if unknown_ids:
+            failures.append("验收 2：扫出注册表里没有的宿主：%s" % unknown_ids)
+        ok2 = bool(rows) and len(present) >= 1 and not missing_fields and not unknown_ids
+        print("判定：", "通过" if ok2 else "不通过")
 
         line(f"验收 3：端到端装 / 卸（打包器={BUNDLE_KIND}，宿主家目录在 TEMP，真家目录一个字节没动）")
         print("宿主家目录：", FIXTURE_HOME)
@@ -762,6 +777,50 @@ def main(argv: list[str] | None = None) -> int:
         if r9c.returncode == 0 or "定界行" not in bad_said:
             failures.append("验收 9：卡片正文含定界行竟然装上去了")
         shutil.rmtree(crlf_home, ignore_errors=True)
+
+        # 验收 9b：**结尾没有换行**的入口文件，装完再卸完必须逐字节回到装前。
+        # 这不是边角，是很常见的文件形态。装的时候要给原文补一个分隔换行
+        # （不补，标记块首行会粘在主人最后一行上，按行锚点摘不干净），
+        # 那个换行是我们加的 —— 卸的时候必须认出来还原。
+        # 认不出来就有两个后果：多一个字节；更糟的是这一个字节差被当成
+        # 「主人自己改过」，于是走「只摘块不覆盖」，把换行永久留在主人文件里还报告成正常。
+        line("验收 9b：结尾没有换行的入口文件，装完再卸完逐字节回到装前")
+        nonl_home = TEMP / "nonl-home"
+        if nonl_home.exists():
+            shutil.rmtree(nonl_home)
+        nonl_home.mkdir(parents=True)
+        nonl_entry = nonl_home / "AGENTS.md"
+        # 故意不以换行收尾（最后一行就是最后一行）
+        nonl_before = "# 我的规则\n\n这一段没有结尾换行。".encode("utf-8")
+        nonl_entry.write_bytes(nonl_before)
+        r9d = subprocess.run(
+            [sys.executable, "-B", str(BUNDLE / "install.py"), "--source",
+             str(BUNDLE / "dist" / "hubcore"), "--host-home", str(nonl_home)],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+        nonl_installed = nonl_entry.read_bytes()
+        print("无结尾换行家装上 rc =", r9d.returncode,
+              "| 标记块在 →", b"# >>> hubcore hub >>>" in nonl_installed,
+              "| 原文在 →", "这一段没有结尾换行。".encode("utf-8") in nonl_installed)
+        if r9d.returncode:
+            failures.append("验收 9b：无结尾换行家装不上")
+        if b"# >>> hubcore hub >>>" not in nonl_installed:
+            failures.append("验收 9b：装完文件里没有标记块")
+        # 主人在装完到卸回之间**一个字都没改** —— 这时候必须整份还原，不能只摘块
+        r9e = subprocess.run(
+            [sys.executable, "-B", str(BUNDLE / "uninstall.py"), "--host-home",
+             str(nonl_home), "--yes"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+        nonl_left = nonl_entry.read_bytes()
+        said = (r9e.stdout or "") + (r9e.stderr or "")
+        print("卸回 rc =", r9e.returncode,
+              "| 装前 %d 字节 → 卸后 %d 字节" % (len(nonl_before), len(nonl_left)),
+              "| 逐字节相同 →", nonl_left == nonl_before)
+        if nonl_left != nonl_before:
+            failures.append("验收 9b：装完再卸完没有逐字节回到装前（多 %+d 字节）"
+                            % (len(nonl_left) - len(nonl_before)))
+        if "主人自己改过" in said or "属正常" in said:
+            failures.append("验收 9b：我们自己补的换行被误报成「主人自己改过」")
+        shutil.rmtree(nonl_home, ignore_errors=True)
 
         line("验收 4：前端 HTML/JS 里不许出现的字样")
         targets = [HERE / "web" / "index.html", HERE / "web" / "app.js", HERE / "web" / "style.css"]

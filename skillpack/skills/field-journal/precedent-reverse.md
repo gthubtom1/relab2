@@ -231,21 +231,27 @@ install_name_tool -change old.dylib new.dylib target        — 修改 dylib 依
 
 ---
 
-## 本机已验证工具速查
+## 历史用例里用过的工具
 
-| 工具 | 已验证版本 | 路径 |
-|------|----------|------|
-| jadx | 1.5.5 | `jadx` (PATH) |
-| apktool | 3.0.2 | `apktool` (PATH) |
-| Frida | 17.9.6 | `frida` / `frida-ps` (PATH) |
-| adb | latest | `adb` (PATH / Android SDK) |
-| IDA Pro | 9.0 | 见 tool-index.md |
-| r2 / rabin2 | latest | `r2` / `rabin2` (PATH) |
-| Ghidra | 11.4 | 见 tool-index.md |
-| GoReSym | latest | `GoReSym` (PATH) |
-| dnSpy | latest | 见 tool-index.md |
-| objection | latest | `objection` (PATH) |
-| class-dump | latest | 见 tool-index.md |
+> **这张表是历史记录，不是现状清单。** 下面写的是**当时那些用例执行时用的版本**，
+> 机器升级、工具换版之后必然对不上 —— 拿它当"本机现状"用会踩空。
+>
+> **要当前机器的真实状态，一律现查**（`../../TOOL-CHAIN.md` §2 四级递进 / `(Get-Command <id>).Source`），
+> 查到再登记到 `D:\Tools\_map.json`，**不要写回本文件** —— 本文件只记做过什么，不记现在有什么。
+
+| 工具 | 用例当时的版本 | 现在怎么查 |
+|------|---------------|-----------|
+| jadx | 1.5.5 | `(Get-Command jadx).Source` |
+| apktool | 3.0.2 | `(Get-Command apktool).Source` |
+| Frida | 17.9.6 | `frida --version` |
+| adb | latest | `(Get-Command adb).Source` |
+| IDA Pro | 9.0 | `Resolve-ReverseToolSpec -Name idat` |
+| r2 / rabin2 | latest | `r2 -v` |
+| Ghidra | 11.4 | `Resolve-ReverseToolSpec -Name ghidra` |
+| GoReSym | latest | `Get-Command GoReSym -ErrorAction SilentlyContinue` |
+| dnSpy | latest | `Resolve-ReverseToolSpec -Name dnSpy` |
+| objection | latest | `objection --version` |
+| class-dump | latest | `Get-Command class-dump -ErrorAction SilentlyContinue` |
 
 ---
 

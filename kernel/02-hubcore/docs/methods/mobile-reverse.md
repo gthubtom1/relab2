@@ -4,7 +4,7 @@ description: 安卓 App 的抓包、脱壳与动态逆向：模拟器起环境�
 purpose: 用「模拟器 + 强制全局代理 + 系统证书 + Frida」这条固定流水线拿到明文流量，而不是跟 App 的防护硬碰
 use_when: 主人给一个安卓 App 要分析接口/协议/加密、要抓手机包、要复现某 App 的请求、要脱壳或 Hook；或抓包时报错断网、只能看到 CONNECT 看不到明文、App 检测到代理。iOS 不在本册范围。
 phase: reverse-engineering, protocol-automation
-needs: [本机工具清单 tools.local.json（读「雷电模拟器9」「安卓抓包套件」那几条），adb，frida，mitmproxy]
+needs: [本机工具探测四级顺序（docs/methods/windows-environment.md）, adb，frida，mitmproxy]
 ---
 
 # 移动端逆向与抓包
@@ -15,7 +15,7 @@ needs: [本机工具清单 tools.local.json（读「雷电模拟器9」「安卓
 
 ## 先记住
 
-**这台机器上已经装好一整套了**，不要再问主人「要不要装模拟器」。工具在哪、怎么调起来，**读本机清单**（`<hub>/tools.local.json`），按名字找这几条：
+**这台机器上已经装好一整套了**，不要再问主人「要不要装模拟器」。工具在哪、怎么调起来，**按 `docs/methods/windows-environment.md`「找工具 / 文件」的四级顺序探测**（环境变量 → 当前会话能调到的命令 → 已知安装位置 → 全盘检索），命中即停，四级全空才报缺。
 
 - **雷电模拟器9 (ldconsole)** —— 模拟器本体 + 命令行入口
 - **安卓抓包套件 (android-tools)** —— 里面是下面那堆
@@ -74,7 +74,7 @@ python <android-tools>/setup_device.py
 - **真实账号的敏感数据**：抓到就是抓到了，**不要往任何仓库、任何文档里贴令牌和密码**，只留结构。参照 `security-audit`。
 - **让模拟器常驻**：用完自己关（`ldconsole quit --index 0`），别留一堆后台进程占内存。
 - **重工具要有界**：Frida 脚本可能一直刷日志，输出落盘，主对话只留摘要。
-- **找不到工具**：先读 `tools.local.json`，再按 `TOOLING.md` 的顺序找。确需安装时，先给主人官方来源、命令、位置、影响和回退，**不要静默装**。
+- **找不到工具**：按 `docs/methods/windows-environment.md`「找工具 / 文件」的四级顺序走完。确需安装时，先给主人官方来源、命令、位置、影响和回退，**不要静默装**；查到的路径要实跑一次才算数，禁止伪造路径。
 
 ## 那场会话留下的东西
 

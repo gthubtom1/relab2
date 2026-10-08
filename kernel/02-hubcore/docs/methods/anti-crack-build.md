@@ -4,7 +4,7 @@ description: 给做完的程序加壳、混淆、编译加固，让别人偷看/
 purpose: 把「写完了」变成「发出去别人不容易破解逆向」：选壳/混淆/编译参数 → 加 → 冒烟实测 → 留退回。工具从中枢工具表里找，不写死路径。
 use_when: 主人说「加壳」「防破解」「防逆向」「混淆」「编译成 exe」「保护一下」；或桌面/命令行/二开产品主功能验收完、准备发布或交付给别人之前
 phase: desktop-product, cli-tool, exe-rebuild, web-service(B端打包时), source-takeover
-needs: [本机工具表 hub/tools.local.json, 一件已完成并验收过的成品, 一份未加壳的原件备份]
+needs: [本机工具探测四级顺序（docs/methods/windows-environment.md）, 一件已完成并验收过的成品, 一份未加壳的原件备份]
 ---
 
 # 加壳 / 编译加固（防破解逆向）
@@ -13,16 +13,13 @@ needs: [本机工具表 hub/tools.local.json, 一件已完成并验收过的成�
 
 ## 一、先找工具（不要问主人路径，也不要写死路径）
 
-1. 读本机工具表 `<product>/hub/tools.local.json` 的 `tools` 数组：里面有 name / path / launch / notes。
-   按类别找：**加壳器**（VMProtect、Themida、Enigma、ASProtect…）、**混淆器**（ConfuserEx、.NET Reactor、
+1. 按 `docs/methods/windows-environment.md`「找工具 / 文件」的四级顺序探测（环境变量 → 当前会话能调到的命令 → 已知安装位置 → 全盘检索），命中即停。按类别找：**加壳器**（VMProtect、Themida、Enigma、ASProtect…）、**混淆器**（ConfuserEx、.NET Reactor、
    Dotfuscator、Obfuscar、OLLVM、Tigress…）、**压缩壳**（UPX、MPRESS、ASPack…）、
    **打包器**（PyInstaller、Nuitka、Inno Setup、NSIS、WiX…）、**混淆/编译器**（MSVC、clang、mingw、Go、Rust…）、
    **签名**（signtool、osslsigncode）。
-2. 表里没有？用 `everything_cli`（表里有绝对路径，通常是 `<install_root>\es\es.exe`）搜盘：
-   `es.exe -i 关键字`，先按已知 exe 名找（`upx.exe`、`confuserex.exe`、`VMProtect.exe`、`signtool.exe`…）。
-3. 还是没有 → 告诉主人「这台机器上没有 X，要装就装这些：…（写清从哪拿）」，**不要静默下载/安装**。
-4. 找到的路径要 `Test-Path` 确认真存在，新工具写回 `tools.local.json`（只写绝对路径 + 一句话用途），
-   下次就不用再搜。重工具（加壳器 GUI/大编译器）命令行调用必须带超时，输出落盘。
+2. 四级全空 → 告诉主人「这台机器上没有 X，要装就装这些：…（写清从哪拿）」，**不要静默下载/安装**。
+3. 查到路径还要实跑一次无副作用能力检查才算数，**禁止伪造路径**。新工具记进产品根 `.hub/tools.local.json`（只写绝对路径 + 一句话用途），下次可从那里直接读——但那是缓存不是真源，仍要走四级。
+   重工具（加壳器 GUI/大编译器）命令行调用必须带超时，输出落盘。
 
 ## 二、流程（一步一个窗口，别一次做完十件事）
 
@@ -41,7 +38,7 @@ needs: [本机工具表 hub/tools.local.json, 一件已完成并验收过的成�
 6. **记录与退回**：写清用了哪套工具什么参数、体积变化、误报情况、原件在哪。要退回就用原件覆盖回去，
    并把「已加固」的标记去掉，不许两份混着发。
 
-   再用工具**自测一遍**（工具都在 `tools.local.json` 里）：DIE 查壳看壳有没有真加上；
+   再用工具**自测一遍**：DIE 查壳看壳有没有真加上；
    .NET 用 de4dot 试着脱（秒脱说明保护不够）；动态用 x64dbg 看反调试是否生效。
 ## 三、硬规矩
 

@@ -12,8 +12,8 @@ This project uses a layered platform model:
 |---|---|---|---|
 | Windows | Full primary path | `README.md`, PowerShell scripts | Original mainline. Uses `.ps1`, Windows paths, `winget` / GitHub release ZIPs. |
 | Kali Linux | Full specialized path | `kali/README-kali.md` | Dedicated Kali layer with `apt`, bash scripts, and Kali-native security tooling. |
-| Ubuntu / Debian Linux | Supported generic path | `docs/platforms/linux.md`, `skills/scripts/bootstrap-reverse.sh`, `skills/scripts/refresh-tool-index.sh` | Uses `apt`, `pipx` / venv, `npm`, GitHub releases, and optional Kali scripts as reference. |
-| macOS | Supported generic path | `docs/platforms/macos.md`, `skills/scripts/bootstrap-reverse.sh`, `skills/scripts/refresh-tool-index.sh` | Uses Homebrew, `pipx` / venv, `npm`, app bundle paths, and manual IDA / Burp setup. |
+| Ubuntu / Debian Linux | Supported generic path | `docs/platforms/linux.md`, `skills/scripts/bootstrap-reverse.sh` | Uses `apt`, `pipx` / venv, `npm`, GitHub releases, and optional Kali scripts as reference. |
+| macOS | Supported generic path | `docs/platforms/macos.md`, `skills/scripts/bootstrap-reverse.sh` | Uses Homebrew, `pipx` / venv, `npm`, app bundle paths, and manual IDA / Burp setup. |
 
 ## What is shared across platforms
 
@@ -70,9 +70,9 @@ The following must be adapted per OS:
 - Kali users: start from `kali/README-kali.md`.
 - Ubuntu / Debian users: start from `docs/platforms/linux.md`.
 - macOS users: start from `docs/platforms/macos.md`.
-- Kali users should use `kali/scripts/bootstrap-reverse.sh` and `kali/scripts/refresh-tool-index.sh`. Generic Linux/macOS users should use `skills/scripts/bootstrap-reverse.sh` and `skills/scripts/refresh-tool-index.sh`.
+- Kali users should use `kali/scripts/bootstrap-reverse.sh`. Generic Linux/macOS users should use `skills/scripts/bootstrap-reverse.sh`.
 
-## Linux/macOS bootstrap and tool index
+## Linux/macOS bootstrap and tool detection
 
 For generic Linux/macOS, list supported bootstrap capabilities:
 
@@ -88,17 +88,6 @@ bash skills/scripts/bootstrap-reverse.sh jshookmcp anything-analyzer
 bash skills/scripts/bootstrap-reverse.sh idapro --start-services
 ```
 
-Refresh the local tool index only:
+Tool availability is determined on the machine at task time, not by an index: walk four levels and stop at the first hit — environment variables → what the current shell resolves (`command -v` / `Get-Command` / `where`) → the tool root (`REVERSE_TOOL_ROOT`) → a full-disk search. `skillpack/skills/TOOLS.md` is a hand-written install guide (what to install, which version, licensing), not a machine inventory.
 
-```bash
-
-```
-
-This writes:
-
-```text
-`skillpack/skills/TOOLS.md`
-skills/`TOOLS.md`
-```
-
-The generic Bash bootstrap uses the same core capability names as the Windows PowerShell version. Kali has a dedicated Bash bootstrap that covers those core names plus Kali-native extras. Refresh scripts only detect tools and suggest platform-appropriate installation commands. Use the platform guides for setup and manual-only tools.
+The generic Bash bootstrap uses the same core capability names as the Windows PowerShell version. Kali has a dedicated Bash bootstrap that covers those core names plus Kali-native extras. There is no index to refresh: tool detection runs at task time via the four-level probe (environment variables → current shell resolution → the tool root `REVERSE_TOOL_ROOT` → a full-disk search). Use the platform guides for setup and manual-only tools.

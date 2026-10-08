@@ -16,16 +16,30 @@ cd C:\relab2
 
 clone 完就**在这个目录下开一个新的智能体会话** —— 之后你读到的一切都在这里。
 
-**第 1 步 · 读 [`环境初始化.md`](环境初始化.md)。** 它只给判断依据，不给固定步骤：
-摸底要看什么、基础环境装什么、工具从哪来、什么时候该停下来问主人。
-
-读完按自己的判断走，做完再回到这里正式干活。
-
 **两个仓库**
 
 - `https://github.com/gthubtom1/relab2.git` —— 本技能包，就是你现在 clone 的这个，一开始就要有
 - `https://github.com/gthubtom1/relab-tools.git` —— 商业付费/已下架的便携工具（9 卷 7z，770 MB），装工具时才拉
 
+**第 1 步 · 定位包根（换机第一入口，零前置依赖）**
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2-root.ps1
+```
+
+**第 2 步 · 摸底自检（只测量、不修改；退出码 0 才算环境通）**
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\selfcheck.ps1
+```
+
+> 这两个脚本是**换机专用的**，不要手工重做它们已经做的事。
+> 它们也是「工具明明装了、却说没有」这类**假 MISSING** 的排查入口。
+
+**第 3 步 · 读 [`环境初始化.md`](环境初始化.md)** —— 红线（§0）、四步入口链（§1）、
+摸底四件（§2）、工具怎么装（§3）、**验收门（§7）**、报告模板（§8）。
+
+读完按自己的判断走，做完再回到这里正式干活。
 ---
 
 ## 0. 这是什么
@@ -35,7 +49,7 @@ clone 完就**在这个目录下开一个新的智能体会话** —— 之后�
 | 层 | 解决什么 | 入口 | 必需 |
 |---|---|---|---|
 | **① 行为卡片层** | agent **怎么做事** —— 身份、纪律、输出契约 | `kernel/04-console/cards/guest/全能专精指引.md` | 是 |
-| **② 能力路由层** | agent **会做什么** —— 48 个技能的方法论与工具用法 | `skillpack/skills/SKILL.md` | 是 |
+| **② 能力路由层** | agent **会做什么** —— 50 个技能的方法论与工具用法 | `skillpack/skills/SKILL.md` | 是 |
 | **③ 物理兜底层** | agent **卡住时有人拉它一把** —— 补 timeout、拦 GUI 二进制 | `extensions/pi/cmd-guard/README.md` | 否（仅 pi 宿主） |
 
 ③ 是 **pi 专有扩展**，换别的宿主就没有这层，①②照样完整可用 ——
@@ -75,21 +89,28 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ". 'C:\relab2\skillpack\s
 # $r.Command     # 在哪（用完整路径调用，不要依赖 cwd）
 # $r.Via         # 从哪找到的：env / PATH / map / scan
 
-# 只想快速问一句「装没装」：
+# 只想快速问一句「装没装」（注意：这一条只是四级里的第 2 级，返回空不等于没装，见下表）
 (Get-Command <工具id> -ErrorAction SilentlyContinue).Source
 ```
 
-**★ 换机必踩的三个坑**（都实测复现过，不是理论）：
+**★ 换机必踩的坑**（都实测复现过，不是理论）：
 
 | 现象 | 真因 | 怎么办 |
 |---|---|---|
 | 「在此系统上禁止运行脚本」 | 执行策略 `Restricted` | 加 `-ExecutionPolicy Bypass`，**别当成工具缺失** |
 | 明明装了却报 `Available=False` | 用了 `-Name 'xxx.exe'` | 用不带扩展名的 id：`'idat'`→True，`'idat.exe'`→False |
 | `Via=PATH` 指向一个陌生/废弃目录 | 第 2 级 `Get-Command` 会返回 PATH 里任何东西 | **当它不存在**，继续走第 3、4 级 |
+| **`Get-Command` 对所有工具同时返回空** | **进程持有启动时的旧 PATH 快照**：工具迁过目录、注册表已更新，但**已运行的进程不会自动刷新环境** | 比对进程 PATH 与注册表 PATH；探测层已内置自愈，走 `Resolve-ReverseToolSpec` 即自动修复。**绝不能就此判定「本机缺工具」** |
+| **exe 找得到却跑不起来、静默无输出** | **环境变量指向死目录**（`IDADIR`/`DOTNET_ROOT`/`JAVA_HOME`/`GHIDRA_INSTALL_DIR`） | 探测式修正：`$env:DOTNET_ROOT=(Get-Command dotnet).Source.Replace('\dotnet.exe','')` |
+| **探测返回 GUI 版**（`die.exe`/`ida.exe`/`Wireshark.exe`/`x64dbg.exe`） | PATH 里 GUI 与 CLI 并存，**PATH 级命中早于 `_map.json` 级** | 确认文件名是 CLI 孪生：`diec`/`idat`/`tshark`/`headless` |
+| python 命令指向的 venv 里没有 `angr`/`z3` | venv 目录进了 PATH，抢走全局 `python` | 用系统解释器绝对路径调用 |
 
 **为什么不能只靠 `Get-Command`**：商业工具（IDA / JEB）躺在
 `D:\Tools\disasm\IDA_Pro_v8.3_Portable\` 里，目录名不等于工具名，不在 PATH 上。
 所以完整探测是四级递进 —— 见 `TOOL-CHAIN.md` 第 2 节。
+
+**环境自检手册**：`skillpack/skills/references/env-selfcheck.md` —— 换机、PATH 漂移、
+「查不到工具」时的完整排查流程与 10 分钟自检清单。**排查前先读它，别从零试。**
 
 **缺工具时不用问人**：照 `TOOL-CHAIN.md` 第 3 节的标准动作自己接上
 （自己查 → 自己装 → 自己登记）。`TOOLS.md` 里没有，不代表不能用。

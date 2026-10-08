@@ -9,11 +9,11 @@ description: Ghidra逆向 — 当用户没IDA想用免费工具看二进制，�
 
 1. `NOW`: 读取 `../field-journal/precedent-reverse.md`
 2. `NOW`: 确认需要 **Ghidra**（无 IDA / 偏好开源 / 批量 headless）
-3. `NOW`（MCP 通道必备）: 拉起常驻 HTTP 服务（~8 s 冷启）——**启动命令与前置条件按 `references/tool-registry.md` 的 `ghidra` 端点行取**（`command` = 启动器，`url` = `http://127.0.0.1:9111/mcp`，`requires` = 需要的 `JAVA_HOME` / `GHIDRA_INSTALL_DIR`；Ghidra 本体路径用 `(Get-Command ghidraRun -ErrorAction SilentlyContinue).Source` 查。本项目无 `toolreg/`，该端点文档即事实源），再按该端点探活确认 READY 且 `Tool Count : 20`；本会话看不到 `ghidra` 工具时先 `/mcp reconnect ghidra`。**不要要求用户改 `mcp.json`，服务由 agent 自己起。**
+3. `NOW`（MCP 通道必备）: 拉起常驻 HTTP 服务（~8 s 冷启）——**启动方式与前置条件按 `../references/tool-registry.md` 的 `pyghidra-mcp` 端点行取**（`启动方式` = 常驻守护，冷启 7–10 s，幂等；`端点` = `127.0.0.1:9111/mcp`；`依赖` = `JDK 21+` + Ghidra 本体；Ghidra 本体路径用探测层 `Resolve-ReverseToolSpec -Name 'ghidraRun'` 的 `Command` 取（`Get-Command` 只是四级探测的第 2 级，返回空不等于缺工具，见 `../references/env-selfcheck.md`）。本项目无 `toolreg/`，该端点文档即事实源），再按该端点探活确认 READY 且 `Tool Count : 20`；本会话看不到 `ghidra` 工具时先 `/mcp reconnect ghidra`。**不要要求用户改 `mcp.json`，服务由 agent 自己起。**
 4. `NEXT`: 读 `TOOLS.md` 查 ghidra / ghidra-mcp 路径
 5. `NEXT`: 缺工具 → bootstrap `ghidra-mcp`（若 manifest 支持）或按手动步骤装 Ghidra
 6. `ACT`: 导入样本 → 自动分析 → 导出关键函数反编译
-7. `DONE`: 静态分析收尾按同一来源（`references/tool-registry.md` 的 `ghidra` 端点行）停守护（先经 MCP `save` 落盘，再释放 9111/9112 端口，避免残留 JVM）
+7. `DONE`: 静态分析收尾按同一来源（`../references/tool-registry.md` 的 `pyghidra-mcp` 端点行）停守护（先经 MCP `save` 落盘，再释放 9111/9112 端口，避免残留 JVM）
 
 ## 适用场景
 
@@ -34,12 +34,15 @@ description: Ghidra逆向 — 当用户没IDA想用免费工具看二进制，�
 
 ### 1. 智能体首选：pyghidra-mcp（20 个开箱即用工具，HTTP 常驻守护）
 
-本机已配置并实测通过基于 PyGhidra 的 **streamable-http** MCP 服务（`mcp.json` 里配置名 `ghidra`）：
+**这是可选通道，不是默认前提。** 新机环境不保证已装，**用之前先探测当前机器**：宿主 MCP 列表里有没有 `ghidra`，或对 `mcp_endpoints.ghidra.url` 探活。**没有就走 §2 的 `analyzeHeadless`**（本技能的主路径，不依赖任何 MCP）。
+
+已注册且探活通的时候，按下述方式使用基于 PyGhidra 的 **streamable-http** MCP 服务：
 
 - **传输形式**：常驻 HTTP 守护，端点 `http://127.0.0.1:9111/mcp`（受控口 9112）。
-  之所以不再用 stdio：stdio 模式要给 `pi` 每次启动加 ~7 s 冷启（拉 Python + JVM + Ghidra），改成 HTTP 后 `pi mcp list` 实测 0.40 s（实测记录见本机 `<包根>/selfcheck/` 下同名报告 `MCP-AUTOPROV-REPORT.md`；该目录随包携带，缺失不影响流程）。
+  改用 HTTP 而非 stdio 的原因：stdio 模式要给宿主每次启动加冷启（拉 Python + JVM + Ghidra），HTTP 守护可复用。
+  **冷启与响应耗时随机器而变，用前现测，不要引用任何历史数字。**
 - **启停（agent 自理，全程不需要用户改配置文件）**：
-  - **起**：`mcp_endpoints.ghidra.command` 给出的启动器（可带样本路径预导入），实测冷启 7.1–10.2 s，幂等（已起时 0.19 s 返回）
+- **起**：`mcp_endpoints.ghidra.command` 给出的启动器（可带样本路径预导入）。**冷启耗时现测**；该启动器设计为幂等（已在跑时应快速返回）
   - **查**：对 `mcp_endpoints.ghidra.url`（`http://127.0.0.1:9111/mcp`）探活，期望 READY / `Tool Count : 20`
   - **停**：同一启动器的停止模式（内部先调 MCP `save` 保存工程，再释放端口）
   - **一行切换**：同一启动器的 `on|off` 模式

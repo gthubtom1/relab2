@@ -1,10 +1,10 @@
 {
   "name": "hubcore",
   "version": "1.0.0",
-  "built_at": "2026-10-07T16:18:52Z",
+  "built_at": "2026-10-08T20:44:56Z",
   "entry_file": "AGENTS.md",
   "core_file": "CORE.md",
-  "core_bytes": 3541,
+  "core_bytes": 3504,
   "core_budget_bytes": 4000,
   "marker_begin": "# >>> hubcore hub >>>",
   "marker_end": "# <<< hubcore hub <<<",
@@ -68,7 +68,6 @@
   "rewrites_applied": {
     "原路径按旧技能夹层级算，包内解析不到": 6,
     "包内没有 workflows/review/，方法书在 docs/methods/": 1,
-    "残留占位符兜底": 2,
     "包内没有 README，该条规则实际在 AGENTS.md §3": 1,
     "裸文件名补出包内目录，运行核确实在包内": 1,
     "旧中枢技能指针 -> 包内六线工作流（与 build_hubcore.py 同款映射）": 6,

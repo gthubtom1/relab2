@@ -63,8 +63,8 @@ Skill Router
 |---|---|---|
 | Windows | 完整主线 | `README.md`、PowerShell 脚本 |
 | Kali Linux | 专项适配 | `kali/README-kali.md` |
-| Ubuntu / Debian Linux | 通用适配 | `platforms/linux.md`、`skills/scripts/bootstrap-reverse.sh`、`skills/scripts/refresh-tool-index.sh` |
-| macOS | 通用适配 | `platforms/macos.md`、`skills/scripts/bootstrap-reverse.sh`、`skills/scripts/refresh-tool-index.sh` |
+| Ubuntu / Debian Linux | 通用适配 | `platforms/linux.md`、`skills/scripts/bootstrap-reverse.sh` |
+| macOS | 通用适配 | `platforms/macos.md`、`skills/scripts/bootstrap-reverse.sh` |
 
 平台总览见 [PLATFORMS.md](PLATFORMS.md)。普通 Linux / macOS 用户建议先查看能力列表：
 
@@ -72,11 +72,7 @@ Skill Router
 bash skills/scripts/bootstrap-reverse.sh --list
 ```
 
-只刷新工具索引时运行：
-
-```bash
-
-```
+工具在不在由现场探测决定：按四级往下走、命中即停 —— 环境变量 → 当前 shell 能否解析到（`command -v` / `Get-Command` / `where`）→ 工具根（`REVERSE_TOOL_ROOT`）→ 全盘搜索。本仓库没有工具索引，也没有需要刷新或生成的内容。
 
 ## 支持的 Agent 客户端
 
@@ -88,7 +84,7 @@ bash skills/scripts/bootstrap-reverse.sh --list
 - Kiro
 - 其他支持项目规则、system prompt、MCP 或外部工具调用的代码 Agent
 
-本项目不绑定某一个客户端。它的核心资产是 `RULES.md`、`skills/SKILL.md`、`skills/routing.md`、工具索引、子 Skill 和 MCP / 脚本入口。
+本项目不绑定某一个客户端。它的核心资产是 `RULES.md`、`skills/SKILL.md`、`skills/routing.md`、子 Skill 和 MCP / 脚本入口。
 
 ## 支持场景
 
@@ -177,7 +173,7 @@ bash skills/scripts/bootstrap-reverse.sh --list
 - 有场景分流：不同目标进入不同 Skill；
 - 有工具执行面：MCP、脚本、本地工具链；
 - 有经验回写：任务完成后沉淀可复用经验；
-- 有迁移机制：换机器后重新扫描工具索引，恢复执行能力。
+- 有迁移机制：换机器后按四级探测重新确认本机工具，恢复执行能力。
 
 它不是让 Agent “知道更多”，而是让 Agent “少猜、少跳步、能落地执行”。
 

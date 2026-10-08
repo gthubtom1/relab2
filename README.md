@@ -2,9 +2,10 @@
 
 **给 AI 智能体用的一套东西：怎么做事（kernel）+ 会做什么（skillpack）+ 工具怎么找（TOOLS.md）。**
 
-项目根习惯放 **`C:\relab2`**，工具根习惯放 **`D:\Tools\`** ——
-但**都不是硬性要求**：换盘符、换目录都能跑，探测层读 `REVERSE_SKILL_ROOT` / `REVERSE_TOOL_ROOT`
-两个环境变量，探测不到时退回上面的习惯位置。新机第一步见 [`环境初始化.md`](环境初始化.md) 开头。
+项目根固定是 **`C:\relab2`**，工具根固定是 **`D:\Tools`** —— 这是定死的约定，**换机也是这两个**，
+命令里直接写，不用占位符。探测层内置这两个默认值；万一某台机器还没按约定建好，
+它会自推导并给出警告（`REVERSE_SKILL_ROOT` 指向 skills 根 / 包根 / 仓库根三种写法都认）。
+新机第一步见 [`环境初始化.md`](环境初始化.md) 开头。
 
 ---
 
@@ -44,7 +45,7 @@ C:\relab2\
 │  └─ 07-kernel-sweep\          提示词实测与调优工具链
 │
 ├─ skillpack\              ② 能力层 —— agent 会做什么
-│  ├─ skills\                   ★ 48 个技能模块，主入口 SKILL.md
+│  ├─ skills\                   ★ 50 个技能模块，主入口 SKILL.md
 │  │  ├─ TOOLS.md               ★ 工具清单与装法（机器无关）
 │  │  ├─ references\tool-registry.md   MCP 通道登记模板
 │  │  └─ scripts\lib\Bootstrap.ps1    探测层（纯测量）
@@ -142,7 +143,7 @@ notepad .\skillpack\skills\<技能名>\SKILL.md
 
 | 项 | 数量 |
 |---|---|
-| 技能模块 | 48 |
+| 技能模块 | 50 |
 | 行为卡片 | 42 |
 | 本仓库 | ~2500 文件 / ~25 MB |
 | 工具根 `D:\Tools` | ~1.3 GB（商业工具，便携版，**不随本仓库分发**） |

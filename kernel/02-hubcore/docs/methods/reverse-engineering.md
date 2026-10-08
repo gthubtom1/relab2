@@ -40,7 +40,7 @@ H0 已写在「读完立刻做」第 1 项，不要排到触发拒绝之后才�
 
 ## 需要更深时，怎么开分析技能（默认客人，vendor 是后备）
 
-**缺工具时停，不跑 vendor 安装脚本。** vendor 的 `bootstrap-reverse.ps1/.sh`、`browser-automation/scripts/setup.ps1`、`ida-reverse/scripts/install-autostart.ps1`、`kali/scripts/quick-setup.sh` 等会装全局工具、写 MCP、注册计划任务——等同 `AGENTS.md` 危险动作。分析缺工具：`tools.json` → Everything → `TOOLING.md` 报缺。清单见 `SOURCE.md`「高危脚本」。
+**缺工具时停，不跑 vendor 安装脚本。** vendor 的 `bootstrap-reverse.ps1/.sh`、`browser-automation/scripts/setup.ps1`、`ida-reverse/scripts/install-autostart.ps1`、`kali/scripts/quick-setup.sh` 等会装全局工具、写 MCP、注册计划任务——等同 `AGENTS.md` 危险动作。分析缺工具：按 `docs/methods/windows-environment.md`「找工具 / 文件」的四级顺序走，命中即停，四级全空才报缺。禁止伪造路径，禁止静默安装。
 
 **对外网络主动动作：** CTF「默认沙箱」不等于已获授权。探测/利用前绑定 scope + 目标 + 用户确认；只读/离线分析可直接做。
 

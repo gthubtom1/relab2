@@ -9,11 +9,11 @@
 
 宿主：
   A  CLAUDE.md 已有大量内容（中文+代码块+表格+列表），无 BOM
-  B  CLAUDE.md 已有内容，带 UTF-8 BOM          ← 主人不知道的坑，重点验
+  B  CLAUDE.md 已有内容，带 UTF-8 BOM，结尾没有换行   ← 两个坑叠在一起，必测
   C  AGENTS.md 第一行「# 我的项目」，另有自己的标记块
   D  全新家目录，装前没有任何入口文件
   E  边角：AGENTS.md 用 CRLF 换行
-  F  边角：主人自己的正文里抄了我们的标记行      ← 当前**命中一个缺陷**，退出码 1
+  F  边角：主人自己的正文里抄了我们的标记行
 
 每轮都做两遍：
   一遍装完就卸，逐字节对账；
@@ -187,11 +187,18 @@ F_LINES = [           # 主人在自己的文档里抄了我们的标记行
 ]
 
 
-def fixture_bytes(lines, bom=False, crlf=False):
+def fixture_bytes(lines, bom=False, crlf=False, trailing_nl=True):
+    """宿主原文件素材。trailing_nl=False 造「结尾没有换行」的文件。
+
+    别把它改回「总是补一个结尾换行」：结尾没有换行的入口文件是**必测项**，
+    不是边角。装的时候要给原文补分隔换行（否则标记块首行粘行、摘块失效），
+    卸的时候必须认得出来那是自己补的并还原 —— 少了这条，
+    「装完再卸完」就比原文多一个字节，而且会被误报成「主人自己改过，属正常」。
+    """
     sep = "\r\n" if crlf else "\n"
     text = sep.join(lines)
-    if lines and not text.endswith(sep):
-        pass
+    if trailing_nl and lines and not text.endswith(sep):
+        text += sep
     data = text.encode("utf-8")
     return (BOM if bom else b"") + data
 
@@ -206,9 +213,9 @@ def make_cases():
         dict(id="A", desc="已有大量内容（≥30 行，中文+代码块+表格+列表），无 BOM",
              root=ua, home=ua / ".claude", entry="CLAUDE.md",
              before=fixture_bytes(A_LINES), mode="std"),
-        dict(id="B", desc="已有内容，带 UTF-8 BOM",
+        dict(id="B", desc="已有内容，带 UTF-8 BOM，且结尾没有换行",
              root=ub, home=ub / ".claude", entry="CLAUDE.md",
-             before=fixture_bytes(B_LINES, bom=True), mode="std"),
+             before=fixture_bytes(B_LINES, bom=True, trailing_nl=False), mode="std"),
         dict(id="C", desc="AGENTS.md，第一行「# 我的项目」，另有自己的标记块",
              root=uc, home=uc / ".codex", entry="AGENTS.md",
              before=fixture_bytes(C_LINES), mode="std"),
@@ -318,12 +325,25 @@ def run_one(case, results):
         body = t[t.find(MARKER_BEGIN):]
         body = body[:body.find(MARKER_END) + len(MARKER_END)]
         rest = t.replace(body + "\n", "", 1)
+        # 手工摘块只能吃掉「块 + 块自己那一个结尾换行」。
+        # 装的时候若主人原文不以换行收尾，还会在块**前面**补一个分隔换行 ——
+        # 不补，块的首行就粘在主人最后一行上，按行锚点就摘不干净。
+        # 那一个换行是我们加的，卸的时候由 uninstall 的 same_as_origin 认出来还原。
+        # 所以这里允许剩余比原文多**恰好一个**结尾换行；多一个以上、或正文有别处不同，都是真缺陷。
+        want = text_of(before) if before is not None else ""
+        rest_ok = (rest == want or rest == want + "\n")
         ok = (beg == 1 and end == 1 and t.find(MARKER_BEGIN) < t.find(MARKER_END)
-              and (before is None or rest == text_of(before)))
+              and (before is None or rest_ok))
+        if before is None:
+            tail = "空"
+        elif rest == want:
+            tail = "与原文逐字节相同"
+        elif rest == want + "\n":
+            tail = "与原文相同 + 1 个分隔换行（装时补的，卸时还原）"
+        else:
+            tail = "不一致"
         C["A3_标记成对"] = (ok, "BEGIN×%d END×%d，块=%d 字节；手工摘掉后剩余=%s"
-                           % (beg, end, len(body.encode("utf-8")),
-                              "与原文逐字节相同" if before is not None and rest == text_of(before)
-                              else ("空" if before is None else "不一致")))
+                           % (beg, end, len(body.encode("utf-8")), tail))
 
     # 断言 6：BOM 原样（这是刚修的坑）
     C["A6_BOM"] = ((has_bom(before or b"") == has_bom(after or b"")),

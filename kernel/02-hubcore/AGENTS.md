@@ -293,7 +293,8 @@ python tools/state.py accept-closed --product <项目根> --phase <阶段> --quo
 | `tools/shift.py` | 留班、接班 |
 | 产品根 `.hub/` | 该产品的账本与门禁声明 |
 | 产品根 `CHANGES.md` | 改动图 |
-| 产品根 `OWNER-SPEECH.md` | 原始需求流水流水 |
+| 产品根 `FEATURES.md` | 功能对照清单（运行核对它是硬门，缺这一格不许 confirm 下一阶段） |
+| 产品根 `OWNER-SPEECH.md` | 原始需求流水 |
 
 **打开的工作区文件夹 = 当前项目。** 第一件事是分档。不要跑去施工别的已有产品目录。
 

@@ -59,7 +59,6 @@ description: Browser extension reverse engineering — 当用户要分析浏览�
 ## 参考
 
 - `references/extension-analysis.md`
-- field-journal 扩展恢复相关条目
 - `../js-reverse/` `../malware-analysis/`
 
 ## 路由上下文

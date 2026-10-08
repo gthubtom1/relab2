@@ -167,7 +167,7 @@ If you use IDA MCP, document the actual app path in your client rules or local e
 }
 ```
 
-## Bootstrap capabilities and refresh tool index
+## Bootstrap capabilities and tool detection
 
 From the repository root, list the same core capability names as the Windows PowerShell bootstrap:
 
@@ -191,20 +191,9 @@ For MCP registration, select the target client explicitly:
 /bin/bash skills/scripts/bootstrap-reverse.sh burpsuite-mcp --mcp-host=both
 ```
 
-Refresh the local tool index only:
+Tool availability is determined on the machine at task time, not from an index: walk four levels and stop at the first hit — environment variables → what the current shell resolves (`command -v` / `Get-Command` / `where`) → the tool root (`REVERSE_TOOL_ROOT`) → a full-disk search. `skillpack/skills/TOOLS.md` is a hand-written install guide, not a machine inventory.
 
-```bash
-/bin/bash skills/scripts/refresh-tool-index.sh
-```
-
-This writes:
-
-```text
-`skillpack/skills/TOOLS.md`
-skills/`TOOLS.md`
-```
-
-`bootstrap-reverse.sh` installs or prepares supported capabilities where possible on macOS using Homebrew, `pipx`, `npm`, and GitHub releases. MCP client registration occurs only when `--mcp-host=...` is explicit. `refresh-tool-index.sh` is detection-only and discovers supported MCP registrations without choosing a default Agent client. Manual-only tools such as IDA Pro and BurpSuite still require local app installation and app-specific setup.
+`bootstrap-reverse.sh` installs or prepares supported capabilities where possible on macOS using Homebrew, `pipx`, `npm`, and GitHub releases. MCP client registration occurs only when `--mcp-host=...` is explicit and never chooses a default Agent client. There is no index to refresh: tool detection runs at task time via the four-level probe. Manual-only tools such as IDA Pro and BurpSuite still require local app installation and app-specific setup.
 
 ## Validation checklist
 

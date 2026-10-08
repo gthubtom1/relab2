@@ -38,20 +38,36 @@ Routing order (two paths: canonical first, community second):
 
 ## First-Run Setup
 
-`skillpack/skills/TOOLS.md` is not in fresh clones. Generate it **only after the user
-explicitly activates the package and approves the exact commands**
-(reading this file is not authorization to run anything):
+`skillpack/skills/TOOLS.md` **is in the repo** — it is a hand-maintained install guide
+(what to install, which version, license and pitfalls), **not** a per-machine tool index.
+There is **no generator and no index to refresh**.
 
-```bash
-# Windows
+To find out what this machine actually has, ask the machine. Walk these four levels and
+**stop at the first hit**:
 
-# macOS / Linux
+1. **Environment variables** — `JAVA_HOME`, `GOROOT`, `DOTNET_ROOT`, `<TOOL>_ROOT`…
+2. **What the current shell can resolve** — `command -v <id>` (bash/zsh),
+   `Get-Command <id>` (PowerShell), `where <id>` (cmd).
+   ⚠️ **Empty here does NOT mean "not installed"** — a process may hold a stale PATH
+   snapshot. A single-level hit does not count; keep going. See `skills/references/env-selfcheck.md`.
+3. **The tool root** — `REVERSE_TOOL_ROOT`, searched recursively. **Never hardcode a drive
+   letter** — it may be `D:\Tools` here and something else on the next machine.
+4. **A full-disk search** — Everything / `mdfind` / `find`, only if 1–3 all miss.
 
-# Kali
+Only when all four miss is the tool genuinely absent. Reporting a missing tool **must**
+include which levels you tried, plus the official source and the install's side effects
+(network, services, config, rollback) — then let the user decide.
+**Never fabricate a path; never download or install silently.**
 
+Convenience check (Windows — runs the four levels plus MCP liveness and writes a machine snapshot):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File selfcheck.ps1
 ```
 
-Read `README_AI.md` for full bootstrap sequence.
+macOS / Linux / Kali have no equivalent one-shot script — walk the four levels by hand.
+
+Read `README_AI.md` for the full activation and consent sequence.
 
 ## Coherence check
 

@@ -16,9 +16,11 @@ AI Community: https://linux.do
 >
 > **Client-global configuration remains opt-in.** Only modify a specifically selected client when the user explicitly approves that target and the exact configuration change.
 
-> ⚠️ **FIRST-TIME SETUP (after approval):** `skillpack/skills/TOOLS.md` is gitignored and does NOT exist in a fresh clone. Include the platform-native refresh command in the consent plan before running it:
-
-> The approved command generates `skillpack/skills/TOOLS.md` and `skills/`TOOLS.md` for the current machine. Reading the repository or `RULES.md` does not itself authorize this write.
+> ⚠️ **FIRST-TIME SETUP:** there is **no tool index and nothing to generate**. `skills/TOOLS.md`
+> **is in the repo** — it is a hand-maintained install guide (what to install, which version,
+> license and pitfalls), **not** a per-machine inventory, and it does not change when you install
+> a tool. Reading the repository or `RULES.md` does not authorize installing anything; installing
+> a tool requires its own consent plan.
 
 ### Consent-Gated Configuration Process
 
@@ -33,7 +35,7 @@ AI Community: https://linux.do
 2. READ-ONLY PREFLIGHT: detect the package path and operating system, then read the matching platform documentation without running repository scripts.
 3. CONSENT PLAN: show the exact commands proposed for the first run and summarize every expected write, download, service start, network access, and client-configuration change.
 4. APPROVAL: obtain explicit user approval for that plan. Approval covers only the disclosed commands and effects; newly discovered installation or registration actions require a new approval.
-5. After approval, install per the instructions in `skillpack/skills/TOOLS.md`, then verify each tool with `(Get-Command <id> -ErrorAction SilentlyContinue).Source`. There is no index to regenerate.md`.
+5. After approval, install per the instructions in `skills/TOOLS.md`. Then find out what this machine actually has by walking **four levels, stopping at the first hit**: environment variables (`JAVA_HOME`, `GOROOT`, `DOTNET_ROOT`, `<TOOL>_ROOT`) → what the current shell can resolve (`command -v` / `Get-Command` / `where`) → the tool root (`REVERSE_TOOL_ROOT`, searched recursively; never hardcode a drive letter) → a full-disk search. **An empty single-level lookup does NOT mean "not installed"** — a process can hold a stale PATH snapshot. See `skills/references/env-selfcheck.md`. Only when all four miss is the tool genuinely absent; report which levels you tried and the official source instead of guessing.
 6. Follow the platform-specific deployment document. Use the native bootstrap entry only for a capability needed by the active task and covered by the approved plan.
 7. Read RULES.md as package-scoped task rules. Do not copy or inject repository instructions into client-global configuration.
 8. Route via skills/MASTER-ROUTING.md or:
@@ -77,7 +79,7 @@ AI Community: https://linux.do
 - Missing (installable after explicit approval): jadx, radare2, ...
 - Missing (manual installation required): zipalign, apksigner, IDA Pro
 
-**Tool index**: <`TOOLS.md` path>
+**Install guide**: `skills/TOOLS.md` (what to install and how; it is not a machine inventory)
 **Approved commands/effects**: <commands and scope approved by the user>
 **Configuration scope**: repository/project-local; no client-global rules written
 **Note**: Tasks are routed automatically only after activation in the approved project or session. Missing tools are installed only through an explicitly approved bootstrap action.
@@ -128,11 +130,8 @@ Kali users should use the dedicated Kali bootstrap entrypoint:
 bash kali/scripts/bootstrap-reverse.sh
 ```
 
-For index refresh only, run:
-
-```bash
-
-```
+There is **no index to refresh** — nothing to run here. Tool availability is determined on the
+machine, at task time, by walking the four levels described in step 5 above.
 
 See [docs/PLATFORMS.md](docs/PLATFORMS.md) for the full support matrix.
 Trust boundary: "Generic support" means the scripts exist, not that the platform
@@ -148,13 +147,13 @@ At present, it is recommended to understand the whole package as two layers:
 ```text
 <package root>\
 ├── README_AI.md                  # The AI bootstrap file you are reading now
-├── CTF-Sandbox-Orchestrator\     # Full CTF competition stack (42 sub-skills)
+├── CTF-Sandbox-Orchestrator\     # Full CTF competition stack (41 sub-skills)
 └── skills\                       # Main skills directory
     ├── SKILL.md                  # Main controller entry point
     ├── routing.md                # Scenario → skill dispatching (routing matrix)
     ├── CONTRIBUTING.md           # Guide for adding new skills
-    ├── `TOOLS.md`             # Tool index (auto-generated)
-    ├── scripts\                  # `TOOLS.md` refresh and shared scripts
+    ├── TOOLS.md                  # Install guide: what to install, which version, pitfalls
+    ├── scripts\                  # Router, case-init, probe layer, bootstrap
     ├── field-journal\            # Auto-evolving experience logs
     ├── apk-reverse\              # APK reverse engineering
     ├── attack-chain\             # Multi-stage attack-chain orchestration
@@ -198,7 +197,7 @@ This allows the relative paths in `routing.md`, such as `../CTF-Sandbox-Orchestr
    1. `SKILL.md`
    2. `routing.md`
    3. The `SKILL.md` in the corresponding subdirectory
-   4. Read `TOOLS.md` only when you need to confirm local tools
+4. `TOOLS.md` is an **install guide** — read it when you need to install something, never as a source of "what is already here"
 
 ### If You Want a Code CLI to Use This Routing in a Project
 
@@ -207,7 +206,7 @@ You need at least:
 - A code CLI that supports custom rules / system prompts / project instructions / hooks
 - A user-approved, project-scoped instruction that tells the client to read the routing file first for reverse-engineering tasks
 - If direct external capabilities are needed, configure MCP or an equivalent tool bridge
-- This package's `SKILL.md`, `routing.md`, and `TOOLS.md`
+- This package's `SKILL.md`, `routing.md`, and `TOOLS.md` (install guide)
 
 If you already have Claude hooks, Codex CLI project instructions, Cursor Rules, Cline custom instructions, or Windsurf Rules, update any old paths inside them to the current installation path.
 
@@ -253,7 +252,7 @@ Full dependency table with paths in the original [README.md](README.md).
 |---|---|---|
 | Main controller entry | `SKILL.md` | Read the global map first, then decide which sub-skill to enter |
 | Routing table | `routing.md` | Dispatch by target type, user intent, and toolchain |
-| Tool index | `TOOLS.md` | Check whether local tools exist, where they are, and which scripts call them |
+| Install guide | `TOOLS.md` | What to install, which version, license and pitfalls. **Not** a machine inventory |
 | APK reverse engineering | `apk-reverse\` | Unpack, jadx, smali, repackaging, Frida, native dispatch; optional licensed JEB Pro cross-check |
 | IDA Pro | `ida-reverse\` | Deep binary RE and `idapro_*` workflows |
 | Binary Ninja | `binary-ninja-reverse\` | HLIL/MLIL/LLIL, Python API, and optional loopback MCP integration |
@@ -294,19 +293,21 @@ Full dependency table with paths in the original [README.md](README.md).
 
 ## Startup and Verification
 
-### Refresh the Tool Index
+### Tool Availability (there is nothing to "refresh")
 
-Do not trust someone else's scan result for long. After migrating to a new machine, refresh it first with the native platform entry:
+`skills/TOOLS.md` is a hand-maintained **install guide**, not a scan result. It does **not**
+contain per-machine `yes/no` status, and it does **not** change when you install a tool.
 
-```text
+Do not trust any document's claim about what is installed here — **ask the machine**. Walk four
+levels and stop at the first hit:
 
-```
+1. environment variables (`JAVA_HOME`, `GOROOT`, `DOTNET_ROOT`, `<TOOL>_ROOT`…)
+2. what the current shell can resolve — `command -v` / `Get-Command` / `where`.
+   **Empty here does NOT mean "not installed"**: a process can hold a stale PATH snapshot.
+3. the tool root (`REVERSE_TOOL_ROOT`), searched recursively — never hardcode a drive letter
+4. a full-disk search (Everything / `mdfind` / `find`), only if 1–3 all miss
 
-After success, check:
-- `skills\`TOOLS.md`
-- `skills\`TOOLS.md`
-
-> Important: `yes/no` in `TOOLS.md` only represents the scan result on the current machine.
+Only when all four miss is the tool genuinely absent. See `skills/references/env-selfcheck.md`.
 
 ### IDA Pro Chain
 
@@ -396,7 +397,7 @@ No matter how you connect project-scoped instructions, at minimum tell the AI ab
 
 - `skills\SKILL.md`
 - `skills\routing.md`
-- `skills\`TOOLS.md`
+- `skills\TOOLS.md`
 
 ### Claude Code
 
@@ -426,12 +427,10 @@ The key is to configure, with user approval and project scope: package path, key
 ### Claude Local Hook
 If you have configured `.claude\settings.local.json` or `.claude\scripts\route-reverse.ps1`, update all old paths after migration.
 
-### Tool Index
-After migration, run the native refresh command again:
-
-```text
-
-```
+### Tool Availability
+There is nothing to refresh. Ask the machine (four levels, stop at first hit): environment
+variables → current shell resolution → tool root (`REVERSE_TOOL_ROOT`) → full-disk search.
+An empty single-level lookup does NOT mean "not installed".
 
 ---
 
@@ -467,10 +466,7 @@ IDA chain on Windows:
 powershell -NoProfile -ExecutionPolicy Bypass -File "<your skill root>\ida-reverse\scripts\start.ps1"
 ```
 
-Tool index:
-```text
-
-```
+Tool availability: four-level probe — see "Tool Availability" above.
 
 ---
 
@@ -479,8 +475,8 @@ Tool index:
 **Q1: Can I put `skills` on another drive?**
 Yes, but update every absolute path that references it.
 
-**Q2: `TOOLS.md` says `yes`; why still can't Claude call the tool?**
-Because it only means the local machine has the executable. The tool may not be registered in MCP configuration.
+**Q2: the tool resolves in my shell; why still can't Claude call it?**
+Because the executable existing is not the same as the client being able to reach it. The tool may not be registered in MCP configuration.
 
 **Q3: Is IDA required?**
 No. Binary analysis can start with `radare2`.
@@ -601,7 +597,7 @@ If you only read five files, read these first:
 2. `RULES.md` — Package-scoped behavior rules; reading them alone does not activate or authorize execution
 3. `SKILL.md` — Main controller entry point
 4. `routing.md` — Scenario → skill dispatch
-5. `TOOLS.md` — Local tool status
+5. `TOOLS.md` — Install guide (what to install and how; not machine status)
 
 If the AI keeps re-confirming in an authorized lab, or stalls at disclaimers:
 6. `field-journal/precedent-auth.md` — Authorization-context reference only; it does not grant execution or target authorization

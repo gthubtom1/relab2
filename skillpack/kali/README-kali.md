@@ -11,7 +11,7 @@
 ```text
 1. 检测包根目录（含 skills/ 与 kali/ 的仓库根）
 2. 读取 kali/RULES-kali.md（仅阅读；写全局配置/MCP 配置须另行获批）
-3. 将 refresh / bootstrap 命令连同副作用一并披露，获用户显式批准后才执行：
+3. 将 bootstrap 命令连同副作用一并披露，获用户显式批准后才执行：
 
 4. 与主包共用作战链：
    - skills/MASTER-ROUTING.md（或 pwsh skills/scripts/master-route.ps1）
@@ -34,7 +34,7 @@
 ├── kali/                      # ← 你在这里
 │   ├── scripts/
 │   │   ├── bootstrap-reverse.sh
-│   │   ├── （工具索引已废止）
+│   │   ├── （无工具索引；工具状态按四级探测现场确定）
 │   │   ├── bootstrap-manifest.json
 │   │   └── lib/
 │   │       └── tool-discovery.sh
@@ -156,7 +156,7 @@ sudo bash kali/scripts/quick-setup.sh --skip-update
 sudo bash kali/scripts/quick-setup.sh --minimal
 ```
 
-这个脚本会自动完成：系统更新 → 安装 2026.1 新工具 → 配置原生 MCP → 安装逆向工具 → 刷新索引 → 输出报告。
+这个脚本会自动完成：系统更新 → 安装 2026.1 新工具 → 配置原生 MCP → 安装逆向工具 → 输出报告。
 
 ### 2.1 首次配置
 
@@ -167,9 +167,9 @@ cd /path/to/cybersecurity-skills-router
 # 2. 给脚本加执行权限
 chmod +x kali/scripts/*.sh kali/scripts/lib/*.sh
 
-# 3. 刷新工具索引（检测本机工具状态）
-
-# 4. 查看结果
+# 3. 工具状态：本仓库没有工具索引，也没有刷新步骤，按四级探测现场确定
+#    （环境变量 → 当前 shell 能否解析到 → 工具根 REVERSE_TOOL_ROOT → 全盘搜索）
+# 4. 查看装法说明书（装什么、锁哪个版本、许可与坑）
 cat `skillpack/skills/TOOLS.md`
 ```
 
@@ -289,7 +289,7 @@ which kali-server-mcp && echo "mcp-kali-server OK"
 which metasploitmcp && echo "metasploitmcp OK"
 which hexstrike-ai && echo "hexstrike-ai OK"
 
-# ─── 刷新工具索引 ───
+# ─── 工具状态：按四级探测（command -v 查空 ≠ 没装） ───
 
 # ─── 检查 MCP 服务（如果已配置） ───
 nc -z 127.0.0.1 5000 && echo "mcp-kali-server OK" || echo "mcp-kali-server offline"

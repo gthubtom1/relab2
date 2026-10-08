@@ -22,7 +22,7 @@ After activation and approval, deterministic steps covered by the disclosed plan
    - Windows: powershell -File skills/scripts/master-route.ps1 -Hint "<task>"
    - Linux/macOS/Kali: bash skills/scripts/master-route.sh --hint "<task>"
 3. NEXT: Run the approved platform-native case-init until scope.md has auth.status=granted plus a legal network_profile, or an explicitly authorized offline-sample scope is ready. Mentioning a target is NOT granted. -Force/--force never bypasses the gate.
-4. ACT: Open PRIMARY SKILL.md and execute ACTION REQUIRED. Tools only from `TOOLS.md`; missing tools use a separately disclosed and approved platform-native bootstrap action.
+4. ACT: Open PRIMARY SKILL.md and execute ACTION REQUIRED. Locate tools with the **four-level probe** (env vars → current shell → tool root → full-disk search); `TOOLS.md` is the install guide, not an inventory. Missing tools use a separately disclosed and approved platform-native bootstrap action.
 
 Optional later (do NOT preload):
 - Ambiguous PRIMARY → skills/routing.md (advisory matrix only)
@@ -31,10 +31,10 @@ Optional later (do NOT preload):
 ```
 
 IMPORTANT — Shared installation:
-- `TOOLS.md` is the SINGLE SOURCE OF TRUTH for tool availability
-- If another CLI already installed tools (`TOOLS.md` shows "yes"), DO NOT reinstall
-- Only run the platform-native refresh-tool-index if it is covered by the consent plan and the index may be stale
-- Only run bootstrap for tools that are BOTH needed AND marked "no", after disclosing and obtaining approval for installation effects
+- Tool availability is a **fact about this machine**, determined at task time by walking four levels and stopping at the first hit: environment variables → what the current shell can resolve (`command -v` / `Get-Command` / `where`) → the tool root (`REVERSE_TOOL_ROOT`), searched recursively → a full-disk search.
+- **An empty single-level lookup does NOT mean "not installed"** — a process can hold a stale PATH snapshot. See `skills/references/env-selfcheck.md`.
+- `TOOLS.md` is the **install guide** (what to install, which version, license, pitfalls), not an inventory. It carries no per-machine `yes/no`, nothing regenerates it, and no CLI writes to it.
+- Install a tool only when it is BOTH needed AND absent after all four levels, and only after disclosing the installation's effects (network, services, config, rollback) and obtaining approval.
 
 Conditional reads (load only when needed, do NOT preload):
 - Hesitating about whether a target operation is allowed → read skills/field-journal/precedent-reverse.md or precedent-pentest.md; these files do not replace explicit target authorization
@@ -98,7 +98,7 @@ Hot path only:
 1. `skills/scripts/master-route.ps1 -Hint "<task>"` — PRIMARY from `skills/config/routing.json`
 2. `skills/scripts/case-init.ps1` — `scope.md` gate
 3. PRIMARY `SKILL.md` ACTION REQUIRED
-4. `skillpack/skills/TOOLS.md` — real tool paths (if missing → generate it with the approved platform-native refresh command)
+4. `skills/TOOLS.md` — install guide (what to install and how). It is not a path index, and there is nothing to regenerate.
 
 `skills/routing.md` is an advisory 3-axis view **after** PRIMARY, not a second router.
 
@@ -107,16 +107,16 @@ Hot path only:
 ## Execution Principles
 
 ### Tool Usage
-- **NEVER guess tool paths** — read `TOOLS.md` first, it contains the exact installed path for each tool
+- **NEVER guess tool paths** — use the four-level probe (`Resolve-ReverseToolSpec`); `TOOLS.md` provides install and setup guides, never hardcode machine-specific paths
 - Missing tools → disclose the exact platform bootstrap command and its install, network, service, and configuration effects; obtain approval, then run it instead of guessing paths:
   - Windows: `bootstrap-reverse.ps1`
   - Linux / macOS: `bash skills/scripts/bootstrap-reverse.sh`
   - Kali Linux: `bash kali/scripts/bootstrap-reverse.sh`
 
-- When writing `TOOLS.md` entries, paths MUST be **complete absolute paths** (e.g., `D:\wangluo\jadx\bin\jadx.bat`, NOT just `jadx`). Include: full path, version number, install method, and verification command.
+- **Never write machine-specific paths into anything under version control** — not into `TOOLS.md`, not into a skill, not into a field-journal entry. A path such as `D:\wangluo\jadx\bin\jadx.bat` is correct on exactly one machine and wrong on every other. `TOOLS.md` entries describe **what to install, which version, and how to verify**; the location is discovered per machine by the four-level probe.
 - Same tool fails auto-install 2 times → stop retrying, output full manual install steps
 - MCP service port mismatch → ask user for actual port, help update config
-- `TOOLS.md` is the **shared registry** — all CLIs read from it, all CLIs write to it after installing
+- `TOOLS.md` is **shared documentation, not a registry**: no CLI writes to it, and it is never a source of machine state.
 
 ### Routing Decisions
 - Route not matched → do NOT force-fit into existing skill, propose new skill creation
@@ -162,7 +162,7 @@ Hot path only:
 4. Platform-native case-init / scope.md (ops/scope-contract) — auth.status=granted + valid network profile, or explicit authorized offline sample, before any target ACT; Force never bypasses the hard gate
 5. Open PRIMARY SKILL.md ACTION REQUIRED
 6. Route not matched → propose new skill (edit routing.json + benchmark; do not hand-edit routing.md as SSoT)
-7. Read `TOOLS.md` → confirm local tool status. If missing, use the approved platform-native refresh command
+7. Locate the tools this task needs with the **four-level probe**. Read `TOOLS.md` only when something actually has to be installed.
 8. Missing tools → disclose exact bootstrap/refresh commands and effects, obtain approval, then run the platform-native actions
 9. Enter skill workflow → execute (timeline/workitems; Evidence→Finding→Path per ops/). At transitions, carry unchanged authoritative state by reference and emit only `decision_delta`; menus only at genuine decision boundaries.
 10. Continuously report progress (do NOT go silent)
@@ -224,7 +224,7 @@ After task completion (vulnerability verified / reverse complete / flag captured
 | "The user probably doesn't need this" | **NEVER decide for the user.** Present all options, mark recommendations but don't hide alternatives. |
 | "I already know how to do this, don't need to read X" | **Read X first, then act.** Even if you're sure, X may contain task-specific constraints. Reading takes seconds. |
 | "To save time, I can skip..." | **The correct way to save time is parallel execution of independent steps, NOT skipping steps.** |
-| "I've used this tool before, I know the path" | **FORBIDDEN to guess paths.** MUST locate it with `(Get-Command <id> -ErrorAction SilentlyContinue).Source`
+| "I've used this tool before, I know the path" | **FORBIDDEN to guess paths.** Locate it with the four-level probe; an empty single-level lookup is not evidence of absence. |
 | "Task is basically done, don't need checklist" | **Task completion = ALL Checklist items checked.** Unchecked checklist = task NOT complete. |
 | "After approval, I will pause before every deterministic step" | **Do not repeatedly re-confirm disclosed actions.** Continue while informing the user; pause only for a new side-effect category or genuine decision point. |
 | "An activated task exists, but I will only acknowledge the rules" | **Continue the approved task.** Match the existing user intent to the routing table and begin the disclosed workflow. Inspection-only requests remain read-only. |
@@ -242,7 +242,7 @@ Before saying "task complete" or "done", MUST self-check:
 
 ```text
 □ 1. After activation and approval, did I execute every applicable step in the disclosed behavior chain (not just read docs)?
-□ 2. Did I guess any tool paths? If yes, what's the actual `TOOLS.md` path?
+□ 2. Did I guess any tool path? Did I walk all four probe levels before declaring a tool missing?
 □ 3. Did I produce the approved task artifacts/evidence without any undisclosed side-effect category?
 □ 4. Is the Completion Checklist fully checked?
 □ 5. If ANY answer is "no" → task is NOT complete. Go back and fix.
@@ -253,7 +253,7 @@ Before saying "task complete" or "done", MUST self-check:
 ## Prohibited Behaviors
 
 - ❌ Do NOT start reverse/pentest without explicit package activation, first-side-effect approval, and the platform-native router (routing.json)
-- ❌ Do NOT guess tool paths — MUST get from `TOOLS.md`
+- ❌ Do NOT guess tool paths — locate them with the four-level probe (env vars → current shell → tool root → full-disk search)
 - ❌ Do NOT skip field-journal lookup before starting task
 - ❌ Do NOT skip Checklist after task completion
 - ❌ Do NOT retain un-anonymized real target info in reports
@@ -348,27 +348,20 @@ Kali Linux (Bash, Kali-native tooling):
 bash <SKILL_ROOT>/kali/scripts/bootstrap-reverse.sh tool_name --start-services
 ```
 
-## Refresh Tool Index (reference; execute only when covered by the approved plan)
+## Tool Availability (nothing to refresh)
 
-This writes generated local index files. Disclose and obtain approval unless the action was already included in the active plan.
+There is **no index to generate or refresh**. Nothing in this repository writes tool state to
+disk, and no document here records what is installed on any machine.
 
-Windows (PowerShell):
+Determine availability at task time by walking four levels and **stopping at the first hit**:
 
-```powershell
+1. environment variables (`JAVA_HOME`, `GOROOT`, `DOTNET_ROOT`, `<TOOL>_ROOT`…)
+2. what the current shell can resolve — `command -v` / `Get-Command` / `where`
+3. the tool root (`REVERSE_TOOL_ROOT`), searched recursively
+4. a full-disk search (Everything / `mdfind` / `find`)
 
-```
-
-Linux / macOS (Bash):
-
-```bash
-
-```
-
-Kali Linux (Bash):
-
-```bash
-
-```
+Only when all four miss is the tool genuinely absent. Reporting it as missing requires stating
+which levels you tried, plus the official source and the install's effects.
 
 ---
 

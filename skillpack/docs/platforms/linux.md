@@ -44,7 +44,7 @@ python3 -m pipx ensurepath
 | jshookmcp | `npx -y @jshookmcp/jshook@0.3.4` | MCP config command | Requires Node/npm/npx and explicit MCP registration. |
 | anything-analyzer | project clone + `pnpm install` | custom local service | Register its MCP endpoint in the Agent client. |
 | nuclei | GitHub release / `go install` | distro package if available | Often absent in Ubuntu apt. |
-| SecLists | `git clone https://github.com/danielmiessler/SecLists ~/tools/SecLists` | distro package if available | Keep path in tool index. |
+| SecLists | `git clone https://github.com/danielmiessler/SecLists ~/tools/SecLists` | distro package if available | Keep the `~/tools/SecLists` convention shown below. |
 
 ## Recommended path layout
 
@@ -169,7 +169,7 @@ MCP stdio bridge example:
 }
 ```
 
-## Bootstrap capabilities and refresh tool index
+## Bootstrap capabilities and tool detection
 
 From the repository root, list all bootstrap capabilities:
 
@@ -191,21 +191,9 @@ bash skills/scripts/bootstrap-reverse.sh anything-analyzer --mcp-host=claude
 bash skills/scripts/bootstrap-reverse.sh idapro --start-services --mcp-host=both
 ```
 
-Refresh the tool index only:
+Tool availability is determined on the machine at task time, not from an index: walk four levels and stop at the first hit — environment variables → what the current shell resolves (`command -v` / `Get-Command` / `where`) → the tool root (`REVERSE_TOOL_ROOT`) → a full-disk search. `skillpack/skills/TOOLS.md` is a hand-written install guide, not a machine inventory.
 
-```bash
-bash skills/scripts/bootstrap-reverse.sh --list
-
-```
-
-This generates:
-
-```text
-`skillpack/skills/TOOLS.md`
-skills/`TOOLS.md`
-```
-
-The bootstrap script installs or prepares supported capabilities where possible using the same core capability names as Windows. MCP client registration is performed only when `--mcp-host=...` is explicit. The refresh script detects common Linux/macOS tools and discovers supported MCP registrations without choosing a default Agent client. Manual-only tools such as IDA Pro and BurpSuite still require local installation and app-specific setup.
+The bootstrap script installs or prepares supported capabilities where possible using the same core capability names as Windows. MCP client registration is performed only when `--mcp-host=...` is explicit and never chooses a default Agent client. There is no index to refresh: tool detection runs at task time via the four-level probe. Manual-only tools such as IDA Pro and BurpSuite still require local installation and app-specific setup.
 
 ## Validation checklist
 

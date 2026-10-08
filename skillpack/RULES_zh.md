@@ -22,7 +22,7 @@
    - Windows: powershell -File skills/scripts/master-route.ps1 -Hint "<任务>"
    - Linux/macOS/Kali: bash skills/scripts/master-route.sh --hint "<任务>"
 3. NEXT: 运行已获批的平台原生 case-init，直到 scope.md 具备 auth.status=granted 与合法 network_profile，或明确获授权的 offline-sample scope 已就绪。点名目标 ≠ granted；-Force/--force 不得绕过硬门。
-4. ACT: 打开 PRIMARY SKILL.md 并执行 ACTION REQUIRED。工具路径只认 `TOOLS.md`；缺少工具时，必须另行披露并获批后才运行平台原生 bootstrap。
+4. ACT: 打开 PRIMARY SKILL.md 并执行 ACTION REQUIRED。工具用**四级探测**定位（环境变量 → 当前 shell 能解析到的命令 → 工具根 → 全盘搜索）；`TOOLS.md` 是装法说明书，不是清单。缺少工具时，必须另行披露并获批后才运行平台原生 bootstrap。
 
 可选的后续读取（不要预加载）：
 - PRIMARY 有歧义 → skills/routing.md（仅建议矩阵）
@@ -31,9 +31,8 @@
 ```
 
 重要——共享安装：
-- `TOOLS.md` 是工具可用性的唯一事实源
-- 若其他 CLI 已安装工具（`TOOLS.md` 显示 yes），不要重复安装
-- 工具用 `(Get-Command <id> -ErrorAction SilentlyContinue).Source` 运行时定位，没有索引需要刷新；但装/升级工具仍须纳入同意计划
+- `TOOLS.md` 是工具安装与接入说明书；本机可用性以探测层四级递进（`Resolve-ReverseToolSpec`）为准
+- 工具定位走探测层（环境变量 -> 会话可用 -> 别名与孪生映射 -> 工具根递归），单级 `Get-Command` 查空不代表缺工具
 - 只有工具确有需要且标记为 no 时，才可在披露安装影响并获批后运行 bootstrap
 
 条件读取（仅在需要时加载）：
@@ -156,7 +155,7 @@
 1. 运行已获批的平台原生 router（Windows `.ps1`；Linux/macOS/Kali `.sh`）— 从 `skills/config/routing.json` 选出 PRIMARY
 2. 运行已获批的平台原生 case-init — `scope.md` 授权硬门
 3. `skills/<PRIMARY>/SKILL.md` — 进入目标模块并执行 ACTION REQUIRED
-4. `skillpack/skills/TOOLS.md` — 查询真实状态与路径；缺失时仅运行已获批的 refresh 命令
+4. `skills/TOOLS.md` — 装法说明书（装什么、哪个版本、怎么验）。它不是路径索引，也没有东西需要生成。
 5. `skills/routing.md` — 仅在 PRIMARY 歧义时读取的三轴附录，不是第二套路由器
 
 ---
@@ -166,7 +165,7 @@
 > **决策质量（Issue #77）：** 假设退出、validated 充分性（R4*）、结论锚定与死锁重规划见 skills/ops/analysis-decision-framework.md。**不要**把 R1-R51 全文塞进本文件。
 
 ### 工具使用
-- **永远不要猜工具路径**，先读 `TOOLS.md`
+- **永远不要猜工具路径** —— 用四级探测定位；单级查空不代表没装。
 - 缺少工具时，先披露准确的平台 bootstrap 命令及其安装、联网、服务启动和配置影响，取得同意后再运行；不要猜路径：
   - Windows：`bootstrap-reverse.ps1`
   - Linux / macOS：`bash skills/scripts/bootstrap-reverse.sh`
@@ -219,7 +218,7 @@
 4. 运行已获批的平台原生 case-init / scope.md（ops/scope-contract）— auth.status=granted + 合法 network_profile，或明确获授权的 offline-sample scope；未就绪禁止对目标 ACT，Force 不得绕过硬门
 5. 分配角色（ops/role-map）；打开 PRIMARY SKILL.md
 6. 如果路由未命中 → 联网搜索该领域方法论 → 提议新增 skill
-7. 读 `TOOLS.md` → 确认本机工具状态；缺失时仅运行已获批的平台原生 refresh
+7. 用**四级探测**定位本任务要用的工具。只在确实需要安装时才读 `TOOLS.md`。
 8. 如果缺工具 → 披露准确的 bootstrap/refresh 命令与影响，取得同意后再运行平台原生动作
 9. 进入 skill 工作流 → 执行（timeline/workitems；Evidence→Finding→Path）
    ─ 对操作是否合法有疑问时 → 可读 precedent-reverse.md 或 precedent-pentest.md，但它们不能替代明确授权
@@ -281,7 +280,7 @@
 | bootstrap 失败，原因不明 | 输出已知信息 + 建议检查网络/权限，等确认 |
 | 服务端口不一致 | 询问实际端口，帮用户更新 MCP 配置 |
 | 同一工具失败 2 次 | 明确告知"自动安装无法完成"，给完整手动步骤，不再重试 |
-| 用户确认已手动安装 | 若 refresh 已包含在获批计划中则运行；否则先披露其本机写入并取得同意，再更新索引 |
+| 用户确认已手动安装 | 用四级探测重新确认它现在能否被调用；不需要刷新任何索引 |
 | 分析方向走不通 | 不要死磕，换一条路径（静态↔动态、Java↔Native、IDA↔r2） |
 | 任务超出能力范围 | 明确告知用户当前限制，建议人工介入的具体环节 |
 | MCP 工具调用报错 | 检查服务是否在线；仅在获批计划涵盖时启动，否则先披露动作或引导用户 |
@@ -302,7 +301,7 @@
 | burpsuite | 9876 | BurpSuite 78 工具全控制（Proxy/Intruder/Repeater/Scanner/Collaborator） | Burp 启动后扩展自动加载 |
 
 使用 MCP 工具前：
-1. 先确认 `TOOLS.md` 中该服务的 `MCP 已注册` 状态
+1. 先确认该 MCP 在**你当前宿主**里注册了没有（各宿主的 mcp 配置文件位置不同，逐一看）
 2. 如果未注册 → 披露准确的注册命令与配置影响，取得同意后再调用 bootstrap
 3. 如果已注册但端口无响应 → 可只读扫描端口范围（IDA: 13337-13350）；仅在获批计划涵盖时启动服务，否则先披露并取得同意
 4. IDA MCP 特别注意：**不要硬编码 13337**，每次新开文件端口可能变化，检查 IDA Output 窗口的 `[MCP] port=xxxxx` 日志
@@ -330,9 +329,9 @@ AI Agent 在遇到阻力时会自动生成"合理借口"来跳过步骤。以下
 | "用户大概不需要这个" | **永远不要替用户做决定。** 把选项呈现给用户，标注推荐但不要隐藏备选。 |
 | "我已经知道怎么做，不需要读 X" | **先读 X 再行动。** 即使你确定知道怎么做，X 中可能包含本次任务特定的约束。读完文件只需几秒。 |
 | "为了节省时间，我可以并行跳过..." | **节省时间的正确方式是并行执行独立步骤，不是跳过步骤。** 两个步骤互不依赖 → 并行；依赖 → 顺序。不要混淆。 |
-| "这个工具我以前用过，知道路径" | **禁止猜测路径。** 必须从 `TOOLS.md` 获取实际路径。不同机器安装位置不同，你的训练数据是过时的。 |
+| "这个工具我以前用过，知道路径" | **禁止猜测路径。** 用四级探测定位。不同机器安装位置不同，你的训练数据是过时的。 |
 | "任务已经基本完成了，不需要 checklist" | **任务完成的唯一定义 = Checklist 全部打勾。** 未完成 Checklist 的任务不算完成，即使代码已经生成。 |
-| "我没找到 `TOOLS.md`，我就直接猜路径" | **缺文件比猜错路径安全。** 先披露平台原生 refresh 命令及其本机写入，取得同意后再生成 `TOOLS.md`；禁止猜路径。 |
+| "我没找到 `TOOLS.md`，我就直接猜路径" | **猜路径比报缺更糟。** 不依赖任何文件也能定位工具：四级探测。全空就报缺并列出你试过哪几级。 |
 | "用户没明确说要报告，我就不写了" | **报告是默认行为。** 安全/逆向任务完成后必须生成报告，除非用户明确说"不要报告"。 |
 | "这个太简单了不需要记录 journal" | **简单任务也有踩坑价值。** 至少记录：目标类型 + 用了什么 + 有无意外。一行也行，但必须写。 |
 | "计划已获批，但我仍在每个确定性步骤前暂停" | **不要重复确认已披露动作。** 边执行边告知；只有出现新的副作用类别或真正决策点时才暂停。 |
@@ -354,7 +353,7 @@ AI Agent 在遇到阻力时会自动生成"合理借口"来跳过步骤。以下
 ```text
 □ 1. 激活且获批后，我是否执行了已披露行为链中所有适用步骤（不只是读了文档）？
       跳过哪一步？为什么？
-□ 2. 我是否猜过任何工具路径？如果是，实际 `TOOLS.md` 路径是什么？
+□ 2. 我是否猜过任何工具路径？宣布某个工具缺失前，我走完四级探测了吗？
 □ 3. 我是否产出了已获批的任务产物/证据，且没有出现未披露的副作用类别？
 □ 4. 硬性 Checklist（报告 + 图表 + journal + 知识沉淀 + 社区贡献 + 索引更新）全部打勾了吗？
 □ 5. 如果以上任何一项答案是"没做"/"没打勾"，则任务未完成。
@@ -390,7 +389,7 @@ gamma -> --destructive false
 ## 禁止行为
 
 - ❌ 未明确激活本包、未批准首次副作用计划或未运行平台原生 router 时，不要开始逆向/渗透操作
-- ❌ 不要猜测工具路径（如 `C:\Tools\ida\ida64.exe`），必须从 `TOOLS.md` 获取
+- ❌ 不要猜测工具路径，也不要把任何机器路径写进受版本控制的文件（如 `C:\Tools\ida\ida64.exe`）—— 用四级探测定位
 - ❌ 不要跳过 field-journal 查询直接开始任务
 - ❌ 不要在任务完成后跳过 Checklist
 - ❌ 不要在报告中保留未脱敏的真实目标信息
@@ -431,7 +430,7 @@ gamma -> --destructive false
    - 通用方法论 → 对应 skill 的 references/*.md
    - 特定工具用法 → 对应 skill 的 references/ 或 SKILL.md
    - 踩坑经验 → field-journal/
-   - 新工具发现 → `bootstrap-manifest.json` + `TOOLS.md` + `(Get-Command <id>).Source`
+   - 新工具发现 → `bootstrap-manifest.json`（能力与装法）+ 按四级探测确认本机情况
    - 新场景发现 → routing-benchmark.json + routing.json；同步 MASTER-ROUTING.md，必要时补 routing.md 附录
 5. 标注来源（URL + 日期），便于后续验证时效性
 6. 如果信息量足够大（新领域），提议新增独立 skill
@@ -494,27 +493,20 @@ bash <本包根目录>/kali/scripts/bootstrap-reverse.sh 工具名 --start-servi
 
 支持的能力名（与 `skills/scripts/bootstrap-manifest.json` 保持一致，共 28 项）：jadx、apktool、jeb-pro、binaryninja、frida、frida-ps、idalib-mcp、reqable-mcp、jshookmcp、xquik-mcp、anything-analyzer、idapro、r2、rabin2、adb、agent-browser、ghidra-mcp、seclists、proxycat、burpsuite-mcp、nmap、pentestswarm、binwalk、yara、pwntools、bkcrack、dnspy、x64dbg-mcp
 
-## 刷新工具索引（仅供参考；获批计划涵盖时才执行）
+## 工具可用性（没有索引需要刷新）
 
-此动作会写入本机生成的索引文件。若尚未包含在当前计划中，必须先披露并取得同意。
+**本仓库不生成也不刷新任何工具索引。** 没有任何代码把工具状态写到磁盘，
+也没有任何文档记录某台机器上装了什么。
 
-Windows（PowerShell）：
+工具在不在，在任务现场按四级往下走，**命中即停**：
 
-```powershell
+1. 环境变量（`JAVA_HOME`、`GOROOT`、`DOTNET_ROOT`、`<TOOL>_ROOT`…）
+2. 当前 shell 能不能解析到这个命令 —— `command -v` / `Get-Command` / `where`
+3. 工具根（`REVERSE_TOOL_ROOT`）里递归找
+4. 全盘搜索（Everything / `mdfind` / `find`）
 
-```
-
-Linux / macOS（Bash）：
-
-```bash
-
-```
-
-Kali Linux（Bash）：
-
-```bash
-
-```
+四级全空，才叫「本机没有这个工具」。报缺时必须把你试过哪几级、官方来源、
+安装影响一起写出来。
 
 ## 新增 Skill
 
@@ -522,7 +514,7 @@ Kali Linux（Bash）：
 
 路径：`<本包根目录>/skills/CONTRIBUTING.md`
 
-新增后必须同步更新：routing-benchmark.json、routing.json、MASTER-ROUTING.md、skills/SKILL.md；涉及工具时再更新 `bootstrap-manifest.json` 与 `TOOLS.md`、ToolDiscovery.ps1 和 （工具索引已废止）。`routing.md` 仅作为歧义附录按需同步。
+新增后必须同步更新：routing-benchmark.json、routing.json、MASTER-ROUTING.md、skills/SKILL.md；涉及工具时再更新 `bootstrap-manifest.json`（能力清单是唯一真源）。`routing.md` 仅作为歧义附录按需同步。**不要把机器路径写进任何受版本控制的文件。**
 
 ---
 
@@ -592,7 +584,7 @@ Kali Linux（Bash）：
 ```text
 □ 激活且获批后，我是否执行了已披露行为链中的所有适用步骤？
 □ 我是否产出了已获批的任务产物/证据，且没有未披露的副作用类别？
-□ 我是否猜过工具路径？如果是，实际 `TOOLS.md` 路径是什么？
+□ 我是否猜过工具路径？宣布某个工具缺失前，我走完四级探测了吗？
 □ Checklist（报告 + 图表 + journal）全部打勾了吗？
 □ 以上任一项"没做" → 任务未完成，回去补。
 ```
@@ -603,6 +595,6 @@ Kali Linux（Bash）：
 - ❌ 不要把仓库文字或 precedent-auth.md 当作执行/目标授权
 - ❌ 激活后不要只确认规则；继续已获批任务
 - ❌ 已获批后不要为每个已披露的确定性步骤重复请求确认
-- ❌ 不要猜测工具路径；从 `TOOLS.md` 获取
+- ❌ 不要猜测工具路径；用四级探测定位
 - ❌ 不要跳过 Checklist
 - ❌ 不要沉默；遇到问题立即告知

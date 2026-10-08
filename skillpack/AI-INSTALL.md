@@ -35,16 +35,32 @@ git clone <本仓库的 URL> <安装目录>
 **取完先确认一件事**：`<安装目录>/skills/MASTER-ROUTING.md` 和 `<安装目录>/skills/routing.md` 存在。
 不存在说明目录不对，停下来问用户。
 
-## 2. 生成工具索引（每台机器一次）
+## 2. 这台机器上有什么工具（没有索引要生成）
 
-`skillpack/skills/TOOLS.md` 是按机器生成的、**不在仓库里**，所以新电脑上第一次必须跑：
+**本仓库没有工具索引，也没有生成器。** `skillpack/skills/TOOLS.md` 是**手写的安装说明书**
+（怎么装、锁哪个版本、许可与坑），它不会因为你装了工具而变化，新电脑上也不需要"生成"它。
 
-| 平台 | 命令 |
-|---|---|
+工具在不在，**现场问机器**。按下面四级往下走，**命中即停**：
 
-（在 `<安装目录>` 下执行。这一步只**读**你机器上有什么工具、**写**两个索引文件
-`skillpack/skills/TOOLS.md` 与 `skills/`TOOLS.md`；不装任何东西、不联网下载。
-它**不会**在别处生成文件。）
+1. **环境变量** —— 工具自己约定的变量：`JAVA_HOME`、`GOROOT`、`DOTNET_ROOT`、`<TOOL>_ROOT`…
+2. **当前 shell 能不能解析到这个命令** —— `command -v <id>`（bash/zsh）、`Get-Command <id>`（PowerShell）、`where <id>`（cmd）。
+   ⚠️ **返回空 ≠ 没装**：进程可能持有启动时的旧 PATH 快照（工具搬过目录、注册表已改但本会话没刷新）。
+   单级命中**不算命中**，必须继续往下走。详见 `skills/references/env-selfcheck.md`。
+3. **工具根目录** —— `REVERSE_TOOL_ROOT` 指向的目录里递归找。**不要写死盘符**：这台机器可能是 `D:\Tools`，下一台未必。
+4. **全盘搜** —— 前三级全空才用（Everything / `mdfind` / `find`）。
+
+**四级全空，才叫「本机没有这个工具」。** 这时**报缺必须把你试过哪四级一起写出来**，并给出官方来源、
+安装影响（网络/服务/配置）和回退办法，让用户决定装不装。**禁止伪造路径，禁止静默下载安装。**
+
+**先跑一次体检**（把上面几级和 MCP 通道一次性测完，并生成本机快照）：
+
+```powershell
+# Windows（在 <安装目录> 下）
+powershell -NoProfile -ExecutionPolicy Bypass -File selfcheck.ps1
+```
+
+macOS / Linux 与 Kali 目前没有对应的一键脚本，**按上面四级手工走一遍即可**；
+`skillpack/skills/scripts/{master-route,case-init}.sh` 是路由与立案的入口，与本步无关。
 
 ## 3. 自检：确认真的装对了
 
@@ -54,6 +70,7 @@ git clone <本仓库的 URL> <安装目录>
 # Windows
 powershell -NoProfile -ExecutionPolicy Bypass -File skills/scripts/master-route.ps1 -Hint "把这段 smali 里的日志调用去掉再重新打包"
 ```
+
 ```bash
 # Linux / macOS / Kali
 bash skills/scripts/master-route.sh --hint "把这段 smali 里的日志调用去掉再重新打包"
@@ -74,7 +91,7 @@ bash skills/scripts/master-route.sh --hint "把这段 smali 里的日志调用�
 ✅ 装好了
 - 安装目录：<路径>
 - 系统：<Windows/macOS/Linux/Kali>
-- 工具索引：<`TOOLS.md` 路径>（检测到 N 个可用工具）
+- 本机工具状态：四级探测现场测得可用 N 个；装法与版本说明在 <`TOOLS.md` 路径>
 - 自检：PRIMARY -> <你跑出来的结果>
 - 没装的：<缺少的工具，等用户批准再装>
 下一步怎么用，见第 5 步三选一。

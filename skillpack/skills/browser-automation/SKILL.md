@@ -1,4 +1,4 @@
----
+﻿---
 name: browser-automation
 description: 统一自动化入口 — 当用户要自动打开网页点点填表爬取截图/自动登录，或说"帮我自动填下这个表单""把这个页面内容爬下来""自动登录后截图看看"时使用。Use when automating browser clicks, forms, scraping, screenshots or desktop GUI apps.
 ---
@@ -234,6 +234,6 @@ npm run doctor:network
 ## 任务完成自检（声称完成前 MUST 通过）
 
 - [ ] 我是否执行了工作流中的每一步（而不是只阅读）？
-- [ ] 我是否跑过 `(Get-Command <id> -ErrorAction SilentlyContinue).Source` 定位实际路径（而不是拿 `TOOLS.md` 里的装法当路径猜）？
+- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？

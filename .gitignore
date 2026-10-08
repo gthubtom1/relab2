@@ -24,6 +24,12 @@ kernel/04-console/hostlist/
 kernel/safebox/
 safebox/
 
+# selfcheck-newmachine.ps1 每次跑都往仓根 .hub/tools.local.json 写一份本机快照，
+# 里面是 ToolRoot / SkillRoot 和每个工具的绝对路径 —— 换台机器就是错的，
+# 而且等于把主人的目录结构公开出去。带前导斜杠，只挡仓根这一个。
+# （实测 2026-10-09：.gitignore 漏了这条，git add -A 会把它扫进仓库。）
+/.hub/
+
 # 敏感：别把凭据带进仓库
 *.env
 .env.*

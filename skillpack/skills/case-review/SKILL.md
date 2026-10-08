@@ -25,7 +25,7 @@ It MUST NOT perform reconnaissance, exploitation, dynamic instrumentation, or ta
 1. `NOW`: read `../field-journal/precedent-reverse.md` and confirm that this is a review of an existing authorized case package.
 2. `NOW`: confirm the case path and choose read-only review mode.
 3. `NEXT`: read `TOOLS.md`; this skill uses only Python 3 standard library and does not require bootstrap.
-4. `NEXT`: run `python scripts/review_case.py <case-root> --format markdown` (Windows; on Linux/macOS/Kali use `python3`).
+4. `NEXT`: run `python skillpack/skills/case-review/scripts/review_case.py <case-root> --format markdown` (Windows; on Linux/macOS/Kali use `python3`).
 5. `ACT`: resolve every error, then rerun the review before claiming a handoff is complete.
 
 ## Tool dependencies
@@ -45,8 +45,8 @@ No network access or third-party package is required.
 Run the review against the existing case directory:
 
 ```bash
-python skills/case-review/scripts/review_case.py work/<case> --format markdown   # Windows
-python3 skills/case-review/scripts/review_case.py work/<case> --format markdown  # Linux / macOS / Kali
+python skillpack/skills/case-review/scripts/review_case.py work/<case> --format markdown   # Windows
+python3 skillpack/skills/case-review/scripts/review_case.py work/<case> --format markdown  # Linux / macOS / Kali
 ```
 
 Confirm that `scope.md`, `timeline.md`, `workitems.md`, and `evidence/` are present. A non-strict review reports scope warnings while a strict review treats warnings as handoff blockers.
@@ -75,8 +75,8 @@ An offline observation may use `repro_command: n/a` only when its `notes` field 
 Use JSON when another tool needs stable fields:
 
 ```bash
-python skills/case-review/scripts/review_case.py work/<case> --format json   # Windows
-python3 skills/case-review/scripts/review_case.py work/<case> --format json  # Linux / macOS / Kali
+python skillpack/skills/case-review/scripts/review_case.py work/<case> --format json   # Windows
+python3 skillpack/skills/case-review/scripts/review_case.py work/<case> --format json  # Linux / macOS / Kali
 ```
 
 ## 建议下一步（选一个编号）
@@ -92,7 +92,7 @@ python3 skills/case-review/scripts/review_case.py work/<case> --format json  # L
 When an Evidence record contains both `content_hash` and `artifact_path`, verify the case-local artifact:
 
 ```bash
-python skills/case-review/scripts/review_case.py work/<case> --verify-hashes --strict   # Windows（Linux/macOS/Kali 用 python3）
+python skillpack/skills/case-review/scripts/review_case.py work/<case> --verify-hashes --strict   # Windows（Linux/macOS/Kali 用 python3）
 ```
 
 The script accepts `sha256:<64 hex characters>` and checks that the artifact remains inside the case root. A hash mismatch is a hard failure.
@@ -100,7 +100,7 @@ The script accepts `sha256:<64 hex characters>` and checks that the artifact rem
 The PowerShell Evidence helper can record a hash while appending a record:
 
 ```powershell
-powershell -File skills/scripts/append-evidence.ps1 -CaseRoot work\<case> -Id E-001 -Title "Sample hash" -ReproCommand "sha256sum evidence/sample.bin" -ArtifactPath "evidence\sample.bin"
+powershell -File skillpack/skills/scripts/append-evidence.ps1 -CaseRoot work\<case> -Id E-001 -Title "Sample hash" -ReproCommand "sha256sum evidence/sample.bin" -ArtifactPath "evidence\sample.bin"
 ```
 
 ## 建议下一步（选一个编号）
@@ -116,7 +116,7 @@ powershell -File skills/scripts/append-evidence.ps1 -CaseRoot work\<case> -Id E-
 Use strict mode before a final report or specialist handoff:
 
 ```bash
-python skills/case-review/scripts/review_case.py work/<case> --strict --format markdown > work/<case>/report/case-review.md   # Windows（Linux/macOS/Kali 用 python3）
+python skillpack/skills/case-review/scripts/review_case.py work/<case> --strict --format markdown > work/<case>/report/case-review.md   # Windows（Linux/macOS/Kali 用 python3）
 ```
 
 The command is read-only with respect to the case unless shell redirection is explicitly used to save its output. The review is not legal advice and does not replace organizational evidence handling procedures.

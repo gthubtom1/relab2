@@ -128,6 +128,13 @@ def verify() -> list[dict]:
     tests = DEV / "05-tests" / "run_all.py"
     if tests.is_file():
         checks.append(_run("scenarios", [py, str(tests)], DEV / "05-tests"))
+    # 卡片 / 安装器 / 卸载器的**全部**验收（验收 1–9）住在 04-console/selftest.py。
+    # 它以前不在这个列表里 —— 也就是说：改一张卡片，跑到的卡片断言数是零，
+    # 唯一能防住宿主入口文件被损坏的那条不变量从没被自动跑过（2026-10-09 审计发现）。
+    selftest = DEV / "04-console" / "selftest.py"
+    if selftest.is_file():
+        checks.append(_run("console-selftest", [py, "-B", str(selftest)],
+                           DEV / "04-console"))
     return checks
 
 

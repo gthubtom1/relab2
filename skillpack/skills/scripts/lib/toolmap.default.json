@@ -1,0 +1,172 @@
+{
+  "_comment": "仓内默认工具知识库与孪生映射表。不含机器绝对路径。换机零配置生效；若本机工具根存在 _map.json，则本机覆盖本表。",
+  "_version": "1.0.0",
+  "twins": {
+    "ida": {
+      "cliTwin": "idat",
+      "executablePatterns": ["*idat.exe", "*idat64.exe"],
+      "mcp": {
+        "name": "idalib-mcp",
+        "port": 13337,
+        "kind": "python-streamable-http"
+      },
+      "note": "IDA Pro GUI 版（ida.exe/ida64.exe）禁止进 bash，必须使用 CLI 孪生 idat 或 idalib-mcp"
+    },
+    "ghidra": {
+      "cliTwin": "analyzeHeadless",
+      "executablePatterns": ["*analyzeHeadless.bat"],
+      "mcp": {
+        "name": "pyghidra-mcp",
+        "port": 9111,
+        "kind": "http-streamable",
+        "endpoint": "http://127.0.0.1:9111/mcp"
+      },
+      "note": "Ghidra GUI（ghidraRun）会弹窗，无头自动化必须使用 analyzeHeadless 或 pyghidra-mcp 守护服务"
+    },
+    "x64dbg": {
+      "cliTwin": "headless",
+      "executablePatterns": ["*\\release\\x64\\headless.exe", "*\\headless.exe"],
+      "note": "x64dbg GUI 会弹窗卡死，自动化与动态调试必须使用 headless 控制台版"
+    },
+    "x32dbg": {
+      "cliTwin": "headless",
+      "executablePatterns": ["*\\release\\x32\\headless.exe", "*\\headless.exe"],
+      "note": "x32dbg GUI 会弹窗卡死，自动化必须使用 headless 控制台版"
+    },
+    "die": {
+      "cliTwin": "diec",
+      "executablePatterns": ["*diec.exe"],
+      "note": "Detect It Easy GUI（die.exe）禁止进 bash，自动化查壳使用 diec.exe"
+    },
+    "wireshark": {
+      "cliTwin": "tshark",
+      "executablePatterns": ["*tshark.exe"],
+      "note": "Wireshark GUI 会弹窗，抓包与流解析自动化统一使用 tshark.exe"
+    },
+    "dnspy": {
+      "cliTwin": "dnSpy.Console",
+      "executablePatterns": ["*dnSpy.Console.exe"],
+      "note": ".NET 批量反编译自动化优先使用 dnSpy.Console.exe"
+    }
+  },
+  "aliases": {
+    "ghidra": {
+      "exec": "analyzeHeadless.bat",
+      "prefer": ["Ghidra\\support\\analyzeHeadless.bat"]
+    },
+    "analyzeHeadless": {
+      "prefer": ["Ghidra\\support\\analyzeHeadless.bat"]
+    },
+    "scyllahide": {
+      "exec": "InjectorCLIx64.exe",
+      "prefer": ["ScyllaHide\\InjectorCLIx64.exe"]
+    },
+    "confuserex": {
+      "exec": "Confuser.CLI.exe",
+      "prefer": ["ConfuserEx\\Confuser.CLI.exe"]
+    },
+    "innoextract": {
+      "exec": "innoextract.exe",
+      "prefer": ["innoextract\\innoextract.exe"]
+    },
+    "innounp": {
+      "exec": "innounp.exe",
+      "prefer": ["innounp\\innounp.exe"]
+    },
+    "x32dbg": {
+      "exec": "headless.exe",
+      "prefer": ["x64dbg\\release\\x32\\headless.exe"]
+    },
+    "x64dbg": {
+      "exec": "headless.exe",
+      "prefer": ["x64dbg\\release\\x64\\headless.exe"]
+    },
+    "idat": {
+      "exec": "idat.exe",
+      "prefer": ["IDA Professional 9.4\\idat.exe"]
+    },
+    "die": {
+      "exec": "diec.exe",
+      "prefer": ["DIE\\diec.exe"]
+    },
+    "r2": {
+      "exec": "r2.exe",
+      "prefer": ["radare2\\bin\\r2.exe"]
+    },
+    "radare2": {
+      "prefer": ["radare2\\bin\\radare2.exe"]
+    },
+    "de4dot": {
+      "prefer": ["de4dot\\de4dot.exe"]
+    },
+    "upx": {
+      "prefer": ["UPX\\upx.exe"]
+    },
+    "dnSpy": {
+      "prefer": ["dnSpy\\dnSpy.exe"]
+    },
+    "dnSpy.Console": {
+      "prefer": ["dnSpy\\dnSpy.Console.exe"]
+    },
+    "sqlmap": {
+      "prefer": ["sqlmap\\sqlmap.py"]
+    },
+    "pesieve": {
+      "exec": "pe-sieve64.exe",
+      "prefer": ["pe-sieve\\pe-sieve64.exe"]
+    },
+    "ida": {
+      "exec": "idat.exe",
+      "prefer": ["IDA Professional 9.4\\idat.exe"]
+    },
+    "ida64": {
+      "exec": "idat.exe",
+      "prefer": ["IDA Professional 9.4\\idat.exe"]
+    },
+    "wireshark": {
+      "exec": "tshark.exe",
+      "prefer": ["Wireshark\\tshark.exe"]
+    },
+    "wshark": {
+      "exec": "tshark.exe",
+      "prefer": ["Wireshark\\tshark.exe"]
+    }
+  },
+  "deny": [
+    {
+      "toolIds": ["python", "python3", "py", "pip"],
+      "pathPatterns": ["*\\zenmap\\*"],
+      "reason": "Zenmap 捆绑旧 Python，版本过旧且缺依赖，不得作为系统 Python"
+    },
+    {
+      "toolIds": ["git", "git-lfs"],
+      "pathPatterns": ["*\\mingw64\\libexec\\git-core\\*"],
+      "reason": "Git 内部实现目录缺少 PATH 组装，不能直接调用"
+    },
+    {
+      "toolIds": ["npm", "npx", "node"],
+      "pathPatterns": ["*\\corepack\\shims\\*"],
+      "reason": "corepack shim 与 Node 原生命令竞争"
+    },
+    {
+      "toolIds": ["x64dbg", "x32dbg"],
+      "pathPatterns": [
+        "*\\x64dbg\\release\\x64\\x64dbg.exe",
+        "*\\x64dbg\\release\\x32\\x32dbg.exe"
+      ],
+      "reason": "GUI 调试器弹窗卡死进程，自动化必须回落到 headless.exe"
+    },
+    {
+      "toolIds": ["die", "ida", "ida64", "idaq", "wireshark", "wshark"],
+      "pathPatterns": [
+        "*\\DIE\\die.exe",
+        "*\\IDA*\\ida.exe",
+        "*\\IDA*\\ida64.exe",
+        "*\\IDA*\\idaq.exe",
+        "*\\IDA*\\idaq64.exe",
+        "*\\Wireshark\\Wireshark.exe"
+      ],
+      "reason": "GUI 前端弹窗卡死进程，自动化必须使用 CLI 孪生（diec, idat, tshark）"
+    }
+  ]
+}

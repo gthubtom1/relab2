@@ -13,7 +13,12 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 1. `NOW`：跑平台原生 router（Windows `scripts/master-route.ps1`；Linux/macOS/Kali `scripts/master-route.sh`），从 `config/routing.json` 定 PRIMARY；疑难再读 `routing.md` 三轴附录。
 2. `NOW`：平台原生 `case-init` 落地当前分析项目的 `work/<case>/scope.md`；**auth 未 granted 禁止对目标 ACT**。本地离线样本使用 `offline-sample` preset + explicit sample；Force 不得绕过硬门。
 3. `ACT`：立即打开 PRIMARY `SKILL.md` 执行 ACTION REQUIRED。
-4. `NEXT`：工具路径**当场探测本机** —— `(Get-Command <工具id> -ErrorAction SilentlyContinue).Source`；无值则按候选目录逐个 `Test-Path`；全失败即报「本机缺该工具」，禁止伪造路径。`TOOLS.md` / `.json` 是**旧机生成物快照**，其中 ``D:\Tools`` 为未探测占位符，**只作批量速查、不得当本机事实**。**工具没有统一安装根，禁止拼根目录**（见 §工具根）。缺工具 → 平台原生 bootstrap（仅 manifest）。
+4. `NEXT`：工具路径**当场探测本机** —— 唯一入口是探测层。本机固定路径：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`，然后 `Resolve-ReverseToolSpec -Name <工具id>`（`env → PATH → 别名表 → 工具根递归` 四级递进，返回 `Available`/`Command`/`Via`，调用前自动自愈 PATH 与 `DOTNET_ROOT`）。
+   **两个根是主人定死的约定，换机不变：仓库 `C:\relab2`、工具根 `D:\Tools`。命令里直接写，不必用占位符。**
+   （万一某台机器还没按约定建好、上面那条路径不存在：从本文件所在目录往上两级找 `scripts\lib\Bootstrap.ps1`（即 `<技能包根>\skills\scripts\lib\Bootstrap.ps1`），或用 `REVERSE_SKILL_ROOT` 指向技能包根 / 仓库根 / skills 根——探测层三种写法都认。都没有就把情况报出来问人，不许自己找地方新建一份。）
+   - ⚠️ **`Get-Command <id>` 返回空 ≠ 本机缺该工具**（2026-10-08 实测事故：工具整体迁目录后注册表已更新，但 agent 进程仍持有启动时的旧 PATH 快照，`Get-Command` 对 `diec`/`r2`/`idat`/`ghidraRun` 全部返回空，agent 据此误判「本机缺工具」并直接停手，实际工具全都在）。**排除办法见 `references/env-selfcheck.md`。**
+   - 只有当**四级探测全部 `Available=False`**、且已排除「PATH 快照」「环境变量错位（如 `IDADIR`/`DOTNET_ROOT` 指向死目录时 exe 静默失败）」「GUI/CLI 孪生选错」三种情况后，才允许报「本机缺该工具」。禁止伪造路径。
+   - `TOOLS.md` / `.json` 只说「干什么用 / 怎么装」，**不含本机探测结果**，不得当本机事实直接用。工具定位永远以探测层返回的 `Command` 为准；**没有探测过就不要拼路径**。缺工具 → 平台原生 bootstrap（仅 manifest）。
    > ⚠️ 本项目**不含 `toolreg/` 注册层**：没有 `registry.py resolve`、没有 `capabilities.json`、没有 `toolreg.ps1 build`。这些命令在本项目不存在，**不要执行**。
 5. 结论用 Evidence→Finding→Path。报告/journal 是 SHOULD，除非用户要交付物。
 
@@ -23,21 +28,23 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 
 ## COMMAND DISCIPLINE（命令执行纪律，与路由契约同级 MUST）
 
-> 来源：`<本仓库>/kernel/04-console/cards/guest/全能专精指引.md` —— 仓库内**唯一权威**卡片，`指引卡.md` 只是它的指针文件。
-> 如与该卡片源冲突，**以卡片源为准**。`<本仓库>` = 仓库根目录。
-> ⚠️ 不要再去引`D:\Project\hubcore\04-console\cards\guest\全能专精指引.md`：那是仓库外的旧副本，§1 写的是「必须在隔离虚拟机执行，严禁在宿主机拉起」，与权威卡的「单机·无跨机假设」**完全相反**，两份并存就是口径分裂的根源。
+> **本节是命令纪律的唯一事实源。** 卡片（`<本仓库>/kernel/04-console/cards/guest/全能专精指引.md`）
+> 只是**指向本文件**的路由指针，它不承载纪律内容、不重复本节；如两者冲突，**以本文件为准**。
+> `skillpack/指引卡.md` 同样只是指针。
+> ⚠️ 不要再去引 `D:\Project\hubcore\04-console\cards\guest\全能专精指引.md`：那是仓库外的旧副本，
+> §1 写的是「必须在隔离虚拟机执行，严禁在宿主机拉起」，与本包「单机·无跨机假设」**完全相反**。
 > 事故背景：2026-10-04 会话 `01a107ea` 两次无响应停顿，根因是本包 `die.exe` 漏登记导致拉起 GUI 版（弹窗、零 stdout、进程不退）。工具执行是**同步阻塞**的：命令不返回，模型不会运行、不会有任何 token 产出，终端计时器继续走。**没有模型能察觉自己的命令卡住**，因此约束必须前置到命令本身。
 
 ### 本包特有（硬门）
 
-1. **工具路径只认本机实测值**（`Get-Command <id>` → 无值再退到 `D:\Tools` 的别名表与递归兜底）；装法查 `TOOLS.md`。`运行模式=GUI` 的工具**禁止经 bash 执行**，必须换成 CLI 孪生（例：`die.exe`→`diec`、`x64dbg.exe`→控制台 headless、`Wireshark.exe`→`tshark`）或该工具的 MCP 通道。找不到 CLI 孪生时（如 PE-bear、jeb-pro、scylla），该工具只能由人在桌面侧操作，MUST NOT 由 agent 拉起。
+1. **工具路径只认本机实测值**，且**必须走探测层四级递进**（`Resolve-ReverseToolSpec`，见 ACTION REQUIRED 第 4 条）—— 单条 `Get-Command <id>` 返回空**不构成「缺工具」**，PATH 快照过期时它会对所有工具返回空（2026-10-08 实测）；装法查 `TOOLS.md`。`运行模式=GUI` 的工具**禁止经 bash 执行**，必须换成 CLI 孪生（例：`die.exe`→`diec`、`x64dbg.exe`→控制台 headless、`Wireshark.exe`→`tshark`、`ida.exe`→`idat`）或该工具的 MCP 通道；注意 PATH 里 GUI 版常与 CLI 版并存，探测可能返回 GUI，**用前先确认 `Command` 的文件名是 CLI 孪生**。找不到 CLI 孪生时（如 PE-bear、jeb-pro、scylla），该工具只能由人在桌面侧操作，MUST NOT 由 agent 拉起。
 2. **`TOOLS.md` 是装法说明书（机器无关），不是路径索引**：它只说「干什么用 / 哪个 skill 要 / 装法 / 许可」，**不含本机路径，也没有生成器 —— 直接手改**。本项目不维护任何工具状态文件：工具定位是运行时探测，所以不存在「索引过期」的问题，也不存在刷新步骤。
 3. **首次使用某工具前先跑该行「验证命令」列**，确认路径与版本，再进入实际调用。不得凭目录名猜可执行文件名（`die`/`diec`、`Wireshark`/`tshark` 就是同名不同物的现成教训）。
 
-### 通用八条（与卡片 §4 对齐）
+### 通用八条
 
 4. **每条 shell 必须带 `timeout`**：取值按本包 `默认 timeout` 列（探查 30s / 分析 120s / 构建 600s）。宁可短超时后重试，不可长超时后干等。
-5. **GUI / 交互式二进制禁入 bash**。已实测的替换关系：`die.exe` → `diec.exe -d -e -j <file>`；`wireshark.exe` → `tshark.exe`；`ida.exe` → `idalib-mcp` 或 `pyghidra-mcp` / `analyzeHeadless`；`x64dbg.exe` → **控制台版 headless**（同引擎，首选；真实路径靠本机 `Get-Command x64dbg-headless` 探测，配合 `x64dbg MCP` 80 个工具调用）；确需 GUI 观察才起在交互式桌面会话里，禁经管道/服务方式拉起。
+5. **GUI / 交互式二进制禁入 bash**。已实测的替换关系：`die.exe` → `diec.exe -d -e -j <file>`；`wireshark.exe` → `tshark.exe`；`ida.exe` → `idalib-mcp` 或 `pyghidra-mcp` / `analyzeHeadless`；`x64dbg.exe` → **控制台版 headless**（同引擎，首选）。**这些 CLI 孪生的真实路径一律走探测层 `Resolve-ReverseToolSpec`** —— 注意 `x64dbg-headless` 这个名字在多数机器上**不存在**，正确写法是 `Resolve-ReverseToolSpec -Name 'x64dbg'`，它会经 `_map.json` 解析到 `headless.exe`；配合 `x64dbg MCP` 80 个工具调用。确需 GUI 观察才起在交互式桌面会话里，禁经管道/服务方式拉起。
 6. **一条命令只做一件事**：链式 `&&`/`;`/`|` ≤ 8 段，不跨主机、不跨路径体系。Git-Bash 下 `/tmp` 实为 `C:\tmp`，与 Windows 路径混写必错。
 7. **长操作后台 + 轮询**，禁止同步阻塞：大构建、批量解包、首次拉包、大批量传输、长时间分析一律后台起进程再轮询产物。
 8. **快慢命令不得同批并行**：一条无界命令会扣住整轮并行调用中已完成的兄弟结果。
@@ -46,15 +53,22 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 
 ### 逆向工具已知物理陷阱与避坑守则（MUST NOT 踩坑）
 
-1. **rabin2 执行陷阱（极其严重）**：
-   `rabin2.exe` 与 `radare2.exe` 为同一多路复用二进制且缺少 argv[0] 分发，执行 `rabin2 -I <文件>` 会被当作 r2 脚本解析并**直接执行目标二进制**！在未知样本/恶意文件分析时属于严重安全事故。
-   **铁律**：禁止使用 `rabin2 -I`，必须强制使用 `radare2.exe -q -c 'iI' <文件>` 或 `r2 -q -c 'iI'`。
+1. **rabin2 / radare2 多路复用陷阱（先验再用）**：
+   Windows 上 `rabin2.exe` 与 `radare2.exe` 常是**同一份多路复用二进制**（`rabin2` 只是 `radare2` 的入口名）。
+   正常发行版靠 `argv[0]` 分发，`rabin2 -x` 正常按 rabin2 跑；**但被打包/改名过的构建可能丢掉分发**，
+   此时参数会被当 r2 脚本解析，未知样本有被直接执行的风险。
+   **铁律：先验一次再用，验不过就换等价写法。**
+   - **验**：`rabin2 -v` 必须回显出 **rabin2 自己的版本行**；回显不对、或命令挂住 → 不许用它。
+   - **永远安全的等价写法**：文件信息 `radare2 -q -c 'iI' <文件>`、节区 `-c 'iS'`、
+     导入 `-c 'ii'`、导出 `-c 'iE'`、字符串 `-c 'iz'`（或 `floss <文件>`）。
+   - 本机实测（2026-10-09，radare2 6.2.0）：`rabin2 -v` 回显正确、`rabin2 -I <文件>` 未执行目标 ——
+     本机可直接用 rabin2，但**换机器后仍要先跑那一步 `-v`**。
 2. **x64dbg headless 管道剥除空格陷阱**：
    `x64dbg` 无头版（`headless.exe`）命令行管道会剥除传入参数中的空格，导致多参数命令解析断裂。
    **铁律**：动态调试下断点、读写内存、单步等操作，一律通过 `x64dbg MCP` (JSON-RPC) 交互，禁止经 stdin 裸塞带空格的复杂字符串命令。
 3. **Ghidra analyzeHeadless 挂死陷阱**：
    Ghidra `analyzeHeadless` 必须预先创建 project 目录，若目录不存在或遇脚本错误，批处理可能会 pause 挂死。
-   **铁律**：必须预先 `mkdir` 创建项目目录，且命令末尾必须加 `< nul` 重定向 stdin 防止 pause 挂死（例如 `cmd /c "analyzeHeadless.bat ... < nul"`）。优先推荐直接使用本机已生效的 `pyghidra-mcp`（20 工具；**启动器按 `references/tool-registry.md` 的 `ghidra` 端点行取 `command` / `url`，不要写死脚本名** —— 实测全仓与本机都没有 `start-ghidra-mcp.bat`）。
+   **铁律**：必须预先 `mkdir` 创建项目目录，且命令末尾必须加 `< nul` 重定向 stdin 防止 pause 挂死（例如 `cmd /c "analyzeHeadless.bat ... < nul"`）。优先推荐直接使用 `pyghidra-mcp`（20 工具；**端点按 `../references/tool-registry.md` 里 `pyghidra-mcp` 那一行取，表里只有「传输方式 / 端点 / 前置依赖 / 备注」四列，没有 `command` 列；启动方式由本机四级探测得出，不要写死脚本名** —— 实测全仓与本机都没有 `start-ghidra-mcp.bat`）。
 4. **dnSpy.Console IL 模式建工程陷阱**：
    `dnSpy.Console` 在 IL 模式下不支持 `-o`（创建工程目录），若带 `-o` 会直接报错抛异常。
    **铁律**：反编译 IL 必须使用 `--md <token>` 输出到标准输出（例如 `dnSpy.Console.exe target.dll --il --md 0x06000001`）。
@@ -69,8 +83,9 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 ## EXECUTION ENVIRONMENT（运行环境）
 
 > 架构（2026-10-05 起）：**单机 · 无跨机假设**。你只操作自己运行所在的这一台机器，不存在宿主↔客户机的跨设备控制。
-> **路径靠探测，不靠声明。** 工具约定落址 `D:\Tools\<分类>\<工具名>\`，但这是**约定不是保证** —— `winget` 装的进 `C:\Program Files\`、pip 的进用户 `Scripts\`、SDK 的进 `%LOCALAPPDATA\`。拼根目录必然跑不全。
-> 正确做法：用探测层 —— dot-source `scripts/lib/Bootstrap.ps1`，调 `Resolve-ReverseToolSpec -Name <工具id>`，它按 `env` → `PATH` → `D:\Tools\_map.json` 别名 → 工具根递归 四级递进，返回 `Available` / `Command` / `Via`。
+> **技能包根与工具根是主人定死的约定：`C:\relab2`（仓库）与 `D:\Tools`（工具）。** 换机也是这两个，命令里直接写。
+> 但**工具具体在哪个子目录**不靠声明 —— `winget` 装的进 `C:\Program Files\`、pip 的进用户 `Scripts\`、SDK 的进 `%LOCALAPPDATA\`，所以工具的**具体路径**一律用探测层现场求，不要自己拼子目录。
+> 正确做法：用探测层 —— dot-source `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（配置好的机器；若不存在则从本文件往上两级找 `scripts\lib\Bootstrap.ps1`），调 `Resolve-ReverseToolSpec -Name <工具id>`，它按 `env` → `PATH` → 别名表（仓内 `scripts/lib/toolmap.default.json`，本机 `D:\Tools\_map.json` 可覆盖）→ 工具根递归 四级递进，返回 `Available` / `Command` / `Via`。
 > `Via=scan` 的可信度最低（靠文件名扫出来的），用之前先实跑一次版本输出确认身份。四级说明见 `TOOLS.md` §0；MCP 通道见 `references/tool-registry.md`。
 
 ### 运行环境选择（MUST）
@@ -88,8 +103,8 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 **能用 MCP 用 MCP → 能用无头/CLI 用 CLI → 都不行才开 GUI 观察 → GUI 严禁经 bash 同步启动**
 
 1. **已生效的 MCP 资产（智能体首选通道）**：
-   - **ghidra / pyghidra-mcp**：**streamable-http 常驻守护 `http://127.0.0.1:9111/mcp`**（不再用 stdio，以免每次 `pi` 启动多付 ~7 s）。提供 20 个静态分析与反编译工具（`import_binary`, `decompile_function`, `search_symbols_by_name`, `list_imports`, `gen_callgraph` 等）。**服务默认不监听**：做 Ghidra 静态分析前先由 agent 自己拉起守护 —— 端点/启动命令按 `references/tool-registry.md` 的 `ghidra` 行取（`command` = 启动器、`url` = `http://127.0.0.1:9111/mcp`、`requires` = `JAVA_HOME`/`GHIDRA_INSTALL_DIR` 前置；Ghidra 本体位置由本机 `Get-Command ghidraRun` 探测），冷启 7–10 s，幂等；按该端点探活确认 `STATE: READY` 后才用，收尾再按同一来源停守护。**本项目无 `toolreg/capabilities.json`，端点以 `references/tool-registry.md` 为准并实测探活；不得假设某个固定盘符下的 `start-ghidra-mcp.bat` 存在。**
-   - **x64dbg-mcp**：HTTP `http://127.0.0.1:9094/`，基于 Bearer Token（由环境变量 `X64DBG_MCP_TOKEN` 动态注入）。提供 80 个动态调试工具（断点、单步、寄存器、读写内存、反汇编、符号搜索、调用栈）。**服务默认不监听**：动态调试前先起 x64dbg —— 端点细节按 `references/tool-registry.md` 的 `x64dbg` 行取（`config` 存 Token、`plugin` 为 `.dp64`）；**注意 9095 是 x32 的服务口而非控制口**（`bootstrap-manifest.json` 明确 x64=9094 / x32=9095），向 9095 发指令会打到 x32 server 或无人应答。启动器按该行的 `plugin` 所在目录起 x64dbg/headless（插件活在被调试进程里，9094 才监听），收尾用同一入口停。**本项目无 `toolreg/capabilities.json`，端点以 `references/tool-registry.md` 为准，并须实测探活确认；不得假设某个固定盘符下的 `start-mcp.bat` 存在。**
+   - **ghidra / pyghidra-mcp**：**streamable-http 常驻守护 `http://127.0.0.1:9111/mcp`**（不再用 stdio，以免每次 `pi` 启动多付 ~7 s）。提供 20 个静态分析与反编译工具（`import_binary`, `decompile_function`, `search_symbols_by_name`, `list_imports`, `gen_callgraph` 等）。**服务默认不监听**：做 Ghidra 静态分析前先由 agent 自己拉起守护 —— 端点按 `../references/tool-registry.md` 里 `pyghidra-mcp` 那一行取（该表四列＝传输方式 / 端点 / 前置依赖 / 备注；前置＝JDK 21+ 与 Ghidra 本体），**启动方式用四级探测现场求**（`Resolve-ReverseToolSpec -Name 'pyghidra_mcp'`；Ghidra 本体路径用 `-Name 'ghidraRun'`），冷启 7–10 s，幂等；按该端点探活确认 `STATE: READY` 后才用，收尾再按同一来源停守护。**不得假设某个固定盘符下的 `start-ghidra-mcp.bat` 存在。**
+   - **x64dbg-mcp**：HTTP `http://127.0.0.1:9094/`，基于 Bearer Token（由环境变量 `X64DBG_MCP_TOKEN` 动态注入）。提供 80 个动态调试工具（断点、单步、寄存器、读写内存、反汇编、符号搜索、调用栈）。**服务默认不监听**：动态调试前先起 x64dbg —— 端点按 `../references/tool-registry.md` 里 `x64dbg-mcp` 那一行取（四列＝传输方式 / 端点 / 前置依赖 / 备注；前置＝x64dbg + 插件 + Bearer token）；**注意 9095 是 x32 的服务口而非控制口**（`bootstrap-manifest.json` 明确 x64=9094 / x32=9095），向 9095 发指令会打到 x32 server 或无人应答。启动方式与插件位置由四级探测现场求（插件活在被调试进程里，9094 才监听），收尾用同一入口停。**不得假设某个固定盘符下的 `start-mcp.bat` 存在。**
    - **MCP 启停纪律（硬门）**：本机 HTTP 型 MCP 全是「按需启动」，注册 ≠ 已监听。启动/关闭由 agent 用上述 .bat 自行完成，**严禁要求用户手工编辑 `mcp.json`、严禁把启停动作甩给人**；服务未起仅表现为该 server `failed`，先跑对应 start 脚本并 `/mcp reconnect <server>` 再定位别的问题。
    - **idalib-mcp / idapro**：IDA Pro 无头 stdio 及 GUI 插件通道（72 个工具）。
    - **jshook / reqable-mcp / playwright-mcp / chrome-devtools**：前端与网络/浏览器分析 MCP 服务。
@@ -109,7 +124,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
   - 动作：调用 `diec.exe -d -e -j` 检测架构与加壳；调用 `floss.exe` 提取静态与解码字符串；调用 `capa.exe -r <rules> -j <target>` 识别加密、网络与恶意能力分支。
   - 产出：明确 Entry Point、编译器/混淆类型、加密/哈希特征与初步脱壳路线。
 - **阶段二：动静反解与关键逻辑定位 (Disassembly & Logic Trace)**
-  - 动作：优先调用 `pyghidra-mcp`（20 tools；**启动器不要写死**——按 §MCP 端点（references/tool-registry.md）里 `ghidra` 那组的 `command` / `url` 拉起并探活；实测全仓与本机都不存在 `start-ghidra-mcp.bat` 这个文件）或 `idalib-mcp` / `idapro` 反编译关键函数；C#/.NET 目标调用 `ilspycmd` 或 `dnSpy.Console --md`；CLI 侦察调用 `radare2.exe -q -c 'iI'`。
+  - 动作：优先调用 `pyghidra-mcp`（20 tools；**端点按 `../references/tool-registry.md` 的 `pyghidra-mcp` 行取，启动方式用四级探测现场求，不要写死脚本名**；实测全仓与本机都不存在 `start-ghidra-mcp.bat` 这个文件）或 `idalib-mcp` / `idapro` 反编译关键函数；C#/.NET 目标调用 `ilspycmd` 或 `dnSpy.Console --md`；CLI 侦察调用 `radare2.exe -q -c 'iI'`。
   - 产出：定位关键校验分支、文件偏移（File Offset）、内存虚拟地址（VA）与核心调用流。
 - **阶段三：动态追踪与断点取证 (Dynamic Trace & Debugging)**
   - 动作：遇强混淆或反调试，启动 `headless.exe` 配合 `x64dbg-mcp` HTTP API（80 tools）下断点抓取内存明文；使用 `cdb.exe` 分析 crash dump；调用 `pe-sieve.exe /pid <PID>` 扫描 inline hook；Frida/objection 动态插桩。
@@ -196,7 +211,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 1. 平台原生 router（Windows `scripts/master-route.ps1`；Linux/macOS/Kali `scripts/master-route.sh`）→ PRIMARY（`config/routing.json`）
 2. 平台原生 `case-init` → `scope.md`
 3. 打开 PRIMARY `SKILL.md`
-4. 疑难时读 `routing.md`；需要本机路径时**当场探测** `(Get-Command <工具id> -ErrorAction SilentlyContinue).Source`，无值再按候选目录逐个 `Test-Path`（`TOOLS.md` 是旧机快照，其 ``D:\Tools`` 为占位符，不能直接用）
+4. 疑难时读 `routing.md`；需要本机工具路径时**走探测层**：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <工具id>`（`Get-Command` 只是其中一级，返回空不等于缺工具，见 `references/env-selfcheck.md`；`TOOLS.md` 是装法说明书，不是路径索引）
 
 社区适配层只在 `R46`–`R49` 或 canonical 专项 wrapper 已选中后按需读取：
 `skills/community/registry.json` 是 provenance/maturity/risk 目录，
@@ -208,7 +223,9 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 这些模块可以按需组合使用：
 
 1. **拿到一个目标** → 先看文件类型，选对应的分析工具
-2. **快速捡漏** → strings / rabin2 -z / ltrace 看看有没有直接线索
+2. **快速捡漏** → strings / `radare2.exe -q -c 'iz'` / ltrace 看看有没有直接线索
+   （要用 rabin2 之前先跑 `rabin2 -v` 验一次 argv[0] 分发，理由见上文陷阱 1；
+   验不过就统一用 `radare2 -q -c '...'` 的等价写法。）
 3. **深入分析** → 如果需要反编译→IDA；需要动态 Hook→Frida；需要符号执行→angr
 4. **一条路走不通就换一条** → 静态分析不行就动态，Java 层不行就看 so，页面观察不够就断点
 
@@ -242,7 +259,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 新增 skill 时，按 `CONTRIBUTING.md` 的标准流程操作，确保：
 - 路由矩阵能正确分流
 - bootstrap 系统能在获批后补齐依赖
-- 新增工具已在 `TOOLS.md` 登记装法、在 `D:\Tools\_map.json` 登记位置
+- 新增工具已在 `TOOLS.md` 登记装法；若有孪生/无头对应关系，登记进仓内 `scripts/lib/toolmap.default.json`（机器位置不写，交给探测层现场求）
 
 ## 关联资源
 
@@ -276,7 +293,7 @@ bash <package-root>/kali/scripts/bootstrap-reverse.sh 工具名 --start-services
 >
 > 清单中未登记的工具（如 unblob/EMBA 等）`MUST` 在 skill 文档中走手动安装步骤，禁止假装可 bootstrap。
 
-自举完成后，。工具定位为运行时探测，无需刷新；未披露并获批前不安装。
+自举完成后，工具定位仍为运行时探测，无需刷新；未披露并获批前不安装。
 
 ## 操作先例库（Precedent Files）
 
@@ -303,4 +320,5 @@ bash <package-root>/kali/scripts/bootstrap-reverse.sh 工具名 --start-services
 - [ ] 我是否完成了路由三轴匹配（目标类型 + 用户意图 + 工具链）？
 - [ ] 我是否在路由成功后读取了目标 skill 的 SKILL.md？
 - [ ] 路由未命中时，我是否提议了新增 skill 而非强行匹配？
-- [ ] 我是否跑过 `(Get-Command <id> -ErrorAction SilentlyContinue).Source` 定位实际路径（而不是拿 `TOOLS.md` 里的装法当路径猜）？
+- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `TOOLS.md` 里的装法当路径猜）？
+- [ ] 我拿到的 `Command` 是 **CLI 孪生而非 GUI 版**（`diec`/`idat`/`tshark`/`headless`）？

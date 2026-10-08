@@ -1,7 +1,10 @@
 # Tool Registry —— MCP 通道登记模板
 
 > **这份表不回答「工具有没有」，只回答「MCP 通道走哪里」。**
-> 工具装没装、装在哪，一律现查：`skillpack/skills/TOOLS.md` §0 + `(Get-Command <id>).Source`。
+> 工具装没装、装在哪，一律现查：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件上一级的 `..\skills\scripts\lib\Bootstrap.ps1`）→
+> `Resolve-ReverseToolSpec -Name <id>`，读它的 `Command` / `Available` / `Via`。
+> `TOOLS.md` §0 是**装法说明书（机器无关），不含本机探测结果**，不得当本机路径用；
+> 单条 `Get-Command` 只是四级探测里的第 2 级，返回空不等于缺工具（见 `env-selfcheck.md`）。
 >
 > **本文件不缓存本机状态。** 端口、状态列都是**待实测**，不是事实。
 > 历史上这里写过某台机器的「已装 / 未装 / 端口 13337 已验证」—— 那正是它腐烂的原因，已删除。
