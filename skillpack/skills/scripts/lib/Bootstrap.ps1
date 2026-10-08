@@ -75,6 +75,34 @@ function Get-ReverseToolRoot {
     return 'D:\Tools'
 }
 
+# ── 运行期环境自愈（防止继承父进程遗留的死路径污染） ─────────────────────────
+$toolRootCurrent = Get-ReverseToolRoot
+if (Test-Path -LiteralPath $toolRootCurrent -PathType Container) {
+    # 1. 修复 JAVA_HOME
+    $jdkCandidate = Join-Path $toolRootCurrent 'runtime\jdk21\jdk-21.0.12.1+1'
+    if ((-not $env:JAVA_HOME -or -not (Test-Path -LiteralPath $env:JAVA_HOME -PathType Container)) -and (Test-Path -LiteralPath $jdkCandidate)) {
+        $env:JAVA_HOME = $jdkCandidate
+    }
+    # 2. 修复 DOTNET_ROOT
+    $dotnetCandidate = Join-Path $toolRootCurrent 'runtime\dotnet8'
+    if ((-not $env:DOTNET_ROOT -or -not (Test-Path -LiteralPath $env:DOTNET_ROOT -PathType Container)) -and (Test-Path -LiteralPath $dotnetCandidate)) {
+        $env:DOTNET_ROOT = $dotnetCandidate
+    }
+    # 3. 修复 GOROOT
+    $goCandidate = Join-Path $toolRootCurrent 'runtime\go\go'
+    if ((-not $env:GOROOT -or -not (Test-Path -LiteralPath $env:GOROOT -PathType Container)) -and (Test-Path -LiteralPath $goCandidate)) {
+        $env:GOROOT = $goCandidate
+    }
+    # 4. 确保 D:\Tools\cli 在会话 PATH 前端
+    $cliCandidate = Join-Path $toolRootCurrent 'cli'
+    if (Test-Path -LiteralPath $cliCandidate) {
+        $pathList = $env:PATH -split ';'
+        if ($pathList -notcontains $cliCandidate) {
+            $env:PATH = "$cliCandidate;$($env:PATH)"
+        }
+    }
+}
+
 function Get-ReverseToolMap {
     [CmdletBinding()]
     param()
