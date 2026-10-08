@@ -16,7 +16,7 @@
       "keywords": [
         { "must": "(?<![a-z0-9_])apk(?![a-z0-9_])|smali|jadx|apktool|(?<![a-z0-9_])android(?![a-z0-9_])|android.?reverse|安卓|反编译.?apk|apk.?加固|重打包|root.?detect|root.?检测|证书.?校验|certificate.?pinning|pinning.?绕过|签名.?校验", "note": "android 裸词/root 检测/证书校验/pinning 绕过 均为 APK 分析常见诉求" },
         { "must": "安装包", "mustAll": ["手机|安卓|apk|android|应用|app"], "note": "apk SKILL.md APK包体分析；约束移动安装包语境防吸走桌面/mac安装包查询" },
-        { "must": "证书.?绑定|ssl.?pinning|危险权限|梆梆|四大组件|manifest|flutter|dart|加壳", "note": "ctf-apk-diag A类：APK口语词直达R1（A03 ssl pinning/A12 证书绑定/A27 flutter）；权限/脱壳/模拟器见下一条scoped规则（保182-120/800/810与自然-217）" },
+        { "must": "证书.?绑定|ssl.?pinning|危险权限|梆梆|四大组件|manifest|flutter|dart|加壳", "mustAll": ["apk|安卓|android|应用|安装包|手机|dex|smali|jadx|apktool|(?<![a-z0-9_.])app(?![a-z0-9_.])"], "note": "ctf-apk-diag A类：APK口语词直达R1（A03 ssl pinning/A12 证书绑定/A27 flutter）；权限/脱壳/模拟器见下一条scoped规则（保182-120/800/810与自然-217）。加壳此前是裸词，会把 Windows PE 的『加壳 exe 商业软件卡密』抢成 apk（实测 6 条），故加 mustAll 锁 APK 语境" },
         { "must": "脱壳|权限|模拟器", "mustAll": ["apk|安卓|android|应用|app|手机|smali|dex|jadx|apktool"], "note": "ctf-apk-diag A类：脱壳/权限/模拟器须APK语境（A06/A08均含应用）；mustAll刻意不含安装包/工具，防吸走R31-H081与R23-s3查询" },
         { "must": "装上.{0,6}(一点|闪退|退回桌面|没反应|打不开)|同一个包.{0,6}手机|手机上能装|背地里.{0,6}判断|查我这台机子", "mustAll": ["手机|安装|应用|包|安卓|apk|app"], "note": "canon-gap N001-N003：APK口语闪退/环境检测（SKILL适用范围root检测/证书校验/加固致打不开；Manifest/重打包）" },
         { "must": "装好打开后.{0,6}往外发|往外发了些什么", "mustAll": ["手机|安装|应用|打开|往外发|服务器|发"], "note": "canon-gap N001：APK连外发行为（SKILL description看看它连了哪些服务器）" }
