@@ -24,6 +24,7 @@ apply_protocol_automation_fix.py —— 修 workflows/protocol-automation.md 的
 from __future__ import annotations
 
 import argparse
+import re
 import subprocess
 import sys
 from pathlib import Path

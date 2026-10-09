@@ -768,7 +768,7 @@ def duplicate_key_exploit():
     dup_payloads = [
         # 两个相同 key, 值不同
         '{"amount":100,"amount":0.01}',              # 重复 key
-        '{"amount":100,"amount":0.01,"amount":0}'},  # 三重 key
+        '{"amount":100,"amount":0.01,"amount":0}',   # 三重 key
         '{"amount":100,"AMOUNT":0.01}',              # 大小写不同
         '{"amount":100,"amount ":0.01}',             # 尾部空格
         '{"amount":100," amount":0.01}',             # 前导空格
@@ -888,7 +888,7 @@ def xml_c14n_variants():
         '<root><amount>100</amount><status>paid</status></root>',
         
         # 自闭合标签
-        '<root><amount>100</amount><status>paid'/></root>',  # 不是同语义
+        '<root><amount>100</amount><status>paid\' /></root>',  # 不是同语义
         
         # 属性顺序
         '<root a="1" b="2"><amount>100</amount></root>',
@@ -1227,7 +1227,7 @@ def raw_vs_encoded():
         print(f"  {name:20s} {repr(val)[:30]:30s} sign={sig}")
     
     print()
-    print("关键: 所有 sign 不同, 即使"逻辑上"是同一笔数据")
+    print("关键: 所有 sign 不同, 即使「逻辑上」是同一笔数据")
     print("如果签名方用 raw bytes, 验签方用 hex:")
     print("  sign(hash(data)) ≠ sign(hash(data.hex()))")
 ```

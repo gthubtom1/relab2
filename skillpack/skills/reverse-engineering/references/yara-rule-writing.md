@@ -53,7 +53,9 @@ rule SampleFamily_Detector
         uint16(0) == 0x5A4D and      // MZ 头
         filesize < 500KB and
         2 of ($str*) and             // 至少 2 个字符串匹配
-        $code1                       // 必须匹配特征码
+        $code1 and                    // 必须匹配唯一指令序列
+        any of ($code2) and           // 任一特征码变体
+        $re1                          // 必须匹配 UUID 格式串
 }
 ```
 
