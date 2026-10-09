@@ -286,7 +286,7 @@
 
 | 症状 / 信号（我看到了什么） | 文档 | 是什么 |
 |---|---|---|
-| [完整技术索引](../index.md) | [index.md](../ctf-sandbox/references/kb-index/index.md) | CTF Website 渗透测试知识库 — Web 攻击全表面 118 篇 |
+| [完整技术索引](../ctf-sandbox/references/kb-index/index.md) | [index.md](../ctf-sandbox/references/kb-index/index.md) | CTF Website 渗透测试知识库 — Web 攻击全表面 118 篇 |
 
 **references/payloads** — `references/payloads/`
 
@@ -392,8 +392,8 @@
 
 | 技能 | 篇数 | 文档 |
 |---|---|---|
-| `kernel-exploit/references/` | 5 | [cifswitch-nss-privesc](../kernel-exploit/references/cifswitch-nss-privesc.md) · [mm-null-ptrace-bypass](../kernel-exploit/references/mm-null-ptrace-bypass.md) · [page-cache-write-family](../kernel-exploit/references/page-cache-write-family.md) · [pintheft-io-uring-page-cache](../kernel-exploit/references/pintheft-io-uring-page-cache.md) · [slab-cross-cache](slab-cross-cache.md) |
-| `game-reverse/references/` | 6 | [README](README.md) · [game-anti-cheat-bypass](../game-reverse/references/game-anti-cheat-bypass.md) · [game-esp-wallhack-rendering](../game-reverse/references/game-esp-wallhack-rendering.md) · [game-memory-hacking](../game-reverse/references/game-memory-hacking.md) · [game-packet-interception](../game-reverse/references/game-packet-interception.md) · [game-speedhack-time-manipulation](game-speedhack-time-manipulation.md) |
+| `kernel-exploit/references/` | 5 | [cifswitch-nss-privesc](../kernel-exploit/references/cifswitch-nss-privesc.md) · [mm-null-ptrace-bypass](../kernel-exploit/references/mm-null-ptrace-bypass.md) · [page-cache-write-family](../kernel-exploit/references/page-cache-write-family.md) · [pintheft-io-uring-page-cache](../kernel-exploit/references/pintheft-io-uring-page-cache.md) · [slab-cross-cache](../kernel-exploit/references/slab-cross-cache.md) |
+| `game-reverse/references/` | 6 | [README](../game-reverse/references/README.md) · [game-anti-cheat-bypass](../game-reverse/references/game-anti-cheat-bypass.md) · [game-esp-wallhack-rendering](../game-reverse/references/game-esp-wallhack-rendering.md) · [game-memory-hacking](../game-reverse/references/game-memory-hacking.md) · [game-packet-interception](../game-reverse/references/game-packet-interception.md) · [game-speedhack-time-manipulation](../game-reverse/references/game-speedhack-time-manipulation.md) |
 
 **症状对照**（这些症状现在应读上面那几篇，不是「本包不支持」）：
 
