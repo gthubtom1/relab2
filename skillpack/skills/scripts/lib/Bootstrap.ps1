@@ -269,10 +269,40 @@ function Test-ReverseToolDenied {
     return $false
 }
 
+<#
+  从命令路径推断版本提示 —— **不启动任何进程**。
+
+  为什么需要：换机时拿到 `idat` 只知道路径里写着「IDA Pro 9.3」，
+  但 `Available/Command/Via` 三个字段都无法表达「这是 8.3 还是 9.3」。
+  2026-10-10 的 9.4 → 9.3 换版就是这个坑的实例：
+  文档里所有写 `IDA Professional 9.4` 的别名全部指向已删目录，却报Available=True。
+
+  判据顺序（都不执行目标程序）：
+    1. 路径里的显式版本串：IDA Pro 9.3 / x64dbg-2024 / python-3.12
+    2. 路径里的大版本号目录：\9.3\、\v8.3\
+    3. 拿不到就返回 $null —— **绝不猜**，调用方据此知道「版本未知，需实跑 --version」
+#>
+function Get-ReverseToolVersionHint {
+    param([string]$Command)
+    if (-not $Command) { return $null }
+    $p = $Command -replace '/', '\'
+
+    # 形如 "IDA Pro 9.3" / "IDA Pro 9.4" / "x64dbg v8.3" / "python-3.12"
+    $m = [regex]::Match($p, '(?i)(?<name>[\w\.\-\s]{2,24}?)[-\s]?v?(?<ver>\d+\.\d+(?:\.\d+)?)(?=[\\\._]|$)')
+    if ($m.Success) {
+        return ('{0} {1}' -f $m.Groups['name'].Value.Trim(), $m.Groups['ver'].Value)
+    }
+    # 路径里独立的大版本目录：\9.3\ / \v8.3\
+    $m2 = [regex]::Match($p, '\\v?(?<ver>\d+\.\d+(?:\.\d+)?)(\\|$)')
+    if ($m2.Success) { return $m2.Groups['ver'].Value }
+    return $null
+}
+
 function New-ReverseToolSpec {
     param([string]$Name, [string]$Command, [string]$Via)
     return [pscustomobject]@{
         Name = $Name; Available = $true; Command = $Command; Via = $Via; PrefixArgs = @()
+        VersionHint = (Get-ReverseToolVersionHint -Command $Command)
     }
 }
 
@@ -280,6 +310,7 @@ function New-ReverseUnavailableSpec {
     param([string]$Name)
     return [pscustomobject]@{
         Name = $Name; Available = $false; Command = $null; Via = $null; PrefixArgs = @()
+        VersionHint = $null
     }
 }
 
