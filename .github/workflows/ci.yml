@@ -418,6 +418,13 @@ jobs:
         shell: bash
         run: python3 skillpack/skills/scripts/verify-repository-security.py
 
+      # ★ 2026-10-10 接入：这个测试此前从未被任何 job 调用，所以它坏掉也没人知道
+      #（2026-10-10 实测发现 verify-doc-links 处于 BLOCKED 状态，正是靠它报出来的）。
+      # 它的价值在于「验证门禁本身能拦住坏改动」——没有负控，门禁就只是装饰。
+      - name: CI gate negative controls
+        shell: bash
+        run: python3 skillpack/tests/community/test-ci-negative-controls.py
+
   gradle-wrapper-validation:
     name: Gradle wrapper validation
     runs-on: ubuntu-latest
