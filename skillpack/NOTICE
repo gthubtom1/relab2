@@ -57,3 +57,16 @@ Copyright (c) 2026 zhaoxuya520
 本仓库当前是 **local-only integration candidate**，不是可公开分发的发布物。
 `scripts/validate-integration.py --release` 与 `scripts/verify-release-gate.py
 --release` 在上述未决项清零前均以退出码 20 阻断。
+
+## 改编来源（非 community-raw 直采，走另一套 provenance）
+
+| source id | 上游 | 锁定提交 | license_declared | license_status | notice |
+|---|---|---|---|---|---|
+| `open-reverselab` | https://github.com/LING71671/open-reverselab | `e44c351032b2530c926b2aea224276bbee591b16` | `GPL-3.0` | `review-required` | `docs/community/open-reverselab-THIRD_PARTY_NOTICES.md` |
+| `spider-king-skill` | https://github.com/aoyunyang/spider-king-skill | `1ca713658524cadf5a1ca70cd3de3e1ec2b8073e` | `MIT` | `review-required` | `docs/community/spider-king-skill-THIRD_PARTY_NOTICES.md` |
+
+⚠ **`open-reverselab` 是 GPL-3.0（copyleft）**，改编内容达 220 篇，已覆盖
+`api-security` / `database-security` / `ctf-sandbox` / `attack-chain` / `cloud-k8s` /
+`identity-federation` / `reverse-engineering` 等技能。
+**对外分发前必须先决定整体许可策略** —— 见 `docs/community/open-reverselab-THIRD_PARTY_NOTICES.md`
+的「许可证含义」一节。本文件不代替该决定。
