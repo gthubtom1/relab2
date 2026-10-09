@@ -35,3 +35,16 @@ safebox/
 .env.*
 mcp-auth.json
 mcp_config.json
+# Ghidra / pyghidra-mcp 项目产物（二进制，会被另一个会话并发写入）
+pyghidra_mcp_projects/
+*.gpr
+*.rep/
+*.lock~
+
+# 调试残留（本包不该出现的测试产物）
+t.exe
+t.exe.*
+t.c
+unpacking/
+Hook.log
+IDAHook.log
