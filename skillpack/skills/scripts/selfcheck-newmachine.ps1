@@ -48,8 +48,24 @@ Write-Host ("工具根  : " + $(if ($ToolRoot) { $ToolRoot } else { '(未找到)
 Write-Host ''
 
 Write-Host '--- 1. 执行策略 ---' -ForegroundColor Cyan
-$ep = (Get-ExecutionPolicy)
-if ($ep -eq 'Restricted') {
+# ★ 2026-10-10 修正：原实现直接 `(Get-ExecutionPolicy)`，模块加载失败时
+#   抛异常被 $ErrorActionPreference='Continue' 吞成 $null，
+#   于是走到 else 分支打印「当前策略 = （空）」并 **$pass++ 记成通过** ——
+#   「读不到策略」被当成「策略没问题」。这正是本项目最想消灭的那类假绿。
+#   2026-10-10 实测可复现：PSModulePath 混入 WindowsApps 版 PowerShell 7 的
+#   模块目录时，PS 5.1 加载 Microsoft.PowerShell.Security 因 TypeData 重复定义失败，
+#   Get-ExecutionPolicy 直接 CommandNotFoundException。
+$ep = $null
+$epErr = $null
+try {
+  $ep = (Get-ExecutionPolicy -ErrorAction Stop)
+} catch {
+  $epErr = $_.Exception.Message
+}
+if ($null -eq $ep) {
+  Bad "读不到执行策略（模块载入失败）: $epErr"
+  Bad "本脚本靠 -ExecutionPolicy Bypass 仍可跑；通常是 PSModulePath 混入了其它 PowerShell 版本的模块目录"
+} elseif ($ep -eq 'Restricted') {
   Warn ("当前策略 = Restricted。本脚本靠 -ExecutionPolicy Bypass 绕过了，")
   Warn ("但你直接跑别的 .ps1 会失败 —— 调用时一律加 -ExecutionPolicy Bypass。")
   $pass++
@@ -141,7 +157,19 @@ try {
   if (-not (Get-Command Export-ReverseEnvironmentSnapshot -ErrorAction SilentlyContinue)) {
     . $boot
   }
-  $snapFile = Join-Path $SkillRoot '.hub\tools.local.json'
+  # ★ 2026-10-10 修正：原写 `$snapFile = Join-Path $SkillRoot '.hub\tools.local.json'`。
+  #   $SkillRoot 来自 REVERSE_SKILL_ROOT —— 若它指向一个**不存在**的目录，
+  #   Export-ReverseEnvironmentSnapshot 会**建出那个目录**并写文件。
+  #   这与「本脚本只测量、不修改」的自述矛盾（selfcheck-newmachine.ps1 头部声明），
+  #   也让「模拟换机」把快照落到任意路径。
+  #   快照属于**本仓库**的工具清单，应当写在仓库根下，不受 REVERSE_SKILL_ROOT 影响。
+  $repoSelf = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+  $hubDir   = Join-Path $repoSelf '.hub'
+  if (-not (Test-Path -LiteralPath $hubDir)) {
+    # 仓库自己的 .hub 缺失才建（这是本包的正常布局），绝不按 $SkillRoot 建
+    New-Item -ItemType Directory -Path $hubDir -Force | Out-Null
+  }
+  $snapFile = Join-Path $hubDir 'tools.local.json'
   $snap = Export-ReverseEnvironmentSnapshot -OutFile $snapFile
   # ★ Tools 是 OrderedDictionary，不是 PSCustomObject。
   #   早先写成 $snap.Tools.PSObject.Properties，数到的是字典自身的

@@ -8,7 +8,10 @@
 [CmdletBinding()]
 param(
   [string] $SkillRoot = '',
-  [string] $ToolRoot  = 'D:\Tools'
+  [string] $ToolRoot  = 'D:\Tools',
+  # ★ 2026-10-10 新增：Machine 级环境变量写入必须显式开启（红线 R2）。
+  #   探测层从 User 级读变量，不需要 Machine 级。
+  [switch] $WriteMachine
 )
 
 $ErrorActionPreference = 'Stop'
@@ -31,11 +34,21 @@ Write-Host "写入持久化环境变量..." -ForegroundColor Yellow
 [System.Environment]::SetEnvironmentVariable("REVERSE_SKILL_ROOT", $SkillRoot, [System.EnvironmentVariableTarget]::User)
 [System.Environment]::SetEnvironmentVariable("REVERSE_TOOL_ROOT", $ToolRoot, [System.EnvironmentVariableTarget]::User)
 
-try {
-    [System.Environment]::SetEnvironmentVariable("REVERSE_SKILL_ROOT", $SkillRoot, [System.EnvironmentVariableTarget]::Machine)
-    [System.Environment]::SetEnvironmentVariable("REVERSE_TOOL_ROOT", $ToolRoot, [System.EnvironmentVariableTarget]::Machine)
-} catch {
-    Write-Warning "写入系统(Machine)环境变量需要管理员权限，已仅完成当前用户(User)环境变量写入。"
+# ★ 2026-10-10 修正：原实现在这里 try 写 Machine 级环境变量。
+#   这违反 环境初始化.md §0 红线 R2（「不写 Machine 级环境变量 ——
+#   影响这台机器上所有人，你无权替主人做这个决定」）。
+#   文档只写「会尝试，有权限就真写」，但这是换机入口第一步的命令，
+#   而本机默认是管理员 —— 等于默认破线。
+#   探测层不需要 Machine 级变量（它从 User 级读）。
+#   现在只写 User 级；确需 Machine 级请显式加 -WriteMachine 并先问主人。
+if ($WriteMachine) {
+    try {
+        [System.Environment]::SetEnvironmentVariable("REVERSE_SKILL_ROOT", $SkillRoot, [System.EnvironmentVariableTarget]::Machine)
+        [System.Environment]::SetEnvironmentVariable("REVERSE_TOOL_ROOT", $ToolRoot, [System.EnvironmentVariableTarget]::Machine)
+        Write-Host "已写 Machine 级环境变量（-WriteMachine）" -ForegroundColor Yellow
+    } catch {
+        Write-Warning "写入 Machine 级环境变量失败，已仅完成 User 级写入。"
+    }
 }
 
 $env:REVERSE_SKILL_ROOT = $SkillRoot
