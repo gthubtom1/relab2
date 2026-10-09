@@ -383,7 +383,7 @@
 | WebView | [01-webview-attacks.md](../mobile-reverse/references/web-bridge/01-webview-attacks.md) | WebView 攻击全技术 |
 | Cordova | [02-cordova-reactnative.md](../mobile-reverse/references/web-bridge/02-cordova-reactnative.md) | 跨平台框架攻击面 — Cordova / React Native / Flutter / Elec |
 
-## 12. 已落盘但未进 §2 症状表（补录于 2026-10-10）
+## 13. 已落盘但未进 §2 症状表（补录于 2026-10-10）
 
 > **本节曾被写成「待补板块 · 源库有、尚未落盘 · 68 篇」，并加粗提示读者
 > 「不要当成技能包不支持」。这是错的 —— 那些文档当时大多已在盘上。**
@@ -415,7 +415,7 @@
 若后续仍有文档落盘，请同步更新本节，并把新篇按症状补进 §2。
 
 
-## 13. 维护规则
+## 14. 维护规则
 
 - **新增一篇文档就要回填一行**到本表，格式：症状（用户口吻的观察句）→ 相对链接 → 一句话。
 - **不要新增第二套索引**。板块内的小目录索引（`*/references/<sub>/index.md`）可以留，但**症状级检索只有本表一处**。

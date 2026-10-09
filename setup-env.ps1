@@ -57,6 +57,27 @@ param(
     [switch] $NoDownload,
     [switch] $KeepWork
 )
+# ★ PSModulePath 自愈（2026-10-10 注入，路径由 inject-psmp.py 统一计算）：剔除 WindowsApps 版 PowerShell 7 的模块目录，否则 PS 5.1 会因 TypeData 重复定义失败而使 Get-FileHash / Get-ExecutionPolicy 不可用（已造成两次假绿 + 一次失败被吞）。重算/迁移后请重跑 work/envinit/inject-psmp.py
+. 'C:\relab2\skillpack\skills\scripts\lib\PsModulePathInit.ps1'
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# ★ 2026-10-10 修正：ToolRoot 此前**只从 -ToolRoot 参数取**，从不读环境变量
+#   $env:REVERSE_TOOL_ROOT。而 环境初始化.md §2 教用户设置的正是那个环境变量，
+#   setup-env.ps1 自身的 .NOTES 与 §4.5 也把「写 User 级 REVERSE_TOOL_ROOT」
+#   当作登记动作 —— 文档与实现脱节，导致换机时验收门在**错的工具根**上判绿。
+#   实测：设 $env:REVERSE_TOOL_ROOT='E:\fresh' 跑 -VerifyOnly，
+#   §5 门2 仍 8/8 全 PASS，末尾还打印「工具根: D:\Tools」，全程不提示不符。
+#   优先级：显式参数 > 环境变量 > 默认探测。
+# ═════════════════════════════════════════════════════════════════════════════
+if (-not $ToolRoot -and $env:REVERSE_TOOL_ROOT) {
+    $ToolRoot = $env:REVERSE_TOOL_ROOT
+    $script:ToolRootSource = '环境变量 REVERSE_TOOL_ROOT'
+} elseif ($ToolRoot) {
+    $script:ToolRootSource = '命令行参数 -ToolRoot'
+} else {
+    $script:ToolRootSource = '默认探测'
+}
 
 # ═════════════════════════════════════════════════════════════════════════════
 # §2.5.1 ③ 切 UTF-8 码页 —— 否则中文输出全是乱码，会被误判成「命令失败」
@@ -843,6 +864,13 @@ function Install-YaraRules {
 # ═════════════════════════════════════════════════════════════════════════════
 function Register-ToolRoot {
     Write-Step '§4.5 登记工具根 + 环境变量'
+    # ★ 2026-10-10：显式打印工具根**来源**，否则「用了旧盘工具」这件事
+    #   在 140 秒的输出里完全看不出来（验收门会在错的根上判绿）。
+    Write-Act ("工具根: {0}    来源: {1}" -f $script:ToolRoot, $script:ToolRootSource)
+    if (-not (Test-Path -LiteralPath $script:ToolRoot)) {
+        Write-Warn2 ("工具根不存在: {0}（来源: {1}）—— 验收门将无法找到任何工具" -f `
+                      $script:ToolRoot, $script:ToolRootSource)
+    }
     $sk = $PSScriptRoot
     if (-not $sk) { $sk = Split-Path -Parent $MyInvocation.MyCommand.Path }
     foreach ($pair in @(
@@ -1573,7 +1601,6 @@ q
             }
         }
     }
-
 
     # ── 门 4 · 工具根变量无死路径 ────────────────────────────────────────────
     Write-Step '门4 · 工具根变量无死路径'
