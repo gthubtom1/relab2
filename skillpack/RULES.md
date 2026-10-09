@@ -60,7 +60,7 @@ Core scripts MUST NOT write client-global configuration. Optional adapters belon
 - frontend signature, 前端签名, encrypted params, 加密参数, JS reverse, JS 逆向, jshookmcp, CDP, SourceMap
 - packet capture, 抓包, HTTP capture, HTTP 捕获, request replay, 请求重放, anything-analyzer
 - CTF, Pwn, web pentest, Web 渗透, exploit, 漏洞利用, privilege escalation, 提权
-- MCP reverse tools, idalib-mcp, repackage, 重打包, certificate pinning, 证书校验, root detection, 反调试
+- MCP reverse tools, idalib-mcp, pyghidra-mcp, repackage, 重打包, certificate pinning, 证书校验, root detection, 反调试
 - .so analysis, native hook, JNI
 - penetration testing, 渗透测试, red team, 红队, security assessment, 安全评估, blue team, 蓝队, incident response, 应急响应
 - report/docs generation in security context, 安全上下文中的报告/文档, writeup, pentest report, 渗透报告
@@ -331,7 +331,7 @@ Windows (PowerShell):
 powershell -NoProfile -ExecutionPolicy Bypass -File "<SKILL_ROOT>/skills/scripts/bootstrap-reverse.ps1" -Capability @('tool_name') -StartServices
 
 Supported capability names (must match `skills/scripts/bootstrap-manifest.json`):  
-jadx, apktool, jeb-pro, binaryninja, frida, frida-ps, idalib-mcp, reqable-mcp, jshookmcp, xquik-mcp, anything-analyzer, idapro, r2, rabin2, adb, agent-browser, ghidra-mcp, seclists, proxycat, burpsuite-mcp, nmap, pentestswarm, binwalk, yara, pwntools, bkcrack, dnspy, x64dbg-mcp
+jadx, apktool, jeb-pro, binaryninja, frida, frida-ps, idalib-mcp, pyghidra-mcp, reqable-mcp, jshookmcp, xquik-mcp, anything-analyzer, idapro, r2, rabin2, adb, agent-browser, ghidra-mcp, seclists, proxycat, burpsuite-mcp, nmap, pentestswarm, binwalk, yara, pwntools, bkcrack, dnspy, x64dbg-mcp
 
 Do NOT invent capabilities. Tools not listed require manual install steps in the skill docs.
 ```
