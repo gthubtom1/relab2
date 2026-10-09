@@ -383,38 +383,37 @@
 | WebView | [01-webview-attacks.md](../mobile-reverse/references/web-bridge/01-webview-attacks.md) | WebView 攻击全技术 |
 | Cordova | [02-cordova-reactnative.md](../mobile-reverse/references/web-bridge/02-cordova-reactnative.md) | 跨平台框架攻击面 — Cordova / React Native / Flutter / Elec |
 
-## 12. 待补板块（源库有、尚未落盘）
+## 12. 已落盘但未进 §2 症状表（补录于 2026-10-10）
 
-源副本 221 篇，已改编落盘 153 篇。**未落盘的 68 篇**按下表分布 —— 它们是**已规划未交付**，看到「本表里没有」不要当成「技能包不支持」：
+> **本节曾被写成「待补板块 · 源库有、尚未落盘 · 68 篇」，并加粗提示读者
+> 「不要当成技能包不支持」。这是错的 —— 那些文档当时大多已在盘上。**
+> 本节已按 `os.path.isfile` 逐篇核实并改写为「已落盘」。
 
-| 源库板块 | 未落盘 | 规划落点 | 典型症状（等文档交付后回填本表） |
-|---|---|---|---|
-| `apk-reverse/techniques/` | 25 | `../apk-reverse/references/` | 装不上 / 抓不到包 / 有壳 / 想改 so / 证书钉死 |
-| `pe-reverse/techniques/` | 18 | `../reverse-engineering/references/` | 见下方逐条清单 |
-| `general/techniques/` | 14 | 见下方逐条清单 | 内核提权 / 游戏反作弊 / 协议逆向 |
-| `windows/techniques/` | 2 | `../windows-reverse/references/`（待建） | Notepad++ config 注入类 CVE |
-| 各 `../ops/README.md` / `../apk-reverse/references/attack-network.md` 索引页 | 9 | 已由本表 + 各板块 `../ctf-sandbox/references/index.md` 取代 | —— |
 
-**`pe-reverse/techniques/` 未落盘的 18 篇**（静态分析 / 动态注入 / IOC / 免杀 / 许可证 keygen）：
+| 技能 | 篇数 | 文档 |
+|---|---|---|
+| `kernel-exploit/references/` | 5 | [cifswitch-nss-privesc](../kernel-exploit/references/cifswitch-nss-privesc.md) · [mm-null-ptrace-bypass](../kernel-exploit/references/mm-null-ptrace-bypass.md) · [page-cache-write-family](../kernel-exploit/references/page-cache-write-family.md) · [pintheft-io-uring-page-cache](../kernel-exploit/references/pintheft-io-uring-page-cache.md) · [slab-cross-cache](slab-cross-cache.md) |
+| `game-reverse/references/` | 6 | [README](README.md) · [game-anti-cheat-bypass](../game-reverse/references/game-anti-cheat-bypass.md) · [game-esp-wallhack-rendering](../game-reverse/references/game-esp-wallhack-rendering.md) · [game-memory-hacking](../game-reverse/references/game-memory-hacking.md) · [game-packet-interception](../game-reverse/references/game-packet-interception.md) · [game-speedhack-time-manipulation](game-speedhack-time-manipulation.md) |
 
-```text
-03-static-analysis/   （已落盘 struct-reconstruction / disasm-jit / reclass / x64dbg 断点）
-04-dynamic-analysis/  dll-injection / trampoline-detour / external-memory-rw /
-                       naked-function-hook / manual-map-injection / direct-syscall / procmon-patterns
-06-ioc-extraction/    ioc-extraction / persistence-startup-chain
-09-av-evasion/        ai-powered-evasion
-10-license-keygen/    许可证分类 / 校验函数定位 / keygen 复现 / 签名链换公钥 /
-                       Frida 验证闭环 / 云端授权 hook / 自引用签名收敛
-```
+**症状对照**（这些症状现在应读上面那几篇，不是「本包不支持」）：
 
-**`general/techniques/` 未落盘的 14 篇**：
+| 症状 | 读哪篇 |
+|---|---|
+| 函数跳来跳去，控制流被拉平了 | `reverse-engineering/references/ollvm-deobfuscation.md` |
+| 这个函数自己跳自己，是 trampoline 吗 | `reverse-engineering/references/trampoline-detour.md` |
+| DLL 怎么注入别的进程 | `reverse-engineering/references/dll-injection.md`（若未落盘读 manual-map-injection） |
+| 内存改了但磁盘文件没变 | `reverse-engineering/references/external-memory-rw.md` |
+| 程序怎么开机自启 | `reverse-engineering/references/persistence-startup-chain.md` |
+| 怎么从 IOC 判断是不是同一个团伙 | `reverse-engineering/references/ioc-extraction.md` |
+| 游戏外挂怎么做的，我要自查 | `game-reverse/references/game-anti-cheat-bypass.md` |
+| 游戏封包长什么样 | `game-reverse/references/game-packet-interception.md` |
+| 内核提权漏洞怎么分析 | `kernel-exploit/references/pintheft-io-uring-page-cache.md` 等 5 篇 |
 
-```text
-01-kernel/     Page-Cache 写入家族 / slab 跨缓存 / mm-NULL ptrace bypass /
-               CIFSwitch 身份混淆 / PinTheft io_uring      （Linux 内核，非 Windows 主战场）
-cheating/      内存搜索改值 / 封包拦截 / ESP 透视渲染 / 反作弊绕过 / 加速与时间操控
-protocol/      未知协议逆向方法论 / Protobuf-FlatBuffers 无 Schema 逆向
-```
+
+**仍未落盘**：§12 原表所列 `apk-reverse/techniques/` 25 篇与
+`general/techniques/protocol/` 2 篇。上表所列 19 篇经核实**已存在**。
+若后续仍有文档落盘，请同步更新本节，并把新篇按症状补进 §2。
+
 
 ## 13. 维护规则
 

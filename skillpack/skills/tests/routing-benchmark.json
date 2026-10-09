@@ -959,6 +959,46 @@
     {
       "hint": "抓到个 cookie 每次刷新就失效，想搞清楚是谁写的、怎么刷新的",
       "expect": "R50"
+    },
+    {
+      "hint": "游戏客户端逆向，看看它的封包协议",
+      "expect": "R51",
+      "quick": true
+    },
+    {
+      "hint": "这个游戏我买了加速器还是被判外挂，想研究下反作弊",
+      "expect": "R51",
+      "quick": true
+    },
+    {
+      "hint": "anti-cheat detection mechanism research on my own game client",
+      "expect": "R51",
+      "quick": true
+    },
+    {
+      "hint": "unity 游戏客户端的内存结构怎么分析",
+      "expect": "R51",
+      "quick": true
+    },
+    {
+      "hint": "Linux 内核提权漏洞的根因分析",
+      "expect": "R52",
+      "quick": true
+    },
+    {
+      "hint": "内核 io_uring 的 use-after-free 怎么复现",
+      "expect": "R52",
+      "quick": true
+    },
+    {
+      "hint": "kernel slab cross cache exploit primitive analysis",
+      "expect": "R52",
+      "quick": true
+    },
+    {
+      "hint": "cifs spnego 身份混淆漏洞的缓解措施评估",
+      "expect": "R52",
+      "quick": true
     }
   ]
 }

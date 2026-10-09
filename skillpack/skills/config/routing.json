@@ -277,6 +277,16 @@
             "程序|软件|许可|机器|本体|启动|主界面|记"
           ],
           "note": "canon-gap N014/N016：启动检查/换机许可（SKILL分析exe找注册授权校验门）"
+        },
+        {
+          "must": "(破解|找.{0,3}(密码|序列号|注册码|激活码)|怎么.{0,2}(注册|激活)|如何.{0,2}(注册|激活)|不是正版|正版.{0,4}(注册|激活)|注册.{0,4}(不上去|不了|失败)|激活.{0,4}(不上去|不了|失败)|license.{0,4}(crack|破解|校验)|serial.{0,4}(key|number))",
+          "note": "来自 ida-reverse/SKILL.md 自述（「帮我破解」「找一下密码」「这个软件怎么注册」）。★ mustAll 是 AND 语义，候选词必须写成**单个正则串**，不能写成裸词数组 —— 否则会被当成「必须同时命中」，或因 OR 混进而抢走 wifi 密码破解(R29)、hashcat 破解(R11)。本规则要求「破解类词」与「软件/程序/二进制类载体词」共现。 ★ 2026-10-10 加 exclude：不用 mustAll 收窄，改用 exclude 把 wifi 破解(R29)、hashcat(R11)、域控(R24) 明确让出去 —— 这样既不抢它们的活，又不误伤 ida-reverse 自己的例句。",
+          "exclude": "wifi|无线|无线网卡|psk|wpa|hashcat|john|aircrack|hydra|路由器|router|蓝牙|bt|ntdll|lsass|sam|域控|域环境"
+        },
+        {
+          "must": "reverse.{0,3}engineering.{0,20}(ida|反汇编|反编译|静态|汇编|disassembl)|(用|拿).{0,4}(ida|idat|hopper|ghidra|binary.?ninja).{0,10}逆向|逆向.{0,10}(用什么|哪个工具|ida)",
+          "exclude": "apk|安卓|ctf|靶场|比赛|flutter|web|前端|js|javascript|协议|protocol|kernel|linux|内核|游戏|game|密码|hash|无线|wifi|域控|AD",
+          "note": "2026-10-10 收窄：原规则裸词 reverse engineering 把「reverse engineering binary」从 R0 抢走。裸「reverse engineering」信息量不足（PE/JS/协议/内核/游戏），现要求**逆向工具或格式语境**共现，其余仍由 R0 兜底。"
         }
       ]
     },
@@ -552,6 +562,13 @@
             "仓库|开源|版本|依赖|东西|引|流水线|清单|供应链|镜像|ci|sbom|组件"
           ],
           "note": "canon-gap N033/N103：仓库开源版本盘点 + 口语「要软件物料清单、查流水线有没有混进可疑依赖」（SKILL SBOM/供应链依赖审计）"
+        },
+        {
+          "must": "开源.{0,6}(包|组件|库|依赖|项目).{0,10}(漏洞|爆雷|出过事|安全)|(依赖|组件|包).{0,6}(有没有|是否).{0,4}(漏洞|爆雷)|爆过漏洞|出过事.{0,4}(包|组件|依赖)|第三方.{0,4}(包|组件|库).{0,8}(漏洞|安全)",
+          "mustAll": [
+            "清单|报告|出一份|过一遍|扫|查|检测|评估"
+          ],
+          "note": "2026-10-10 补：benchmark 里「上线前想查查项目里引的那些开源包有没有爆过漏洞，顺手出份清单」从 04b80ef 起就没通过（test-routing-natural.ps1 实测 FAIL 1，一直没人跑它）。R13 原有 3 条规则覆盖的是术语（sbom/trivy/供应链/物料清单），但中文最自然的问法是「我引的包有没有爆过漏洞」。★ mustAll 是 AND 语义，故要求同时出现「清单/报告/扫/查」这类**产出动作**词 —— 只问漏洞不产出报告的，可能是另一类需求。"
         }
       ]
     },
@@ -904,6 +921,10 @@
             "编排|环境|钥匙|碰|收拾"
           ],
           "note": "canon-gap N058：编排环境密钥乱丢（SKILL IAM/密钥错配）"
+        },
+        {
+          "must": "容器.{0,4}(逃逸|越界)|(集群|cluster).{0,6}(rbac|权限)|rbac.{0,6}(配|对不对|检查)|k8s.{0,6}(逃逸|rbac)|kubernetes.{0,6}(逃逸|rbac|权限)",
+          "note": "来自 cloud-k8s/SKILL.md 自述；R10 攻击链也关心容器，故用『逃逸』或『RBAC 配置』这类评估语义而非裸『容器』"
         }
       ]
     },
@@ -1017,6 +1038,13 @@
             "合并|审|改|毛病"
           ],
           "note": "canon-gap N066：合并前审改挑可利用毛病（SKILL白盒审计/PR差分审查；{0,6}收合并之前与挑挑…毛病）"
+        },
+        {
+          "must": "pr.{0,3}(合|merge).{0,6}(前|安全)|鉴权.{0,4}(漏|缺失|问题)|(代码|code).{0,4}(审计|审计)|sast|静态分析.{0,4}代码",
+          "mustAll": [
+            "pr|代码|code|鉴权|auth|上线|发布|合入|merge|静态"
+          ],
+          "note": "来自 code-audit/SKILL.md 自述；R26 原本只有 Semgrep/SAST 英文词，中文『PR 合之前』完全吃不下"
         }
       ]
     },
@@ -1145,6 +1173,14 @@
             "浏览器|网页|请求|装|打开"
           ],
           "note": "canon-gap N076：浏览器装物多冒计划外请求（SKILL扩展权限面/后台脚本）"
+        },
+        {
+          "must": "插件.{0,6}(偷|窃|上报|监控|读数据)|浏览器.{0,4}(插件|扩展|extension).{0,6}(逆向|安全|审计)|chrome.{0,4}插件|extension.{0,4}(逆向|security|audit)|插件.{0,4}(逆向|安全)",
+          "note": "来自 browser-extension-reverse/SKILL.md 自述；R32 thick-client 也含『插件』语义，故加『浏览器/chrome』限定"
+        },
+        {
+          "must": "(插件|扩展|extension|addon|浏览器插件).{0,8}(后台|干什么|干了什么|行为|做了什么)|(后台|行为).{0,6}(插件|扩展)",
+          "note": "来自 browser-extension-reverse/SKILL.md 自述的「帮我看看它后台干了什么」。要求『插件/扩展』共现，避免与 R9 恶意样本的『看它干了什么』混淆。"
         }
       ]
     },
@@ -1188,6 +1224,10 @@
             "本地|客户端|sqlite|桌面|电脑端|软件|app|数据|服务器|明文|存"
           ],
           "note": "thick SKILL.md 本地存储明文；约束桌面客户端语境。口语「炒股软件本地数据到处存，想看它跟服务器说了啥」同族"
+        },
+        {
+          "must": "electron|\\.net ?(客户端|程序)|thick.?client|厚客户端",
+          "note": "PM-Routing 实测『electron 应用逆向』被 R0 以 high 抢走；R0 的 exclude 名单漏了 thick-client 域"
         }
       ]
     },
@@ -1347,6 +1387,10 @@
             "交接|时间线|断点|证据|补"
           ],
           "note": "canon-gap N095：交接前时间线断点证据对不上（SKILL证据链时间线缺口审查）"
+        },
+        {
+          "must": "审.{0,3}(case|案件|证据)|case.{0,3}(能不能交|审查|过一遍)|证据.{0,4}(链条|链|完整|全不全)|交报告前|报告.{0,4}(前|交接).{0,4}过|evidence.{0,3}(chain|trail|review)",
+          "note": "来自 case-review/SKILL.md 自述；R12/R20 会抢『报告』，故用『证据链 + case 审查』组合词而非裸『报告』"
         }
       ]
     },
@@ -1366,6 +1410,17 @@
           ],
           "exclude": "新手|入门|组队|分工|攻略|战队|题解整理|writeup汇总",
           "note": "具体做题入口，需CTF语境；pwn专项由R17优先接手；ctf-apk-diag A类 must/mustAll 升级接住C11/C13/C28，exclude同步rule1（C05实际命中本条）"
+        },
+        {
+          "must": "靶场|靶机|比赛环境|ctf.{0,4}环境|打靶",
+          "note": "来自 ctf-sandbox/SKILL.md 自述；R17 pwn 会抢 pwn 语义，故用『靶场/打靶』这类环境词而非裸 pwn"
+        },
+        {
+          "must": "(ctf|awd|靶场|靶机|打靶|比赛).{0,8}(pwn|题|环境)?|(pwn|web|re|misc|crypto).{0,4}(题|怎么打|怎么做)",
+          "mustAll": [
+            "ctf|awd|靶场|靶机|打靶|比赛"
+          ],
+          "note": "来自 ctf-sandbox/SKILL.md 自述的「来道CTF题」「靶场这个pwn怎么做」；判据是 CTF 语境词共现 —— 有 CTF/靶场/比赛语境走本技能（编排入口），纯 pwn 技术栈问题仍走 R17 pwn-chain。"
         }
       ]
     },
@@ -1383,6 +1438,14 @@
             "数据流|data.?flow|交叉|中间层|中间表示|hlil|mlil|llil|反编译|decompil"
           ],
           "note": "binja SKILL.md ILs辅助数据流分析/独立交叉验证；约束反编译语境防吸走IDA/Ghidra查询"
+        },
+        {
+          "must": "用bn|\\bbn\\b|binary.?ninja|binja|hlil|mlil|调用链.{0,4}(跟|追|看)",
+          "note": "来自 binary-ninja-reverse/SKILL.md 自述；『调用链』R6/R7 也关心，故用 BN/binary-ninja 限定"
+        },
+        {
+          "must": "交叉验证|hlil|mlil|调用链.{0,6}(交叉|验证|bn|binary)|(bn|binary.?ninja).{0,6}调用链",
+          "note": "来自 binary-ninja-reverse/SKILL.md 自述的「IDA结果对不上来交叉验证下」与「帮我跟一下这个调用链」。纯「跟调用链」R6/R7 也做，故以『交叉验证 / HLIL / MLIL』为区分点；「帮我跟一下这个调用链」本身信息量不足，落 R0 通用逆向是合理结果，不强夺。"
         }
       ]
     },
@@ -1490,7 +1553,7 @@
         },
         {
           "must": "reverse|逆向",
-          "exclude": "apk|js.?reverse|ios|mobile|\\.net|firmware|malware|安卓|固件|恶意|protocol|ghidra|extension|macos|mach|golang|rust|工控|厚客户端|取证|协议|扩展",
+          "exclude": "apk|js.?reverse|ios|mobile|\\.net|firmware|malware|安卓|固件|恶意|protocol|ghidra|extension|macos|mach|golang|rust|工控|厚客户端|取证|协议|扩展|thick.?client|electron|browser.?extension|靶场|打靶",
           "note": "泛逆向兜底；命中更具体域时让位"
         }
       ]
@@ -1551,6 +1614,10 @@
             "web|target|site|endpoint|request|api|js|javascript|frontend|node|collector|param|sign|token|cookie|envelope|challenge"
           ],
           "note": "英文 query 覆盖：把浏览器端 JS 协议还原成无浏览器依赖的采集器"
+        },
+        {
+          "must": "只能靠浏览器|必须开浏览器|离不开浏览器|得用浏览器",
+          "note": "来自 web-protocol-reverse/SKILL.md 自述；这是『去浏览器依赖』的核心信号，目前 R50 完全没接"
         }
       ]
     },
@@ -1559,15 +1626,15 @@
       "skill": "game-reverse/SKILL.md",
       "keywords": [
         {
-          "must": "游戏.{0,6}(逆向|外挂|作弊)|反作弊.{0,6}(机制|检测|绕过|研究)|anti.?cheat|游戏.{0,4}(客户端|封包|内存)|unity.{0,8}(逆向|il2cpp)|ue4.{0,8}(逆向|uobject)|游戏.{0,4}加速器|被判.{0,2}外挂",
-          "note": "来自 game-reverse/SKILL.md 自述；与 R9 恶意样本、R18 EDR 的区别是「目标是游戏客户端」"
+          "must": "游戏.{0,6}(逆向|外挂|作弊)|反作弊.{0,6}(机制|检测|研究)|anti.?cheat|游戏.{0,4}(客户端|封包|内存)|游戏.{0,4}加速器|被判.{0,2}外挂",
+          "note": "2026-10-10 收窄：unity/il2cpp 从本规则移除 —— 它们是通用二进制逆向的既有语义，benchmark 期望落 R0。本技能只接「游戏客户端 + 反作弊」语义。"
         },
         {
           "must": "游戏|game|gaming",
           "mustAll": [
-            "逆向|reverse|外挂|作弊|cheat|封包|packet|客户端|client|内存|memory|il2cpp|unity|ue4"
+            "反作弊|anti.?cheat|外挂|作弊|cheat|封包|packet|客户端|client|内存|memory|加速器"
           ],
-          "note": "防吸走：R9 恶意样本分析（不带游戏语境的）"
+          "note": "来自 game-reverse/SKILL.md 自述。★ mustAll 是 AND 语义。原值把『逆向|reverse』与『il2cpp|unity』也放进去，导致「unity 游戏 逆向」被抢 —— 但 unity/il2cpp 属通用二进制逆向的既有域（benchmark 期望 R0），本技能只接『游戏客户端 + 反作弊』语义。"
         }
       ]
     },

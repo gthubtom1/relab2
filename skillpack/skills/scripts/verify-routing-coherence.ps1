@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.1
+﻿﻿#Requires -Version 5.1
 # reverse-skill routing + ops contract gates (skill-router only; no host platform runtime)
 param([string] $ScratchDir = '')
 $ErrorActionPreference = 'Stop'
@@ -86,6 +86,29 @@ if (Test-Path -LiteralPath $benchJson) {
 }
 
 if (Test-Path -LiteralPath (Join-Path $skillsRoot 'INDEX.md')) { Ok 'INDEX.md present (generated)' } else { Bad 'INDEX.md missing (run extract-summaries.ps1)' }
+
+# --- 实跑 benchmark（静态检查管不到的一层） -------------------------------
+# 上面的检查只验证「每条路由至少有一条用例」，不验证「用例真能命中」。
+# 实测发现：benchmark 里「上线前…开源包…爆过漏洞」从 04b80ef 起就没通过过
+# （expect=R13 实得=R0），但因为本节只做静态检查，一直没人发现。
+# test-routing-natural.ps1 已经能实跑，这里把它接进门禁。
+$naturalTest = Join-Path $scriptDir 'test-routing-natural.ps1'
+if (Test-Path -LiteralPath $naturalTest) {
+    $nr = & $HostExe -NoProfile -ExecutionPolicy Bypass -File $naturalTest 2>&1 | Out-String
+    $nPass = if ($nr -match 'PASS=(\d+)') { $Matches[1] } else { '?' }
+    $nFail = if ($nr -match 'FAIL=(\d+)') { $Matches[1] } else { '?' }
+    $nTotal = if ($nr -match 'TOTAL=(\d+)') { $Matches[1] } else { '?' }
+    if ("$nFail" -eq '0' -and "$nFail" -ne '?') {
+        Ok "benchmark 实跑 PASS=$nPass/$nTotal (test-routing-natural.ps1)"
+    } else {
+        Bad "benchmark 实跑 FAIL=$nFail/$nTotal —— 用例写错或路由规则退化"
+        $fails = ($nr -split "`r?`n" | Where-Object { $_ -match '^\[FAIL\]' } |
+                  Select-Object -First 8) -join '; '
+        if ($fails) { Write-Output "    $fails" }
+    }
+} else {
+    Bad 'test-routing-natural.ps1 missing (benchmark 无法实跑验证)'
+}
 
 # master-route.ps1 不得回退到硬编码路由表（防绕过 routing.json）
 $mrText = Get-Content -LiteralPath (Join-Path $scriptDir 'master-route.ps1') -Raw -Encoding UTF8
