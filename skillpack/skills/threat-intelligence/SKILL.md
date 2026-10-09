@@ -10,7 +10,7 @@ description: Use for authorized OSINT and cyber threat intelligence that enriche
 1. `NOW`: 读取 `../ops/scope-contract.md`，确认公开来源、目标实体、时间窗与交付用途。
 2. `NOW`: 仅在需要操作先例时读取 `../field-journal/precedent-pentest.md`。先例不能授予权限。
 3. `NOW`: 写出可证伪的情报问题，以及必须独立核验的候选结论。
-4. `NEXT`: 读取 `TOOLS.md`。需要公开 X 数据时检查 `xquik-mcp`。
+4. `NEXT`: 读取 `../TOOLS.md`。需要公开 X 数据时检查 `xquik-mcp`。
 5. `ACT`: 从最窄的只读查询开始，保留来源元数据，再进入关联与核验。
 
 ## 适用范围

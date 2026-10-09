@@ -1,6 +1,6 @@
 # IDA ↔ reverse-skill 对接（可移植）
 
-本页是通用步骤，不含某台机器的绝对路径。本机就绪报告留在仓库根目录的 `LOCAL-READINESS.md`（已 gitignore）。
+本页是通用步骤，不含某台机器的绝对路径。本机就绪报告留在仓库根目录的 `LOCAL-READINESS.md`（本包未落地）（已 gitignore）。
 
 ## 目标形态
 
@@ -20,7 +20,7 @@
 # ★ 先探测、再设 —— 不要凭印象填路径
 powershell -NoProfile -ExecutionPolicy Bypass -Command ". '<技能包根>\skillpack\skills\scripts\lib\Bootstrap.ps1'; Resolve-ReverseToolSpec -Name 'idat'"
 # 把返回的 Command 去掉末尾的 \idat.exe，那才是 IDADIR：
-#   返回 D:\Tools\disasm\IDA_Pro_v8.3_Portable\idat.exe  →  IDADIR = D:\Tools\disasm\IDA_Pro_v8.3_Portable
+#   返回 D:\Tools\disasm\IDA Pro 9.3\idat.exe  →  IDADIR = D:\Tools\disasm\IDA Pro 9.3
 
 setx IDADIR "<上面探测出来的目录>"
 

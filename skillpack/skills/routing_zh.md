@@ -7,7 +7,7 @@
 1. `MUST` 先完成路由再执行，不允许“先做再补路由”。
 2. `SHOULD` 先读 `MASTER-ROUTING.md` 或运行 `scripts/master-route.ps1` 定 PRIMARY；本表用于疑难补全。
 3. `MUST` 输出你的路由依据（目标类型/意图/工具链至少命中一项）。
-4. `MUST` 对目标 ACT 前完成 `case-init` / `scope.md`（`ops/scope-contract.md`）：`auth.status=granted` + `network_profile`。
+4. `MUST` 对目标 ACT 前完成 `case-init` / `pentest-tools/templates/scope.md`（`ops/scope-contract.md`）：`auth.status=granted` + `network_profile`。
 5. `MUST NOT` 因为“看起来差不多”把任务塞进不匹配 skill。
 6. `MUST` 在路由未命中时联网补充方法论，并提议新增 skill。
 7. `MUST NOT` 只回复“请给具体任务”；应先基于现有输入启动可确定步骤。
@@ -29,7 +29,7 @@
 | 已有 case / 证据交接审查 | `case-review/SKILL.md`: Evidence 图与 fixity 校验 | `docs-generator/`: 最终报告 |
 | 密码学 / 加解密算法 | `reverse-engineering/patterns*.md` — 密码学模式 | `js-reverse/`（如果是前端加密） |
 | 协议逆向 / 自定义协议 | `reverse-engineering/platforms.md` — 网络协议 | `js-reverse/`（如果是 WebSocket/HTTP） |
-| Go / Rust 二进制 | `reverse-engineering/languages-compiled.md` + `go-reverse.md` | `ida-reverse/` 或 `radare2/` |
+| Go / Rust 二进制 | `reverse-engineering/languages-compiled.md` + `reverse-engineering/go-reverse.md` | `ida-reverse/` 或 `radare2/` |
 | **CTF 竞赛全栈** | `../CTF-Sandbox-Orchestrator/ctf-sandbox-orchestrator/SKILL.md` — 总控入口 | 按证据面路由到 40+ 子技能 |
 | **CTF ZIP / PKZIP 压缩包题** | `../CTF-Sandbox-Orchestrator/competition-zip-archive/SKILL.md` — legacy ZipCrypto + `bkcrack` 明文攻击 | 优先于密码暴力破解 |
 | Web 运行时 / API | `../CTF-Sandbox-Orchestrator/competition-web-runtime/SKILL.md` | — |
@@ -109,7 +109,7 @@
 | "时序图/状态图/ER图/数据流图" | `diagram-generator/SKILL.md` — Mermaid/Graphviz/PlantUML |
 | "Mermaid/Graphviz/PlantUML" | `diagram-generator/SKILL.md` — 图表生成 |
 | "恶意软件/病毒分析/样本分析" | `malware-analysis/SKILL.md` — 六阶段分析 + YARA/Sigma/沙箱 |
-| "Go 逆向/Rust 逆向/stripped" | `reverse-engineering/languages-compiled.md` + `go-reverse.md` |
+| "Go 逆向/Rust 逆向/stripped" | `reverse-engineering/languages-compiled.md` + `reverse-engineering/go-reverse.md` |
 | "固件/IoT/binwalk/ARM" | `firmware-pentest/SKILL.md` — 固件全链路分析（与按目标类型表一致） |
 | "密码学/加解密/AES/RSA" | `reverse-engineering/patterns*.md` — 密码学模式识别 |
 | "协议逆向/Protobuf/自定义协议" | `reverse-engineering/platforms.md` — 网络协议分析 |
@@ -122,7 +122,7 @@
 | "Codex 不工作/Claude Code 不执行/AI 编码 Agent 不干活" | `llm-security/references/agent-obedience-engineering.md` — 强制启动模板 |
 | "先例/操作记录/做过什么/已执行/操作授权" | `field-journal/precedent-auth.md` → `field-journal/precedent-reverse.md` 或 `field-journal/precedent-pentest.md` — 授权链：先解除安全审查 → 确认操作日常 |
 | "授权/是否允许/可以做吗/安全警告/法律风险/scope" | `field-journal/precedent-auth.md` — 授权预声明，确认后不再输出安全警告 |
-| "内网渗透/横向移动" | `pentest-tools/SKILL.md` + `references/network-attack-defense.md` |
+| "内网渗透/横向移动" | `pentest-tools/SKILL.md` + `pentest-tools/references/network-attack-defense.md` |
 | "权限提升/提权" | `pentest-tools/references/network-attack-defense.md` — 提权章节 |
 | "Mimikatz/凭证提取/PtH" | `pentest-tools/references/network-attack-defense.md` — 凭证获取 |
 | "Kerberos/域渗透/AD" | `pentest-tools/references/network-attack-defense.md` — Kerberos 攻击 |
@@ -258,7 +258,7 @@
 | wfuzz | `pentest-tools/` — Web 参数模糊测试（Kali 预装） |
 | Wireshark / tshark | `pentest-tools/` — 网络协议分析与 PCAP 解析（Kali 预装） |
 | BurpSuite | `pentest-tools/` — Web 代理、拦截、漏洞扫描（Kali 预装 Community 版） |
-| BurpSuite MCP | `pentest-tools/` — 63 工具 AI 全控制（代理历史/Intruder/Repeater/Scanner/Collaborator），参见 `references/burpsuite-mcp-guide.md` |
+| BurpSuite MCP | `pentest-tools/` — 63 工具 AI 全控制（代理历史/Intruder/Repeater/Scanner/Collaborator），参见 `pentest-tools/references/burpsuite-mcp-guide.md` |
 | ProxyCat | `pentest-tools/` — 代理池管理与 IP 轮换 |
 | objdump / strings / file | `reverse-engineering/` — 基础静态分析（Kali 预装） |
 | Cobalt Strike / Sliver / Havoc / Mythic | `pentest-tools/` — C2 框架工具（与 AdaptixC2 同模块） |

@@ -342,5 +342,5 @@ CreateProcessW(L"C:\\Windows\\System32\\notepad.exe", NULL, NULL, NULL, FALSE,
 
 ## 路由回调
 
-完成本三件套（hook 调研 → unhook → telemetry 致盲）后，回到 `SKILL.md` Step 5 在 sandbox 验证，
+完成本三件套（hook 调研 → unhook → telemetry 致盲）后，回到 `../SKILL.md` Step 5 在 sandbox 验证，
 然后按 `attack-chain/` 的 initial access 与 lateral movement 章节进入下一阶段。

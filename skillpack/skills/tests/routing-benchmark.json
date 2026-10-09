@@ -3,7 +3,8 @@
     "description": "reverse-skill 路由回归基准。每条用例 = (hint, expect)。修改路由规则后必须保持此基准全绿；新增路由场景请同步添加用例。",
     "runner": "skills/scripts/test-routing.ps1",
     "generated": "2026-08-02",
-    "quickNote": "quick=true 的用例是每个路由的最小回归集（smoke 快速模式使用）"
+    "quickNote": "quick=true 的用例是每个路由的最小回归集（smoke 快速模式使用）",
+    "R50_added": "2026-10-10 01:51:14"
   },
   "cases": [
     {
@@ -915,6 +916,49 @@
       "hint": "Twitter marketing sentiment for our product",
       "expect": "R0",
       "quick": false
+    },
+    {
+      "hint": "移植 web 签名为 pure python collector without browser dependency",
+      "expect": "R50",
+      "quick": true
+    },
+    {
+      "hint": "cookie provenance: who writes it and how it refreshes on web target",
+      "expect": "R50",
+      "quick": true
+    },
+    {
+      "hint": "JSVMP opcode dispatch analysis then port to pure python",
+      "expect": "R50",
+      "quick": true
+    },
+    {
+      "hint": "reproduce anti-bot signed params without running a browser",
+      "expect": "R50",
+      "quick": true
+    },
+    {
+      "hint": "a_bogus signature ported from node to python keeps mismatching",
+      "expect": "R50",
+      "quick": true
+    },
+    {
+      "hint": "pagination route pivot: later pages hit a different endpoint family",
+      "expect": "R50",
+      "quick": true
+    },
+    {
+      "hint": "model the challenge state envelope returned by the web verifier",
+      "expect": "R50",
+      "quick": true
+    },
+    {
+      "hint": "把这个签名字段移植成纯 Python 采集器，不要依赖 Node",
+      "expect": "R50"
+    },
+    {
+      "hint": "抓到个 cookie 每次刷新就失效，想搞清楚是谁写的、怎么刷新的",
+      "expect": "R50"
     }
   ]
 }

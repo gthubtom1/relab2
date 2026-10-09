@@ -10,7 +10,7 @@ description: Use for authorized reverse engineering of custom binary protocols, 
 1. `NOW`: 读取 `../field-journal/precedent-reverse.md` — 确认授权与常规操作边界
 2. `NOW`: 确认任务是否为**协议/流量/序列化格式**逆向（非纯 Web 参数签名 → 转 `js-reverse/`）
 3. `NOW`: 若有目标网络交互 → `../scripts/case-init.ps1` 完成 scope；`auth` 未 granted 禁止对目标 ACT
-4. `NEXT`: 读取 `TOOLS.md`；缺工具 bootstrap（tshark/wireshark 等可能需手动）
+4. `NEXT`: 读取 `../TOOLS.md`；缺工具 bootstrap（tshark/wireshark 等可能需手动）
 5. `ACT`: 进入工作流 Phase 1，产出帧布局或消息字典草稿
 
 ## 适用场景
@@ -86,7 +86,7 @@ MUST 产出：
 
 ## 路由上下文
 
-**上游**: `MASTER-ROUTING` R21 · `routing.md`  
+**上游**: `MASTER-ROUTING` R21 · `../routing.md`  
 **下游**: 需客户端算法 → `ida-reverse`/`js-reverse`；需利用重放 → `pentest-tools`/`api-security`  
 **同级**: `malware-analysis`（C2 协议）、`digital-forensics`（流量取证）
 

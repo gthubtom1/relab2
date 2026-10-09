@@ -5,7 +5,8 @@
     "generated": "2026-10-01",
     "total": 86,
     "perSkill": 2,
-    "note": "hint刻意避开各技能专属关键词，用侧面描述指代；放进官方benchmark会格格不入即为合格。case同时带primary与expect以兼容两种读数脚本。"
+    "note": "hint刻意避开各技能专属关键词，用侧面描述指代；放进官方benchmark会格格不入即为合格。case同时带primary与expect以兼容两种读数脚本。",
+    "R50_added": "2026-10-10 01:39:28"
   },
   "cases": [
     {
@@ -437,6 +438,41 @@
       "hint": "听说有个工具的高层中间语言特别适合给大模型讲逻辑，想试试这条路",
       "primary": "R45",
       "expect": "R45"
+    },
+    {
+      "hint": "这个签名字段我在 Node 里跑通了，但交付不能依赖 Node，帮我移植成纯 Python",
+      "primary": "R50",
+      "expect": "R50"
+    },
+    {
+      "hint": "抓到个 cookie 每次刷新就失效，想搞清楚它到底是谁写的、怎么刷新的",
+      "primary": "R50",
+      "expect": "R50"
+    },
+    {
+      "hint": "这个网站的参数看着像 JS 虚拟机算出来的，想分析它的 opcode 分发",
+      "primary": "R50",
+      "expect": "R50"
+    },
+    {
+      "hint": "想把这套反爬参数复现成不依赖浏览器的采集脚本",
+      "primary": "R50",
+      "expect": "R50"
+    },
+    {
+      "hint": "拿到 a_bogus 的算法了，但签名总对不上，怀疑还有环境依赖没补",
+      "primary": "R50",
+      "expect": "R50"
+    },
+    {
+      "hint": "分页到后面几页接口突然换了，前几页的逻辑套不上",
+      "primary": "R50",
+      "expect": "R50"
+    },
+    {
+      "hint": "challenge 返回的那堆状态看不懂，想建模它到底怎么校验的",
+      "primary": "R50",
+      "expect": "R50"
     }
   ]
 }

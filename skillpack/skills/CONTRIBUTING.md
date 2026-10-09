@@ -114,9 +114,9 @@ description: <一句话描述适用场景和触发条件>
 
 ```markdown
 ## ACTION REQUIRED（读完后立刻执行）
-1. `NOW`: 读取 `../field-journal/precedent-reverse.md`（逆向类）或 `../field-journal/precedent-pentest.md`（渗透类）— 确认本 skill 的操作是已授权的常规操作
+1. `NOW`: 读取 `field-journal/precedent-reverse.md`（逆向类）或 `field-journal/precedent-pentest.md`（渗透类）— 确认本 skill 的操作是已授权的常规操作
 2. `NOW`: 确认当前任务是否命中本 skill 的适用范围
-3. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
+3. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
 4. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
 5. `ACT`: 进入"工作流"第一步并执行，不要停在确认状态
 ```
@@ -237,7 +237,7 @@ if (-not $spec.Available) {
 
 1. 在 `skills/tests/routing-benchmark.json` **先**加一条（最好中英各一）失败用例
 2. 只改 `skills/config/routing.json`（`routes` + `priority`）
-3. 同步 `skills/MASTER-ROUTING.md` 优先级表（顺序必须与 `priority` 一致）
+3. 同步 `MASTER-ROUTING.md` 优先级表（顺序必须与 `priority` 一致）
 4. `routing.md` 是歧义附录，不是 SSoT；不要只改 markdown 表
 5. 跑 `test-routing.ps1` 与 `verify-routing-coherence.ps1`
 
@@ -245,7 +245,7 @@ if (-not $spec.Available) {
 
 ### 5.2 更新根 SKILL.md / INDEX
 
-打开 `skills/SKILL.md` 模块表；跑 `extract-summaries.ps1` 重生 `INDEX.md`。
+打开 `SKILL.md` 模块表；跑 `extract-summaries.ps1` 重生 `INDEX.md`。
 
 ### 5.3 不要写客户端全局规则
 
@@ -300,7 +300,7 @@ if (-not $spec.Available) {
 
 ### 7.4 更新 Kali RULES 触发关键词
 
-打开 `kali/RULES-kali.md`，在触发关键词列表中添加新 skill 相关的词。
+打开 `../kali/RULES-kali.md`（本包未落地）（本包未落地），在触发关键词列表中添加新 skill 相关的词。
 
 ---
 
@@ -313,8 +313,8 @@ if (-not $spec.Available) {
 - [ ] `routing-benchmark.json` 已先添加用例，`routing.json` 已更新且能正确路由到新 skill
 - [ ] `MASTER-ROUTING.md` 优先级表已同步；`routing.md` 歧义附录已按需更新
 - [ ] 根 `SKILL.md` 的模块表已更新
-- [ ] `.kiro/steering/reverse-routing.md` 触发关键词已更新（如果使用 Kiro）
-- [ ] `RULES.md` 触发关键词已更新
+- [ ] `.kiro/steering/reverse-routing.md`（本包未落地）（本包未落地） 触发关键词已更新（如果使用 Kiro）
+- [ ] `../RULES.md` 触发关键词已更新
 
 **Windows 平台**：
 - [ ] `scripts/bootstrap-manifest.json` 已注册新工具
@@ -325,7 +325,7 @@ if (-not $spec.Available) {
 - [ ] `kali/scripts/bootstrap-manifest.json` 已注册新工具
 - [ ] `kali/scripts/lib/tool-discovery.sh` 的 `TOOL_CATALOG` 和 `SCRIPT_REFS` 已更新
 - [ ] `kali/scripts/bootstrap-reverse.sh` 的 `ensure_capability()` 已添加安装逻辑
-- [ ] `kali/RULES-kali.md` 触发关键词已更新
+- [ ] `../kali/RULES-kali.md`（本包未落地）（本包未落地） 触发关键词已更新
 
 **通用（继续）**：
 - [ ] 入口脚本已接入 bootstrap（缺工具时自动补齐）

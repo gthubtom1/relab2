@@ -54,3 +54,26 @@ description: Database security assessment — 当用户要查数据库是否对�
 - [ ] 是否避免未授权写删？
 - [ ] 是否区分配置问题与可利用链？
 - [ ] Checklist？
+## 改编参考索引（open-reverselab `kb/ctf-website`）
+
+> 下列 reference 改编自 `LING71671/open-reverselab` 的 `kb/ctf-website/`（GPL-3.0）。
+> 每篇统一为「适用信号 / 前置 / 步骤 / 判据 / 坑 / 相关」+ 完整技术正文，
+> 「前置」含**本机实测**的工具状态表——照抄原库裸命令前先看那张表。
+> **仅限 CTF 靶场 / AWD 赛场 / 已授权环境**。
+
+### `references/sqli/` — SQL / NoSQL 注入与配置泄露、备份日志、dump 清洗（10 篇）
+
+- `references/sqli/sqli-nosqli.md`
+- `references/sqli/00-overview.md`
+- `references/sqli/01-sqli-fundamentals.md`
+- `references/sqli/02-sqli-advanced.md`
+- `references/sqli/03-nosql-injection.md`
+- `references/sqli/04-config-exposure.md`
+- `references/sqli/05-backup-log-leak.md`
+- `references/sqli/06-card-platform.md`
+- `references/sqli/07-data-cleaning.md`
+- `references/sqli/index.md`
+
+### `references/` — 根目录
+
+

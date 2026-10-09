@@ -146,24 +146,30 @@ function Stop-IdaMcpManagedProcess {
 }
 
 function Get-PortableIdaCandidates {
+    # IDA dirs carry version numbers, so enumerate one level under the usual
+    # roots and match an IDA* name. Never hardcode version numbers.
     $desktop = [Environment]::GetFolderPath('Desktop')
     $userProfile = $env:USERPROFILE
+    $roots = @(
+        'C:\Program Files',
+        'C:\Program Files (x86)',
+        'C:\',
+        'D:\Tools',
+        'D:\',
+        (Join-Path $desktop 'App'),
+        (Join-Path $userProfile 'Desktop'),
+        (Join-Path $userProfile 'Tools')
+    ) | Where-Object { Test-Path -LiteralPath $_ }
     return @(
-        (Join-Path $desktop 'IDA Pro 9.4\App\IDA Pro'),
-        (Join-Path $desktop 'IDA Pro\App\IDA Pro'),
-        (Join-Path $userProfile 'Desktop\IDA Pro 9.4\App\IDA Pro'),
-        (Join-Path $userProfile 'Tools\IDA Pro 9.4\App\IDA Pro'),
-        (Join-Path $userProfile 'Tools\IDA Pro\App\IDA Pro'),
-        (Join-Path $userProfile 'Tools\IDA'),
-        'C:\Program Files\IDA Professional 9.4',
-        'C:\Program Files\IDA Pro 9.4',
-        'C:\Program Files\IDA Pro',
-        'C:\Program Files\IDA',
-        'C:\IDA Pro',
-        'C:\IDA',
-        'D:\IDA',
-        'D:\Tools\IDA Pro 9.4\App\IDA Pro',
-        'E:\Program Files\IDA'
+        foreach ($root in $roots) {
+            Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue |
+                Where-Object { $_.Name -match '(?i)^IDA\b|^IDA[_. ]' } |
+                ForEach-Object {
+                    $_.FullName
+                    $app = Join-Path $_.FullName 'App\IDA Pro'
+                    if (Test-Path -LiteralPath $app) { $app }
+                }
+        }
     )
 }
 
@@ -273,6 +279,8 @@ function Find-IdalibServer {
         (Join-Path $IdaDirPath 'Python314\python.exe'),
         (Join-Path $IdaDirPath 'python\pythonw.exe'),
         (Join-Path $IdaDirPath 'python\python.exe'),
+        (Join-Path $IdaDirPath 'python311\pythonw.exe'),
+        (Join-Path $IdaDirPath 'python311\python.exe'),
         (Join-Path $env:LOCALAPPDATA 'Python\pythoncore-3.14-64\pythonw.exe'),
         (Join-Path $env:LOCALAPPDATA 'Python\pythoncore-3.14-64\python.exe'),
         (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python314\pythonw.exe'),
@@ -297,7 +305,11 @@ function Find-IdalibServer {
         (Join-Path $env:LOCALAPPDATA 'Python\pythoncore-3.14-64\Scripts\idalib-mcp.exe'),
         (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python312\Scripts\idalib-mcp.exe'),
         (Join-Path $IdaDirPath 'Python314\Scripts\idalib-mcp.exe'),
-        (Join-Path $IdaDirPath 'Python314\Scripts\ida-pro-mcp.exe')
+        (Join-Path $IdaDirPath 'Python314\Scripts\ida-pro-mcp.exe'),
+        (Join-Path $IdaDirPath 'python\Scripts\idalib-mcp.exe'),
+        (Join-Path $IdaDirPath 'python\Scripts\ida-pro-mcp.exe'),
+        (Join-Path $IdaDirPath 'python311\Scripts\idalib-mcp.exe'),
+        (Join-Path $IdaDirPath 'python311\Scripts\ida-pro-mcp.exe')
     )
     foreach ($candidate in $scriptCandidates) {
         if (Test-Path -LiteralPath $candidate) {
@@ -377,10 +389,15 @@ if (-not $resolvedIdaDir) {
 $IdaDir = $resolvedIdaDir
 $env:IDADIR = $IdaDir
 
-# Ensure IDA bins + bundled Python are visible to the child process
-$idaPythonDir = Join-Path $IdaDir 'Python314'
-if (-not (Test-Path -LiteralPath $idaPythonDir)) {
-    $idaPythonDir = Join-Path $IdaDir 'python'
+# Bundled interpreter dir. 9.x ships <IDA>\python (Py3.12+), 8.x shipped Python314,
+# the 9.3 green build uses python311. Probe in order, never assume one layout.
+$idaPythonDir = $IdaDir
+foreach ($candidate in @('python', 'python311', 'python314', 'Python314')) {
+    $probe = Join-Path $IdaDir $candidate
+    if (Test-Path -LiteralPath $probe) {
+        $idaPythonDir = $probe
+        break
+    }
 }
 $env:PATH = "$IdaDir;$idaPythonDir;$(Join-Path $idaPythonDir 'Scripts');$env:PATH"
 

@@ -122,6 +122,17 @@ foreach ($r in $rows) {
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('PRIMARY 路由由 `skills/config/routing.json`（唯一事实源）驱动，用 `master-route.ps1 -Hint "<任务>"` 分诊。')
 [void]$sb.AppendLine('歧义场景读 `skills/routing.md` 全矩阵；CTF 多类型任务走 `CTF-Sandbox-Orchestrator/`。')
+[void]$sb.AppendLine('')
+[void]$sb.AppendLine('## 症状 / 知识库索引')
+[void]$sb.AppendLine('')
+[void]$sb.AppendLine('上面这张表按**模块**查。遇到「用户描述了一个现象，不知道该读哪篇技术文档」，用这两张表：')
+[void]$sb.AppendLine('')
+[void]$sb.AppendLine('| 表 | 用途 | 什么时候读 |')
+[void]$sb.AppendLine('|---|---|---|')
+[void]$sb.AppendLine('| [SYMPTOM-INDEX.md](SYMPTOM-INDEX.md) | 用户口述的现象 → 进哪个技能 | `master-route` 报 `confidence: low` / PRIMARY=R0 / "No strong keyword hit" |')
+[void]$sb.AppendLine('| [field-journal/KB-INDEX.md](field-journal/KB-INDEX.md) | 现象 → 读哪篇技术文档（153 篇） | 已进技能，但不确定该读 `references/` 里的哪一篇 |')
+[void]$sb.AppendLine('')
+[void]$sb.AppendLine('知识库来源、改编规则、以及「源文档被本机实测推翻」的 27 条清单见 [field-journal/KB-SOURCES.md](field-journal/KB-SOURCES.md)。')
 
 $newContent = $sb.ToString()
 # 统一 LF 行尾：与 .gitattributes (*.md eol=lf) 保持一致，保证 clone 后 -Check 幂等

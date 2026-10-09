@@ -36,6 +36,7 @@
 | [ida-reverse](ida-reverse/SKILL.md) | IDA Pro 逆向分析辅助技能。当用户提到逆向、反编译、分析二进制/PE/ELF/APK/DLL/SO、破解、找密码、漏洞分析、病毒分析、firmware 固件分析，或需要分析 exe/dll/so/elf/macho/sys 等文件时，务必使用此技能。 |
 | [identity-federation](identity-federation/SKILL.md) | Use for authorized assessment of federated identity systems including SAML, OIDC, OAuth2 flows, SSO misconfiguration, and token confusion issues. |
 | [js-reverse](js-reverse/SKILL.md) | 在使用 js-reverse-mcp 做前端 JavaScript 逆向时使用，适用于签名链路定位、页面观察取证、运行时采样、本地补环境复现与证据化输出。优先适配当前环境里的 js-reverse_* 工具，需要更强的浏览器/CDP/Hook 面时联动 jshookmcp。 |
+| [web-protocol-reverse](web-protocol-reverse/SKILL.md) | 浏览器端 JS 协议逆向 → 纯 Python 采集器（cookie 溯源 / JSVMP / 去浏览器依赖） | 改编自 spider-king-skill (MIT) |
 | [llm-security](llm-security/SKILL.md) | Use for authorized security assessment of LLM applications and AI agents, including prompt injection, tool abuse, RAG exposure, memory poisoning, and model s... |
 | [macos-reverse](macos-reverse/SKILL.md) | Use for authorized macOS and Mach-O reverse engineering including codesign, Objective-C/Swift recovery, endpoint security surfaces, and Apple platform malwar... |
 | [malware-analysis](malware-analysis/SKILL.md) | Use when analyzing suspected malware through static, dynamic, and behavioral techniques, including IOC extraction, YARA or Sigma rules, sandboxing, and anti-... |
@@ -114,4 +115,15 @@ skills/windows-ad/SKILL.md/
 ## 路由
 
 PRIMARY 路由由 `skills/config/routing.json`（唯一事实源）驱动，用 `master-route.ps1 -Hint "<任务>"` 分诊。
-歧义场景读 `skills/routing.md` 全矩阵；CTF 多类型任务走 `CTF-Sandbox-Orchestrator/`。
+歧义场景读 `routing.md` 全矩阵；CTF 多类型任务走 `CTF-Sandbox-Orchestrator/`。
+
+## 症状 / 知识库索引
+
+上面这张表按**模块**查。遇到「用户描述了一个现象，不知道该读哪篇技术文档」，用这两张表：
+
+| 表 | 用途 | 什么时候读 |
+|---|---|---|
+| [SYMPTOM-INDEX.md](SYMPTOM-INDEX.md) | 用户口述的现象 → 进哪个技能 | `master-route` 报 `confidence: low` / PRIMARY=R0 / "No strong keyword hit" |
+| [field-journal/KB-INDEX.md](field-journal/KB-INDEX.md) | 现象 → 读哪篇技术文档（153 篇） | 已进技能，但不确定该读 `references/` 里的哪一篇 |
+
+知识库来源、改编规则、以及「源文档被本机实测推翻」的 27 条清单见 [field-journal/KB-SOURCES.md](field-journal/KB-SOURCES.md)。

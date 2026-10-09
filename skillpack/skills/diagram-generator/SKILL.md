@@ -8,7 +8,7 @@ description: Generate diagrams from notes or code — 当用户想把流程、�
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`：确认当前任务是否命中本 skill 的适用范围
-2. `NOW`：读取 `TOOLS.md`，校验工具可用性和实际路径
+2. `NOW`：读取 `../TOOLS.md`，校验工具可用性和实际路径
 3. `NEXT`：缺工具时调用 bootstrap，不要猜路径
 4. `ACT`：进入"工作流"第一步并执行，不要停在确认状态
 
@@ -173,7 +173,7 @@ For English user requests, respond in English. For Chinese user requests, respon
 
 ## 路由上下文
 
-**上游入口**: `skills/SKILL.md`（总控）、`routing.md`
+**上游入口**: `SKILL.md`（总控）、`../routing.md`
 **触发条件**: 用户说"画图"、"流程图"、"架构图"、"攻击路径图"、"时序图"、"Mermaid"、"Graphviz"、"PlantUML"
 **下游出口**:
 - 生成的图表可嵌入 `docs-generator/` 的报告中
@@ -184,6 +184,6 @@ For English user requests, respond in English. For Chinese user requests, respon
 ## 任务完成自检（声称完成前 MUST 通过）
 
 - [ ] 我是否执行了工作流中的每一步（而不是只阅读）？
-- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `TOOLS.md` 里的装法当路径猜）？
+- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `../TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？

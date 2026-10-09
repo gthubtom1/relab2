@@ -74,7 +74,7 @@ objection --gadget com.target.app explore -s "android sslpinning disable"
 
 ## 对本包的改进建议
 
-- `apk-reverse/references/` 应有专门的 `ssl-pinning-bypass.md`，把 OkHttp 3/4、Conscrypt、自定义 TrustManager、Flutter（boringssl）四种主流情况合并为速查
+- `apk-reverse/references/` 应有专门的 `ssl-pinning-bypass.md`（本包未落地），把 OkHttp 3/4、Conscrypt、自定义 TrustManager、Flutter（boringssl）四种主流情况合并为速查
 - bootstrap manifest 加入 `objection`（pip 包）
 
 ## 可复用的模式/脚本片段

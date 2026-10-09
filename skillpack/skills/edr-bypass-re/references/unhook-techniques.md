@@ -335,4 +335,4 @@ LONG CALLBACK Blindside(EXCEPTION_POINTERS* ep) {
 
 ## 路由回调
 
-unhook 仅是绕过的一半，另一半是 telemetry 失明：进入 `references/telemetry-blinding.md`。
+unhook 仅是绕过的一半，另一半是 telemetry 失明：进入 `telemetry-blinding.md`。

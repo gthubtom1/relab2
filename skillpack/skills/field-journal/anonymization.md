@@ -223,4 +223,4 @@ CI（ci.yml `leak-scan` job）已接入该脚本，发现未脱敏信息会直�
 □ Cookie 与 session id 已替换
 ```
 
-把这个 checklist 直接补到 `field-journal/_template.md` 末尾。
+把这个 checklist 直接补到 `_template.md` 末尾。

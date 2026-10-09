@@ -8,7 +8,7 @@
 
 - [ ] `case-init` 完成，`auth.status=granted`
 - [ ] `network_profile` ≠ 误用 unrestricted 打生产
-- [ ] `lead` 已指定 specialist_roles（`ops/role-map.md`）
+- [ ] `lead` 已指定 specialist_roles（`../../ops/role-map.md`）
 
 ## 阶段门闩
 
@@ -30,8 +30,8 @@
 | 默认对域名狂扫 | 必须 scope 资产列表 |
 | 弱证据直接写报告 | 强制 E/F/P 链 |
 | 单会话无角色 | role-map 交接 |
-| 无工具索引 | `TOOLS.md` + bootstrap |
+| 无工具索引 | `../../TOOLS.md` + bootstrap |
 
 ## 每阶段 timeline 最少一条
 
-格式见 `ops/timeline-workitem.md`。
+格式见 `../../ops/timeline-workitem.md`。

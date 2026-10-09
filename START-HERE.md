@@ -7,40 +7,51 @@
 
 ## ★ 如果这台电脑是新开的（环境是空的）
 
-**第 0 步 · 先把技能包拿到本机。** 主人会给你仓库地址：
+> **你是来「建设」环境的，不是来「检查」环境的。**
+> 主人的期待是你自己发现缺口、自己补上，不用他提醒。
+> 停下来问「要不要装 X」通常会得到「对，早该装了」—— 这说明你没做完。
+
+**第 0 步 · 拿到技能包**
 
 ```powershell
 git clone https://github.com/gthubtom1/relab2.git C:\relab2
 cd C:\relab2
 ```
 
-clone 完就**在这个目录下开一个新的智能体会话** —— 之后你读到的一切都在这里。
+clone 完**在这个目录下开一个新的智能体会话** —— 之后读到的一切都在这里。
 
-**两个仓库**
+**第 1 步 · 读 [`环境建设.md`](环境建设.md) ★ 这是你最重要的一份文档**
 
-- `https://github.com/gthubtom1/relab2.git` —— 本技能包，就是你现在 clone 的这个，一开始就要有
-- `https://github.com/gthubtom1/relab-tools.git` —— 商业付费/已下架的便携工具（9 卷 7z，770 MB），装工具时才拉
+它包含：
+- §0 你要做的事（主人的工作模式：不主动提醒，要你自己补）
+- §1 红线（尤其「报告后直接装」vs「停下来问」的区别）
+- §3 基础环境要装什么（Python/Git/Node/.NET/JDK/7z/Go/Npcap + MinGW）
+- §4 逆向工具链（免费必装 / pip venv / `_map.json` 登记 / 商业工具）
+- §5 验收门（造真样本端到端，不是"工具能探测到"就算完）
+- §6 **已知机器级坑**（调试器 / 脚本调用 / 样本设计，全部真机实测过）
 
-**第 1 步 · 定位包根（换机第一入口，零前置依赖）**
+**第 2 步 · 定位包根 + 摸底自检**
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2-root.ps1
-```
-
-**第 2 步 · 摸底自检（只测量、不修改；退出码 0 才算环境通）**
-
-```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\selfcheck.ps1
 ```
 
 > 这两个脚本是**换机专用的**，不要手工重做它们已经做的事。
 > 它们也是「工具明明装了、却说没有」这类**假 MISSING** 的排查入口。
+> ⚠️ `selfcheck` 退出码 0 **只代表已登记的都正常，不代表该有的都有** —— 继续第 3 步。
 
-**第 3 步 · 读 [`环境初始化.md`](环境初始化.md)** —— 红线（§0）、四步入口链（§1）、
-摸底四件（§2）、工具怎么装（§3）、**验收门（§7）**、报告模板（§8）。
+**第 3 步 · 按 [`环境建设.md`](环境建设.md) §3-§4 把缺的装上**
 
-读完按自己的判断走，做完再回到这里正式干活。
----
+装每个东西之前**先说清楚装什么、为什么、有什么副作用，然后直接装** —— 不要停下来等批准。
+只有这四种情况才真停下来问：商业许可、账号登录、需要管理员且你没有、装了两条路都不通。
+
+**第 4 步 · 按 [`环境建设.md`](环境建设.md) §5 验收**
+
+造一个带唯一标记的测试样本，走完「查壳 → 脱壳 → 静态 → 反编译 → 动态调试 → 反反调试」，
+每一步都要有外部可观测的证据。
+
+**做完再回到这里正式干活。**
 
 ## 0. 这是什么
 
@@ -106,7 +117,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ". 'C:\relab2\skillpack\s
 | python 命令指向的 venv 里没有 `angr`/`z3` | venv 目录进了 PATH，抢走全局 `python` | 用系统解释器绝对路径调用 |
 
 **为什么不能只靠 `Get-Command`**：商业工具（IDA / JEB）躺在
-`D:\Tools\disasm\IDA_Pro_v8.3_Portable\` 里，目录名不等于工具名，不在 PATH 上。
+`D:\Tools\disasm\IDA Pro 9.3\` 里，目录名不等于工具名，不在 PATH 上。
 所以完整探测是四级递进 —— 见 `TOOL-CHAIN.md` 第 2 节。
 
 **环境自检手册**：`skillpack/skills/references/env-selfcheck.md` —— 换机、PATH 漂移、
@@ -134,7 +145,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ". 'C:\relab2\skillpack\s
 
 1. **每条 shell 必带 timeout**：探查 30s / 分析 120s / 构建 600s。
 2. **GUI / 交互式二进制禁入 bash**。这类程序弹窗等输入、零 stdout、进程永不退出 —— 同步等它 = 模型全程不出 token 且不自愈。
-   - 已实测替换：`die.exe`→`diec`、`Wireshark.exe`→`tshark`、`ida.exe`→`idalib-mcp`/`pyghidra-mcp`/`analyzeHeadless`、`x64dbg.exe`→**控制台 headless**（首选）
+   - 已实测替换：`die.exe`→`diec`、`Wireshark.exe`→`tshark`、`ida.exe`→`idat64`/`pyghidra-mcp`/`analyzeHeadless`
+   - ⚠️ **`x64dbg.exe` → 走 MCP，不要用 headless**：实测 headless 的 command loop 无命令即自杀
+     （慢目标 60s 也只撑 2.1s），`-cf` 脚本是空壳。x64dbg 只能用 MCP（`x64dbg-automate-mcp`），
+     或人在桌面侧手开 GUI。详见 `环境建设.md` §6.7
    - 无 CLI 孪生的（PE-bear、Scylla、010 Editor 等）**只能人工在桌面侧操作，agent 不得拉起**
 3. **一条命令只做一件事**：链式 `&&`/`;`/`|` ≤ 8 段。
 4. **长操作后台 + 轮询**，禁止同步阻塞。
@@ -149,7 +163,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ". 'C:\relab2\skillpack\s
 
 - **不跨设备**：不 SSH、不连远程 MCP 端点、不碰共享文件夹
 - **不管理虚拟机**：建工作机 / 打快照是人的活
-- **不自动装工具**：有安装器（`skillpack\skills\scripts\bootstrap-reverse.ps1` + `bootstrap-manifest.json`），
-  但装之前要先报给用户并获得同意；商业许可的工具不自动下载
+- **工具装之前先报告，然后直接装**：官方免费软件直接装，不要反复停下来问。
+  只有四类才需要停下来：商业许可 / 账号登录 / 需要管理员而你没有 / 装了两条路都不通。
+  详见 `环境建设.md` §0.2 与 §门5
 - **卡片载入是「写文件」，不是「改模型」**
 - 报告里的 `x/x` 必须带分母定义，未通过项逐条列出，不许用「已完成」覆盖

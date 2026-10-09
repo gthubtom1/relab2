@@ -183,14 +183,14 @@ File → Save Module → 替换原文件
 
 ## 路由上下文
 
-**上游入口**: `skills/SKILL.md`（总控）、`routing.md`
+**上游入口**: `SKILL.md`（总控）、`../routing.md`
 **下游出口**:
 - IL2CPP / NativeAOT（native）→ `reverse-engineering/`
 - 深度 native .so/.dll 段分析 → `ida-reverse/` / `radare2/`
 - 需要 AI 直接操作 dnSpy → 注册并联动 dnSpy MCP（见 `references/sharp-tools.md`）
 
 **同级关联模块**:
-- `reverse-engineering/languages-compiled.md`（.NET 简介指向本模块）
+- `../reverse-engineering/languages-compiled.md`（.NET 简介指向本模块）
 - `apk-reverse/`（Xamarin/MAUI Android 逆向可切回本模块看 C# 层）
 
 ## 参考文档

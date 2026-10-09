@@ -58,7 +58,7 @@
 
 ### iOS 逆向
 
-- [[种子] seed-009_ios-jailbr&#101;ak-detect-bypass](./seed-009_ios-jailbr%65ak-detect-bypass.md)
+- [[种子] seed-009_ios-jailbr&#101;ak-detect-bypass](./seed-009_ios-jailbr65ak-detect-bypass.md`（文件名含 %65 编码，实为 `break`）`)
 
 ### 工具链与环境
 
@@ -100,6 +100,15 @@
 ### Cortex-M USB MSC 升级器
 
 - [应用/驻留 bootloader 边界与虚拟磁盘写入链路](./2026-08-06_cortex-m-msc-firmware-self-keyed-rotate-xor.md)
+
+## 知识库文档索引（非实战记录）
+
+本目录另有两份**技术文档索引**，它们不是实战 case，不计入上面的统计：
+
+| 文件 | 用途 | 什么时候读 |
+|---|---|---|
+| [KB-INDEX.md](./KB-INDEX.md) | 外部知识库 153 篇技术文档的**症状索引**（现象 → 读哪一篇） | 已经知道在某个技能里了，但不知道该读 `references/` 里的哪一篇 |
+| [KB-SOURCES.md](./KB-SOURCES.md) | 来源（`LING71671/open-reverselab`，GPL-3.0）、改编规则、以及**源文档被本机实测推翻的 27 条清单** | 照着某篇文档跑之前核对命令；命令和本机表现不一致时先查这里 |
 
 ## 使用说明
 

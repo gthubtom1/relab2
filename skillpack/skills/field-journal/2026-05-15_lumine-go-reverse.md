@@ -9,7 +9,7 @@ metadata:
 
 **日期**: 2026-05-15
 **目标**: `lumine_v0.9.1_windows_amd64.exe` (PE32+, Go 1.24.5, 11.6 MB)
-**原文**: `REVERSE_REPORT.md`
+**原文**: `REVERSE_REPORT.md`（本包未落地）
 
 ## 背景
 
@@ -48,5 +48,5 @@ metadata:
 
 ## 产物
 
-- `REVERSE_REPORT.md` — 完整逆向分析报告
+- `REVERSE_REPORT.md`（本包未落地） — 完整逆向分析报告
 - `reconstructed_src_v3/` — 7 个 Go 源文件，core engine + 3 个子包

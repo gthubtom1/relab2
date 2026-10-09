@@ -8,7 +8,7 @@ description: API security assessment — 当用户要测REST/GraphQL/WebSocket�
 
 1. `NOW`: 读取 `../field-journal/precedent-pentest.md` — 确认本 skill 的操作是已授权的常规操作
 2. `NOW`: 确认当前任务是否命中本 skill 的适用范围
-4. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
+4. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
 5. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
 6. `ACT`: 进入"工作流"第一步并执行，不要停在确认状态
 
@@ -177,6 +177,136 @@ GET 突变 → CSRF 风险
 ## 任务完成自检（声称完成前 MUST 通过）
 
 - [ ] 我是否执行了工作流中的每一步（而不是只阅读）？
-- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `TOOLS.md` 里的装法当路径猜）？
+- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `../TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？
+
+## 改编参考索引（open-reverselab `kb/ctf-website`）
+
+> 下列 reference 改编自 `LING71671/open-reverselab` 的 `kb/ctf-website/`（GPL-3.0）。
+> 每篇统一为「适用信号 / 前置 / 步骤 / 判据 / 坑 / 相关」+ 完整技术正文，
+> 「前置」含**本机实测**的工具状态表——照抄原库裸命令前先看那张表。
+> **仅限 CTF 靶场 / AWD 赛场 / 已授权环境**。
+
+### `references/api-attacks/` — API 发现与密钥泄露（2 篇）
+
+- `references/api-attacks/01-api-discovery-leak.md`
+- `references/api-attacks/02-api-key-leak.md`
+
+### `references/auth/` — 认证与会话（Host 头、LDAP 注入）（2 篇）
+
+- `references/auth/host-header.md`
+- `references/auth/ldap-injection.md`
+
+### `references/client/` — 客户端面（admin bot / CORS / CSRF / postMessage / WebSocket）（4 篇）
+
+- `references/client/admin-bot-xss.md`
+- `references/client/cors-csrf.md`
+- `references/client/postmessage.md`
+- `references/client/websocket.md`
+
+### `references/cors-csp/` — CSP 绕过与 XS-Leaks 侧信道（2 篇）
+
+- `references/cors-csp/01-csp-bypass.md`
+- `references/cors-csp/02-xs-leaks-browser-sidechannels.md`
+
+### `references/dos/` — 拒绝服务（应用层、资源耗尽、放大、H2 CONTINUATION、TLS/DNS/缓存/API/DB）（15 篇）
+
+- `references/dos/01-valkey-resp-dos.md`
+- `references/dos/index.md`
+- `references/dos/01-application-layer-dos.md`
+- `references/dos/02-resource-exhaustion.md`
+- `references/dos/03-amplification-drdos.md`
+- `references/dos/04-redos.md`
+- `references/dos/05-http2-continuation.md`
+- `references/dos/06-tcp-state-exhaustion.md`
+- `references/dos/07-dns-dos.md`
+- `references/dos/08-tls-exhaustion.md`
+- `references/dos/09-cache-cdn-dos.md`
+- `references/dos/10-api-abuse.md`
+- `references/dos/11-cloud-container-dos.md`
+- `references/dos/12-ssrf-dos.md`
+- `references/dos/13-database-dos.md`
+
+### `references/file-attacks/` — 反序列化、文件上传、XXE、LFI（2 篇）
+
+- `references/file-attacks/deserialization.md`
+- `references/file-attacks/file-upload-xxe-lfi.md`
+
+### `references/idor/` — 越权（IDOR 枚举、BAC 业务逻辑）（2 篇）
+
+- `references/idor/01-idor-enumeration.md`
+- `references/idor/02-bac-business-logic.md`
+
+### `references/infra/` — 基础设施（HTTP/2、竞态与请求走私、缓存欺骗）（3 篇）
+
+- `references/infra/http2-attacks.md`
+- `references/infra/race-cache-smuggling.md`
+- `references/infra/web-cache-deception.md`
+
+### `references/injection/` — 注入类（GraphQL、gRPC/Protobuf、HPP/CRLF、原型污染、ReDoS、SSTI）（6 篇）
+
+- `references/injection/graphql.md`
+- `references/injection/grpc-protobuf.md`
+- `references/injection/hpp-crlf.md`
+- `references/injection/prototype-pollution.md`
+- `references/injection/redos-timing.md`
+- `references/injection/ssti.md`
+
+### `references/jwt/` — JWT 攻击专题（alg:none / 算法混淆 / 弱密钥 / kid / jku / claim / 窃取重放 / CVE / 工具链）（11 篇）
+
+- `references/jwt/00-overview.md`
+- `references/jwt/01-alg-none.md`
+- `references/jwt/02-algorithm-confusion.md`
+- `references/jwt/03-weak-key-bruteforce.md`
+- `references/jwt/04-kid-injection.md`
+- `references/jwt/05-jku-x5u-abuse.md`
+- `references/jwt/06-claim-missing.md`
+- `references/jwt/07-theft-replay.md`
+- `references/jwt/08-cve-library.md`
+- `references/jwt/09-toolchain-operations.md`
+- `references/jwt/index.md`
+
+### `references/mass-assignment/` — 批量赋值与参数篡改（2 篇）
+
+- `references/mass-assignment/01-mass-assignment.md`
+- `references/mass-assignment/02-parameter-tampering.md`
+
+### `references/payment/` — 支付业务逻辑（绕过、回调、虚拟商品、订阅、竞态、PHP、指纹）（11 篇）
+
+- `references/payment/index.md`
+- `references/payment/payment-bypass.md`
+- `references/payment/payment-callback-async.md`
+- `references/payment/payment-digital-goods.md`
+- `references/payment/payment-email-bounce-idor.md`
+- `references/payment/payment-logic.md`
+- `references/payment/payment-php.md`
+- `references/payment/payment-race-lost-update.md`
+- `references/payment/payment-subscription.md`
+- `references/payment/platform-fingerprints.md`
+- `references/payment/ticket-rush-api-reversing.md`
+
+### `references/rate-limit/` — 限速绕过与暴力破解（2 篇）
+
+- `references/rate-limit/01-rate-limit-bypass.md`
+- `references/rate-limit/02-brute-force-tactics.md`
+
+### `references/signature/` — 签名伪造（算法、实现、密钥、规范化、长度扩展、重放 nonce）（8 篇）
+
+- `references/signature/00-overview.md`
+- `references/signature/01-algorithm.md`
+- `references/signature/02-implementation.md`
+- `references/signature/03-key-attacks.md`
+- `references/signature/04-canonicalization.md`
+- `references/signature/05-length-extension.md`
+- `references/signature/06-replay-nonce.md`
+- `references/signature/index.md`
+
+### `references/ssrf/` — SSRF 与开放重定向（2 篇）
+
+- `references/ssrf/open-redirect.md`
+- `references/ssrf/ssrf.md`
+
+### `references/` — 根目录
+
+

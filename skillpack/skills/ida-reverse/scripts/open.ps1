@@ -45,24 +45,37 @@ else {
         $env:IDADIR = [System.IO.Path]::GetFullPath($persisted)
     }
     else {
-        $desktop = [Environment]::GetFolderPath('Desktop')
+        # Version-agnostic discovery: IDA dirs carry version numbers, so probe
+        # the usual roots one level deep and pick the newest hit. Never enumerate
+        # hardcoded version numbers.
+        $roots = @(
+            'C:\Program Files',
+            'C:\',
+            'D:\Tools',
+            'D:\',
+            (Join-Path $env:USERPROFILE 'Desktop'),
+            (Join-Path $env:USERPROFILE 'Tools'),
+            (Join-Path $desktop 'App')
+        ) | Where-Object { Test-Path -LiteralPath $_ }
         $idaCandidates = @(
-            (Join-Path $desktop 'IDA Pro 9.4\App\IDA Pro'),
-            (Join-Path $env:USERPROFILE 'Desktop\IDA Pro 9.4\App\IDA Pro'),
-            (Join-Path $env:USERPROFILE 'Tools\IDA Pro 9.4\App\IDA Pro'),
-            (Join-Path $env:USERPROFILE 'Tools\IDA'),
-            'C:\Program Files\IDA Professional 9.4',
-            'C:\Program Files\IDA Pro 9.4',
-            'C:\Program Files\IDA Pro',
-            'C:\IDA Pro',
-            'D:\IDA',
-            'D:\Tools\IDA Pro 9.4\App\IDA Pro'
+            foreach ($root in $roots) {
+                Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue |
+                    Where-Object { $_.Name -match '(?i)^IDA\b|^IDA[_. ]' } |
+                    ForEach-Object {
+                        $_.FullName
+                        $app = Join-Path $_.FullName 'App\IDA Pro'
+                        if (Test-Path -LiteralPath $app) { $app }
+                    }
+            }
         )
-        $foundIda = $idaCandidates | Where-Object { Test-IdaInstallDir -Path $_ } | Select-Object -First 1
+        $foundIda = $idaCandidates |
+            Where-Object { Test-IdaInstallDir -Path $_ } |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
         if ($foundIda) {
             $env:IDADIR = [System.IO.Path]::GetFullPath($foundIda)
         } else {
-            Write-Error "ERR:IDADIR not set and IDA Pro not found at common paths. Set IDADIR environment variable to your IDA installation directory."
+            Write-Error "ERR:IDADIR not set and IDA Pro not found under common roots. Set IDADIR environment variable to your IDA installation directory."
             exit 1
         }
     }

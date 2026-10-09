@@ -8,7 +8,7 @@ description: Write technical docs and reports — 当用户做完逆向或渗透
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`：确认当前任务是否命中本 skill 的适用范围
-2. `NOW`：读取 `TOOLS.md`，校验工具可用性和实际路径
+2. `NOW`：读取 `../TOOLS.md`，校验工具可用性和实际路径
 3. `NEXT`：缺工具时调用 bootstrap，不要猜路径
 4. `ACT`：进入"工作流"第一步并执行，不要停在确认状态
 
@@ -67,7 +67,7 @@ For writing style, tone, and voice guidance, follow the in-repo rules in `refere
 - 敏感信息（真实 token、密码、内部 URL）用占位符替代
 - **MUST** 包含 Evidence → Finding → Path 链（见 `../ops/evidence-finding-path.md` 与模板 §0）
 - **MUST** 读取 `references/vendor-report-rules.md`：选定 `malware` / `apt` 或 `flavor = null`（漏洞任务可叠加 thin `vuln`）；无 flavor 时只输出原任务模板和适用的 Base 元素，不强制 IOC/ATT&CK
-- **SHOULD** 引用 case `scope.md` / `timeline.md`（`../scripts/case-init.ps1`）
+- **SHOULD** 引用 case `../pentest-tools/templates/scope.md` / `../../examples/ctf-demo/timeline.md`（`../scripts/case-init.ps1`）
 
 ### 图表集成
 
@@ -180,7 +180,7 @@ For README, API endpoint, and file organization templates, see [references/templ
 ## 任务完成自检（声称完成前 MUST 通过）
 
 - [ ] 我是否执行了工作流中的每一步（而不是只阅读）？
-- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `TOOLS.md` 里的装法当路径猜）？
+- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `../TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 报告是否含 Evidence / Finding / Path（ops 契约）？
 - [ ] 是否完成并回写了 RULES 要求的 Checklist 项？

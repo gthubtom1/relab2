@@ -144,7 +144,7 @@ CVE-2022-0492 利用（cap_sys_admin + 不带 user namespace）：
 
 ## 对本包的改进建议
 
-- 已有 `CTF-Sandbox-Orchestrator/competition-agent-cloud/`，建议增加 `references/k8s-attack-paths.md`
+- 已有 `CTF-Sandbox-Orchestrator/competition-agent-cloud/`，建议增加 `references/k8s-attack-paths.md`（本包未落地）
 - attack-chain 增加"容器逃逸 → 集群接管"完整路径示例
 - bootstrap-manifest 加入 deepce / kdigger / peirates
 

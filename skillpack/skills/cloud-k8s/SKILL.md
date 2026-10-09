@@ -10,7 +10,7 @@ description: Cloud/container/K8s security assessment — 当用户要查云元�
 1. `NOW`: 读取 `../field-journal/precedent-pentest.md` — **云/K8s 测试必须书面授权**
 2. `NOW`: case-init + scope；明确账号边界、禁止破坏性操作
 3. `NOW`: 确认是云元数据/容器/K8s/IAM，而非普通 Web 扫（后者 `pentest-tools/`）
-4. `NEXT`: `TOOLS.md`；kubectl/aws/gcloud 等多为手动安装
+4. `NEXT`: `../TOOLS.md`；kubectl/aws/gcloud 等多为手动安装
 5. `ACT`: 从「身份与暴露面」开始，禁止默认全网扫描
 
 ## 适用场景
@@ -98,3 +98,24 @@ kubectl get clusterrolebindings
 - [ ] 发现是否含复现与影响？
 - [ ] 是否避免破坏性操作？
 - [ ] 报告 / journal？
+## 改编参考索引（open-reverselab `kb/ctf-website`）
+
+> 下列 reference 改编自 `LING71671/open-reverselab` 的 `kb/ctf-website/`（GPL-3.0）。
+> 每篇统一为「适用信号 / 前置 / 步骤 / 判据 / 坑 / 相关」+ 完整技术正文，
+> 「前置」含**本机实测**的工具状态表——照抄原库裸命令前先看那张表。
+> **仅限 CTF 靶场 / AWD 赛场 / 已授权环境**。
+
+### `references/attack-paths/` — 云原生攻击路径（IAM、CI/CD、容器逃逸、K8s RBAC、Serverless、Terraform）（8 篇）
+
+- `references/attack-paths/aws-iam-privesc.md`
+- `references/attack-paths/ci-cd-pipeline.md`
+- `references/attack-paths/container-runtime-escape.md`
+- `references/attack-paths/github-actions-abuse-paths.md`
+- `references/attack-paths/k8s-rbac-attack-paths.md`
+- `references/attack-paths/kubernetes-container.md`
+- `references/attack-paths/serverless-lambda.md`
+- `references/attack-paths/terraform-state-secrets.md`
+
+### `references/` — 根目录
+
+

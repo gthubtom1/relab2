@@ -24,7 +24,7 @@ It MUST NOT perform reconnaissance, exploitation, dynamic instrumentation, or ta
 
 1. `NOW`: read `../field-journal/precedent-reverse.md` and confirm that this is a review of an existing authorized case package.
 2. `NOW`: confirm the case path and choose read-only review mode.
-3. `NEXT`: read `TOOLS.md`; this skill uses only Python 3 standard library and does not require bootstrap.
+3. `NEXT`: read `../TOOLS.md`; this skill uses only Python 3 standard library and does not require bootstrap.
 4. `NEXT`: run `python skillpack/skills/case-review/scripts/review_case.py <case-root> --format markdown` (Windows; on Linux/macOS/Kali use `python3`).
 5. `ACT`: resolve every error, then rerun the review before claiming a handoff is complete.
 
@@ -49,7 +49,7 @@ python skillpack/skills/case-review/scripts/review_case.py work/<case> --format 
 python3 skillpack/skills/case-review/scripts/review_case.py work/<case> --format markdown  # Linux / macOS / Kali
 ```
 
-Confirm that `scope.md`, `timeline.md`, `workitems.md`, and `evidence/` are present. A non-strict review reports scope warnings while a strict review treats warnings as handoff blockers.
+Confirm that `../pentest-tools/templates/scope.md`, `../../examples/ctf-demo/timeline.md`, `../../examples/ctf-demo/workitems.md`, and `evidence/` are present. A non-strict review reports scope warnings while a strict review treats warnings as handoff blockers.
 
 ## 建议下一步（选一个编号）
 
@@ -144,7 +144,7 @@ This skill has no third-party dependency. If Python 3 is unavailable, the only a
 
 **Downstream exit**: `docs-generator/` for a formal report, or the original PRIMARY skill when the graph is incomplete.
 
-**Related modules**: `ops/evidence-finding-path.md`, `ops/timeline-workitem.md`, `digital-forensics/`, `reverse-engineering/`, and `docs-generator/`.
+**Related modules**: `../ops/evidence-finding-path.md`, `../ops/timeline-workitem.md`, `digital-forensics/`, `reverse-engineering/`, and `docs-generator/`.
 
 ## References
 

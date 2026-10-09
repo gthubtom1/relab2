@@ -117,8 +117,8 @@ U-Boot 单用户 bypass 经典招：
 
 ## 对本包的改进建议
 
-- `reverse-engineering/platforms.md` 已含固件章节，建议拆出 `references/iot-firmware-cheatsheet.md`
-- 新增 `reverse-engineering/references/uart-debug.md` 涵盖 UART/JTAG/SWD 入门
+- `../reverse-engineering/platforms.md` 已含固件章节，建议拆出 `references/iot-firmware-cheatsheet.md`（本包未落地）
+- 新增 `reverse-engineering/references/uart-debug.md`（本包未落地） 涵盖 UART/JTAG/SWD 入门
 - bootstrap manifest 加入 unblob / firmwalker
 
 ## 可复用的模式/脚本片段

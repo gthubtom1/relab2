@@ -59,7 +59,7 @@ def decompress(data):
 
 ## 对本包的改进建议
 
-- `elf-analysis.md` 应该加入"自定义压缩算法识别"的更多特征
+- `../reverse-engineering/elf-analysis.md` 应该加入"自定义压缩算法识别"的更多特征
 - ARM64 syscall 表应该包含 cache 维护指令（dc cvau / ic ivau）的说明
 - 建议加入"如何用 Python 重写汇编算法"的通用方法论
 

@@ -10,7 +10,7 @@ description: Use for authorized Active Directory and Windows identity attacks in
 1. `NOW`: 读取 `../field-journal/precedent-pentest.md`
 2. `NOW`: **域/AD 测试必须明确授权范围**（含 DC、是否允许投毒/中继）
 3. `NOW`: case-init；network_profile 与禁止动作写清
-4. `NEXT`: `TOOLS.md`（impacket/certipy/bloodhound 等常手动）
+4. `NEXT`: `../TOOLS.md`（impacket/certipy/bloodhound 等常手动）
 5. `ACT`: 从身份枚举与 BloodHound 图开始，不先上破坏性利用
 
 ## 适用场景

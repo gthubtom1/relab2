@@ -7,8 +7,8 @@
 | 维度 | reverse-skill |
 |------|----------------|
 | 形态 | **Skill 路由包** — 给任意 AI 客户端（Claude/Cursor/Codex…）用的方法论 + 工具自举 |
-| 入口 | `RULES.md` → `MASTER-ROUTING` / `master-route.ps1` → 子 skill |
-| 工具真相 | `TOOLS.md`（装法说明书）+ `bootstrap-manifest.json`（机器可读）+ `(Get-Command <id>).Source`（实时定位）（本机路径，不猜） |
+| 入口 | `../../RULES.md` → `MASTER-ROUTING` / `master-route.ps1` → 子 skill |
+| 工具真相 | `../TOOLS.md`（装法说明书）+ `bootstrap-manifest.json`（机器可读）+ `(Get-Command <id>).Source`（实时定位）（本机路径，不猜） |
 | 进化 | `field-journal/` 脱敏经验回写 |
 | 产物 | Markdown 报告 + `work/<case>/` 本地作战目录（gitignore） |
 | 部署 | `git clone` 即可；无强制 PG/UI/Docker 池 |
@@ -28,12 +28,12 @@
 
 | 思想 | reverse-skill 形态 |
 |------|-------------------|
-| 授权与项目边界 | `ops/scope-contract.md` → 每案 `scope.md` |
-| Evidence→Finding→Path | `ops/evidence-finding-path.md` + 报告模板 |
-| 专家分工 | `ops/role-map.md`（Lead/cie/cpe/cre…→ skill） |
-| 可回放 | `work/<case>/timeline.md` 追加写 |
-| WorkItem/覆盖 | `workitems.md` + coverage 勾选 |
-| 沙箱工具齐 | `ops/sandbox-profile.md` vs bootstrap-manifest |
+| 授权与项目边界 | `scope-contract.md` → 每案 `../pentest-tools/templates/scope.md` |
+| Evidence→Finding→Path | `evidence-finding-path.md` + 报告模板 |
+| 专家分工 | `role-map.md`（Lead/cie/cpe/cre…→ skill） |
+| 可回放 | `work/<case>/timeline.md`（本包未落地） 追加写 |
+| WorkItem/覆盖 | `../../examples/ctf-demo/workitems.md` + coverage 勾选 |
+| 沙箱工具齐 | `sandbox-profile.md` vs bootstrap-manifest |
 | 出站管控 | `network_profile` 字段（offline/lab/authorized） |
 
 ## 特色（必须保留）
@@ -57,6 +57,6 @@ reverse-skill = Agent 的安全作业路由器 + 说明书
 ## 与「800+ 社区微 skill」的关系
 
 - **不** submodule 巨型 skill 库（投毒面与维护成本，见 `skill-supply-chain.md`）  
-- **要** 维护 `references/community-security-skills.md` 作索引与借鉴规则  
-- **要** 用 `domain-coverage-map.md` 证明：深度 skill + 路由 > 碎片 skill 堆叠  
+- **要** 维护 `../references/community-security-skills.md` 作索引与借鉴规则  
+- **要** 用 `../references/domain-coverage-map.md` 证明：深度 skill + 路由 > 碎片 skill 堆叠  
 - 外部 skill 安装：AST10 思维 + 只信 curated 源（如 Trail of Bits curated）  

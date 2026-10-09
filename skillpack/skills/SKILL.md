@@ -11,7 +11,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 读完本文件后，不允许只回复“已读/已理解”。必须按顺序执行：
 
 1. `NOW`：跑平台原生 router（Windows `scripts/master-route.ps1`；Linux/macOS/Kali `scripts/master-route.sh`），从 `config/routing.json` 定 PRIMARY；疑难再读 `routing.md` 三轴附录。
-2. `NOW`：平台原生 `case-init` 落地当前分析项目的 `work/<case>/scope.md`；**auth 未 granted 禁止对目标 ACT**。本地离线样本使用 `offline-sample` preset + explicit sample；Force 不得绕过硬门。
+2. `NOW`：平台原生 `case-init` 落地当前分析项目的 `work/<case>/scope.md`（本包未落地）；**auth 未 granted 禁止对目标 ACT**。本地离线样本使用 `offline-sample` preset + explicit sample；Force 不得绕过硬门。
 3. `ACT`：立即打开 PRIMARY `SKILL.md` 执行 ACTION REQUIRED。
 4. `NEXT`：工具路径**当场探测本机** —— 唯一入口是探测层。本机固定路径：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`，然后 `Resolve-ReverseToolSpec -Name <工具id>`（`env → PATH → 别名表 → 工具根递归` 四级递进，返回 `Available`/`Command`/`Via`，调用前自动自愈 PATH 与 `DOTNET_ROOT`）。
    **两个根是主人定死的约定，换机不变：仓库 `C:\relab2`、工具根 `D:\Tools`。命令里直接写，不必用占位符。**
@@ -30,8 +30,8 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 
 > **本节是命令纪律的唯一事实源。** 卡片（`<本仓库>/kernel/04-console/cards/guest/全能专精指引.md`）
 > 只是**指向本文件**的路由指针，它不承载纪律内容、不重复本节；如两者冲突，**以本文件为准**。
-> `skillpack/指引卡.md` 同样只是指针。
-> ⚠️ 不要再去引 `D:\Project\hubcore\04-console\cards\guest\全能专精指引.md`：那是仓库外的旧副本，
+> `../指引卡.md`（本包未落地） 同样只是指针。
+> ⚠️ 不要再去引 `D:\Project\hubcore\04-console\cards\guest\全能专精指引.md`（本包未落地）：那是仓库外的旧副本，
 > §1 写的是「必须在隔离虚拟机执行，严禁在宿主机拉起」，与本包「单机·无跨机假设」**完全相反**。
 > 事故背景：2026-10-04 会话 `01a107ea` 两次无响应停顿，根因是本包 `die.exe` 漏登记导致拉起 GUI 版（弹窗、零 stdout、进程不退）。工具执行是**同步阻塞**的：命令不返回，模型不会运行、不会有任何 token 产出，终端计时器继续走。**没有模型能察觉自己的命令卡住**，因此约束必须前置到命令本身。
 
@@ -68,7 +68,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
    **铁律**：动态调试下断点、读写内存、单步等操作，一律通过 `x64dbg MCP` (JSON-RPC) 交互，禁止经 stdin 裸塞带空格的复杂字符串命令。
 3. **Ghidra analyzeHeadless 挂死陷阱**：
    Ghidra `analyzeHeadless` 必须预先创建 project 目录，若目录不存在或遇脚本错误，批处理可能会 pause 挂死。
-   **铁律**：必须预先 `mkdir` 创建项目目录，且命令末尾必须加 `< nul` 重定向 stdin 防止 pause 挂死（例如 `cmd /c "analyzeHeadless.bat ... < nul"`）。优先推荐直接使用 `pyghidra-mcp`（20 工具；**端点按 `../references/tool-registry.md` 里 `pyghidra-mcp` 那一行取，表里只有「传输方式 / 端点 / 前置依赖 / 备注」四列，没有 `command` 列；启动方式由本机四级探测得出，不要写死脚本名** —— 实测全仓与本机都没有 `start-ghidra-mcp.bat`）。
+   **铁律**：必须预先 `mkdir` 创建项目目录，且命令末尾必须加 `< nul` 重定向 stdin 防止 pause 挂死（例如 `cmd /c "analyzeHeadless.bat ... < nul"`）。优先推荐直接使用 `pyghidra-mcp`（20 工具；**端点按 `references/tool-registry.md` 里 `pyghidra-mcp` 那一行取，表里只有「传输方式 / 端点 / 前置依赖 / 备注」四列，没有 `command` 列；启动方式由本机四级探测得出，不要写死脚本名** —— 实测全仓与本机都没有 `start-ghidra-mcp.bat`）。
 4. **dnSpy.Console IL 模式建工程陷阱**：
    `dnSpy.Console` 在 IL 模式下不支持 `-o`（创建工程目录），若带 `-o` 会直接报错抛异常。
    **铁律**：反编译 IL 必须使用 `--md <token>` 输出到标准输出（例如 `dnSpy.Console.exe target.dll --il --md 0x06000001`）。
@@ -103,8 +103,8 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 **能用 MCP 用 MCP → 能用无头/CLI 用 CLI → 都不行才开 GUI 观察 → GUI 严禁经 bash 同步启动**
 
 1. **已生效的 MCP 资产（智能体首选通道）**：
-   - **ghidra / pyghidra-mcp**：**streamable-http 常驻守护 `http://127.0.0.1:9111/mcp`**（不再用 stdio，以免每次 `pi` 启动多付 ~7 s）。提供 20 个静态分析与反编译工具（`import_binary`, `decompile_function`, `search_symbols_by_name`, `list_imports`, `gen_callgraph` 等）。**服务默认不监听**：做 Ghidra 静态分析前先由 agent 自己拉起守护 —— 端点按 `../references/tool-registry.md` 里 `pyghidra-mcp` 那一行取（该表四列＝传输方式 / 端点 / 前置依赖 / 备注；前置＝JDK 21+ 与 Ghidra 本体），**启动方式用四级探测现场求**（`Resolve-ReverseToolSpec -Name 'pyghidra_mcp'`；Ghidra 本体路径用 `-Name 'ghidraRun'`），冷启 7–10 s，幂等；按该端点探活确认 `STATE: READY` 后才用，收尾再按同一来源停守护。**不得假设某个固定盘符下的 `start-ghidra-mcp.bat` 存在。**
-   - **x64dbg-mcp**：HTTP `http://127.0.0.1:9094/`，基于 Bearer Token（由环境变量 `X64DBG_MCP_TOKEN` 动态注入）。提供 80 个动态调试工具（断点、单步、寄存器、读写内存、反汇编、符号搜索、调用栈）。**服务默认不监听**：动态调试前先起 x64dbg —— 端点按 `../references/tool-registry.md` 里 `x64dbg-mcp` 那一行取（四列＝传输方式 / 端点 / 前置依赖 / 备注；前置＝x64dbg + 插件 + Bearer token）；**注意 9095 是 x32 的服务口而非控制口**（`bootstrap-manifest.json` 明确 x64=9094 / x32=9095），向 9095 发指令会打到 x32 server 或无人应答。启动方式与插件位置由四级探测现场求（插件活在被调试进程里，9094 才监听），收尾用同一入口停。**不得假设某个固定盘符下的 `start-mcp.bat` 存在。**
+   - **ghidra / pyghidra-mcp**：**streamable-http 常驻守护 `http://127.0.0.1:9111/mcp`**（不再用 stdio，以免每次 `pi` 启动多付 ~7 s）。提供 20 个静态分析与反编译工具（`import_binary`, `decompile_function`, `search_symbols_by_name`, `list_imports`, `gen_callgraph` 等）。**服务默认不监听**：做 Ghidra 静态分析前先由 agent 自己拉起守护 —— 端点按 `references/tool-registry.md` 里 `pyghidra-mcp` 那一行取（该表四列＝传输方式 / 端点 / 前置依赖 / 备注；前置＝JDK 21+ 与 Ghidra 本体），**启动方式用四级探测现场求**（`Resolve-ReverseToolSpec -Name 'pyghidra_mcp'`；Ghidra 本体路径用 `-Name 'ghidraRun'`），冷启 7–10 s，幂等；按该端点探活确认 `STATE: READY` 后才用，收尾再按同一来源停守护。**不得假设某个固定盘符下的 `start-ghidra-mcp.bat` 存在。**
+   - **x64dbg-mcp**：HTTP `http://127.0.0.1:9094/`，基于 Bearer Token（由环境变量 `X64DBG_MCP_TOKEN` 动态注入）。提供 80 个动态调试工具（断点、单步、寄存器、读写内存、反汇编、符号搜索、调用栈）。**服务默认不监听**：动态调试前先起 x64dbg —— 端点按 `references/tool-registry.md` 里 `x64dbg-mcp` 那一行取（四列＝传输方式 / 端点 / 前置依赖 / 备注；前置＝x64dbg + 插件 + Bearer token）；**注意 9095 是 x32 的服务口而非控制口**（`bootstrap-manifest.json` 明确 x64=9094 / x32=9095），向 9095 发指令会打到 x32 server 或无人应答。启动方式与插件位置由四级探测现场求（插件活在被调试进程里，9094 才监听），收尾用同一入口停。**不得假设某个固定盘符下的 `start-mcp.bat` 存在。**
    - **MCP 启停纪律（硬门）**：本机 HTTP 型 MCP 全是「按需启动」，注册 ≠ 已监听。启动/关闭由 agent 用上述 .bat 自行完成，**严禁要求用户手工编辑 `mcp.json`、严禁把启停动作甩给人**；服务未起仅表现为该 server `failed`，先跑对应 start 脚本并 `/mcp reconnect <server>` 再定位别的问题。
    - **idalib-mcp / idapro**：IDA Pro 无头 stdio 及 GUI 插件通道（72 个工具）。
    - **jshook / reqable-mcp / playwright-mcp / chrome-devtools**：前端与网络/浏览器分析 MCP 服务。
@@ -124,20 +124,20 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
   - 动作：调用 `diec.exe -d -e -j` 检测架构与加壳；调用 `floss.exe` 提取静态与解码字符串；调用 `capa.exe -r <rules> -j <target>` 识别加密、网络与恶意能力分支。
   - 产出：明确 Entry Point、编译器/混淆类型、加密/哈希特征与初步脱壳路线。
 - **阶段二：动静反解与关键逻辑定位 (Disassembly & Logic Trace)**
-  - 动作：优先调用 `pyghidra-mcp`（20 tools；**端点按 `../references/tool-registry.md` 的 `pyghidra-mcp` 行取，启动方式用四级探测现场求，不要写死脚本名**；实测全仓与本机都不存在 `start-ghidra-mcp.bat` 这个文件）或 `idalib-mcp` / `idapro` 反编译关键函数；C#/.NET 目标调用 `ilspycmd` 或 `dnSpy.Console --md`；CLI 侦察调用 `radare2.exe -q -c 'iI'`。
+  - 动作：优先调用 `pyghidra-mcp`（20 tools；**端点按 `references/tool-registry.md` 的 `pyghidra-mcp` 行取，启动方式用四级探测现场求，不要写死脚本名**；实测全仓与本机都不存在 `start-ghidra-mcp.bat` 这个文件）或 `idalib-mcp` / `idapro` 反编译关键函数；C#/.NET 目标调用 `ilspycmd` 或 `dnSpy.Console --md`；CLI 侦察调用 `radare2.exe -q -c 'iI'`。
   - 产出：定位关键校验分支、文件偏移（File Offset）、内存虚拟地址（VA）与核心调用流。
 - **阶段三：动态追踪与断点取证 (Dynamic Trace & Debugging)**
   - 动作：遇强混淆或反调试，启动 `headless.exe` 配合 `x64dbg-mcp` HTTP API（80 tools）下断点抓取内存明文；使用 `cdb.exe` 分析 crash dump；调用 `pe-sieve.exe /pid <PID>` 扫描 inline hook；Frida/objection 动态插桩。
   - 产出：抓取运行时解密密钥、明文通信数据、动态导出函数与跳转判断值。
 - **阶段四：仿真验证与资产固化 (Emulation & Crystallization)**
   - 动作：跨架构或复杂反分析时使用 `qiling` 框架仿真执行；约束路径分支使用 `angr` / `z3` 求解；二进制修补使用 `lief` 打补丁；算法使用 Python 独立脚本还原并对账验证。
-  - 产出：在项目根目录生成标准化 `REVERSE-MAP.md`，沉淀函数偏移、特征码、密钥算法与复验指令。
+  - 产出：在项目根目录生成标准化 `REVERSE-MAP.md`（本包未落地），沉淀函数偏移、特征码、密钥算法与复验指令。
 
 ### 端口与地址（MUST）
-端口/地址 MUST 来自 Tool Registry（`skills/references/tool-registry.md`）或实测发现，**禁止猜**。
+端口/地址 MUST 来自 Tool Registry（`references/tool-registry.md`）或实测发现，**禁止猜**。
 
 ### 输出纪律（MUST）
-产物（`REVERSE-MAP.md` / 分析脚本 / dump / patched 样本 / pcap / 日志）**MUST 先落盘到工作目录并校验哈希**，之后才允许清理；不得在产物落盘前删除工作目录或覆盖原始样本。
+产物（`REVERSE-MAP.md`（本包未落地） / 分析脚本 / dump / patched 样本 / pcap / 日志）**MUST 先落盘到工作目录并校验哈希**，之后才允许清理；不得在产物落盘前删除工作目录或覆盖原始样本。
 **失败分支**：落盘或哈希校验失败 → 停下报告，不许继续下一步，也不许「先清理再说」。
 
 ## 指令语义级别（RFC 2119）
@@ -209,7 +209,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 遇到逆向、CTF、抓包、前端签名、APK 改包、二进制分析类任务时，先按这个顺序进入：
 
 1. 平台原生 router（Windows `scripts/master-route.ps1`；Linux/macOS/Kali `scripts/master-route.sh`）→ PRIMARY（`config/routing.json`）
-2. 平台原生 `case-init` → `scope.md`
+2. 平台原生 `case-init` → `pentest-tools/templates/scope.md`
 3. 打开 PRIMARY `SKILL.md`
 4. 疑难时读 `routing.md`；需要本机工具路径时**走探测层**：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <工具id>`（`Get-Command` 只是其中一级，返回空不等于缺工具，见 `references/env-selfcheck.md`；`TOOLS.md` 是装法说明书，不是路径索引）
 
@@ -266,7 +266,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 - **流量抓包与代理逆向手册**: `protocol-reverse/references/traffic-proxy.md`（`mitmproxy` 证书与 8080 端点、Wireshark/Fiddler、Frida 证书绑定绕过）
 - **装法说明书**: `TOOLS.md`（干什么用 / 哪个 skill 要 / 装法 / 许可。**不含本机路径**，也没有生成器 —— 直接手改）
 - 本机还有 **anything-analyzer**（端口 23816）MCP 服务器，提供浏览器自动化、HTTP 捕获和 AI 分析能力
-- 包根目录下的 `Readme.md` 提供面向各代码 AI 客户端的通用安装与接入说明
+- 包根目录下的 `Readme.md`（本包未落地） 提供面向各代码 AI 客户端的通用安装与接入说明
 
 ## 按需自举
 
@@ -301,18 +301,18 @@ bash <package-root>/kali/scripts/bootstrap-reverse.sh 工具名 --start-services
 
 | 读序 | 文件 | 何时读 |
 |------|------|--------|
-| **#1** | `ops/scope-contract.md` + `case-init.ps1` | 可执行授权门。`precedent-auth.md` 不写 granted |
-| **#2** | `field-journal/precedent-reverse.md` 或 `precedent-pentest.md` | 按需 — AI 犹豫时才加载 |
+| **#1** | `ops/scope-contract.md` + `case-init.ps1` | 可执行授权门。`field-journal/precedent-auth.md` 不写 granted |
+| **#2** | `field-journal/precedent-reverse.md` 或 `field-journal/precedent-pentest.md` | 按需 — AI 犹豫时才加载 |
 
 **#1 前置，#2 懒加载。**
 
 ## 自动进化
 
-每次完成逆向/渗透任务后，必须回写经验到 `field-journal/` 目录。详见 `RULES.md` 的"任务完成后的硬性 Checklist"。
+每次完成逆向/渗透任务后，必须回写经验到 `field-journal/` 目录。详见 `../RULES.md` 的"任务完成后的硬性 Checklist"。
 
 - 模板：`field-journal/_template.md`
 - 索引：`field-journal/_index.md`
-- 先例：`field-journal/precedent-auth.md` → `precedent-reverse.md` → `precedent-pentest.md`
+- 先例：`field-journal/precedent-auth.md` → `field-journal/precedent-reverse.md` → `field-journal/precedent-pentest.md`
 - 新任务开始前先查索引和先例，复用已有经验
 
 ## 任务完成自检（声称完成前 MUST 通过）

@@ -223,4 +223,4 @@ API Monitor v2（Rohitab）适合在 lab 里看 EDR 在何时何处插入 hook�
 
 ## 路由回调
 
-完成 hook 调研后，回到 `SKILL.md` 的 Step 3 选择绕过技术组合，然后按 `references/unhook-techniques.md` 与 `references/telemetry-blinding.md` 执行。
+完成 hook 调研后，回到 `../SKILL.md` 的 Step 3 选择绕过技术组合，然后按 `unhook-techniques.md` 与 `telemetry-blinding.md` 执行。

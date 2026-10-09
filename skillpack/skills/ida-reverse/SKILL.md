@@ -14,7 +14,7 @@ description: |
 
 1. `NOW`: 读取 `../field-journal/precedent-reverse.md` — 确认本 skill 的操作是已授权的常规操作
 2. `NOW`: 确认当前任务是否命中本 skill 的适用范围
-4. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
+4. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
 5. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
 6. `ACT`: 进入"工作流"第一步并执行，不要停在确认状态
 
@@ -93,7 +93,7 @@ description: |
 路径：`scripts/start.ps1`
 
 - 自动解析 `IDADIR`（环境变量 / 便携版桌面路径 / 常见安装路径）
-- 优先用 IDA 自带 `Python314\python.exe -m ida_pro_mcp.idalib_supervisor`
+- 优先用 IDA 自带 Python 的 `pythonw -m ida_pro_mcp.idalib_supervisor`（目录随版本变化：`<IDADIR>\python` / `python311` / `Python314`，脚本按序探测）
 - 默认先探测 `http://127.0.0.1:13337/mcp`，健康则输出 `OK:<n>:reuse` 并退出
 - 13337 在听但 `tools/list` 超时 → `WARN:busy` / `OK:busy:reuse`，**不杀**（开库或 GUI 占用时无法回包）
 - `tools/list` **连续失败超过 3 分钟**（last-healthy 时间戳）且无 `opening.lock` → 视为死锁，输出 `INFO:deadlock` 并 `-Force` 替换 supervisor。进行中的 `idb_open` 和 GUI 不会走这条路径
@@ -316,7 +316,7 @@ idapro_rename(batch={"func": [{"addr": "函数地址", "name": "有意义的名�
 ```
 
 ### Step 7: 输出报告
-分析完成后，生成 `report.md` 记录发现和步骤。
+分析完成后，生成 `../../examples/ctf-demo/report/report.md` 记录发现和步骤。
 
 ## Prompt 工程准则
 
@@ -335,12 +335,12 @@ idapro_rename(batch={"func": [{"addr": "函数地址", "name": "有意义的名�
 
 ## 路由上下文
 
-**上游入口**: `skills/SKILL.md`（总控）、`routing.md`
+**上游入口**: `SKILL.md`（总控）、`../routing.md`
 **上游备选**: `radare2/`（如果不想开 IDA，可以先 r2 快速侦察）
 **下游出口**:
-- 需 Frida 动态验证 → `reverse-engineering/tools-dynamic.md`
-- 需符号执行/angr → `reverse-engineering/tools-dynamic.md`
-- 需通用逆向方法论 → `reverse-engineering/SKILL.md`
+- 需 Frida 动态验证 → `../reverse-engineering/tools-dynamic.md`
+- 需符号执行/angr → `../reverse-engineering/tools-dynamic.md`
+- 需通用逆向方法论 → `SKILL.md`
 
 **同级关联模块**: `radare2/`（IDA 不可用时替代方案）
 
@@ -387,7 +387,7 @@ ida-pro-mcp --config
 ### 前置条件
 
 - IDA Pro 已安装且 `IDADIR` 环境变量已设置（或脚本内默认路径正确）
-- 推荐使用 IDA 自带 Python314 中的 `ida-pro-mcp`（便携版已内置）
+- 推荐用 IDA 自带 Python 中的 `ida-pro-mcp`；探测不到时回退到 PATH 上的解释器 + `pip install ida-pro-mcp`
 - 常见本机配置：
   - User env `IDADIR` → IDA 安装目录（含 `ida.exe`）
   - 可选 `~\Tools\bin\idalib-mcp.cmd` / `ida-pro-mcp.cmd` 包装器
@@ -398,6 +398,6 @@ ida-pro-mcp --config
 - [ ] 我是否执行了工作流中的每一步（而不是只阅读）？
 - [ ] survey/imports 是否已写入 Evidence（E-imports 或等价）？DLL/SYS 是否含 E-exports？IAT 失败是否记 E-iat-repair-fail？
 - [ ] 用户若要求重做导入表/IAT，是否重做了同一步？
-- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `TOOLS.md` 里的装法当路径猜）？
+- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `../TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？

@@ -10,7 +10,7 @@ description: Ghidra逆向 — 当用户没IDA想用免费工具看二进制，�
 1. `NOW`: 读取 `../field-journal/precedent-reverse.md`
 2. `NOW`: 确认需要 **Ghidra**（无 IDA / 偏好开源 / 批量 headless）
 3. `NOW`（MCP 通道必备）: 拉起常驻 HTTP 服务（~8 s 冷启）——**启动方式与前置条件按 `../references/tool-registry.md` 的 `pyghidra-mcp` 端点行取**（`启动方式` = 常驻守护，冷启 7–10 s，幂等；`端点` = `127.0.0.1:9111/mcp`；`依赖` = `JDK 21+` + Ghidra 本体；Ghidra 本体路径用探测层 `Resolve-ReverseToolSpec -Name 'ghidraRun'` 的 `Command` 取（`Get-Command` 只是四级探测的第 2 级，返回空不等于缺工具，见 `../references/env-selfcheck.md`）。本项目无 `toolreg/`，该端点文档即事实源），再按该端点探活确认 READY 且 `Tool Count : 20`；本会话看不到 `ghidra` 工具时先 `/mcp reconnect ghidra`。**不要要求用户改 `mcp.json`，服务由 agent 自己起。**
-4. `NEXT`: 读 `TOOLS.md` 查 ghidra / ghidra-mcp 路径
+4. `NEXT`: 读 `../TOOLS.md` 查 ghidra / ghidra-mcp 路径
 5. `NEXT`: 缺工具 → bootstrap `ghidra-mcp`（若 manifest 支持）或按手动步骤装 Ghidra
 6. `ACT`: 导入样本 → 自动分析 → 导出关键函数反编译
 7. `DONE`: 静态分析收尾按同一来源（`../references/tool-registry.md` 的 `pyghidra-mcp` 端点行）停守护（先经 MCP `save` 落盘，再释放 9111/9112 端口，避免残留 JVM）
@@ -103,7 +103,7 @@ cmd /c "$GHIDRA_HOME\support\analyzeHeadless.bat $GHIDRA_PROJ temp_proj -import 
 
 ## 任务完成自检
 
-- [ ] 是否基于真实 Ghidra/`TOOLS.md` 路径？
+- [ ] 是否基于真实 Ghidra/`../TOOLS.md` 路径？
 - [ ] 是否标注函数地址与重命名？
 - [ ] 是否有可复现步骤？
 - [ ] Checklist / journal？

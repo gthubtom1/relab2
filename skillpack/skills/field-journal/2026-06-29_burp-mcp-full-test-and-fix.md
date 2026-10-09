@@ -103,7 +103,7 @@ activeAudit.addRequest(seedReq);
 ## 对本包的改进建议
 
 - 路由矩阵已覆盖 BurpSuite MCP,无需修改
-- `burpsuite-mcp-guide.md` 已追加更新日志(3 个修复 + 桥接层 + 全量验证结果)
+- `../pentest-tools/references/burpsuite-mcp-guide.md` 已追加更新日志(3 个修复 + 桥接层 + 全量验证结果)
 - 工具表已更新 Scanner(scan 新增 mode 参数)和 Intruder(send_to_intruder Host header 要求)
 - 无需新增 bootstrap 条目(编译脚本 build.bat 已自包含)
 - IDA MCP 端口非固定,建议在 MCP 服务管理表中注明

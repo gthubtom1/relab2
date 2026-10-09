@@ -100,8 +100,8 @@ ent dump.bin                    # 数值
 
 ## 对本包的改进建议
 
-- `reverse-engineering/platforms.md` 增加"自定义协议逆向 4 步法"章节
-- 新增 `reverse-engineering/references/kaitai-cheatsheet.md` 速查
+- `../reverse-engineering/platforms.md` 增加"自定义协议逆向 4 步法"章节
+- 新增 `reverse-engineering/references/kaitai-cheatsheet.md`（本包未落地） 速查
 - bootstrap manifest 增加 scapy（pip）和 binwalk
 
 ## 可复用的模式/脚本片段

@@ -6,13 +6,13 @@
 
 ## 0. Evidence Chain（所有安全报告 MUST 包含）
 
-> 契约全文：`skills/ops/evidence-finding-path.md`  
+> 契约全文：`../../ops/evidence-finding-path.md`  
 > Case 目录：`work/<case>/`（`case-init.ps1`）
 
 报告正文中 **MUST** 含以下章节（可并入「核心发现」但字段不得省略）：
 
 ### 0.1 Scope 摘要
-- 链到 `scope.md`：`auth` / `in_scope` / `network_profile`
+- 链到 `../../pentest-tools/templates/scope.md`：`auth` / `in_scope` / `network_profile`
 - 无 scope → 不得宣称任务完成
 
 ### 0.2 Evidence
@@ -25,7 +25,7 @@
 至少 1 条 `P-id`：`path_type=attack|callflow|solve`，步骤可挂 E/F
 
 ### 0.5 Timeline 摘要
-链到 `timeline.md` 或嵌入关键 3–10 条追加记录
+链到 `../../../examples/ctf-demo/timeline.md` 或嵌入关键 3–10 条追加记录
 
 ---
 
@@ -33,7 +33,7 @@
 
 ## 0.6 Vendor structure overlay（专业厂商报告结构）
 
-> 全文规则：`references/vendor-report-rules.md`（Issue #65）  
+> 全文规则：`vendor-report-rules.md`（Issue #65）  
 > **MUST** 在生成安全类正式报告时读取并选型；**只抽结构，禁止抄录厂商原文/IOC 实例**。
 
 | Flavor / Overlay | 场景 | 骨架一句话 |

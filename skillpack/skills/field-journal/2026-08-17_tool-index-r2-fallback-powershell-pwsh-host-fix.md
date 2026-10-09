@@ -17,8 +17,8 @@
 
 ## 完整执行链路
 
-1. 按 `README_AI.md` 第 0 节执行引导：`refresh-tool-index.ps1` 生成 tool-index.md（37 工具）。
-2. 读 `tool-index.md` 发现异常：`r2`（radare2 主分析器）= no，但同目录 `rabin2/rasm2/radiff2/rahash2/rax2/r2pm` 全部 = yes。
+1. 按 `../../README_AI.md` 第 0 节执行引导：`refresh-tool-index.ps1` 生成 tool-index.md（37 工具）。
+2. 读 `../../docs/community/ai-fullstack-delivery/tool-index.md` 发现异常：`r2`（radare2 主分析器）= no，但同目录 `rabin2/rasm2/radiff2/rahash2/rax2/r2pm` 全部 = yes。
 3. 列 `C:\Users\{username}\Tools\radare2\bin` 确认：存在 `r2.bat`（21 字节，内容 `@"%~dp0\radare2" %*`）与 `radare2.exe`，**无 `r2.exe`**。
 4. 读 `lib/ToolDiscovery.ps1:131-141`，`r2` 的 Fallbacks 只找 `r2.exe`，漏掉 `r2.bat`/`radare2.exe`。对比 `jadx`/`apktool`/`analyzeHeadless` 都为 `.bat` 工具配了 fallback。
 5. 修复：给 `r2` Fallbacks 补 `r2.bat` 与 `radare2.exe` 路径（覆盖 `%USERPROFILE%\Tools\radare2\bin`、根目录、`C:\Tools\` 三套位置），保留原 `r2.exe` fallback 兼容其他机器。

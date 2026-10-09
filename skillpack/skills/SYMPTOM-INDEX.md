@@ -11,6 +11,10 @@
 > `集群` vs `k8s`、`效果掉了` vs `评估效果`这类）。
 >
 > 链接只指向各技能已存在的 `SKILL.md`；进去之后一切以该 `SKILL.md` 为准。
+>
+> **进了技能之后还有第二跳**：这张表只回答「进哪个技能」，不回答「读该技能的哪一篇技术文档」。
+> 已经知道在 `reverse-engineering/`（或 `api-security/`、`ctf-sandbox/` …）里了，
+> 接下来按症状找具体文档 → **[`field-journal/KB-INDEX.md`](field-journal/KB-INDEX.md)**（153 篇技术文档的症状索引）。
 
 ## 症状 → 技能
 
@@ -190,5 +194,17 @@
 | "上一套工具的结果对不上，来个第二意见" | [R45 binary-ninja-reverse](binary-ninja-reverse/SKILL.md) | 第二意见；与 R22 二选一：点名用 BN、要中间语言数据流、类型重理或对上一套工具做交叉验证 → 本行；只是没 IDA 要免费的、或要批量 headless → R22 |
 | "类型猜得乱七八糟，想换个工具重新理一遍" | [R45 binary-ninja-reverse](binary-ninja-reverse/SKILL.md) | 类型重理；与 R22 二选一：点名用 BN、要中间语言数据流、类型重理或对上一套工具做交叉验证 → 本行；只是没 IDA 要免费的、或要批量 headless → R22 |
 
-_173 row(s) below the header. Every row's target exists as `skills/<dir>/SKILL.md`._
+_173 row(s) below the header. Every row's target exists as `skills/<dir>/SKILL.md`（本包未落地）._
 
+## Web 端 JS 协议逆向（web-protocol-reverse）
+
+| 症状 | 先看 |
+|------|------|
+| 页面能出数据，但 Python 请求就 403/签名错 | `web-protocol-reverse/references/state/cookie-provenance-playbook.md`（cookie 溯源）|
+| 签名字段看不懂，怀疑 JS 虚拟机 | `web-protocol-reverse/references/crypto/jsvmp-analysis-playbook.md` |
+| Node 里跑通了但没法交付（依赖浏览器） | `web-protocol-reverse/references/deliver/pure-python-rebuild-playbook.md` |
+| 抓到的 cookie 刷新就没了 | `web-protocol-reverse/references/state/session-contract-playbook.md` |
+| 要补浏览器环境（navigator/document/window） | `web-protocol-reverse/references/crypto/environment-patch-playbook.md` |
+| 分页在后面几页换了接口 | `web-protocol-reverse/references/observe/pagination-route-pivot-playbook.md` |
+| 挑战/风控请求看不懂 | `web-protocol-reverse/references/state/challenge-artifact-harvest-playbook.md` |
+| 不知道该用哪个工具 | `web-protocol-reverse/references/triage/tool-playbook.md` |

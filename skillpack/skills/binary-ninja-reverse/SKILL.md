@@ -10,7 +10,7 @@ Use Binary Ninja when the user explicitly selects it, when its ILs materially he
 ## Start safely
 
 1. Confirm the repository case scope is ready before acting on a target.
-2. Check `skillpack/skills/TOOLS.md` for `binaryninja`; Binary Ninja is commercial software and must be installed manually with a valid Vector 35 license.
+2. Check `../TOOLS.md` for `binaryninja`; Binary Ninja is commercial software and must be installed manually with a valid Vector 35 license.
 3. Work on a copy when applying patches or saving database changes.
 4. Record imports/exports, entry points, architecture, and file hash before promoting findings.
 

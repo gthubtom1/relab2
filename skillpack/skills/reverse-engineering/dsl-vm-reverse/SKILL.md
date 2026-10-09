@@ -8,7 +8,7 @@ description: Reverse JavaScript-based custom DSL/VM interpreters, non-standard W
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 确认当前任务是自定义 JS opcode VM / 风控引擎，不是标准 WASM 或普通 webpack
-2. `NOW`: `case-init` 直到 `scope.md` 就绪；离线样本用 `offline` / `lab`
+2. `NOW`: `case-init` 直到 `../../pentest-tools/templates/scope.md` 就绪；离线样本用 `offline` / `lab`
 3. `ACT`: 从「3. 通用逆向工作流」Phase 1 做文件分类，不要停在目录
 
 > 用于逆向基于 JavaScript 实现的自定义 WASM 虚拟机/风控引擎
@@ -43,10 +43,10 @@ description: Reverse JavaScript-based custom DSL/VM interpreters, non-standard W
 
 | 条件 | 非本 skill | 转至 |
 |------|-----------|------|
-| 文件以 `\x00asm` 开头 | 标准 WASM 二进制 | `reverse-engineering/languages.md` |
+| 文件以 `\x00asm` 开头 | 标准 WASM 二进制 | `../languages.md` |
 | 文件以 `Uint8Array([0,97,115,109])` 含 WASM 魔术字 | WASM 嵌入式 | 提取 .wasm 后转 IDA/Ghidra |
 | 标准 Webpack 打包（`function(e,t,n){...}`） | 普通 JS | `js-reverse/` |
-| 零字节占比 > 20% | WASM 二进制 | `reverse-engineering/languages.md` |
+| 零字节占比 > 20% | WASM 二进制 | `../languages.md` |
 
 ---
 
@@ -364,7 +364,7 @@ async function run() {
 
 | 类型 | 路由 |
 |------|------|
-| **目标类型**: WASM / DSL VM / 自定义指令集 | `reverse-engineering/dsl-vm-reverse/SKILL.md` |
+| **目标类型**: WASM / DSL VM / 自定义指令集 | `SKILL.md` |
 | **用户意图**: "DSL VM / 风控引擎逆向" | 本 skill |
 | **工具链**: Playwright / Selenium CDP | 浏览器注入方案 |
 

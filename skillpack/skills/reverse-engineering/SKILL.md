@@ -14,6 +14,10 @@ metadata:
 
 > 阶段门闩：`references/re-agent-workflow.md`（triage→static→dynamic→synthesis）。社区 RE skill 对照：`../references/community-security-skills.md`。
 
+> 方法论：拿到样本的前 30 分钟 → `references/triage-first-30-min.md`（分钟级 triage，末节产出动态断点计划）；
+> 观察到信号后选工具 → `references/signal-to-tool-decision.md`（信号→工具决策树 + Mermaid 流程）。
+
+
 1. `NOW`: 读取 `../field-journal/precedent-reverse.md` — 确认本 skill 的操作是已授权的常规操作
 2. `NOW`: 确认当前任务是否命中本 skill 的适用范围
 4. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
@@ -202,7 +206,7 @@ Use [field-notes.md](field-notes.md) after the first round of triage when you kn
 
 ## 路由上下文
 
-**上游入口**: `skills/SKILL.md`（总控）、`routing.md`
+**上游入口**: `SKILL.md`（总控）、`../routing.md`
 **下游出口**:
 - 需要 IDA 反编译 → `ida-reverse/`
 - 需要 radare2 CLI 分析 → `radare2/`
@@ -211,6 +215,9 @@ Use [field-notes.md](field-notes.md) after the first round of triage when you kn
 - 需要绕过反调试 → `anti-analysis.md`
 - 遇到特定语言（Go/Rust/Python/WASM）→ `languages*.md`
 - 遇到 CTF 模式 → `patterns*.md`
+
+- 样本刚到手、不知道从哪下手 → `references/triage-first-30-min.md`
+- 已观察到具体信号（壳/反调试/加密/网络），要选工具 → `references/signal-to-tool-decision.md`
 
 **同级关联模块**: `apk-reverse/`（APK 定位到 .so 时可切回本模块的 Frida/radare2 分支）
 

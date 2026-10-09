@@ -8,7 +8,7 @@
 
 ```text
 □ scope.md：offline 样本路径 或 授权设备/靶机
-□ `TOOLS.md`：file/strings/r2/ida/frida 等实际路径
+□ `../../TOOLS.md`：file/strings/r2/ida/frida 等实际路径
 □ 角色：cre（ops/role-map）
 □ 开工先查旧账：搜分析项目根与用户提及目录，看有没有已解密的产物、历史报告、旧 patcher
   —— 找到就复用，跳过已完成阶段
@@ -16,7 +16,7 @@
 
 ## 0.1 Transition handoff（decision delta）
 
-阶段之间不重新注入完整 case context。`scope.md` / `workitems.md` / Evidence 保持 authoritative；`timeline.md` 只承载 transition delta：
+阶段之间不重新注入完整 case context。`../../pentest-tools/templates/scope.md` / `../../../examples/ctf-demo/workitems.md` / Evidence 保持 authoritative；`../../../examples/ctf-demo/timeline.md` 只承载 transition delta：
 
 1. stage/turn 结束时只写真正改变后续动作的 `decision_delta`；无变化写 `[]`。
 2. unchanged route/auth/scope/network profile/tool state/hypothesis 只放 `carry_forward_refs`，consumer 依引用读取，不重新 serialize / emit。
@@ -45,7 +45,7 @@
 ```text
 □ 计算样本 Hash（MD5/SHA256）→ 唯一 ID
 □ 识别文件类型：EXE / DLL / SYS / ELF / Mach-O / .NET / 脚本(bat/ps1/vba) / JS / APK 等
-□ 非 PE/脚本/APK/驱动专项：见 §3.4 与 `references/nonpe-format-cookbook.md`（U–AV）
+□ 非 PE/脚本/APK/驱动专项：见 §3.4 与 `nonpe-format-cookbook.md`（U–AV）
 □ file / DIE / 熵 / 壳特征（PEiD / DIE / Exeinfo 等）
 □ 架构：x86 / x64 / ARM；编译语言线索（VC++ / Delphi / .NET / Go / Rust）
 □ 加壳类型线索：UPX / ASPack / VMProtect / Themida / 未知混淆
@@ -261,7 +261,7 @@
 
 ### 3.3 反调试 / 混淆旁路速查（Issue #65 补丁 A–T · 高频）
 
-完整索引与动作细节见 `reverse-engineering/anti-analysis.md`「Agent 响应菜谱 A–T」。此处只列 **P0 必查 + 常见转场**。默认 **授权隔离 lab**；patch/改标志位不是未授权生产动作。
+完整索引与动作细节见 `../anti-analysis.md`「Agent 响应菜谱 A–T」。此处只列 **P0 必查 + 常见转场**。默认 **授权隔离 lab**；patch/改标志位不是未授权生产动作。
 
 | 触发特征 | 首选动作（摘要） | Evidence |
 |----------|------------------|----------|
@@ -288,7 +288,7 @@
 
 ### 3.4 非 PE / 多格式旁路（Issue #65 补丁 U–AV · 路由）
 
-完整索引：`reverse-engineering/references/nonpe-format-cookbook.md`。此处只列 **类型 → 入口**；动作细节在 cookbook / 对应 skill。
+完整索引：`nonpe-format-cookbook.md`。此处只列 **类型 → 入口**；动作细节在 cookbook / 对应 skill。
 
 | 类型 | 跳转 | P0 Evidence 锚点（示例） |
 |------|------|---------------------------|

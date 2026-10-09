@@ -110,7 +110,7 @@ zip -r evil.docx unpacked/*
 
 ## 对本包的改进建议
 
-- `pentest-tools/references/web-attack-cheatsheet.md` 应该有 XXE 完整章节（OOB / error / blind / docx upload / svg）
+- `../pentest-tools/references/web-attack-cheatsheet.md` 应该有 XXE 完整章节（OOB / error / blind / docx upload / svg）
 - bootstrap manifest 增加 interactsh-client（如果还没）
 - routing 已含 XXE，但建议显式加"XXE OOB 外带"路由
 

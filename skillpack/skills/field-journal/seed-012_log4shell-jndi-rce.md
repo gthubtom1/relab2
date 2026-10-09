@@ -83,7 +83,7 @@ java -jar JNDI-Exploit-Kit-1.0-SNAPSHOT-all.jar \
 
 ## 对本包的改进建议
 
-- `pentest-tools/references/log4shell-bypass-payloads.md` 单独建档，把 50+ 绕过 payload 集中
+- `pentest-tools/references/log4shell-bypass-payloads.md`（本包未落地） 单独建档，把 50+ 绕过 payload 集中
 - nuclei 模板已自带 → 提醒用户 `nuclei -t cves/2021/CVE-2021-44228.yaml -l targets.txt`
 - attack-chain 增加"通过 Log4Shell 进入内网后"的标准动作清单
 

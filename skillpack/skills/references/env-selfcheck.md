@@ -52,7 +52,7 @@ $env:PATH = [Environment]::GetEnvironmentVariable('PATH','Machine') + ';' +
 
 ## 2. 永远走四级探测，不要只看 `Get-Command`
 
-`Get-Command` 只是**第 2 级**。商业工具在子目录、目录名≠工具名（`IDA Professional 9.4\idat.exe`
+`Get-Command` 只是**第 2 级**。商业工具在子目录、目录名≠工具名（`IDA Pro 9.3\idat.exe`
 里才是 IDA），单靠它必然漏。
 
 ```powershell

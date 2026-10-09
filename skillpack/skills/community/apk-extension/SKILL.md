@@ -8,11 +8,11 @@ description: APK 逆向能力扩展入口。把新版 apk-reverse 的 doctor、c
 ## ACTION REQUIRED
 
 1. `NOW`: 确认 APK、设备/ABI、root/Frida/ADB、目标行为和交付形态，先走
-   `skills/apk-reverse/SKILL.md` 的 scope 与 control-build gates。
+   `SKILL.md` 的 scope 与 control-build gates。
 2. `NEXT`: 读取 `skillpack/community-raw/apk-reverse-source/evidence/capability-matrix.json`
-   和 `skillpack/community-raw/apk-reverse-source/evidence/known-limitations.md`；`partial`
+   和 `../../../community-raw/apk-reverse-source/evidence/known-limitations.md`（本包未落地）；`partial`
    要先声明缺口，`blocked` 直接停在边界说明。
-3. `NEXT`: 通过 canonical `skillpack/skills/TOOLS.md` 和 doctor/preflight 检查工具状态。
+3. `NEXT`: 通过 canonical `../../TOOLS.md` 和 doctor/preflight 检查工具状态。
    不执行源仓库的隐式安装、固定机器路径、debug keystore 或未授权设备命令。
 4. `ACT`: 仅在 case、设备和动作授权就绪后使用按需脚本组：baseline/doctor、DEX/Dart、
    APK packaging、native、Frida、protocol 或 governance；每步保留 zero-change 对照。
@@ -44,4 +44,4 @@ description: APK 逆向能力扩展入口。把新版 apk-reverse 的 doctor、c
 - 置信度 `confidence = best_score / hint 词数`，低于 0.35 为 `low_confidence`；
   首尾 wrapper 分差 ≤20% 为 `ambiguous_tie`，两者都进 `needs_review`。
 - 超预算后的确认格式：报出收窄后的 hint 与 `--source` 取值，等人工确认后再查。
-- 完整数字与 policy manifest 变更请求见 `docs/community/LOADING-BUDGET.md`。
+- 完整数字与 policy manifest 变更请求见 `../../../docs/community/LOADING-BUDGET.md`（本包未落地）。

@@ -38,8 +38,8 @@ const result = thing.doSomething();
 
 ## Documentation
 
-- [API Reference](./docs/api/README.md)
-- [Architecture](./docs/architecture/overview.md)
+- [API Reference](../../ops/README.md)
+- [Architecture](./docs/architecture/overview.md) ← 示例：读者自己项目里的路径，不是本包文件
 ```
 
 ## API Endpoint Documentation

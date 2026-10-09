@@ -38,8 +38,8 @@
 | # | 元素 | 要求 |
 |---|------|------|
 | G1 | 执行摘要 / 概述 | **MUST**：3–8 句：分析了什么、最严重结论、影响面、建议动作 |
-| G2 | 范围与授权 | **MUST**：链到 case `scope.md`（见模板 §0.1） |
-| G3 | Evidence→Finding→Path | **MUST**：见 `security-report-templates.md` §0 与 `skills/ops/evidence-finding-path.md` |
+| G2 | 范围与授权 | **MUST**：链到 case `../../pentest-tools/templates/scope.md`（见模板 §0.1） |
+| G3 | Evidence→Finding→Path | **MUST**：见 `security-report-templates.md` §0 与 `skills/ops/evidence-finding-path.md`（仓库根相对） |
 | G4 | IOC 表 | `malware` / `apt` **MUST**；其他任务仅在存在相关指标时出现 |
 | G5 | 建议 / 处置 | `malware` / `apt` **MUST**：至少 1 条可执行建议；其他任务按原任务模板 |
 | G6 | 附录元数据 | **SHOULD**：工具与版本、样本哈希、完整复现命令 |

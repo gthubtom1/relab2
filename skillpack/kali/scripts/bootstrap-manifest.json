@@ -98,6 +98,29 @@
       "kaliNote": "需要 IDA Pro Linux 版本"
     },
     {
+      "name": "pyghidra-mcp",
+      "bootstrapKind": "pip-package",
+      "pipPackage": "pyghidra-mcp==0.2.7",
+      "pinnedVersion": "0.2.7",
+      "mcpNames": [
+        "pyghidra-mcp"
+      ],
+      "mcpCommand": "pyghidra-mcp",
+      "mcpArgs": [
+        "--transport",
+        "stdio"
+      ],
+      "mcpEnv": {
+        "GHIDRA_INSTALL_DIR": "%REVERSE_TOOL_ROOT%\\Ghidra",
+        "JAVA_HOME": "%JAVA_HOME%"
+      },
+      "docsUrl": "https://github.com/LaurieWired/pyghidra-mcp",
+      "canAutoInstall": true,
+      "verifyCommand": "pyghidra-mcp",
+      "note": "★ PyGhidra MCP server —— JPype 直驱 Ghidra，不装插件、不占端口、不需要 GUI。★ 必须先有 JDK 21+ 与 Ghidra 本体，并设 GHIDRA_INSTALL_DIR / JAVA_HOME。★ 不要装 LaurieWired/GhidraMCP 扩展：它的 banner 往 stdout 打非 JSON 行，会直接打断 MCP 的 tools/list。",
+      "kaliNote": "需要 Ghidra 本体（可下 release zip）+ JDK 21；JPype 在 Linux 上工作正常。"
+    },
+    {
       "name": "jeb-pro",
       "bootstrapKind": "manual",
       "docsUrl": "https://www.pnfsoftware.com/jeb/",

@@ -41,7 +41,7 @@ powershell -File skills\scripts\case-init.ps1 -Hint "full pentest" -CaseName "ac
 
 ### Decision delta boundary
 
-`scope.md`、`workitems.md` 与现有 Evidence 是当前 authoritative state。`timeline.md` 记录 transition，不复制完整 snapshot。
+`../pentest-tools/templates/scope.md`、`../../examples/ctf-demo/workitems.md` 与现有 Evidence 是当前 authoritative state。`../../examples/ctf-demo/timeline.md` 记录 transition，不复制完整 snapshot。
 
 - 每个真实 stage/turn transition **MUST** 写 `decision_delta`；只列从上一状态到当前状态真正改变、且会影响后续动作的 decision。没有变化时写 `[]`。
 - 未改变的 route、auth、scope、network profile、tool capability、既有 hypothesis/Evidence **MUST NOT** 为了交接再次展开；放在 `carry_forward_refs` 中引用 authoritative 文件或条目。

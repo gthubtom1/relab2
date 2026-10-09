@@ -130,6 +130,6 @@
 | Linux syscall 表 (x64) | https://blog.rchapman.org/posts/Linux_System_Call_Table_for_x86_64/ |
 | Linux syscall 表 (ARM64) | https://arm64.syscall.sh/ |
 | GDB 速查 | https://darkdust.net/files/GDB%20Cheat%20Sheet.pdf |
-| radare2 速查 | 本包 `radare2/references/cheatsheet.md` |
+| radare2 速查 | 本包 `../radare2/references/cheatsheet.md` |
 | IDA 快捷键 | https://hex-rays.com/products/ida/support/freefiles/IDA_Pro_Shortcuts.pdf |
 | Ghidra 快捷键 | Ghidra 内置 Help → Keyboard Shortcuts |

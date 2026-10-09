@@ -45,7 +45,7 @@ $r.Available; $r.Command; $r.Via
 `D:\Tools\<分类>\<工具名>\`；pip/npm 类进各自 venv，不占这个目录。
 
 **但光靠一条 `Get-Command` 找不到全部** —— 商业工具在子目录里、目录名也不等于工具名
-（`disasm\IDA_Pro_v8.3_Portable\` 里才是 `ida`）。所以完整探测是**四级递进，命中即停**：
+（`IDA Pro 9.3\` 里才是 `idat`）。所以完整探测是**四级递进，命中即停**：
 
 | 级 | 手段 | 命中来源标记 | 可信度 |
 |---|---|---|---|
@@ -86,14 +86,14 @@ SDK 的进 `%LOCALAPPDATA%`。**第 1 步的探测对所有工具都必做**，�
 ### `D:\Tools\_map.json` —— 声明探测不出来的东西
 
 有些关系**探测不出来，只能声明**：目录名 ≠ 工具名、同名多份要指定哪份、
-以及**要排除的陷阱**（例：`IDA_Pro_v8.3_Portable\python311\python.exe` 是 IDA 自带的裸 Python，
+以及**要排除的陷阱**（例：`IDA Pro 9.3\python311\python.exe` 是 IDA 自带的裸 Python，
 没有 pip 包 —— 误命中它，你的脚本就跑在没有依赖的解释器上）。
 
 ```json
 {
   "toolRoot": "D:\\Tools",
   "aliases": {
-    "idat": { "prefer": ["disasm\\IDA_Pro_v8.3_Portable\\idat.exe"], "note": "headless 版" },
+    "idat": { "prefer": ["IDA Pro 9.3\\idat.exe"], "note": "headless 版" },
     "adb":  { "prefer": ["android\\AndroidKiller_fix\\bin\\adb\\adb.exe"], "note": "两处都有" }
   },
   "deny": [
@@ -251,6 +251,7 @@ GUI 程序弹窗等输入、零 stdout、进程永不退出。**agent 不得经 
 | **sdenv** | jsdom 系补环境框架：伪造浏览器环境跑混淆 JS | `npm i sdenv`（需 Node ≥20.19.5 **+ node-gyp + MSVC C++ 生成工具**） | 🟢 |
 | **rs-reverse** | 瑞数 VMP 纯算法逆向：`makecode` 还原动态代码 / `makecookie` 复现 cookie | `npm i -g rs-reverse`（Node ≥18） | 🟢 |
 | **yara** | 规则匹配 | `winget install --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity VirusTotal.YARA` | 🟢 |
+| **yara-rules 库** | 通用规则集（反调试 / 加壳器 / 恶意样本 / CVE / 能力） | ★ **`yara` 不吃目录**，只能传单文件；整库靠根目录的 `*_index.yar`（内部用 `include` 串子目录）。装法：`gh api repos/Yara-Rules/rules/tarball/master > _repo.tar.gz` 后解压 —— `git clone` 在部分网络下 TLS 握手会被切断，`urllib` 同样失败，`gh` 的 HTTP 栈可用。解压后把索引文件当 `-r` 目标 | 🟢 |
 | **binwalk** | 固件提取 | `cargo install binwalk`（无 winget 无预编译） | 🟡 |
 
 > **pip 类工具装进 venv**，别污染系统 Python。建议一个 `D:\Tools\pyrev-venv\`，`D:\Tools\pyrev-venv\Scripts\` 加 PATH。

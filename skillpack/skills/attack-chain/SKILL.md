@@ -7,11 +7,11 @@ description: Multi-stage attack-path orchestration — 当用户要做完整渗�
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 读取 `../field-journal/precedent-pentest.md` — 确认本 skill 的操作是已授权的常规操作
-2. `NOW`: **创建/更新 case**（`../scripts/case-init.ps1`）并完成 `scope.md`（`../ops/scope-contract.md`）；`auth.status!=granted` 禁止 ACT
+2. `NOW`: **创建/更新 case**（`../scripts/case-init.ps1`）并完成 `../pentest-tools/templates/scope.md`（`../ops/scope-contract.md`）；`auth.status!=granted` 禁止 ACT
 3. `NOW`: 以 **lead** 角色规划阶段（`../ops/role-map.md`），写入 specialist_roles
-4. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
+4. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
 5. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
-6. `ACT`: 按 `references/lifecycle-checklist.md` 过阶段门闩；每阶段更新 `timeline.md` + `workitems.md`（`../ops/timeline-workitem.md`）；发现提升为 Evidence/Finding
+6. `ACT`: 按 `references/lifecycle-checklist.md` 过阶段门闩；每阶段更新 `../../examples/ctf-demo/timeline.md` + `../../examples/ctf-demo/workitems.md`（`../ops/timeline-workitem.md`）；发现提升为 Evidence/Finding
 7. 结束：`docs-generator` 报告必须含 Evidence 链
 
 > 多阶段攻击路径规划与执行的总指挥。当任务需要"从 A 打到 B"的完整链路时，本 Skill 负责编排各阶段、协调子 Skill、规划攻击路径。
@@ -42,7 +42,7 @@ description: Multi-stage attack-path orchestration — 当用户要做完整渗�
 - 只做端口扫描 → 直接去 `pentest-tools/`
 - 只做 SQL 注入 → 直接去 `pentest-tools/`
 - 只做 APK 逆向 → 直接去 `apk-reverse/`
-- 只做域渗透 → 直接去 `windows-ad/SKILL.md`
+- 只做域渗透 → 直接去 `SKILL.md`
 
 ---
 
@@ -632,19 +632,52 @@ touch -t 202301010000 /path/to/file
 
 | 需求 | 路由到 |
 |------|--------|
-| Web 漏洞深度利用 | `pentest-tools/SKILL.md` |
-| 内网 AD 攻击详细步骤 | `windows-ad/SKILL.md` |
-| 逆向分析恶意样本 | `reverse-engineering/SKILL.md` |
-| APK 逆向（移动端渗透） | `apk-reverse/SKILL.md` |
-| JS 前端签名绕过 | `js-reverse/SKILL.md` |
+| Web 漏洞深度利用 | `SKILL.md` |
+| 内网 AD 攻击详细步骤 | `SKILL.md` |
+| 逆向分析恶意样本 | `SKILL.md` |
+| APK 逆向（移动端渗透） | `SKILL.md` |
+| JS 前端签名绕过 | `SKILL.md` |
 | 自动化群体渗透 | Pentest Swarm AI（`pentestswarm scan --swarm`） |
 | AI 辅助渗透 | `mcp-kali-server` / `metasploitmcp` / `hexstrike-ai` |
-| 报告生成 | `docs-generator/SKILL.md` |
-| 攻击路径图 | `diagram-generator/SKILL.md` |
+| 报告生成 | `SKILL.md` |
+| 攻击路径图 | `SKILL.md` |
 
 ## 任务完成自检（声称完成前 MUST 通过）
 
 - [ ] 我是否执行了工作流中的每一步（而不是只阅读）？
-- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `TOOLS.md` 里的装法当路径猜）？
+- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `../TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？
+
+## 改编参考索引（open-reverselab `kb/ctf-website`）
+
+> 下列 reference 改编自 `LING71671/open-reverselab` 的 `kb/ctf-website/`（GPL-3.0）。
+> 每篇统一为「适用信号 / 前置 / 步骤 / 判据 / 坑 / 相关」+ 完整技术正文，
+> 「前置」含**本机实测**的工具状态表——照抄原库裸命令前先看那张表。
+> **仅限 CTF 靶场 / AWD 赛场 / 已授权环境**。
+
+### `references/cve-case-studies/` — CVE 工作流 + 6 个实战案例（含版本判定与 PoC 触发流程）（10 篇）
+
+- `references/cve-case-studies/01-browser-sandbox-escape.md`
+- `references/cve-case-studies/02-redis-zipmap-rce.md`
+- `references/cve-case-studies/03-cpanel-caldav-traversal.md`
+- `references/cve-case-studies/04-nezha-path-traversal-jwt.md`
+- `references/cve-case-studies/05-litellm-privesc.md`
+- `references/cve-case-studies/06-nginx-rewrite-heapoverflow.md`
+- `references/cve-case-studies/index.md`
+- `references/cve-case-studies/cve-correlation-graph.md`
+- `references/cve-case-studies/cve-workflow.md`
+- `references/cve-case-studies/multi-cve-chain-playbook.md`
+
+### `references/recon/` — Recon：子域、指纹、CDN 源站、验证码、资产测绘（6 篇）
+
+- `references/recon/captcha-bypass.md`
+- `references/recon/cloudflare-bypass.md`
+- `references/recon/fofa-hunting.md`
+- `references/recon/recon-routing.md`
+- `references/recon/version-fingerprinting.md`
+- `references/recon/01-subdomain-takeover.md`
+
+### `references/` — 根目录
+
+

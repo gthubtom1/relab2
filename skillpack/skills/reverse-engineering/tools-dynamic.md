@@ -516,7 +516,7 @@ Windows 动态调试体系：**优先通过 x64dbg MCP 或 cdb CLI 进行自动�
 - **端点**: `http://127.0.0.1:9094/` (x64) / `http://127.0.0.1:9095/` (x32)
 - **鉴权**: 请求 Header 携带 `Authorization: Bearer ${X64DBG_MCP_TOKEN}`（Token 存于 x64dbg 的 `mcp_config.json` 的 `AuthToken` 字段 —— 该文件与插件同目录，`resolve x64dbg-MCP-plugin` 读 `path` 后取其上级；环境变量名由 `mcp.json` 注入）
 - **启停（agent 自理，不需要用户改配置文件）**:
-  - **起（必须先有目标在调试）**: 启动器按 `references/tool-registry.md` 的 `x64dbg` 行 `plugin` 所在目录起控制台版 headless：先用 `(Get-Command x64dbg-headless -ErrorAction SilentlyContinue).Source` 探测，再 `<该路径> <目标> -- /Q nodem`，等 9094 监听到就返回，实测 READY 约 3–6 s；插件活在被调试进程里，x64dbg 没跑起来 9094 必然拒连
+  - **起（必须先有目标在调试）**: 启动器按 `../references/tool-registry.md` 的 `x64dbg` 行 `plugin` 所在目录起控制台版 headless：先用 `(Get-Command x64dbg-headless -ErrorAction SilentlyContinue).Source` 探测，再 `<该路径> <目标> -- /Q nodem`，等 9094 监听到就返回，实测 READY 约 3–6 s；插件活在被调试进程里，x64dbg 没跑起来 9094 必然拒连
   - **查**: 对 `http://127.0.0.1:9094/` 探活（或跑同一启动器的 `status`），期望 READY
   - **停**: 用同一启动器的停止入口，再回收 headless 进程，释放 9094。**不要向 9095 发 STOP** —— 9095 是 **x32 的服务口**（`bootstrap-manifest.json`：x64=9094 / x32=9095），x64dbg 根本没有独立控制口字段；x64 会话只能经 9094 的 MCP 工具或同一 launcher 收尾
   - **以上三条都不得写死盘符**：没装 x64dbg 时，明确报「x64dbg 未安装 / MCP 端点不可用」，不要编一个 `C:\...` 脚本路径

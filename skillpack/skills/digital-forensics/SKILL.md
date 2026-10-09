@@ -10,7 +10,7 @@ description: Digital forensics and IR — 当用户要分析内存转储、磁�
 1. `NOW`: 读取 `../field-journal/precedent-pentest.md` 或组织 IR 授权说明
 2. `NOW`: 确认是**取证/溯源**而非进攻性扫描
 3. `NOW`: 建立 case；证据只读副本优先（原始介质写保护）
-4. `NEXT`: `TOOLS.md`；Volatility 等常手动
+4. `NEXT`: `../TOOLS.md`；Volatility 等常手动
 5. `ACT`: 保全哈希 → 时间线 → 关键伪影
 
 ## 适用场景

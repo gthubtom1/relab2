@@ -1,6 +1,6 @@
 # 通用 Scope 契约（任务启动硬门槛）
 
-> **MUST**：任何安全/逆向/渗透任务在 **ACT 之前** 在当前用户分析项目的 `work/<case>/` 落地 `scope.md`。
+> **MUST**：任何安全/逆向/渗透任务在 **ACT 之前** 在当前用户分析项目的 `work/<case>/` 落地 `../pentest-tools/templates/scope.md`。
 > 无 scope → 只允许读文档/路由，**禁止** 对目标主动扫描、Hook、利用。
 > 模板可复制；字段名保持英文键，便于脚本校验。
 
@@ -114,4 +114,4 @@ RULES / MASTER-ROUTING / SKILL:
 ## 特色
 
 - 纯 Markdown，**无数据库**  
-- 与工具定位正交：scope 管「能不能打」，`TOOLS.md` + `Get-Command` 管「用什么打」
+- 与工具定位正交：scope 管「能不能打」，`../TOOLS.md` + `Get-Command` 管「用什么打」

@@ -25,7 +25,7 @@ node -v
 (Get-Command rs-reverse -ErrorAction SilentlyContinue).Source
 ```
 
-sdenv 未装时**不要先装**：先按 `references/node-env-rebuild.md` 手写最小 shim 试一次。
+sdenv 未装时**不要先装**：先按 `node-env-rebuild.md` 手写最小 shim 试一次。
 多数「补环境」问题（缺 `document.all` 之外的常规缺口）手写 20 行就够了，装 sdenv 的成本
 （原生编译 + VS C++ 工作负载）不划算。**只有自研 VMP 风控才值得上 sdenv。**
 
@@ -82,14 +82,14 @@ beforeParse: function (window, sdenv) {
 ```
 
 链路固定为：`makecode` 抠代码 → sdenv 跑环境 → **cookie 对账**（sdenv 产出 vs 浏览器
-DevTools 实测）。对不上就按 `references/env-patching.md` 的规则走最小补丁，一次一个。
+DevTools 实测）。对不上就按 `env-patching.md` 的规则走最小补丁，一次一个。
 
 ## 何时**不该**用这两个
 
 - **目标是 PE/ELF/APK** —— 这是浏览器 JS 层的事，滚去 `ida-reverse` / `apk-reverse`。
-- **自研（非瑞数）VMP** —— 先读 `../reverse-engineering/references/nonpe-format-cookbook.md`
+- **自研（非瑞数）VMP** —— 先读 `../../reverse-engineering/references/nonpe-format-cookbook.md`
   的 AD（JSVMP）章节，方法论通用，工具不一定通用。
-- **普通加密参数** —— `references/ast-deobfuscation.md` + `instrumentation.md` 就够。
+- **普通加密参数** —— `ast-deobfuscation.md` + `instrumentation.md` 就够。
 
 ## 硬约束
 

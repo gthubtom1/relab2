@@ -23,7 +23,7 @@
 
 ## 可复用模式
 
-1. Surface → Sink → Chain（见 `pentest-tools/references/client-side-lab-playbook.md`）  
+1. Surface → Sink → Chain（见 `../pentest-tools/references/client-side-lab-playbook.md`）  
 2. 库存类 `innerHTML = fetchBody`：先证 sink，再找 200 非数字  
 3. 静态 rg sink + agent-browser eval 双证  
 

@@ -780,7 +780,7 @@ Many CTF challenges stack multiple checks:
 
 ## Agent 响应菜谱 A–T（Issue #65）
 
-> 检测类长文仍见 `malware-analysis/references/anti-analysis-techniques.md`；OLLVM 长流程见 `references/ollvm-deobfuscation.md`。  
+> 检测类长文仍见 `../malware-analysis/references/anti-analysis-techniques.md`；OLLVM 长流程见 `references/ollvm-deobfuscation.md`。  
 > 本节是 **触发 → 动作 → Evidence** 短菜谱，供 agent 在 Dynamic/Static 旁路选用。  
 > **授权隔离 lab 默认**；静态 patch / 改 PEB / 改返回值不是未授权目标上的默认动作。
 
@@ -803,7 +803,7 @@ Many CTF challenges stack multiple checks:
 | **E** | TimeDateStamp 未来/0/荒谬；版本信息像合法厂商 | 与发现时间对照；**可选** VT 首次提交；`SigCheck` 看版本资源是否配合签名；无 VT → n/a | `E-meta-timestamp` | P2 |
 | **F** | 显示有数字签名但来源可疑 | `SigCheck`：链有效？吊销？签名时间 vs 编译时间；**无效/吊销不得降低**威胁等级 | `E-sig-forge` | P0 |
 | **G** | 多 PE 头、重叠节、节名伪装 | CFF/PE-bear/LoadPE 看真实映射与 EP 节；熵区分加密 vs 代码；不信节名 | `E-pe-anomaly` | P1 |
-| **H** | F5 大量 `while(1)+switch`、星形 CFG | **See** `ollvm-deobfuscation.md`（d810/deflat 等）；插件不全则动态记录块序重构 | `E-cff` | P1 指针 |
+| **H** | F5 大量 `while(1)+switch`、星形 CFG | **See** `references/ollvm-deobfuscation.md`（d810/deflat 等）；插件不全则动态记录块序重构 | `E-cff` | P1 指针 |
 | **I** | strings 无域名/IP 但有网/文件行为 | 找 Base64/XOR/自定义 decode；xref 解密函数；解密后 dump 回注 IDA | `E-string-decrypt` | P0 |
 | **J** | 文件大小 ≫ 节原始数据之和（Overlay） | 提 overlay；`file`/熵；IDA 搜偏移引用；加密则动态抓密钥 | `E-overlay` | P1 |
 | **K** | `fs:[0x30]`/`gs:[0x60]` → BeingDebugged / NtGlobalFlag | 改 PEB 标志或 ScyllaHide；或 patch 条件跳 | `E-anti-debug-peb` | P0 |

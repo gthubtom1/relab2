@@ -35,7 +35,7 @@
 > **契约对齐（review_case.py）**：若本次 case 产出了独立证据目录（`evidence/E-xxx.md`），
 > 每条证据须满足 `skills/case-review/scripts/review_case.py` 的字段契约，否则 `--strict` 校验会 FAIL：
 >
-> - 标题：`### E-xxx`（须与文件名一致，如 `E-001.md` → `### E-001`）
+> - 标题：`### E-xxx`（须与文件名一致，如 `../../examples/ctf-demo/evidence/E-001.md` → `### E-001`）
 > - `- severity:` ∈ critical / high / medium / low / info / n/a
 > - `- status:` ∈ observed / candidate / validated / false_positive / accepted_risk
 > - `- repro_command:` 必填（离线场景在 notes 中注明 offline/离线 可豁免）

@@ -9,7 +9,7 @@ description: Use for authorized macOS and Mach-O reverse engineering including c
 
 1. `NOW`: 读取 `../field-journal/precedent-reverse.md`
 2. `NOW`: 确认目标为 macOS/Mach-O/App bundle（iOS IPA → `mobile-reverse/`）
-3. `NEXT`: `TOOLS.md`；jtool2/lldb 等
+3. `NEXT`: `../TOOLS.md`；jtool2/lldb 等
 4. `ACT`: 签名与装载信息 → 静态 → 动态（lldb/Frida）
 
 ## 适用场景

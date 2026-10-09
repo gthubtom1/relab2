@@ -14,516 +14,1596 @@
       "label": "APK reverse",
       "skill": "apk-reverse/SKILL.md",
       "keywords": [
-        { "must": "(?<![a-z0-9_])apk(?![a-z0-9_])|smali|jadx|apktool|(?<![a-z0-9_])android(?![a-z0-9_])|android.?reverse|安卓|反编译.?apk|apk.?加固|重打包|root.?detect|root.?检测|证书.?校验|certificate.?pinning|pinning.?绕过|签名.?校验", "note": "android 裸词/root 检测/证书校验/pinning 绕过 均为 APK 分析常见诉求" },
-        { "must": "安装包", "mustAll": ["手机|安卓|apk|android|应用|app"], "note": "apk SKILL.md APK包体分析；约束移动安装包语境防吸走桌面/mac安装包查询" },
-        { "must": "证书.?绑定|ssl.?pinning|危险权限|梆梆|四大组件|manifest|flutter|dart|加壳", "mustAll": ["apk|安卓|android|应用|安装包|手机|dex|smali|jadx|apktool|(?<![a-z0-9_.])app(?![a-z0-9_.])"], "note": "ctf-apk-diag A类：APK口语词直达R1（A03 ssl pinning/A12 证书绑定/A27 flutter）；权限/脱壳/模拟器见下一条scoped规则（保182-120/800/810与自然-217）。加壳此前是裸词，会把 Windows PE 的『加壳 exe 商业软件卡密』抢成 apk（实测 6 条），故加 mustAll 锁 APK 语境" },
-        { "must": "脱壳|权限|模拟器", "mustAll": ["apk|安卓|android|应用|app|手机|smali|dex|jadx|apktool"], "note": "ctf-apk-diag A类：脱壳/权限/模拟器须APK语境（A06/A08均含应用）；mustAll刻意不含安装包/工具，防吸走R31-H081与R23-s3查询" },
-        { "must": "装上.{0,6}(一点|闪退|退回桌面|没反应|打不开)|同一个包.{0,6}手机|手机上能装|背地里.{0,6}判断|查我这台机子", "mustAll": ["手机|安装|应用|包|安卓|apk|app"], "note": "canon-gap N001-N003：APK口语闪退/环境检测（SKILL适用范围root检测/证书校验/加固致打不开；Manifest/重打包）" },
-        { "must": "装好打开后.{0,6}往外发|往外发了些什么", "mustAll": ["手机|安装|应用|打开|往外发|服务器|发"], "note": "canon-gap N001：APK连外发行为（SKILL description看看它连了哪些服务器）" }
+        {
+          "must": "(?<![a-z0-9_])apk(?![a-z0-9_])|smali|jadx|apktool|(?<![a-z0-9_])android(?![a-z0-9_])|android.?reverse|安卓|反编译.?apk|apk.?加固|重打包|root.?detect|root.?检测|证书.?校验|certificate.?pinning|pinning.?绕过|签名.?校验",
+          "note": "android 裸词/root 检测/证书校验/pinning 绕过 均为 APK 分析常见诉求"
+        },
+        {
+          "must": "安装包",
+          "mustAll": [
+            "手机|安卓|apk|android|应用|app"
+          ],
+          "note": "apk SKILL.md APK包体分析；约束移动安装包语境防吸走桌面/mac安装包查询"
+        },
+        {
+          "must": "证书.?绑定|ssl.?pinning|危险权限|梆梆|四大组件|manifest|flutter|dart|加壳",
+          "mustAll": [
+            "apk|安卓|android|应用|安装包|手机|dex|smali|jadx|apktool|(?<![a-z0-9_.])app(?![a-z0-9_.])"
+          ],
+          "note": "ctf-apk-diag A类：APK口语词直达R1（A03 ssl pinning/A12 证书绑定/A27 flutter）；权限/脱壳/模拟器见下一条scoped规则（保182-120/800/810与自然-217）。加壳此前是裸词，会把 Windows PE 的『加壳 exe 商业软件卡密』抢成 apk（实测 6 条），故加 mustAll 锁 APK 语境"
+        },
+        {
+          "must": "脱壳|权限|模拟器",
+          "mustAll": [
+            "apk|安卓|android|应用|app|手机|smali|dex|jadx|apktool"
+          ],
+          "note": "ctf-apk-diag A类：脱壳/权限/模拟器须APK语境（A06/A08均含应用）；mustAll刻意不含安装包/工具，防吸走R31-H081与R23-s3查询"
+        },
+        {
+          "must": "装上.{0,6}(一点|闪退|退回桌面|没反应|打不开)|同一个包.{0,6}手机|手机上能装|背地里.{0,6}判断|查我这台机子",
+          "mustAll": [
+            "手机|安装|应用|包|安卓|apk|app"
+          ],
+          "note": "canon-gap N001-N003：APK口语闪退/环境检测（SKILL适用范围root检测/证书校验/加固致打不开；Manifest/重打包）"
+        },
+        {
+          "must": "装好打开后.{0,6}往外发|往外发了些什么",
+          "mustAll": [
+            "手机|安装|应用|打开|往外发|服务器|发"
+          ],
+          "note": "canon-gap N001：APK连外发行为（SKILL description看看它连了哪些服务器）"
+        }
       ]
     },
     "R2": {
       "label": "Mobile reverse (Android+iOS)",
       "skill": "mobile-reverse/SKILL.md",
       "keywords": [
-        { "must": "(?<![a-z0-9_])ipa(?![a-z0-9_])|ios.?reverse|objection|mobsf|mobile.?reverse|ios.?逆向" },
-        { "must": "越狱", "exclude": "模型|提示词|llm|prompt|jailbreak|garak|红队.?ai|ai.?红队", "note": "越狱 裸词分给 iOS 侧；LLM/模型上下文归 R14" },
-        { "must": "jailbreak", "mustAll": ["ios|iphone|ipad|mobile|objection|ipa"], "note": "jailbreak 仅当带 iOS 语境才归移动端" },
-        { "must": "ipa.?脱壳|ios.?脱壳|(?<![a-z0-9_])mastg(?![a-z0-9_])", "note": "mobile SKILL.md: IPA逆向、OWASP MSTG" },
-        { "must": "ssl.?pinning|证书.?绑定|双向.?认证", "mustAll": ["app|应用|移动|ios|android|apk|ipa|mobile|frida|objection|客户端"], "note": "mobile SKILL.md: SSL Pinning绕过；需移动端语境" },
-        { "must": "防抓包|抓不到包|通信加.?密|通信.{0,6}加密|闪退|应用防护|加了啥防护|app.{0,10}防护", "mustAll": ["app|应用|移动|android|ios|apk|ipa|客户端|游戏|手机"], "note": "mobile SKILL.md SSL Pinning/平台防护检查/移动端加密；约束移动端语境防吸走前端/协议查询" },
-        { "must": "双端.{0,8}对比|ios.{0,15}android|android.{0,15}ios|compare.{0,15}pinning|cert pinning.{0,10}storage", "note": "mobile SKILL.md 双端一致性/证书绑定对比" },
-        { "must": "真机.?调试|检测环境.{0,6}(闪退|不安全|防护)", "mustAll": ["app|应用|移动|android|ios|apk|ipa|客户端|游戏|手机|真机|手游|调试"], "note": "mobile SKILL.md 真机环境检测/调试防护；约束移动端语境" },
-        { "must": "加了壳|绑了证书|移动端角度", "mustAll": ["app|应用|移动|android|ios|apk|ipa|客户端|游戏|手机|移动端"], "note": "mobile SKILL.md 加固/证书绑定/移动端视角；约束移动端语境" },
-        { "must": "偷偷传.{0,6}数据|偷传数据|后台.{0,6}(收集|上传)|偷偷.{0,6}上传|传了什么数据|后台.{0,8}传.{0,6}数据|数据传到哪", "mustAll": ["app|应用|移动|手机|apk|ipa|客户端|安卓|ios|安装包|程序|软件|手游|游戏|服务器|后台"], "note": "mobile SKILL.md 移动应用动态行为/后台数据外传；口语偷偷传数据/后台收集；后台须带收集上传传数据防吸走R1开机自启后台行为查询" },
-        { "must": "抓不到.{0,6}(数据|包)|走.{0,6}代理.{0,6}(看看|传了啥)|走我的代理", "mustAll": ["苹果|ios|手机|应用|代理|数据|传"], "note": "canon-gap N004：iOS抓包走代理（SKILL SSL Pinning/抓包绕过/平台防护检查）" },
-        { "must": "内测版.{0,6}消失|一点就消失|机子的状态有关", "mustAll": ["苹果|ios|机|应用|内测|状态|消失"], "note": "canon-gap N005：iOS环境检测闪退（SKILL越狱检测/环境检测绕过）" }
+        {
+          "must": "(?<![a-z0-9_])ipa(?![a-z0-9_])|ios.?reverse|objection|mobsf|mobile.?reverse|ios.?逆向"
+        },
+        {
+          "must": "越狱",
+          "exclude": "模型|提示词|llm|prompt|jailbreak|garak|红队.?ai|ai.?红队",
+          "note": "越狱 裸词分给 iOS 侧；LLM/模型上下文归 R14"
+        },
+        {
+          "must": "jailbreak",
+          "mustAll": [
+            "ios|iphone|ipad|mobile|objection|ipa"
+          ],
+          "note": "jailbreak 仅当带 iOS 语境才归移动端"
+        },
+        {
+          "must": "ipa.?脱壳|ios.?脱壳|(?<![a-z0-9_])mastg(?![a-z0-9_])",
+          "note": "mobile SKILL.md: IPA逆向、OWASP MSTG"
+        },
+        {
+          "must": "ssl.?pinning|证书.?绑定|双向.?认证",
+          "mustAll": [
+            "app|应用|移动|ios|android|apk|ipa|mobile|frida|objection|客户端"
+          ],
+          "note": "mobile SKILL.md: SSL Pinning绕过；需移动端语境"
+        },
+        {
+          "must": "防抓包|抓不到包|通信加.?密|通信.{0,6}加密|闪退|应用防护|加了啥防护|app.{0,10}防护",
+          "mustAll": [
+            "app|应用|移动|android|ios|apk|ipa|客户端|游戏|手机"
+          ],
+          "note": "mobile SKILL.md SSL Pinning/平台防护检查/移动端加密；约束移动端语境防吸走前端/协议查询"
+        },
+        {
+          "must": "双端.{0,8}对比|ios.{0,15}android|android.{0,15}ios|compare.{0,15}pinning|cert pinning.{0,10}storage",
+          "note": "mobile SKILL.md 双端一致性/证书绑定对比"
+        },
+        {
+          "must": "真机.?调试|检测环境.{0,6}(闪退|不安全|防护)",
+          "mustAll": [
+            "app|应用|移动|android|ios|apk|ipa|客户端|游戏|手机|真机|手游|调试"
+          ],
+          "note": "mobile SKILL.md 真机环境检测/调试防护；约束移动端语境"
+        },
+        {
+          "must": "加了壳|绑了证书|移动端角度",
+          "mustAll": [
+            "app|应用|移动|android|ios|apk|ipa|客户端|游戏|手机|移动端"
+          ],
+          "note": "mobile SKILL.md 加固/证书绑定/移动端视角；约束移动端语境"
+        },
+        {
+          "must": "偷偷传.{0,6}数据|偷传数据|后台.{0,6}(收集|上传)|偷偷.{0,6}上传|传了什么数据|后台.{0,8}传.{0,6}数据|数据传到哪",
+          "mustAll": [
+            "app|应用|移动|手机|apk|ipa|客户端|安卓|ios|安装包|程序|软件|手游|游戏|服务器|后台"
+          ],
+          "note": "mobile SKILL.md 移动应用动态行为/后台数据外传；口语偷偷传数据/后台收集；后台须带收集上传传数据防吸走R1开机自启后台行为查询"
+        },
+        {
+          "must": "抓不到.{0,6}(数据|包)|走.{0,6}代理.{0,6}(看看|传了啥)|走我的代理",
+          "mustAll": [
+            "苹果|ios|手机|应用|代理|数据|传"
+          ],
+          "note": "canon-gap N004：iOS抓包走代理（SKILL SSL Pinning/抓包绕过/平台防护检查）"
+        },
+        {
+          "must": "内测版.{0,6}消失|一点就消失|机子的状态有关",
+          "mustAll": [
+            "苹果|ios|机|应用|内测|状态|消失"
+          ],
+          "note": "canon-gap N005：iOS环境检测闪退（SKILL越狱检测/环境检测绕过）"
+        }
       ]
     },
     "R3": {
       "label": "JS / frontend reverse",
       "skill": "js-reverse/SKILL.md",
       "keywords": [
-        { "must": "js.?reverse|webpack|cryptojs|frontend.?sign|jshook|cdp|encrypted.?param|前端.?签名|js.?逆向|加密.?参数|webpack.?逆向|抓包|http.?capture|请求.?重放|request.?replay|js.?加密|js.?解密|前端.?加密", "exclude": "apk|证书绑定|安卓|应用", "note": "抓包/HTTP 捕获/请求重放 属 JS 前端链路 (anything-analyzer)；ctf-apk-diag B类：APK语境抓包不抢（A12回R1）" },
-        { "must": "扣.?代码|补.?环境|风控.?字段", "note": "js-reverse SKILL.md: 本地补环境复现、风控字段" },
-        { "must": "请求.?参数.{0,8}加密|参数.{0,8}咋算|咋算出来|生成.?签名|签名.{0,10}生成|signature.{0,12}(generat|build|send)|trace.{0,10}js|js.{0,12}builds|网页里.{0,8}算出来", "mustAll": ["网站|网页|前端|签名|加密|请求|参数|生成|trace|signature|算出来|page|site|web|frontend|js"], "note": "js SKILL.md 接口签名/加密参数定位/请求链路追踪；约束前端语境防吸走API/协议查询" },
-        { "must": "算成密文|哪段代码算|算法藏在哪|密码.{0,6}算成", "mustAll": ["网站|网页|前端|登录|密码|按钮|代码|算法|page|site|web|frontend|js"], "note": "js SKILL.md 网页加密算法定位；约束前端语境" },
-        { "must": "加密的.?js|看不懂.{0,6}js|js.{0,6}看不懂|混淆.{0,6}js|js.{0,6}混淆|一段.{0,6}js|js.{0,6}(还原|解密)", "mustAll": ["js|加密|混淆|看不懂|代码|还原|解密|逻辑"], "note": "js-reverse SKILL.md 接口签名/加密参数定位；口语看不懂的加密JS；js字面即域内词，防吸走R4操作码与R21流量看不懂查询" },
-        { "must": "登录.{0,8}加密|加密.{0,8}登录|网页.{0,8}加密|密码.{0,8}(怎么|如何).{0,6}加密|登录.{0,6}(怎么|如何)加密", "mustAll": ["网页|网站|前端|登录|密码|js|加密|页面|请求"], "note": "js-reverse SKILL.md 定位接口签名/加密参数；口语网页登录怎么加密；须带加密与前端语境防吸走R37单点登录与R26代码审计查询" },
-        { "must": "送出去.{0,6}看不懂|页面里.{0,6}(拼好|手续|怎么拼)|前端.{0,6}现算|自己电脑.{0,6}跑出来|发出去.{0,6}对不上|每次打开都不一样.{0,6}码", "mustAll": ["页面|表单|登录|密码|按钮|前端|码"], "note": "canon-gap N006-N008：前端加密串拼接现算本地复现（SKILL接口签名/加密参数定位/补环境复现）" },
-        { "must": "本地.{0,4}(算|生成|跑出来|拼)|怎么拼出来|拼出来.{0,6}参数|参数.{0,8}怎么拼|参数.{0,6}乱码|乱码.{0,6}参数|参数.{0,6}对不上", "mustAll": ["网页|网站|前端|页面|web|frontend|js"], "exclude": "apk|安卓|android|证书绑定|应用|exe|dll|固件|驱动|参数表|配置表", "note": "口语「在本地算过 / 怎么拼出来的」—— 用户不会说「签名」「加密参数」，只会说乱码、拼出来、本地算出来的。mustAll 只认网页语境（不认「参数/登录/请求」，否则「参数表乱码」「安卓登录参数是本地算的」这类非网页的会被吸走）；exclude 再挡 APK/安卓/二进制语境 —— 实测这三条不加 exclude 会误吸：「安卓应用登录参数是本地算的」「这个 exe 的参数怎么拼起来的」「参数表乱码了帮我看看」" }
+        {
+          "must": "js.?reverse|webpack|cryptojs|frontend.?sign|jshook|cdp|encrypted.?param|前端.?签名|js.?逆向|加密.?参数|webpack.?逆向|抓包|http.?capture|请求.?重放|request.?replay|js.?加密|js.?解密|前端.?加密",
+          "exclude": "apk|证书绑定|安卓|应用",
+          "note": "抓包/HTTP 捕获/请求重放 属 JS 前端链路 (anything-analyzer)；ctf-apk-diag B类：APK语境抓包不抢（A12回R1）"
+        },
+        {
+          "must": "扣.?代码|补.?环境|风控.?字段",
+          "note": "js-reverse SKILL.md: 本地补环境复现、风控字段"
+        },
+        {
+          "must": "请求.?参数.{0,8}加密|参数.{0,8}咋算|咋算出来|生成.?签名|签名.{0,10}生成|signature.{0,12}(generat|build|send)|trace.{0,10}js|js.{0,12}builds|网页里.{0,8}算出来",
+          "mustAll": [
+            "网站|网页|前端|签名|加密|请求|参数|生成|trace|signature|算出来|page|site|web|frontend|js"
+          ],
+          "note": "js SKILL.md 接口签名/加密参数定位/请求链路追踪；约束前端语境防吸走API/协议查询"
+        },
+        {
+          "must": "算成密文|哪段代码算|算法藏在哪|密码.{0,6}算成",
+          "mustAll": [
+            "网站|网页|前端|登录|密码|按钮|代码|算法|page|site|web|frontend|js"
+          ],
+          "note": "js SKILL.md 网页加密算法定位；约束前端语境"
+        },
+        {
+          "must": "加密的.?js|看不懂.{0,6}js|js.{0,6}看不懂|混淆.{0,6}js|js.{0,6}混淆|一段.{0,6}js|js.{0,6}(还原|解密)",
+          "mustAll": [
+            "js|加密|混淆|看不懂|代码|还原|解密|逻辑"
+          ],
+          "note": "js-reverse SKILL.md 接口签名/加密参数定位；口语看不懂的加密JS；js字面即域内词，防吸走R4操作码与R21流量看不懂查询"
+        },
+        {
+          "must": "登录.{0,8}加密|加密.{0,8}登录|网页.{0,8}加密|密码.{0,8}(怎么|如何).{0,6}加密|登录.{0,6}(怎么|如何)加密",
+          "mustAll": [
+            "网页|网站|前端|登录|密码|js|加密|页面|请求"
+          ],
+          "note": "js-reverse SKILL.md 定位接口签名/加密参数；口语网页登录怎么加密；须带加密与前端语境防吸走R37单点登录与R26代码审计查询"
+        },
+        {
+          "must": "送出去.{0,6}看不懂|页面里.{0,6}(拼好|手续|怎么拼)|前端.{0,6}现算|自己电脑.{0,6}跑出来|发出去.{0,6}对不上|每次打开都不一样.{0,6}码",
+          "mustAll": [
+            "页面|表单|登录|密码|按钮|前端|码"
+          ],
+          "note": "canon-gap N006-N008：前端加密串拼接现算本地复现（SKILL接口签名/加密参数定位/补环境复现）"
+        },
+        {
+          "must": "本地.{0,4}(算|生成|跑出来|拼)|怎么拼出来|拼出来.{0,6}参数|参数.{0,8}怎么拼|参数.{0,6}乱码|乱码.{0,6}参数|参数.{0,6}对不上",
+          "mustAll": [
+            "网页|网站|前端|页面|web|frontend|js"
+          ],
+          "exclude": "apk|安卓|android|证书绑定|应用|exe|dll|固件|驱动|参数表|配置表",
+          "note": "口语「在本地算过 / 怎么拼出来的」—— 用户不会说「签名」「加密参数」，只会说乱码、拼出来、本地算出来的。mustAll 只认网页语境（不认「参数/登录/请求」，否则「参数表乱码」「安卓登录参数是本地算的」这类非网页的会被吸走）；exclude 再挡 APK/安卓/二进制语境 —— 实测这三条不加 exclude 会误吸：「安卓应用登录参数是本地算的」「这个 exe 的参数怎么拼起来的」「参数表乱码了帮我看看」"
+        }
       ]
     },
     "R4": {
       "label": "DSL VM reverse",
       "skill": "reverse-engineering/dsl-vm-reverse/SKILL.md",
       "keywords": [
-        { "must": "dsl.?vm|fireye|opcode.?vm|custom.?vm|自定义.?虚拟机" },
-        { "must": "分发.{0,6}指令|自己定.{0,6}指令|小解释器|看不出.{0,6}算什么", "mustAll": ["页面|脚本|判断|指令|解释器|分发|算"], "note": "canon-gap N009-N010：switch opcode分发/解释器主循环（SKILL IIFE+switch-case解码opcode/常量表）" }
+        {
+          "must": "dsl.?vm|fireye|opcode.?vm|custom.?vm|自定义.?虚拟机"
+        },
+        {
+          "must": "分发.{0,6}指令|自己定.{0,6}指令|小解释器|看不出.{0,6}算什么",
+          "mustAll": [
+            "页面|脚本|判断|指令|解释器|分发|算"
+          ],
+          "note": "canon-gap N009-N010：switch opcode分发/解释器主循环（SKILL IIFE+switch-case解码opcode/常量表）"
+        }
       ]
     },
     "R5": {
       "label": ".NET reverse",
       "skill": "dotnet-reverse/SKILL.md",
       "keywords": [
-        { "must": "\\.net|dnspy|de4dot|confuserex|csharp|dotnet|c#" },
-        { "must": "混淆过的|反编译.{0,6}乱码|乱码.{0,4}混淆", "mustAll": ["dll|exe|dotnet|net|c#|反编译|混淆|de4dot|dnspy"], "note": "dotnet SKILL.md 混淆/脱壳/C#逻辑还原；约束二进制语境" },
-        { "must": "反编译.{0,6}乱码", "mustAll": ["dll|exe|dotnet|net|c#|反编译|混淆"], "note": "dotnet SKILL.md 混淆致反编译乱码；约束二进制语境" },
-        { "must": "微软那套|托管起来.{0,6}代码|名字.{0,6}(搅过|全是乱)|字符串.{0,6}对不上|连不起来", "mustAll": ["程序|工具|代码|微软|托管|名字|字符串|逻辑|管理端|登录"], "note": "canon-gap N011-N013：托管PE/混淆名乱（SKILL ConfuserEx脱混淆/C#逻辑还原/IL视图）" }
+        {
+          "must": "\\.net|dnspy|de4dot|confuserex|csharp|dotnet|c#"
+        },
+        {
+          "must": "混淆过的|反编译.{0,6}乱码|乱码.{0,4}混淆",
+          "mustAll": [
+            "dll|exe|dotnet|net|c#|反编译|混淆|de4dot|dnspy"
+          ],
+          "note": "dotnet SKILL.md 混淆/脱壳/C#逻辑还原；约束二进制语境"
+        },
+        {
+          "must": "反编译.{0,6}乱码",
+          "mustAll": [
+            "dll|exe|dotnet|net|c#|反编译|混淆"
+          ],
+          "note": "dotnet SKILL.md 混淆致反编译乱码；约束二进制语境"
+        },
+        {
+          "must": "微软那套|托管起来.{0,6}代码|名字.{0,6}(搅过|全是乱)|字符串.{0,6}对不上|连不起来",
+          "mustAll": [
+            "程序|工具|代码|微软|托管|名字|字符串|逻辑|管理端|登录"
+          ],
+          "note": "canon-gap N011-N013：托管PE/混淆名乱（SKILL ConfuserEx脱混淆/C#逻辑还原/IL视图）"
+        }
       ]
     },
     "R6": {
       "label": "IDA reverse",
       "skill": "ida-reverse/SKILL.md",
       "keywords": [
-        { "must": "(?<![a-z0-9_])ida(?![a-z0-9_])|decompile|disassembl|反编译|反汇编|静态.?分析.?二进制|\\.so(?![a-z0-9_])|\\.elf(?![a-z0-9_])|so.?文件|native.?分析|jni", "exclude": "apk|安卓|ctf|靶场|比赛|flutter|re题|misc", "note": ".so/.elf/native/JNI 分析归二进制静态分析（IDA/反汇编路线）；ctf-apk-diag B类：CTF/APK/flutter语境不抢（C15回R41、A27回R1）" },
-        { "must": "(?<![a-z0-9_])exe(?![a-z0-9_])|(?<![a-z0-9_])dll(?![a-z0-9_])|exe.?文件|dll.?文件", "note": "routing.md: Binary exe/dll → ida-reverse；ida SKILL.md: 分析 exe/dll/so/elf/macho，看看这个exe；不用\\b因CJK是词字符" },
-        { "must": "授权.?校验|注册.?校验|授权.?验证|许可.?验证|license.?check", "mustAll": ["exe|dll|\\.so|\\.elf|二进制|逆向|反编译|反汇编|ida|脱壳|补丁|程序|软件"], "note": "授权/注册校验找门诉求，需二进制语境，防吸走合同合规类查询" },
-        { "must": "注册码|校验逻辑|跟进去.{0,6}看|校验.{0,6}写在哪", "mustAll": ["注册|校验|软件|程序|exe|dll|逆向|反编译|破解|逻辑"], "note": "ida SKILL.md 注册/授权校验找门；约束二进制语境防吸走合同合规查询" },
-        { "must": "提示.{0,6}不是正版|买的不是正版|未激活|激活.{0,6}失败|试用.{0,6}(到期|过期|结束)|注册码.{0,6}(不对|无效|错误|不正确)|license.{0,6}校验|授权.{0,6}(过期|失效)", "mustAll": ["程序|软件|客户端|应用|工具|系统|激活|注册|正版|试用|license|授权|过期|到期"], "note": "ida SKILL.md 这个软件怎么注册/找密码/破解；口语授权校验（提示不是正版/试用到期/注册码不对/激活失败）；约束软件语境防吸走合同合规与免费工具查询" },
-        { "must": "启动时先检查|先进主界面|换台机器.{0,6}许可|记了本机.{0,6}东西|许可不对", "mustAll": ["程序|软件|许可|机器|本体|启动|主界面|记"], "note": "canon-gap N014/N016：启动检查/换机许可（SKILL分析exe找注册授权校验门）" }
+        {
+          "must": "(?<![a-z0-9_])ida(?![a-z0-9_])|decompile|disassembl|反编译|反汇编|静态.?分析.?二进制|\\.so(?![a-z0-9_])|\\.elf(?![a-z0-9_])|so.?文件|native.?分析|jni",
+          "exclude": "apk|安卓|ctf|靶场|比赛|flutter|re题|misc",
+          "note": ".so/.elf/native/JNI 分析归二进制静态分析（IDA/反汇编路线）；ctf-apk-diag B类：CTF/APK/flutter语境不抢（C15回R41、A27回R1）"
+        },
+        {
+          "must": "(?<![a-z0-9_])exe(?![a-z0-9_])|(?<![a-z0-9_])dll(?![a-z0-9_])|exe.?文件|dll.?文件",
+          "note": "routing.md: Binary exe/dll → ida-reverse；ida SKILL.md: 分析 exe/dll/so/elf/macho，看看这个exe；不用\\b因CJK是词字符"
+        },
+        {
+          "must": "授权.?校验|注册.?校验|授权.?验证|许可.?验证|license.?check",
+          "mustAll": [
+            "exe|dll|\\.so|\\.elf|二进制|逆向|反编译|反汇编|ida|脱壳|补丁|程序|软件"
+          ],
+          "note": "授权/注册校验找门诉求，需二进制语境，防吸走合同合规类查询"
+        },
+        {
+          "must": "注册码|校验逻辑|跟进去.{0,6}看|校验.{0,6}写在哪",
+          "mustAll": [
+            "注册|校验|软件|程序|exe|dll|逆向|反编译|破解|逻辑"
+          ],
+          "note": "ida SKILL.md 注册/授权校验找门；约束二进制语境防吸走合同合规查询"
+        },
+        {
+          "must": "提示.{0,6}不是正版|买的不是正版|未激活|激活.{0,6}失败|试用.{0,6}(到期|过期|结束)|注册码.{0,6}(不对|无效|错误|不正确)|license.{0,6}校验|授权.{0,6}(过期|失效)",
+          "mustAll": [
+            "程序|软件|客户端|应用|工具|系统|激活|注册|正版|试用|license|授权|过期|到期"
+          ],
+          "note": "ida SKILL.md 这个软件怎么注册/找密码/破解；口语授权校验（提示不是正版/试用到期/注册码不对/激活失败）；约束软件语境防吸走合同合规与免费工具查询"
+        },
+        {
+          "must": "启动时先检查|先进主界面|换台机器.{0,6}许可|记了本机.{0,6}东西|许可不对",
+          "mustAll": [
+            "程序|软件|许可|机器|本体|启动|主界面|记"
+          ],
+          "note": "canon-gap N014/N016：启动检查/换机许可（SKILL分析exe找注册授权校验门）"
+        }
       ]
     },
     "R7": {
       "label": "radare2",
       "skill": "radare2/SKILL.md",
       "keywords": [
-        { "must": "radare|(?<![a-z0-9_])r2(?![a-z0-9_])" },
-        { "must": "r2xsql|r2mcp|r2http|radius2|r2pm|rabin2|rasm2|radiff2|rahash2|rax2" },
-        { "must": "(?<![a-z0-9_])r2pipe(?![a-z0-9_])", "note": "radare2 SKILL.md适用 r2pipe脚本" },
-        { "must": "别开.?图形|不用.?图形|命令行.{0,12}(看|分析).{0,8}二进制|纯命令行|字符界面.{0,6}分析", "note": "radare2 SKILL.md CLI二进制分析/不依赖GUI" },
-        { "must": "use r2|拿r2|只有r2|用r2", "note": "radare2 SKILL.md 用户点名r2" },
-        { "must": "只有终端|只有命令行|纯终端分析", "mustAll": ["终端|命令行|elf|二进制|样本|分析|反汇编"], "note": "radare2 SKILL.md 纯终端CLI分析场景；约束命令行语境" },
-        { "must": "自带.{0,6}(反汇编|工具)|用自带", "mustAll": ["终端|命令行|r2|elf|二进制"], "note": "radare2 SKILL.md 无GUI纯自带工具分析；约束命令行语境" },
-        { "must": "不让装.{0,6}界面|自带.{0,6}套|终端里.{0,6}拆开", "mustAll": ["终端|命令行|界面|工具|文件|自带|拆开"], "note": "canon-gap N018：无GUI纯终端拆文件（SKILL CLI二进制分析不依赖GUI）" }
+        {
+          "must": "radare|(?<![a-z0-9_])r2(?![a-z0-9_])"
+        },
+        {
+          "must": "r2xsql|r2mcp|r2http|radius2|r2pm|rabin2|rasm2|radiff2|rahash2|rax2"
+        },
+        {
+          "must": "(?<![a-z0-9_])r2pipe(?![a-z0-9_])",
+          "note": "radare2 SKILL.md适用 r2pipe脚本"
+        },
+        {
+          "must": "别开.?图形|不用.?图形|命令行.{0,12}(看|分析).{0,8}二进制|纯命令行|字符界面.{0,6}分析",
+          "note": "radare2 SKILL.md CLI二进制分析/不依赖GUI"
+        },
+        {
+          "must": "use r2|拿r2|只有r2|用r2",
+          "note": "radare2 SKILL.md 用户点名r2"
+        },
+        {
+          "must": "只有终端|只有命令行|纯终端分析",
+          "mustAll": [
+            "终端|命令行|elf|二进制|样本|分析|反汇编"
+          ],
+          "note": "radare2 SKILL.md 纯终端CLI分析场景；约束命令行语境"
+        },
+        {
+          "must": "自带.{0,6}(反汇编|工具)|用自带",
+          "mustAll": [
+            "终端|命令行|r2|elf|二进制"
+          ],
+          "note": "radare2 SKILL.md 无GUI纯自带工具分析；约束命令行语境"
+        },
+        {
+          "must": "不让装.{0,6}界面|自带.{0,6}套|终端里.{0,6}拆开",
+          "mustAll": [
+            "终端|命令行|界面|工具|文件|自带|拆开"
+          ],
+          "note": "canon-gap N018：无GUI纯终端拆文件（SKILL CLI二进制分析不依赖GUI）"
+        }
       ]
     },
     "R8": {
       "label": "Firmware pentest",
       "skill": "firmware-pentest/SKILL.md",
       "keywords": [
-        { "must": "firmware|binwalk|iot|emba|firmadyne|固件|路由器.?固件|嵌入式", "exclude": "ctf|隐写|misc|夺旗", "note": "ctf-apk-diag B类：CTF隐写语境binwalk不抢（C18回R41）" },
-        { "must": "官网.{0,8}升级包|路由器.{0,6}升级|升级包.{0,6}逆向", "mustAll": ["官网|升级|固件|路由器|摄像头|智能家居|iot"], "note": "firmware SKILL.md 升级包逆向；约束固件语境" },
-        { "must": "unpack.{0,12}filesystem|hardcoded.?creds|dumped.{0,10}flash|升级包.{0,12}(后门|漏洞)|固件.{0,8}(后门|漏洞)", "note": "firmware SKILL.md 文件系统提取/硬编码凭证/升级包漏洞" },
-        { "must": "升级包里.{0,6}(留|口)|出厂就带|连进去.{0,6}口", "mustAll": ["摄像头|升级包|固件|出厂|路由器|口"], "note": "canon-gap N020：升级包留口疑出厂后门（SKILL升级包逆向/硬编码凭证）" }
+        {
+          "must": "firmware|binwalk|iot|emba|firmadyne|固件|路由器.?固件|嵌入式",
+          "exclude": "ctf|隐写|misc|夺旗",
+          "note": "ctf-apk-diag B类：CTF隐写语境binwalk不抢（C18回R41）"
+        },
+        {
+          "must": "官网.{0,8}升级包|路由器.{0,6}升级|升级包.{0,6}逆向",
+          "mustAll": [
+            "官网|升级|固件|路由器|摄像头|智能家居|iot"
+          ],
+          "note": "firmware SKILL.md 升级包逆向；约束固件语境"
+        },
+        {
+          "must": "unpack.{0,12}filesystem|hardcoded.?creds|dumped.{0,10}flash|升级包.{0,12}(后门|漏洞)|固件.{0,8}(后门|漏洞)",
+          "note": "firmware SKILL.md 文件系统提取/硬编码凭证/升级包漏洞"
+        },
+        {
+          "must": "升级包里.{0,6}(留|口)|出厂就带|连进去.{0,6}口",
+          "mustAll": [
+            "摄像头|升级包|固件|出厂|路由器|口"
+          ],
+          "note": "canon-gap N020：升级包留口疑出厂后门（SKILL升级包逆向/硬编码凭证）"
+        }
       ]
     },
     "R9": {
       "label": "Malware analysis",
       "skill": "malware-analysis/SKILL.md",
       "keywords": [
-        { "must": "malware|yara|virus.?sample|pe-?sieve|cape.?sandbox|恶意.?软件|病毒.?样本|木马.?分析|恶意.?样本|样本.?分析|ransomware|勒索|webshell|后门|backdoor" },
-        { "must": "sandbox", "mustAll": ["malware|virus|恶意|木马|样本|cape|any\\.run|triage"], "note": "裸 sandbox 归 R9 需恶意语境（防误伤云沙箱/开发语境）" },
-        { "must": "沙箱报毒|报毒|附件.{0,8}exe|一跑就.{0,8}(连|外网)|连外网.{0,8}删|删自己|行为和指标|指标整理出来", "mustAll": ["沙箱|附件|样本|exe|报毒|外网|病毒|木马|行为|指标|loader"], "note": "malware SKILL.md 沙箱/行为/IOC提取；约束样本语境" },
-        { "must": "中毒|中了.{0,6}(病毒|木马|毒)|u盘.{0,6}(病毒|木马|感染|中毒)|感染.{0,6}病毒|电脑.{0,6}中毒|文件.{0,6}变.{0,6}快捷方式|自启动项|多了.{0,6}(自启动|可疑进程)", "mustAll": ["电脑|手机|u盘|系统|程序|软件|文件|病毒|木马|杀毒|设备|服务器|硬盘|插|自启动"], "note": "malware SKILL.md 恶意软件样本分析/行为三合一；口语中毒/U盘病毒/快捷方式木马；约束设备语境防吸走食物中毒类查询" },
-        { "must": "带附件.{0,6}信|点开后.{0,6}往外连|到底干了啥|邮箱.{0,10}附件|收到.{0,8}附件|是不是.{0,2}坏东西|坏东西|释放.{0,6}东西", "mustAll": ["附件|邮箱|信|点开|电脑|往外连|干|坏东西|病毒|木马|恶意|释放|外网|可疑|样本"], "note": "canon-gap N021/N105：附件信点开外连（SKILL恶意样本行为分析）；口语「邮箱收到附件就释放东西连外网，是不是坏东西」同族，mustAll 相应放宽到附件/坏东西语境" },
-        { "must": "睡了一会才动|行为日志.{0,6}捋", "mustAll": ["沙箱|样本|行为|日志|睡|捋"], "note": "canon-gap N022：沙箱延时行为捋日志（SKILL沙箱行为/IOC提取）" },
-        { "must": "进程已经没了|只剩.{0,6}奇怪.{0,6}记录|半夜.{0,6}往外传", "mustAll": ["机器|进程|半夜|往外传|记录|奇怪|只剩"], "note": "canon-gap N023：tie-break R25（SKILL样本行为；priority R9在前1:1胜出）" }
+        {
+          "must": "malware|yara|virus.?sample|pe-?sieve|cape.?sandbox|恶意.?软件|病毒.?样本|木马.?分析|恶意.?样本|样本.?分析|ransomware|勒索|webshell|后门|backdoor"
+        },
+        {
+          "must": "sandbox",
+          "mustAll": [
+            "malware|virus|恶意|木马|样本|cape|any\\.run|triage"
+          ],
+          "note": "裸 sandbox 归 R9 需恶意语境（防误伤云沙箱/开发语境）"
+        },
+        {
+          "must": "沙箱报毒|报毒|附件.{0,8}exe|一跑就.{0,8}(连|外网)|连外网.{0,8}删|删自己|行为和指标|指标整理出来",
+          "mustAll": [
+            "沙箱|附件|样本|exe|报毒|外网|病毒|木马|行为|指标|loader"
+          ],
+          "note": "malware SKILL.md 沙箱/行为/IOC提取；约束样本语境"
+        },
+        {
+          "must": "中毒|中了.{0,6}(病毒|木马|毒)|u盘.{0,6}(病毒|木马|感染|中毒)|感染.{0,6}病毒|电脑.{0,6}中毒|文件.{0,6}变.{0,6}快捷方式|自启动项|多了.{0,6}(自启动|可疑进程)",
+          "mustAll": [
+            "电脑|手机|u盘|系统|程序|软件|文件|病毒|木马|杀毒|设备|服务器|硬盘|插|自启动"
+          ],
+          "note": "malware SKILL.md 恶意软件样本分析/行为三合一；口语中毒/U盘病毒/快捷方式木马；约束设备语境防吸走食物中毒类查询"
+        },
+        {
+          "must": "带附件.{0,6}信|点开后.{0,6}往外连|到底干了啥|邮箱.{0,10}附件|收到.{0,8}附件|是不是.{0,2}坏东西|坏东西|释放.{0,6}东西",
+          "mustAll": [
+            "附件|邮箱|信|点开|电脑|往外连|干|坏东西|病毒|木马|恶意|释放|外网|可疑|样本"
+          ],
+          "note": "canon-gap N021/N105：附件信点开外连（SKILL恶意样本行为分析）；口语「邮箱收到附件就释放东西连外网，是不是坏东西」同族，mustAll 相应放宽到附件/坏东西语境"
+        },
+        {
+          "must": "睡了一会才动|行为日志.{0,6}捋",
+          "mustAll": [
+            "沙箱|样本|行为|日志|睡|捋"
+          ],
+          "note": "canon-gap N022：沙箱延时行为捋日志（SKILL沙箱行为/IOC提取）"
+        },
+        {
+          "must": "进程已经没了|只剩.{0,6}奇怪.{0,6}记录|半夜.{0,6}往外传",
+          "mustAll": [
+            "机器|进程|半夜|往外传|记录|奇怪|只剩"
+          ],
+          "note": "canon-gap N023：tie-break R25（SKILL样本行为；priority R9在前1:1胜出）"
+        }
       ]
     },
     "R10": {
       "label": "Attack chain",
       "skill": "attack-chain/SKILL.md",
       "keywords": [
-        { "must": "attack.?chain|red.?team|lateral|domain.?pentest|internal.?network|full.?pentest|完整.?渗透|从外网|打到域控|红队|横向.?移动|内网.?渗透|横向.{0,6}(走多远|能走多远|摸)|机房.{0,10}被控|一台机器被控|摸到哪", "note": "口语「机房已有一台被控，横向能走多远」；本条无 mustAll，故用带上下文的长短语而非裸「被控」以免吸走 R25 取证语境" },
-        { "must": "多阶段|分阶段.{0,8}(拿下|渗透)|从.{0,8}(钓鱼|外网).{0,15}(横向|内网|拿下)|最后拿下|拿下核心", "note": "attack SKILL.md 多阶段攻击路径编排；钓鱼/外网仅作起点语境，正主仍是编排" },
-        { "must": "多阶段|分阶段.{0,8}(拿下|渗透)", "note": "attack SKILL.md 多阶段编排总述" },
-        { "must": "从外面拿到.{0,6}机器|顺着它摸到里面|放重要东西.{0,6}那几台", "mustAll": ["外面|机器|里面|重要|摸"], "note": "canon-gap N024：外网立足摸内网（SKILL多阶段攻击路径/横向）" },
-        { "must": "从钓鱼邮件开始|碰到核心数据", "mustAll": ["钓鱼|邮件|核心|数据"], "note": "canon-gap N025a：tie-break R36之一（SKILL钓鱼起点到核心多阶段编排；与下一条叠票2:1胜出）" },
-        { "must": "完整路子|每一步.{0,6}讲清", "mustAll": ["完整|路子|讲清|步骤|每一步"], "note": "canon-gap N025b：tie-break R36之二（SKILL完整攻击路径讲清；叠票用）" }
+        {
+          "must": "attack.?chain|red.?team|lateral|domain.?pentest|internal.?network|full.?pentest|完整.?渗透|从外网|打到域控|红队|横向.?移动|内网.?渗透|横向.{0,6}(走多远|能走多远|摸)|机房.{0,10}被控|一台机器被控|摸到哪",
+          "note": "口语「机房已有一台被控，横向能走多远」；本条无 mustAll，故用带上下文的长短语而非裸「被控」以免吸走 R25 取证语境"
+        },
+        {
+          "must": "多阶段|分阶段.{0,8}(拿下|渗透)|从.{0,8}(钓鱼|外网).{0,15}(横向|内网|拿下)|最后拿下|拿下核心",
+          "note": "attack SKILL.md 多阶段攻击路径编排；钓鱼/外网仅作起点语境，正主仍是编排"
+        },
+        {
+          "must": "多阶段|分阶段.{0,8}(拿下|渗透)",
+          "note": "attack SKILL.md 多阶段编排总述"
+        },
+        {
+          "must": "从外面拿到.{0,6}机器|顺着它摸到里面|放重要东西.{0,6}那几台",
+          "mustAll": [
+            "外面|机器|里面|重要|摸"
+          ],
+          "note": "canon-gap N024：外网立足摸内网（SKILL多阶段攻击路径/横向）"
+        },
+        {
+          "must": "从钓鱼邮件开始|碰到核心数据",
+          "mustAll": [
+            "钓鱼|邮件|核心|数据"
+          ],
+          "note": "canon-gap N025a：tie-break R36之一（SKILL钓鱼起点到核心多阶段编排；与下一条叠票2:1胜出）"
+        },
+        {
+          "must": "完整路子|每一步.{0,6}讲清",
+          "mustAll": [
+            "完整|路子|讲清|步骤|每一步"
+          ],
+          "note": "canon-gap N025b：tie-break R36之二（SKILL完整攻击路径讲清；叠票用）"
+        }
       ]
     },
     "R11": {
       "label": "Pentest tools",
       "skill": "pentest-tools/SKILL.md",
       "keywords": [
-        { "must": "nmap|nuclei|sqlmap|ffuf|pentest|src.?hunt|bug.?bounty|waf.?bypass|渗透.?测试|端口.?扫描|漏洞.?扫描|目录.?爆破|sql.?注入|众测|burp|burpsuite|intruder|repeater|metasploit|hashcat|hydra|gobuster|dirsearch|提权|privilege.?escalat|安全.?评估|security.?assess|风险.?评估|risk.?assess", "note": "burp 家族/常见渗透工具/提权/评估 归 R11" },
-        { "must": "改包|请求.?篡改|篡改.?请求", "note": "Burp/Repeater改包重放归pentest-tools；裸抓包仍由R3承载（benchmark pin，js SKILL.md请求链路依据）" },
-        { "must": "子域名|信息.?收集|弱口令|旁站|指纹.?识别|(?<![a-z0-9_])whois(?![a-z0-9_])|c段", "note": "pentest-tools description触发关键词：子域名/信息收集；适用范围 目标信息收集" },
-        { "must": "网段.{0,8}扫|扫.{0,8}网段|扫一遍|开了啥端口|开了.{0,6}端口|recon.?sweep|in.?scope.?subnet|subdomain|enumerate subdomains", "note": "pentest SKILL.md 信息收集/端口扫描/子域名" },
-        { "must": "登录框|注进去|后台.?目录|目录.{0,6}扫", "mustAll": ["登录|目录|后台|注入|sql|框|扫"], "note": "pentest SKILL.md Web渗透/SQL注入/目录爆破；约束渗透语境" },
-        { "must": "单引号.{0,8}(报错|带出)|搜索框.{0,8}(注入|单引号)|报错.{0,6}回显", "mustAll": ["搜索|框|注入|sql|报错|后台|登录"], "note": "pentest SKILL.md Web注入手工验证；约束渗透语境" },
-        { "must": "就一个名字|连地址段都没给|公开渠道.{0,6}摸|入口都列出来", "mustAll": ["授权|名字|地址段|公开|入口"], "note": "canon-gap N028：仅有名目标信息收集（SKILL子域名/入口枚举）" }
+        {
+          "must": "nmap|nuclei|sqlmap|ffuf|pentest|src.?hunt|bug.?bounty|waf.?bypass|渗透.?测试|端口.?扫描|漏洞.?扫描|目录.?爆破|sql.?注入|众测|burp|burpsuite|intruder|repeater|metasploit|hashcat|hydra|gobuster|dirsearch|提权|privilege.?escalat|安全.?评估|security.?assess|风险.?评估|risk.?assess",
+          "note": "burp 家族/常见渗透工具/提权/评估 归 R11"
+        },
+        {
+          "must": "改包|请求.?篡改|篡改.?请求",
+          "note": "Burp/Repeater改包重放归pentest-tools；裸抓包仍由R3承载（benchmark pin，js SKILL.md请求链路依据）"
+        },
+        {
+          "must": "子域名|信息.?收集|弱口令|旁站|指纹.?识别|(?<![a-z0-9_])whois(?![a-z0-9_])|c段",
+          "note": "pentest-tools description触发关键词：子域名/信息收集；适用范围 目标信息收集"
+        },
+        {
+          "must": "网段.{0,8}扫|扫.{0,8}网段|扫一遍|开了啥端口|开了.{0,6}端口|recon.?sweep|in.?scope.?subnet|subdomain|enumerate subdomains",
+          "note": "pentest SKILL.md 信息收集/端口扫描/子域名"
+        },
+        {
+          "must": "登录框|注进去|后台.?目录|目录.{0,6}扫",
+          "mustAll": [
+            "登录|目录|后台|注入|sql|框|扫"
+          ],
+          "note": "pentest SKILL.md Web渗透/SQL注入/目录爆破；约束渗透语境"
+        },
+        {
+          "must": "单引号.{0,8}(报错|带出)|搜索框.{0,8}(注入|单引号)|报错.{0,6}回显",
+          "mustAll": [
+            "搜索|框|注入|sql|报错|后台|登录"
+          ],
+          "note": "pentest SKILL.md Web注入手工验证；约束渗透语境"
+        },
+        {
+          "must": "就一个名字|连地址段都没给|公开渠道.{0,6}摸|入口都列出来",
+          "mustAll": [
+            "授权|名字|地址段|公开|入口"
+          ],
+          "note": "canon-gap N028：仅有名目标信息收集（SKILL子域名/入口枚举）"
+        }
       ]
     },
     "R12": {
       "label": "API security",
       "skill": "api-security/SKILL.md",
       "keywords": [
-        { "must": "graphql|bola|bfla|api.?secur|接口.?安全|越权|未授权.?访问|rest.?api.?secur" },
-        { "must": "api.{0,10}安全测试|安全测试.{0,10}api|接口.{0,10}安全测试|api.{0,10}做.?安全|接口.{0,8}做.?安全", "note": "api SKILL.md: API 安全测试/REST API 安全测试；中文语序 给API做安全/接口安全测试" },
-        { "must": "(?<![a-z0-9_])oauth(?![a-z0-9_])", "exclude": "oauth2|oidc|saml|sso|openid|联邦|单点", "note": "OAuth 裸词分给 API；OIDC/SAML/SSO 归 R37" },
-        { "must": "(?<![a-z0-9_])jwt(?![a-z0-9_])|(?<![a-z0-9_])jwks?(?![a-z0-9_])|token.?伪造|伪造.?token|接口.?限流|限流.?绕过|限速.?绕过", "note": "api SKILL.md适用场景 JWT/OAuth认证测试、API限速绕过" },
-        { "must": "看别人的(订单|数据|信息)|调别人的(信息|数据|订单)|改.?id.{0,12}(看|调|拿)|换.?id.{0,8}(看|调)|fetch.{0,15}other users|changing.{0,10}id", "note": "api SKILL.md BOLA/IDOR授权漏洞检测：改id看别人数据" },
-        { "must": "token.{0,12}(改|伪造|调别人|看别人)|改一下就能(调|看)|请求里.{0,8}token", "note": "api SKILL.md JWT/OAuth认证测试：请求token篡改测越权" },
-        { "must": "别人的.{0,10}(订阅|房间号|收货地址|订单)|他的.{0,6}(收货地址|订单|数据)|发别人的", "note": "api SKILL.md BOLA横向越权：替别人传参读别人数据" },
-        { "must": "swapping.{0,12}(account|id|user).{0,20}(returns|invoice|data)|returns someone else|someone else.{0,10}(invoice|data|order)", "note": "api SKILL.md BOLA英文口语：换标识读别人单据" },
-        { "must": "别人.{0,6}单号|编号挨个试|不属于自己.{0,6}记录|没做拦", "mustAll": ["接口|单号|编号|请求|账号|登录|别人|记录|拦"], "note": "canon-gap N029/N031：BOLA单号编号越权（SKILL BOLA/IDOR授权漏洞检测）" }
+        {
+          "must": "graphql|bola|bfla|api.?secur|接口.?安全|越权|未授权.?访问|rest.?api.?secur"
+        },
+        {
+          "must": "api.{0,10}安全测试|安全测试.{0,10}api|接口.{0,10}安全测试|api.{0,10}做.?安全|接口.{0,8}做.?安全",
+          "note": "api SKILL.md: API 安全测试/REST API 安全测试；中文语序 给API做安全/接口安全测试"
+        },
+        {
+          "must": "(?<![a-z0-9_])oauth(?![a-z0-9_])",
+          "exclude": "oauth2|oidc|saml|sso|openid|联邦|单点",
+          "note": "OAuth 裸词分给 API；OIDC/SAML/SSO 归 R37"
+        },
+        {
+          "must": "(?<![a-z0-9_])jwt(?![a-z0-9_])|(?<![a-z0-9_])jwks?(?![a-z0-9_])|token.?伪造|伪造.?token|接口.?限流|限流.?绕过|限速.?绕过",
+          "note": "api SKILL.md适用场景 JWT/OAuth认证测试、API限速绕过"
+        },
+        {
+          "must": "看别人的(订单|数据|信息)|调别人的(信息|数据|订单)|改.?id.{0,12}(看|调|拿)|换.?id.{0,8}(看|调)|fetch.{0,15}other users|changing.{0,10}id",
+          "note": "api SKILL.md BOLA/IDOR授权漏洞检测：改id看别人数据"
+        },
+        {
+          "must": "token.{0,12}(改|伪造|调别人|看别人)|改一下就能(调|看)|请求里.{0,8}token",
+          "note": "api SKILL.md JWT/OAuth认证测试：请求token篡改测越权"
+        },
+        {
+          "must": "别人的.{0,10}(订阅|房间号|收货地址|订单)|他的.{0,6}(收货地址|订单|数据)|发别人的",
+          "note": "api SKILL.md BOLA横向越权：替别人传参读别人数据"
+        },
+        {
+          "must": "swapping.{0,12}(account|id|user).{0,20}(returns|invoice|data)|returns someone else|someone else.{0,10}(invoice|data|order)",
+          "note": "api SKILL.md BOLA英文口语：换标识读别人单据"
+        },
+        {
+          "must": "别人.{0,6}单号|编号挨个试|不属于自己.{0,6}记录|没做拦",
+          "mustAll": [
+            "接口|单号|编号|请求|账号|登录|别人|记录|拦"
+          ],
+          "note": "canon-gap N029/N031：BOLA单号编号越权（SKILL BOLA/IDOR授权漏洞检测）"
+        }
       ]
     },
     "R13": {
       "label": "Supply chain",
       "skill": "supply-chain-security/SKILL.md",
       "keywords": [
-        { "must": "sbom|supply.?chain|trivy|gitleaks|syft|供应链|依赖.?扫描" },
-        { "must": "开源组件|第三方组件.{0,6}漏洞|真能打到|流水线.{0,8}镜像|拉外网镜像|直接拉.{0,6}镜像", "mustAll": ["开源|组件|镜像|流水线|ci|容器|依赖|sbom|告警|漏洞"], "note": "supply SKILL.md 开源依赖/CI镜像/管道审计；约束供应链语境" },
-        { "must": "引了一堆开源|版本被人动过|物料清单|流水线.{0,10}依赖|混进.{0,6}依赖|可疑.{0,4}依赖|偷偷混进", "mustAll": ["仓库|开源|版本|依赖|东西|引|流水线|清单|供应链|镜像|ci|sbom|组件"], "note": "canon-gap N033/N103：仓库开源版本盘点 + 口语「要软件物料清单、查流水线有没有混进可疑依赖」（SKILL SBOM/供应链依赖审计）" }
+        {
+          "must": "sbom|supply.?chain|trivy|gitleaks|syft|供应链|依赖.?扫描"
+        },
+        {
+          "must": "开源组件|第三方组件.{0,6}漏洞|真能打到|流水线.{0,8}镜像|拉外网镜像|直接拉.{0,6}镜像",
+          "mustAll": [
+            "开源|组件|镜像|流水线|ci|容器|依赖|sbom|告警|漏洞"
+          ],
+          "note": "supply SKILL.md 开源依赖/CI镜像/管道审计；约束供应链语境"
+        },
+        {
+          "must": "引了一堆开源|版本被人动过|物料清单|流水线.{0,10}依赖|混进.{0,6}依赖|可疑.{0,4}依赖|偷偷混进",
+          "mustAll": [
+            "仓库|开源|版本|依赖|东西|引|流水线|清单|供应链|镜像|ci|sbom|组件"
+          ],
+          "note": "canon-gap N033/N103：仓库开源版本盘点 + 口语「要软件物料清单、查流水线有没有混进可疑依赖」（SKILL SBOM/供应链依赖审计）"
+        }
       ]
     },
     "R14": {
       "label": "LLM / Agent security",
       "skill": "llm-security/SKILL.md",
       "keywords": [
-        { "must": "llm|prompt.?inject|jailbreak|agent.?secur|garak|owasp.?llm|提示词.?注入|模型.?红队|模型.?越狱|llm.?越狱|提示词.?越狱|ai.?红队" },
-        { "must": "提示词.?泄露|泄露.?提示词|套.?提示词|(?<![a-z0-9_])rag(?![a-z0-9_]).{0,6}(泄露|投毒|污染)|记忆.?投毒|智能体.?审计", "note": "llm SKILL.md: 系统提示词泄露面、RAG、Agent记忆持久化审计" },
-        { "must": "ai.?客服|智能.?助手|套它|套话|说出不该说|诱导.{0,8}(说出|输出)|指挥.{0,8}干坏事|绕过.{0,8}指挥|连.{0,6}一堆工具", "note": "llm SKILL.md prompt注入/Agent工具滥用/记忆投毒" },
-        { "must": "rag.?chatbot|chatbot.{0,12}leak|leaks internal docs|prompted cleverly|injection surface", "mustAll": ["rag|chatbot|llm|prompt|agent|leak|model|ai"], "note": "llm SKILL.md RAG暴露/提示词注入面；约束模型语境" },
-        { "must": "喂给模型.{0,6}文档|掺了东西|往奇怪.{0,6}方向偏", "mustAll": ["模型|文档|回答|掺|偏"], "note": "canon-gap N036：文档投毒致回答偏移（SKILL RAG投毒/记忆持久化审计）" }
+        {
+          "must": "llm|prompt.?inject|jailbreak|agent.?secur|garak|owasp.?llm|提示词.?注入|模型.?红队|模型.?越狱|llm.?越狱|提示词.?越狱|ai.?红队"
+        },
+        {
+          "must": "提示词.?泄露|泄露.?提示词|套.?提示词|(?<![a-z0-9_])rag(?![a-z0-9_]).{0,6}(泄露|投毒|污染)|记忆.?投毒|智能体.?审计",
+          "note": "llm SKILL.md: 系统提示词泄露面、RAG、Agent记忆持久化审计"
+        },
+        {
+          "must": "ai.?客服|智能.?助手|套它|套话|说出不该说|诱导.{0,8}(说出|输出)|指挥.{0,8}干坏事|绕过.{0,8}指挥|连.{0,6}一堆工具",
+          "note": "llm SKILL.md prompt注入/Agent工具滥用/记忆投毒"
+        },
+        {
+          "must": "rag.?chatbot|chatbot.{0,12}leak|leaks internal docs|prompted cleverly|injection surface",
+          "mustAll": [
+            "rag|chatbot|llm|prompt|agent|leak|model|ai"
+          ],
+          "note": "llm SKILL.md RAG暴露/提示词注入面；约束模型语境"
+        },
+        {
+          "must": "喂给模型.{0,6}文档|掺了东西|往奇怪.{0,6}方向偏",
+          "mustAll": [
+            "模型|文档|回答|掺|偏"
+          ],
+          "note": "canon-gap N036：文档投毒致回答偏移（SKILL RAG投毒/记忆持久化审计）"
+        }
       ]
     },
     "R15": {
       "label": "Binary diff / symbol migrate",
       "skill": "binary-diff/SKILL.md",
       "keywords": [
-        { "must": "bindiff|symbol.?migrat|pdb|符号.?迁移|版本.?对比" },
-        { "must": "缺.?pdb|旧版.?符号|符号.?推导|函数名.?迁移|迁移.?函数名|偏移.?变了|新版.?偏移", "note": "binary-diff SKILL.md: 内核缺PDB、旧版符号推导、批量迁移函数名" },
-        { "must": "标好的函数|标注.{0,8}(搬|迁移|对不上)|批量.?搬|port.{0,12}labels|annotated.{0,12}disassembly|函数名.{0,10}(重新认|迁移|搬)|新版本.{0,10}(函数名|重新认)|懒得重新认|对不上.{0,8}(函数|位置)", "note": "binary-diff SKILL.md 程序更新后批量迁移函数名/旧版结果批量迁移" },
-        { "must": "annotated.{0,12}disassembly", "note": "binary-diff SKILL.md 旧版逆向结果英文表述" },
-        { "must": "port.{0,12}labels|labels.{0,8}over|migrat.{0,8}(labels|symbols)", "note": "binary-diff SKILL.md 批量迁移标签英文表述" },
-        { "must": "结构体.{0,6}偏移|偏移.{0,6}漂移|整体平移|平移过去", "note": "binary-diff SKILL.md 升级后偏移漂移整体迁移" }
+        {
+          "must": "bindiff|symbol.?migrat|pdb|符号.?迁移|版本.?对比"
+        },
+        {
+          "must": "缺.?pdb|旧版.?符号|符号.?推导|函数名.?迁移|迁移.?函数名|偏移.?变了|新版.?偏移",
+          "note": "binary-diff SKILL.md: 内核缺PDB、旧版符号推导、批量迁移函数名"
+        },
+        {
+          "must": "标好的函数|标注.{0,8}(搬|迁移|对不上)|批量.?搬|port.{0,12}labels|annotated.{0,12}disassembly|函数名.{0,10}(重新认|迁移|搬)|新版本.{0,10}(函数名|重新认)|懒得重新认|对不上.{0,8}(函数|位置)",
+          "note": "binary-diff SKILL.md 程序更新后批量迁移函数名/旧版结果批量迁移"
+        },
+        {
+          "must": "annotated.{0,12}disassembly",
+          "note": "binary-diff SKILL.md 旧版逆向结果英文表述"
+        },
+        {
+          "must": "port.{0,12}labels|labels.{0,8}over|migrat.{0,8}(labels|symbols)",
+          "note": "binary-diff SKILL.md 批量迁移标签英文表述"
+        },
+        {
+          "must": "结构体.{0,6}偏移|偏移.{0,6}漂移|整体平移|平移过去",
+          "note": "binary-diff SKILL.md 升级后偏移漂移整体迁移"
+        }
       ]
     },
     "R16": {
       "label": "Patch-diff / N-day",
       "skill": "patch-diff-exploit/SKILL.md",
       "keywords": [
-        { "must": "n-?day|patch.?diff|patch.?tuesday|补丁.?差分|补丁.?分析" },
-        { "must": "(?<![a-z0-9_])cve.{0,12}(复现|补丁|分析|反推)|补丁.?反推|补丁.?对比|(?<![a-z0-9_])1-?day(?![a-z0-9_])", "note": "patch-diff SKILL.md: 已知CVE无PoC从补丁反推、1-day" },
-        { "must": "周二.?补丁|no public poc|cve.{0,20}(patch|poc|trigger|diff)|diff.{0,12}binaries|build a trigger|还没升级.{0,8}(机器|能打)|补丁.{0,8}出了", "note": "patch-diff SKILL.md 已知CVE只有补丁无PoC/周二补丁跟进/N-day武器化" },
-        { "must": "安全更新.{0,8}(diff|对比)|diff.{0,6}(一下|看看|对比)|修的是哪|补丁对比看看", "mustAll": ["更新|补丁|diff|对比|越界|漏洞|cve|修"], "note": "patch-diff SKILL.md 安全更新diff反推漏洞点；约束补丁语境" }
+        {
+          "must": "n-?day|patch.?diff|patch.?tuesday|补丁.?差分|补丁.?分析"
+        },
+        {
+          "must": "(?<![a-z0-9_])cve.{0,12}(复现|补丁|分析|反推)|补丁.?反推|补丁.?对比|(?<![a-z0-9_])1-?day(?![a-z0-9_])",
+          "note": "patch-diff SKILL.md: 已知CVE无PoC从补丁反推、1-day"
+        },
+        {
+          "must": "周二.?补丁|no public poc|cve.{0,20}(patch|poc|trigger|diff)|diff.{0,12}binaries|build a trigger|还没升级.{0,8}(机器|能打)|补丁.{0,8}出了",
+          "note": "patch-diff SKILL.md 已知CVE只有补丁无PoC/周二补丁跟进/N-day武器化"
+        },
+        {
+          "must": "安全更新.{0,8}(diff|对比)|diff.{0,6}(一下|看看|对比)|修的是哪|补丁对比看看",
+          "mustAll": [
+            "更新|补丁|diff|对比|越界|漏洞|cve|修"
+          ],
+          "note": "patch-diff SKILL.md 安全更新diff反推漏洞点；约束补丁语境"
+        }
       ]
     },
     "R17": {
       "label": "Pwn chain",
       "skill": "pwn-chain/SKILL.md",
       "keywords": [
-        { "must": "(?<![a-z0-9_])pwn(?![a-z0-9_])|(?<![a-z0-9_])rop(?![a-z0-9_])|ret2libc|heap.?overflow|stack.?overflow|buffer.?overflow|kernel.?pwn|exploit.?dev|pwntools|栈溢出|堆溢出|格式化.?字符串" },
-        { "must": "溢出点|堆题|本地通|远程就崩|一打远程|稳定.{0,6}利用|利用.{0,6}稳定|本地演示|能上手的利用", "note": "pwn SKILL.md 本地通到远程稳定打通/堆利用" },
-        { "must": "输长了就崩|超长.{0,6}(断|崩)|听话跑起|听话跑起自己的东西", "mustAll": ["崩|断|输入|长|跑起|小程序|服务|内容"], "note": "canon-gap N041-N042：输长崩/超长断拿回显（SKILL本地通到远程稳定打通）" },
-        { "must": "吃输入.{0,6}点|本地能玩通|打远端就断|差的那口气", "mustAll": ["本地|远端|输入|靶机|玩通|断"], "note": "canon-gap N043：本地玩通远端断（SKILL堆利用/远程稳定打通）" }
+        {
+          "must": "(?<![a-z0-9_])pwn(?![a-z0-9_])|(?<![a-z0-9_])rop(?![a-z0-9_])|ret2libc|heap.?overflow|stack.?overflow|buffer.?overflow|kernel.?pwn|exploit.?dev|pwntools|栈溢出|堆溢出|格式化.?字符串"
+        },
+        {
+          "must": "溢出点|堆题|本地通|远程就崩|一打远程|稳定.{0,6}利用|利用.{0,6}稳定|本地演示|能上手的利用",
+          "note": "pwn SKILL.md 本地通到远程稳定打通/堆利用"
+        },
+        {
+          "must": "输长了就崩|超长.{0,6}(断|崩)|听话跑起|听话跑起自己的东西",
+          "mustAll": [
+            "崩|断|输入|长|跑起|小程序|服务|内容"
+          ],
+          "note": "canon-gap N041-N042：输长崩/超长断拿回显（SKILL本地通到远程稳定打通）"
+        },
+        {
+          "must": "吃输入.{0,6}点|本地能玩通|打远端就断|差的那口气",
+          "mustAll": [
+            "本地|远端|输入|靶机|玩通|断"
+          ],
+          "note": "canon-gap N043：本地玩通远端断（SKILL堆利用/远程稳定打通）"
+        }
       ]
     },
     "R18": {
       "label": "EDR bypass RE",
       "skill": "edr-bypass-re/SKILL.md",
       "keywords": [
-        { "must": "edr|av.?bypass|syscall|amsi|etw.?patch|hell.?s.?gate|免杀|反病毒" },
-        { "must": "(?<![a-z0-9_])defender(?![a-z0-9_])|(?<![a-z0-9_])crowdstrike(?![a-z0-9_])|(?<![a-z0-9_])unhook(?![a-z0-9_])|(?<![a-z0-9_])sysmon(?![a-z0-9_])|process.?hollow", "note": "edr SKILL.md description: Defender/CrowdStrike绕过、unhook、Sysmon规避、Process Hollowing" },
-        { "must": "杀软|杀毒软件|终端.?防护|终端.?安全|内存.?加载|hook了哪儿|hook.{0,8}(哪|位置)|检测.{0,6}内存|拦着.{0,8}测试工具", "note": "edr SKILL.md EDR/Defender hook表/内存加载检测/测试工具被拦" },
-        { "must": "gets quarantined|quarantined on launch|user.?mode hook|which hook fires|hook fires first", "mustAll": ["loader|hook|quarantin|edr|defender|av|red.?team|process"], "note": "edr SKILL.md loader被隔离/用户态hook定位；约束EDR语境" },
-        { "must": "开挂.{0,6}检测|检测.{0,6}开挂|反外挂|外挂.{0,6}检测|反作弊|游戏.{0,6}(检测|绕过)", "mustAll": ["游戏|开挂|外挂|作弊|绕过|检测|调试"], "note": "edr-bypass-re SKILL.md 防御规避T1562类比游戏反作弊绕过；口语开挂检测/反作弊；须带游戏作弊语境防吸走R1root检测与R2越狱检测绕过" },
-        { "must": "安全软件吃掉|想让它能跑起来", "mustAll": ["工具|运行|安全|软件|吃掉|跑起来|系统|小工具"], "note": "canon-gap N044：系统安全软件查杀致运行被吃（SKILL Defender/CrowdStrike绕过）" },
-        { "must": "被终端.{0,6}拦|被哪一层盯上", "mustAll": ["加载器|终端|防护|拦|测试|盯"], "note": "canon-gap N045：加载器被终端防护拦（SKILL hook表/EDR检测定位；{0,6}收终端上的防护）" }
+        {
+          "must": "edr|av.?bypass|syscall|amsi|etw.?patch|hell.?s.?gate|免杀|反病毒"
+        },
+        {
+          "must": "(?<![a-z0-9_])defender(?![a-z0-9_])|(?<![a-z0-9_])crowdstrike(?![a-z0-9_])|(?<![a-z0-9_])unhook(?![a-z0-9_])|(?<![a-z0-9_])sysmon(?![a-z0-9_])|process.?hollow",
+          "note": "edr SKILL.md description: Defender/CrowdStrike绕过、unhook、Sysmon规避、Process Hollowing"
+        },
+        {
+          "must": "杀软|杀毒软件|终端.?防护|终端.?安全|内存.?加载|hook了哪儿|hook.{0,8}(哪|位置)|检测.{0,6}内存|拦着.{0,8}测试工具",
+          "note": "edr SKILL.md EDR/Defender hook表/内存加载检测/测试工具被拦"
+        },
+        {
+          "must": "gets quarantined|quarantined on launch|user.?mode hook|which hook fires|hook fires first",
+          "mustAll": [
+            "loader|hook|quarantin|edr|defender|av|red.?team|process"
+          ],
+          "note": "edr SKILL.md loader被隔离/用户态hook定位；约束EDR语境"
+        },
+        {
+          "must": "开挂.{0,6}检测|检测.{0,6}开挂|反外挂|外挂.{0,6}检测|反作弊|游戏.{0,6}(检测|绕过)",
+          "mustAll": [
+            "游戏|开挂|外挂|作弊|绕过|检测|调试"
+          ],
+          "note": "edr-bypass-re SKILL.md 防御规避T1562类比游戏反作弊绕过；口语开挂检测/反作弊；须带游戏作弊语境防吸走R1root检测与R2越狱检测绕过"
+        },
+        {
+          "must": "安全软件吃掉|想让它能跑起来",
+          "mustAll": [
+            "工具|运行|安全|软件|吃掉|跑起来|系统|小工具"
+          ],
+          "note": "canon-gap N044：系统安全软件查杀致运行被吃（SKILL Defender/CrowdStrike绕过）"
+        },
+        {
+          "must": "被终端.{0,6}拦|被哪一层盯上",
+          "mustAll": [
+            "加载器|终端|防护|拦|测试|盯"
+          ],
+          "note": "canon-gap N045：加载器被终端防护拦（SKILL hook表/EDR检测定位；{0,6}收终端上的防护）"
+        }
       ]
     },
     "R19": {
       "label": "Browser / desktop automation",
       "skill": "browser-automation/SKILL.md",
       "keywords": [
-        { "must": "playwright|browser.?auto|desktop.?auto|openreverse|fill.?form|浏览器.?自动化|桌面.?自动化|自动.?填表" },
-        { "must": "自动.?登录|爬取.?页面|页面.?截图|网页.?截图|自动.?过.?验证码|批量.?提交", "note": "browser-automation SKILL.md: 自动化登录/爬取截图/验证码处理/批量表单" },
-        { "must": "自动.{0,8}(打开网页|填表|登录|截图|提交)|重复.{0,8}(几十遍|每天)|每天.{0,10}重复|open the site|click through login|dump the table|自己操作.{0,8}(管理后台|页面)|每个页面.{0,8}(爬|数据)|管理后台.{0,8}爬", "note": "browser-automation SKILL.md 打开网页/填表/爬取/截图/自动化登录" },
-        { "must": "登.{0,6}后台|导报表|自动化.{0,6}顶上去", "mustAll": ["后台|报表|登录|页面|自动化"], "note": "browser-automation SKILL.md 批量后台/报表自动化；约束自动化语境" },
-        { "must": "screenshot|place a test order|checkout flow", "mustAll": ["script|automate|nightly|order|checkout|playwright|browser"], "note": "browser-automation SKILL.md 页面截图/下单流自动化；约束自动化语境" },
-        { "must": "挨个截图|截图留档|手工点太慢|自动跑", "mustAll": ["页面|截图|自动|手工|留档|跑"], "note": "canon-gap N047：多页截图留档自动跑（SKILL爬取截图/批量表单）" }
+        {
+          "must": "playwright|browser.?auto|desktop.?auto|openreverse|fill.?form|浏览器.?自动化|桌面.?自动化|自动.?填表"
+        },
+        {
+          "must": "自动.?登录|爬取.?页面|页面.?截图|网页.?截图|自动.?过.?验证码|批量.?提交",
+          "note": "browser-automation SKILL.md: 自动化登录/爬取截图/验证码处理/批量表单"
+        },
+        {
+          "must": "自动.{0,8}(打开网页|填表|登录|截图|提交)|重复.{0,8}(几十遍|每天)|每天.{0,10}重复|open the site|click through login|dump the table|自己操作.{0,8}(管理后台|页面)|每个页面.{0,8}(爬|数据)|管理后台.{0,8}爬",
+          "note": "browser-automation SKILL.md 打开网页/填表/爬取/截图/自动化登录"
+        },
+        {
+          "must": "登.{0,6}后台|导报表|自动化.{0,6}顶上去",
+          "mustAll": [
+            "后台|报表|登录|页面|自动化"
+          ],
+          "note": "browser-automation SKILL.md 批量后台/报表自动化；约束自动化语境"
+        },
+        {
+          "must": "screenshot|place a test order|checkout flow",
+          "mustAll": [
+            "script|automate|nightly|order|checkout|playwright|browser"
+          ],
+          "note": "browser-automation SKILL.md 页面截图/下单流自动化；约束自动化语境"
+        },
+        {
+          "must": "挨个截图|截图留档|手工点太慢|自动跑",
+          "mustAll": [
+            "页面|截图|自动|手工|留档|跑"
+          ],
+          "note": "canon-gap N047：多页截图留档自动跑（SKILL爬取截图/批量表单）"
+        }
       ]
     },
     "R20": {
       "label": "Docs generator",
       "skill": "docs-generator/SKILL.md",
       "keywords": [
-        { "must": "writeup|write.?report|generate.?report|(?<![a-z0-9_])report(?![a-z0-9_])|写.?报告|出.?报告|渗透.?报告|逆向.?报告", "exclude": "ctf|比赛|夺旗|靶场|战队", "note": "ctf-apk-diag B类：CTF语境裸writeup归R47入口（C10），不抢" },
-        { "must": "整理.?成.?文档|(?<![a-z0-9_])readme(?![a-z0-9_])|架构.?文档|接口.?文档|补.?文档", "note": "docs-generator SKILL.md: README/API文档/技术文档" },
-        { "must": "出.{0,6}报告|正式.?报告|整理成文档|过程.{0,6}整理成|以后能复用|贴到项目里", "note": "docs SKILL.md 任务收尾正式报告/README/技术文档" },
-        { "must": "说明一直没补|写一份给后人|接口和架构", "mustAll": ["说明|接口|架构|项目|后人|写"], "note": "canon-gap N049：项目说明接口架构补文档（SKILL README/API文档）" }
+        {
+          "must": "writeup|write.?report|generate.?report|(?<![a-z0-9_])report(?![a-z0-9_])|写.?报告|出.?报告|渗透.?报告|逆向.?报告",
+          "exclude": "ctf|比赛|夺旗|靶场|战队",
+          "note": "ctf-apk-diag B类：CTF语境裸writeup归R47入口（C10），不抢"
+        },
+        {
+          "must": "整理.?成.?文档|(?<![a-z0-9_])readme(?![a-z0-9_])|架构.?文档|接口.?文档|补.?文档",
+          "note": "docs-generator SKILL.md: README/API文档/技术文档"
+        },
+        {
+          "must": "出.{0,6}报告|正式.?报告|整理成文档|过程.{0,6}整理成|以后能复用|贴到项目里",
+          "note": "docs SKILL.md 任务收尾正式报告/README/技术文档"
+        },
+        {
+          "must": "说明一直没补|写一份给后人|接口和架构",
+          "mustAll": [
+            "说明|接口|架构|项目|后人|写"
+          ],
+          "note": "canon-gap N049：项目说明接口架构补文档（SKILL README/API文档）"
+        }
       ]
     },
     "R39": {
       "label": "Diagram generation",
       "skill": "diagram-generator/SKILL.md",
       "keywords": [
-        { "must": "diagram|mermaid|graphviz|plantuml|flowchart|流程图|架构图|时序图|状态图|数据流图|攻击路径图|er.?图|画图|图表" },
-        { "must": "画成图|画张.{0,4}图|调用关系.{0,8}(绕|图|画)|结构图|开会要讲|贴到文档里", "note": "diagram SKILL.md 自然语言/代码调用关系出图" },
-        { "must": "泳道图|甘特图|脑图|思维导图|组织结构图|画个.{0,4}图", "note": "diagram SKILL.md 泳道/甘特/脑图等图型" },
-        { "must": "调用绕来绕去|画张结构|结构出来对着看", "mustAll": ["调用|结构|画|代码|绕"], "note": "canon-gap N051：调用绕讲不清画结构（SKILL调用关系出图；题无图字故不用图约束）" }
+        {
+          "must": "diagram|mermaid|graphviz|plantuml|flowchart|流程图|架构图|时序图|状态图|数据流图|攻击路径图|er.?图|画图|图表"
+        },
+        {
+          "must": "画成图|画张.{0,4}图|调用关系.{0,8}(绕|图|画)|结构图|开会要讲|贴到文档里",
+          "note": "diagram SKILL.md 自然语言/代码调用关系出图"
+        },
+        {
+          "must": "泳道图|甘特图|脑图|思维导图|组织结构图|画个.{0,4}图",
+          "note": "diagram SKILL.md 泳道/甘特/脑图等图型"
+        },
+        {
+          "must": "调用绕来绕去|画张结构|结构出来对着看",
+          "mustAll": [
+            "调用|结构|画|代码|绕"
+          ],
+          "note": "canon-gap N051：调用绕讲不清画结构（SKILL调用关系出图；题无图字故不用图约束）"
+        }
       ]
     },
     "R21": {
       "label": "Protocol reverse",
       "skill": "protocol-reverse/SKILL.md",
       "keywords": [
-        { "must": "protocol.?reverse|custom.?protocol|protobuf|grpc|pcap|wireshark|pcap.?protocol|wireshark.?dissector|协议.?逆向|自定义.?协议|流量.?逆向|流量.?分析", "exclude": "ctf|misc|比赛|靶场|夺旗", "note": "ctf-apk-diag B类：CTF/misc语境wireshark不抢（C14回R41）" },
-        { "must": "私有.{0,6}(格式|协议)|说话的格式|格式是私有的|自定义.{0,6}格式", "note": "protocol SKILL.md 自定义二进制协议/私有格式" },
-        { "must": "拆字段|字段.{0,6}拆|嵌套.{0,6}层|包嵌套|状态机.{0,6}还原|结构.{0,8}还原", "note": "protocol SKILL.md PCAP字段还原/状态机；拆字段防被前端抓包规则吸走" },
-        { "must": "装完.{0,8}连|自动连.{0,6}(地址|服务器|外网|域名)|连了.{0,6}(几个|奇怪|未知|好几个|哪)|奇怪.{0,6}(地址|服务器|连接)|外联.{0,6}(地址|服务器|行为)|回连.{0,6}(地址|服务器)|未知.{0,6}(服务器|地址)|连了什么服务器", "mustAll": ["软件|程序|客户端|应用|安装|地址|服务器|连|外联|流量|抓包|协议"], "note": "protocol SKILL.md 客户端-服务端/握手心跳重连；口语网络行为（装完连奇怪地址/外联/回连）；自动连须带地址类词防吸走游戏连招；外联区别于取证的外连" },
-        { "must": "和服务器说话.{0,6}包|每段都代表什么", "mustAll": ["软件|服务器|包|说话|抓|代表|意思"], "note": "canon-gap N052：软件服务端包字段含义（SKILL PCAP字段还原）" },
-        { "must": "一包扣一包|规矩还原出来|来回发.{0,6}有状态|看不懂.{0,6}流量|什么.{0,2}协议|弄清楚.{0,8}协议|抓包.{0,12}(分片|缺块|下发)|分片.{0,6}(下发|缺)|下发.{0,6}缺块", "mustAll": ["两端|来回|状态|包|规矩|还原|流量|协议|pcap|抓包|字段|分片|解析|缺|同事|一段"], "note": "canon-gap N054/N101/N102：有状态包规矩还原 + 口语「看不懂的流量是什么协议」「抓包见分片下发缺块」（SKILL PCAP字段/分片重组/私有协议还原）" },
-        { "must": "模拟器.{0,24}(闪退|分片|抓包|缺块)|手游.{0,24}(闪退|加速)|加速器.{0,12}闪退", "mustAll": ["模拟器|手游|加速|闪退|抓包|分片|游戏|协议|包|下发|缺|修"], "note": "canon-gap N106：模拟器上某游戏加速器闪退、抓包见分片下发缺块（SKILL PCAP分片重组/私有协议还原）。本条专治 R3 抢票——R3 的「抓包」裸词优先级在 R21 之前，单票打不过，故叠第二票" }
+        {
+          "must": "protocol.?reverse|custom.?protocol|protobuf|grpc|pcap|wireshark|pcap.?protocol|wireshark.?dissector|协议.?逆向|自定义.?协议|流量.?逆向|流量.?分析",
+          "exclude": "ctf|misc|比赛|靶场|夺旗",
+          "note": "ctf-apk-diag B类：CTF/misc语境wireshark不抢（C14回R41）"
+        },
+        {
+          "must": "私有.{0,6}(格式|协议)|说话的格式|格式是私有的|自定义.{0,6}格式",
+          "note": "protocol SKILL.md 自定义二进制协议/私有格式"
+        },
+        {
+          "must": "拆字段|字段.{0,6}拆|嵌套.{0,6}层|包嵌套|状态机.{0,6}还原|结构.{0,8}还原",
+          "note": "protocol SKILL.md PCAP字段还原/状态机；拆字段防被前端抓包规则吸走"
+        },
+        {
+          "must": "装完.{0,8}连|自动连.{0,6}(地址|服务器|外网|域名)|连了.{0,6}(几个|奇怪|未知|好几个|哪)|奇怪.{0,6}(地址|服务器|连接)|外联.{0,6}(地址|服务器|行为)|回连.{0,6}(地址|服务器)|未知.{0,6}(服务器|地址)|连了什么服务器",
+          "mustAll": [
+            "软件|程序|客户端|应用|安装|地址|服务器|连|外联|流量|抓包|协议"
+          ],
+          "note": "protocol SKILL.md 客户端-服务端/握手心跳重连；口语网络行为（装完连奇怪地址/外联/回连）；自动连须带地址类词防吸走游戏连招；外联区别于取证的外连"
+        },
+        {
+          "must": "和服务器说话.{0,6}包|每段都代表什么",
+          "mustAll": [
+            "软件|服务器|包|说话|抓|代表|意思"
+          ],
+          "note": "canon-gap N052：软件服务端包字段含义（SKILL PCAP字段还原）"
+        },
+        {
+          "must": "一包扣一包|规矩还原出来|来回发.{0,6}有状态|看不懂.{0,6}流量|什么.{0,2}协议|弄清楚.{0,8}协议|抓包.{0,12}(分片|缺块|下发)|分片.{0,6}(下发|缺)|下发.{0,6}缺块",
+          "mustAll": [
+            "两端|来回|状态|包|规矩|还原|流量|协议|pcap|抓包|字段|分片|解析|缺|同事|一段"
+          ],
+          "note": "canon-gap N054/N101/N102：有状态包规矩还原 + 口语「看不懂的流量是什么协议」「抓包见分片下发缺块」（SKILL PCAP字段/分片重组/私有协议还原）"
+        },
+        {
+          "must": "模拟器.{0,24}(闪退|分片|抓包|缺块)|手游.{0,24}(闪退|加速)|加速器.{0,12}闪退",
+          "mustAll": [
+            "模拟器|手游|加速|闪退|抓包|分片|游戏|协议|包|下发|缺|修"
+          ],
+          "note": "canon-gap N106：模拟器上某游戏加速器闪退、抓包见分片下发缺块（SKILL PCAP分片重组/私有协议还原）。本条专治 R3 抢票——R3 的「抓包」裸词优先级在 R21 之前，单票打不过，故叠第二票"
+        }
       ]
     },
     "R22": {
       "label": "Ghidra reverse",
       "skill": "ghidra-reverse/SKILL.md",
       "keywords": [
-        { "must": "ghidra|ghidra.?mcp|analyzeheadless|无.?ida|开源.?反编译" },
-        { "must": "没买正版|免费的.{0,8}(反编译|工具|分析)|用.{0,5}免费的", "mustAll": ["免费|正版|开源|反编译|工具|分析|elf|ghidra"], "note": "ghidra SKILL.md 无IDA许可证时的主逆向入口；约束免费开源语境" },
-        { "must": "不让装盗版|不要钱.{0,6}(把样本|过一遍)|批量过一遍|出伪代码", "mustAll": ["盗版|不要钱|样本|批量|伪代码|免费|开源|正版"], "note": "canon-gap N056：无盗版批量出伪代码（SKILL无IDA许可证主入口/批量headless伪代码导出）" },
-        { "must": "(?<![a-z0-9_.])elf(?![a-z0-9_])|免费.{0,4}工具|二进制.{0,8}(转成|变成).{0,6}源码|接近源码|转成.{0,4}源码", "mustAll": ["免费|开源|ghidra|伪代码|自动分析|headless|源码|二进制|固件|工具|反编译"], "note": "ghidra SKILL.md 批量headless分析/伪代码导出；约束免费工具语境防吸走IDA二进制查询。口语「免费工具把二进制转成接近源码看固件逻辑」同族" }
+        {
+          "must": "ghidra|ghidra.?mcp|analyzeheadless|无.?ida|开源.?反编译"
+        },
+        {
+          "must": "没买正版|免费的.{0,8}(反编译|工具|分析)|用.{0,5}免费的",
+          "mustAll": [
+            "免费|正版|开源|反编译|工具|分析|elf|ghidra"
+          ],
+          "note": "ghidra SKILL.md 无IDA许可证时的主逆向入口；约束免费开源语境"
+        },
+        {
+          "must": "不让装盗版|不要钱.{0,6}(把样本|过一遍)|批量过一遍|出伪代码",
+          "mustAll": [
+            "盗版|不要钱|样本|批量|伪代码|免费|开源|正版"
+          ],
+          "note": "canon-gap N056：无盗版批量出伪代码（SKILL无IDA许可证主入口/批量headless伪代码导出）"
+        },
+        {
+          "must": "(?<![a-z0-9_.])elf(?![a-z0-9_])|免费.{0,4}工具|二进制.{0,8}(转成|变成).{0,6}源码|接近源码|转成.{0,4}源码",
+          "mustAll": [
+            "免费|开源|ghidra|伪代码|自动分析|headless|源码|二进制|固件|工具|反编译"
+          ],
+          "note": "ghidra SKILL.md 批量headless分析/伪代码导出；约束免费工具语境防吸走IDA二进制查询。口语「免费工具把二进制转成接近源码看固件逻辑」同族"
+        }
       ]
     },
     "R23": {
       "label": "Cloud / K8s",
       "skill": "cloud-k8s/SKILL.md",
       "keywords": [
-        { "must": "kubernetes|(?<![a-z0-9_])k8s(?![a-z0-9_])|container.?escape|docker.?escape|kube-?bench|cloud.?secur|imds|169\\.254\\.169\\.254|容器.?逃逸|云.?安全|k8s.?渗透|s3|对象存储|存储桶", "note": "S3/对象存储归云安全" },
-        { "must": "密钥.{0,8}乱放|到处乱放.{0,6}密钥|访问控制.{0,10}(没人管|不管)|权限配得不对", "mustAll": ["集群|云|k8s|密钥|存储|容器|权限|访问控制|rbac"], "note": "cloud SKILL.md IAM/密钥/RBAC错配；约束云管语境" },
-        { "must": "存东西.{0,6}桶|谁都能看|权限是不是配错", "mustAll": ["云|桶|存储|权限|东西|配错"], "note": "canon-gap N057：云存储桶公开可读（SKILL对象存储/权限错配）" },
-        { "must": "钥匙丢得到处|谁能碰也没说法", "mustAll": ["编排|环境|钥匙|碰|收拾"], "note": "canon-gap N058：编排环境密钥乱丢（SKILL IAM/密钥错配）" }
+        {
+          "must": "kubernetes|(?<![a-z0-9_])k8s(?![a-z0-9_])|container.?escape|docker.?escape|kube-?bench|cloud.?secur|imds|169\\.254\\.169\\.254|容器.?逃逸|云.?安全|k8s.?渗透|s3|对象存储|存储桶",
+          "note": "S3/对象存储归云安全"
+        },
+        {
+          "must": "密钥.{0,8}乱放|到处乱放.{0,6}密钥|访问控制.{0,10}(没人管|不管)|权限配得不对",
+          "mustAll": [
+            "集群|云|k8s|密钥|存储|容器|权限|访问控制|rbac"
+          ],
+          "note": "cloud SKILL.md IAM/密钥/RBAC错配；约束云管语境"
+        },
+        {
+          "must": "存东西.{0,6}桶|谁都能看|权限是不是配错",
+          "mustAll": [
+            "云|桶|存储|权限|东西|配错"
+          ],
+          "note": "canon-gap N057：云存储桶公开可读（SKILL对象存储/权限错配）"
+        },
+        {
+          "must": "钥匙丢得到处|谁能碰也没说法",
+          "mustAll": [
+            "编排|环境|钥匙|碰|收拾"
+          ],
+          "note": "canon-gap N058：编排环境密钥乱丢（SKILL IAM/密钥错配）"
+        }
       ]
     },
     "R24": {
       "label": "Windows / AD",
       "skill": "windows-ad/SKILL.md",
       "keywords": [
-        { "must": "active.?directory|(?<![a-z0-9_])ad(?![a-z0-9_]).?cs|bloodhound|kerberoast|as-?rep|certipy|ntlm.?relay|dc.?sync|kerberos.?攻击|ad.?证书|impacket|mimikatz|secretsdump" },
-        { "must": "域.?渗透|域控", "exclude": "完整.?渗透|从外网|打到域控|attack.?chain|full.?pentest", "note": "完整渗透/打到域控 归 R10 攻击链" },
-        { "must": "票据.{0,6}(冒充|伪造)|拿票据|冒领.{0,6}证书|证书服务器|管理员证书|黄金票据|白银票据", "note": "windows-ad SKILL.md 票据攻击/ADCS证书冒领" },
-        { "must": "蹭到.{0,6}票|域管的票|普通域账号|域账号.{0,6}提权", "mustAll": ["域|票|账号|提权|管"], "note": "windows-ad SKILL.md 普通域账号提权/票据；约束域语境" },
-        { "must": "没啥权限.{0,6}域用户|摸到管事", "mustAll": ["域|用户|权限|管事|摸"], "note": "canon-gap N059：低权域用户提权摸管事机（SKILL普通域账号提权）" }
+        {
+          "must": "active.?directory|(?<![a-z0-9_])ad(?![a-z0-9_]).?cs|bloodhound|kerberoast|as-?rep|certipy|ntlm.?relay|dc.?sync|kerberos.?攻击|ad.?证书|impacket|mimikatz|secretsdump"
+        },
+        {
+          "must": "域.?渗透|域控",
+          "exclude": "完整.?渗透|从外网|打到域控|attack.?chain|full.?pentest",
+          "note": "完整渗透/打到域控 归 R10 攻击链"
+        },
+        {
+          "must": "票据.{0,6}(冒充|伪造)|拿票据|冒领.{0,6}证书|证书服务器|管理员证书|黄金票据|白银票据",
+          "note": "windows-ad SKILL.md 票据攻击/ADCS证书冒领"
+        },
+        {
+          "must": "蹭到.{0,6}票|域管的票|普通域账号|域账号.{0,6}提权",
+          "mustAll": [
+            "域|票|账号|提权|管"
+          ],
+          "note": "windows-ad SKILL.md 普通域账号提权/票据；约束域语境"
+        },
+        {
+          "must": "没啥权限.{0,6}域用户|摸到管事",
+          "mustAll": [
+            "域|用户|权限|管事|摸"
+          ],
+          "note": "canon-gap N059：低权域用户提权摸管事机（SKILL普通域账号提权）"
+        }
       ]
     },
     "R25": {
       "label": "Digital forensics",
       "skill": "digital-forensics/SKILL.md",
       "keywords": [
-        { "must": "forensic|volatility|memory.?dump|plaso|timeline.?explorer|取证|内存.?转储|应急.?响应.?取证|手机.?取证|磁盘.?取证|autopsy|sleuth|encase|dump.?内存|内存.?dump|应急.?响应|incident.?response", "exclude": "ctf|misc|夺旗", "note": "应急响应/内存转储归数字取证；ctf-apk-diag B类：CTF/misc语境不抢（C23回R41）" },
-        { "must": "被入侵了|异常外连|半夜.{0,8}外连|流量包.{0,10}还原|系统记录.{0,6}还原|内存和日志", "mustAll": ["内存|日志|入侵|外连|镜像|流量|取证|主机|机器|电脑|磁盘"], "note": "forensics SKILL.md 入侵主机内存日志取证/异常外连溯源；约束取证语境" },
-        { "must": "往外传东西|往外传.{0,6}数据|捋成时间线|捋.{0,6}时间线|时间线.{0,6}(捋|还原)", "mustAll": ["日志|主机|机器|半夜|外传|入侵|取证"], "note": "forensics SKILL.md 异常外传日志时间线；约束取证语境" },
-        { "must": "开不了机|盘接下来看|发生过什么", "mustAll": ["主机|盘|开不了机|搞过|发生"], "note": "canon-gap N063：主机开不了机盘取证（SKILL磁盘/主机取证）" },
-        { "must": "空白.{0,6}被擦|按时间排出来|还原.{0,6}操作", "mustAll": ["日志|空白|擦|时间|还原|排"], "note": "canon-gap N064：日志被擦按时间还原（SKILL日志时间线取证）" }
+        {
+          "must": "forensic|volatility|memory.?dump|plaso|timeline.?explorer|取证|内存.?转储|应急.?响应.?取证|手机.?取证|磁盘.?取证|autopsy|sleuth|encase|dump.?内存|内存.?dump|应急.?响应|incident.?response",
+          "exclude": "ctf|misc|夺旗",
+          "note": "应急响应/内存转储归数字取证；ctf-apk-diag B类：CTF/misc语境不抢（C23回R41）"
+        },
+        {
+          "must": "被入侵了|异常外连|半夜.{0,8}外连|流量包.{0,10}还原|系统记录.{0,6}还原|内存和日志",
+          "mustAll": [
+            "内存|日志|入侵|外连|镜像|流量|取证|主机|机器|电脑|磁盘"
+          ],
+          "note": "forensics SKILL.md 入侵主机内存日志取证/异常外连溯源；约束取证语境"
+        },
+        {
+          "must": "往外传东西|往外传.{0,6}数据|捋成时间线|捋.{0,6}时间线|时间线.{0,6}(捋|还原)",
+          "mustAll": [
+            "日志|主机|机器|半夜|外传|入侵|取证"
+          ],
+          "note": "forensics SKILL.md 异常外传日志时间线；约束取证语境"
+        },
+        {
+          "must": "开不了机|盘接下来看|发生过什么",
+          "mustAll": [
+            "主机|盘|开不了机|搞过|发生"
+          ],
+          "note": "canon-gap N063：主机开不了机盘取证（SKILL磁盘/主机取证）"
+        },
+        {
+          "must": "空白.{0,6}被擦|按时间排出来|还原.{0,6}操作",
+          "mustAll": [
+            "日志|空白|擦|时间|还原|排"
+          ],
+          "note": "canon-gap N064：日志被擦按时间还原（SKILL日志时间线取证）"
+        }
       ]
     },
     "R26": {
       "label": "Code audit / SAST",
       "skill": "code-audit/SKILL.md",
       "keywords": [
-        { "must": "code.?audit|sast|semgrep|codeql|source.?review|白盒|代码.?审计|静态.?应用.?安全" },
-        { "must": "审查", "mustAll": ["代码|code|白盒|sast|semgrep|codeql"], "note": "code-audit SKILL.md: 安全审查/白盒审计；约束代码语境，防吸走案件审查/合同审查" },
-        { "must": "审.{0,6}代码|审计.{0,8}代码|代码.{0,12}(漏洞|缺陷|审计|审查|白盒)|看.{0,6}代码.{0,8}(漏洞|缺陷)", "note": "口语 审代码/代码漏洞/对代码做审计；SKILL.md适用场景 危险API/注入点/鉴权缺失" },
-        { "must": "硬编码.?(密钥|密码)|危险.?api|sql.?拼接|鉴权.?缺失", "note": "code-audit SKILL.md: 危险API/注入点/鉴权缺失/密钥处理" },
-        { "must": "仓库代码|代码过一遍|过一遍代码|上线前.{0,12}代码|老项目.{0,10}(源码|代码)|源码都在|接手.{0,10}(项目|代码)|pr.?diff|review.{0,12}pr.{0,6}diff|before we merge", "note": "code-audit SKILL.md 白盒审计/PR差分审查/源码范围" },
-        { "must": "合进去之前|合入之前.{0,6}审|挑毛病", "mustAll": ["代码|模块|登录|pr|合并|合入|审|漏洞"], "note": "code-audit SKILL.md 合入前代码审查；约束代码语境防吸走通用挑错" },
-        { "must": "合并之前.{0,6}审|改的东西审一遍|挑.{0,6}毛病", "mustAll": ["合并|审|改|毛病"], "note": "canon-gap N066：合并前审改挑可利用毛病（SKILL白盒审计/PR差分审查；{0,6}收合并之前与挑挑…毛病）" }
+        {
+          "must": "code.?audit|sast|semgrep|codeql|source.?review|白盒|代码.?审计|静态.?应用.?安全"
+        },
+        {
+          "must": "审查",
+          "mustAll": [
+            "代码|code|白盒|sast|semgrep|codeql"
+          ],
+          "note": "code-audit SKILL.md: 安全审查/白盒审计；约束代码语境，防吸走案件审查/合同审查"
+        },
+        {
+          "must": "审.{0,6}代码|审计.{0,8}代码|代码.{0,12}(漏洞|缺陷|审计|审查|白盒)|看.{0,6}代码.{0,8}(漏洞|缺陷)",
+          "note": "口语 审代码/代码漏洞/对代码做审计；SKILL.md适用场景 危险API/注入点/鉴权缺失"
+        },
+        {
+          "must": "硬编码.?(密钥|密码)|危险.?api|sql.?拼接|鉴权.?缺失",
+          "note": "code-audit SKILL.md: 危险API/注入点/鉴权缺失/密钥处理"
+        },
+        {
+          "must": "仓库代码|代码过一遍|过一遍代码|上线前.{0,12}代码|老项目.{0,10}(源码|代码)|源码都在|接手.{0,10}(项目|代码)|pr.?diff|review.{0,12}pr.{0,6}diff|before we merge",
+          "note": "code-audit SKILL.md 白盒审计/PR差分审查/源码范围"
+        },
+        {
+          "must": "合进去之前|合入之前.{0,6}审|挑毛病",
+          "mustAll": [
+            "代码|模块|登录|pr|合并|合入|审|漏洞"
+          ],
+          "note": "code-audit SKILL.md 合入前代码审查；约束代码语境防吸走通用挑错"
+        },
+        {
+          "must": "合并之前.{0,6}审|改的东西审一遍|挑.{0,6}毛病",
+          "mustAll": [
+            "合并|审|改|毛病"
+          ],
+          "note": "canon-gap N066：合并前审改挑可利用毛病（SKILL白盒审计/PR差分审查；{0,6}收合并之前与挑挑…毛病）"
+        }
       ]
     },
     "R27": {
       "label": "Threat hunting",
       "skill": "threat-hunting/SKILL.md",
       "keywords": [
-        { "must": "threat.?hunt|detection.?engineer|blue.?team|sigma.?rule|(?<![a-z0-9_])sigma(?![a-z0-9_])|威胁.?狩猎|检测.?工程|蓝队.?狩猎|检测.?规则" },
-        { "must": "半夜.{0,6}登录|日志里猎|猎一猎|误报.{0,8}规则|调调规则|顺着线索|漏网的|写.{0,6}检测规则|检测规则.{0,10}捞|这类行为.{0,6}捞|捞出来", "mustAll": ["登录|告警|日志|规则|线索|狩猎|蓝队|siem|猎|检测|外连|捞"], "note": "hunting SKILL.md 假说狩猎/告警调优误报分析；约束蓝队语境。口语「为半夜往外连写检测规则捞出这类行为」同族，与 R25 取证叠票胜出" }
+        {
+          "must": "threat.?hunt|detection.?engineer|blue.?team|sigma.?rule|(?<![a-z0-9_])sigma(?![a-z0-9_])|威胁.?狩猎|检测.?工程|蓝队.?狩猎|检测.?规则"
+        },
+        {
+          "must": "半夜.{0,6}登录|日志里猎|猎一猎|误报.{0,8}规则|调调规则|顺着线索|漏网的|写.{0,6}检测规则|检测规则.{0,10}捞|这类行为.{0,6}捞|捞出来",
+          "mustAll": [
+            "登录|告警|日志|规则|线索|狩猎|蓝队|siem|猎|检测|外连|捞"
+          ],
+          "note": "hunting SKILL.md 假说狩猎/告警调优误报分析；约束蓝队语境。口语「为半夜往外连写检测规则捞出这类行为」同族，与 R25 取证叠票胜出"
+        }
       ]
     },
     "R44": {
       "label": "Threat intelligence / OSINT",
       "skill": "threat-intelligence/SKILL.md",
       "keywords": [
-        { "must": "(?<![a-z0-9_])osint(?![a-z0-9_])|open.?source.?intelligence|threat.?intelligence|(?<![a-z0-9_])cti(?![a-z0-9_])|ioc.?enrichment|indicator.?enrichment|威胁.?情报|开源.?情报|ioc.?扩充|ioc.?富化" },
-        { "must": "twitter|tweet|x\\.com|x.?post|推文|社交.?媒体", "mustAll": ["ioc|threat|malware|campaign|actor|phish|scam|impersonat|indicator|情报|威胁|恶意|钓鱼|诈骗|仿冒"], "note": "要求安全上下文，避免把通用社交分析路由到威胁情报" },
-        { "must": "有没有恶名|域名.{0,8}恶名|公开渠道.{0,6}查|传.{0,6}截图|溯.{0,4}源头|截图.{0,6}溯源|网上.{0,8}恶名", "mustAll": ["域名|ip|截图|源头|公开|网上|情报|威胁"], "note": "intel SKILL.md 公开来源IOC/溯源核验；约束情报语境" },
-        { "must": "网上传得到处|最早从哪发出|钓鱼域名|新的.{0,4}钓鱼|域名.{0,8}告警|告警.{0,8}对上", "mustAll": ["截图|网上|传|最早|发出|推|钓鱼|域名|告警|对|情报|ioc|指标"], "note": "canon-gap N071/N098：截图网上传找最早发出 + 口语「推上有人传新的钓鱼域名，想跟已有告警对上」（SKILL公开来源IOC富化/溯源核验）" }
+        {
+          "must": "(?<![a-z0-9_])osint(?![a-z0-9_])|open.?source.?intelligence|threat.?intelligence|(?<![a-z0-9_])cti(?![a-z0-9_])|ioc.?enrichment|indicator.?enrichment|威胁.?情报|开源.?情报|ioc.?扩充|ioc.?富化"
+        },
+        {
+          "must": "twitter|tweet|x\\.com|x.?post|推文|社交.?媒体",
+          "mustAll": [
+            "ioc|threat|malware|campaign|actor|phish|scam|impersonat|indicator|情报|威胁|恶意|钓鱼|诈骗|仿冒"
+          ],
+          "note": "要求安全上下文，避免把通用社交分析路由到威胁情报"
+        },
+        {
+          "must": "有没有恶名|域名.{0,8}恶名|公开渠道.{0,6}查|传.{0,6}截图|溯.{0,4}源头|截图.{0,6}溯源|网上.{0,8}恶名",
+          "mustAll": [
+            "域名|ip|截图|源头|公开|网上|情报|威胁"
+          ],
+          "note": "intel SKILL.md 公开来源IOC/溯源核验；约束情报语境"
+        },
+        {
+          "must": "网上传得到处|最早从哪发出|钓鱼域名|新的.{0,4}钓鱼|域名.{0,8}告警|告警.{0,8}对上",
+          "mustAll": [
+            "截图|网上|传|最早|发出|推|钓鱼|域名|告警|对|情报|ioc|指标"
+          ],
+          "note": "canon-gap N071/N098：截图网上传找最早发出 + 口语「推上有人传新的钓鱼域名，想跟已有告警对上」（SKILL公开来源IOC富化/溯源核验）"
+        }
       ]
     },
     "R28": {
       "label": "OT / ICS",
       "skill": "ot-ics/SKILL.md",
       "keywords": [
-        { "must": "(?<![a-z0-9_])ot(?![a-z0-9_])|(?<![a-z0-9_])ics(?![a-z0-9_])|scada|plc(?![a-z0-9_])|modbus|dnp3|s7comm|purdue|工控|工业.?控制|ot/?ics", "note": "(?<![a-z0-9_])ot(?![a-z0-9_]) 词边界避免 forensics 误伤" },
-        { "must": "控制器.{0,10}(直连|暴露|风险)|工程师站|触摸屏|人机界面|办公网.{0,10}(直连|连)|从办公网.{0,6}连|组态.{0,6}网", "mustAll": ["控制器|厂|工控|scada|plc|组态|工程师站|触摸|hmi|办公网|生产"], "note": "ot SKILL.md 工程师站/HMI/IT-OT边界暴露；约束工控语境" }
+        {
+          "must": "(?<![a-z0-9_])ot(?![a-z0-9_])|(?<![a-z0-9_])ics(?![a-z0-9_])|scada|plc(?![a-z0-9_])|modbus|dnp3|s7comm|purdue|工控|工业.?控制|ot/?ics",
+          "note": "(?<![a-z0-9_])ot(?![a-z0-9_]) 词边界避免 forensics 误伤"
+        },
+        {
+          "must": "控制器.{0,10}(直连|暴露|风险)|工程师站|触摸屏|人机界面|办公网.{0,10}(直连|连)|从办公网.{0,6}连|组态.{0,6}网",
+          "mustAll": [
+            "控制器|厂|工控|scada|plc|组态|工程师站|触摸|hmi|办公网|生产"
+          ],
+          "note": "ot SKILL.md 工程师站/HMI/IT-OT边界暴露；约束工控语境"
+        }
       ]
     },
     "R29": {
       "label": "Wi-Fi / wireless",
       "skill": "wifi-wireless/SKILL.md",
       "keywords": [
-        { "must": "wifi|wi-?fi|aircrack|airmon|wpa.?handshake|wireless.?pentest|无线.?渗透|wifi.?攻击" },
-        { "must": "rogue.?aps?|handshakes|capture handshakes|钓鱼.?热点|开放热点|谁架的|扫一圈.{0,8}热点", "note": "wifi SKILL.md 流氓AP/钓鱼热点/握手采集" },
-        { "must": "握手包|pmkid|抓握手|握手采集|deauth", "note": "wifi SKILL.md 握手采集/离线评估" },
-        { "must": "握手.{0,6}那几包|离线看看强度", "mustAll": ["无线|握手|离线|强度|包"], "note": "canon-gap N075：无线握手包离线强度（SKILL握手采集/离线评估；{0,6}收握手的那几包）" },
-        { "must": "门户.{0,6}(绕过|有坑|安全)|上网门户|portal.{0,6}bypass|captive", "mustAll": ["wifi|热点|无线|门户|上网|portal"], "note": "wifi SKILL.md 无线门户安全；约束无线语境" }
+        {
+          "must": "wifi|wi-?fi|aircrack|airmon|wpa.?handshake|wireless.?pentest|无线.?渗透|wifi.?攻击"
+        },
+        {
+          "must": "rogue.?aps?|handshakes|capture handshakes|钓鱼.?热点|开放热点|谁架的|扫一圈.{0,8}热点",
+          "note": "wifi SKILL.md 流氓AP/钓鱼热点/握手采集"
+        },
+        {
+          "must": "握手包|pmkid|抓握手|握手采集|deauth",
+          "note": "wifi SKILL.md 握手采集/离线评估"
+        },
+        {
+          "must": "握手.{0,6}那几包|离线看看强度",
+          "mustAll": [
+            "无线|握手|离线|强度|包"
+          ],
+          "note": "canon-gap N075：无线握手包离线强度（SKILL握手采集/离线评估；{0,6}收握手的那几包）"
+        },
+        {
+          "must": "门户.{0,6}(绕过|有坑|安全)|上网门户|portal.{0,6}bypass|captive",
+          "mustAll": [
+            "wifi|热点|无线|门户|上网|portal"
+          ],
+          "note": "wifi SKILL.md 无线门户安全；约束无线语境"
+        }
       ]
     },
     "R30": {
       "label": "Browser extension reverse",
       "skill": "browser-extension-reverse/SKILL.md",
       "keywords": [
-        { "must": "browser.?extension|chrome.?extension|(?<![a-z0-9_])crx(?![a-z0-9_])|(?<![a-z0-9_])xpi(?![a-z0-9_])|mv3.?extension|浏览器.?扩展|chrome.?扩展" },
-        { "must": "油猴|(?<![a-z0-9_])tampermonkey(?![a-z0-9_])|content.?script|background.?脚本|扩展.?权限", "note": "browser-extension SKILL.md: 后台脚本/content_script/权限面" },
-        { "must": "浏览器.{0,8}插件|插件.{0,10}(发请求|权限|偷偷|后台)|下了个扩展|装的.{0,6}扩展|扩展.{0,12}(私货|夹带|权限|发请求)|background.?script", "mustAll": ["浏览器|chrome|firefox|edge|扩展|插件|crx|manifest|权限|后台|background|add.?on"], "note": "ext SKILL.md 扩展包体/manifest/权限面/后台脚本；约束浏览器扩展语境防吸走普通网页JS" },
-        { "must": "add.?on", "mustAll": ["chrome|firefox|browser|extension|permission|background"], "note": "ext SKILL.md Chrome/Firefox扩展分析；约束浏览器语境" },
-        { "must": "装的东西多了|冒出计划外.{0,6}请求|夹了私货", "mustAll": ["浏览器|网页|请求|装|打开"], "note": "canon-gap N076：浏览器装物多冒计划外请求（SKILL扩展权限面/后台脚本）" }
+        {
+          "must": "browser.?extension|chrome.?extension|(?<![a-z0-9_])crx(?![a-z0-9_])|(?<![a-z0-9_])xpi(?![a-z0-9_])|mv3.?extension|浏览器.?扩展|chrome.?扩展"
+        },
+        {
+          "must": "油猴|(?<![a-z0-9_])tampermonkey(?![a-z0-9_])|content.?script|background.?脚本|扩展.?权限",
+          "note": "browser-extension SKILL.md: 后台脚本/content_script/权限面"
+        },
+        {
+          "must": "浏览器.{0,8}插件|插件.{0,10}(发请求|权限|偷偷|后台)|下了个扩展|装的.{0,6}扩展|扩展.{0,12}(私货|夹带|权限|发请求)|background.?script",
+          "mustAll": [
+            "浏览器|chrome|firefox|edge|扩展|插件|crx|manifest|权限|后台|background|add.?on"
+          ],
+          "note": "ext SKILL.md 扩展包体/manifest/权限面/后台脚本；约束浏览器扩展语境防吸走普通网页JS"
+        },
+        {
+          "must": "add.?on",
+          "mustAll": [
+            "chrome|firefox|browser|extension|permission|background"
+          ],
+          "note": "ext SKILL.md Chrome/Firefox扩展分析；约束浏览器语境"
+        },
+        {
+          "must": "装的东西多了|冒出计划外.{0,6}请求|夹了私货",
+          "mustAll": [
+            "浏览器|网页|请求|装|打开"
+          ],
+          "note": "canon-gap N076：浏览器装物多冒计划外请求（SKILL扩展权限面/后台脚本）"
+        }
       ]
     },
     "R31": {
       "label": "macOS / Mach-O reverse",
       "skill": "macos-reverse/SKILL.md",
       "keywords": [
-        { "must": "macos|mach-?o|codesign|objective-?c|swift.?reverse|xpc|mac.?逆向|苹果.?桌面" },
-        { "must": "launchagent|dylib|公证.?绕过|mac.?木马|(?<![a-z0-9_])tcc(?![a-z0-9_])|(?<![a-z0-9_])jtool2(?![a-z0-9_])", "note": "macos SKILL.md: LaunchAgent/dylib/公证签名/macOS恶意软件/TCC/jtool2" },
-        { "must": "没.?签名|未签名|自启动|launchdaemon|app.?bundle|隐私.?权限|dropped a launchdaemon", "mustAll": ["苹果|mac|app|dmg|pkg|安装包|程序|工具|权限|bundle|daemon"], "note": "macos SKILL.md 签名/LaunchDaemon/自启动/TCC权限行为分析；约束苹果平台语境" }
+        {
+          "must": "macos|mach-?o|codesign|objective-?c|swift.?reverse|xpc|mac.?逆向|苹果.?桌面"
+        },
+        {
+          "must": "launchagent|dylib|公证.?绕过|mac.?木马|(?<![a-z0-9_])tcc(?![a-z0-9_])|(?<![a-z0-9_])jtool2(?![a-z0-9_])",
+          "note": "macos SKILL.md: LaunchAgent/dylib/公证签名/macOS恶意软件/TCC/jtool2"
+        },
+        {
+          "must": "没.?签名|未签名|自启动|launchdaemon|app.?bundle|隐私.?权限|dropped a launchdaemon",
+          "mustAll": [
+            "苹果|mac|app|dmg|pkg|安装包|程序|工具|权限|bundle|daemon"
+          ],
+          "note": "macos SKILL.md 签名/LaunchDaemon/自启动/TCC权限行为分析；约束苹果平台语境"
+        }
       ]
     },
     "R32": {
       "label": "Thick client security",
       "skill": "thick-client/SKILL.md",
       "keywords": [
-        { "must": "thick.?client|desktop.?client|electron.?app|winforms|wpf|厚客户端|桌面.?客户端" },
-        { "must": "session.?tokens|caches session|skips cert checks|tokens on disk|电脑端软件|自动更新.{0,6}(不校验|劫持)|不校验签名|更新.{0,6}劫持|本地.{0,6}明文", "mustAll": ["desktop|app|client|disk|cert|token|电脑|软件|更新|签名|信任|本地"], "note": "thick SKILL.md 本地存储/更新通道签名验证/信任边界；约束桌面客户端语境" },
-        { "must": "没加密.{0,8}(翻|看|读)|sqlite.{0,6}没加密|聊天记录.{0,6}本地|本地sqlite|本地.{0,6}数据.{0,8}(存|放|散|到)|数据.{0,6}存得到处|跟服务器.{0,6}说|说了啥", "mustAll": ["本地|客户端|sqlite|桌面|电脑端|软件|app|数据|服务器|明文|存"], "note": "thick SKILL.md 本地存储明文；约束桌面客户端语境。口语「炒股软件本地数据到处存，想看它跟服务器说了啥」同族" }
+        {
+          "must": "thick.?client|desktop.?client|electron.?app|winforms|wpf|厚客户端|桌面.?客户端"
+        },
+        {
+          "must": "session.?tokens|caches session|skips cert checks|tokens on disk|电脑端软件|自动更新.{0,6}(不校验|劫持)|不校验签名|更新.{0,6}劫持|本地.{0,6}明文",
+          "mustAll": [
+            "desktop|app|client|disk|cert|token|电脑|软件|更新|签名|信任|本地"
+          ],
+          "note": "thick SKILL.md 本地存储/更新通道签名验证/信任边界；约束桌面客户端语境"
+        },
+        {
+          "must": "没加密.{0,8}(翻|看|读)|sqlite.{0,6}没加密|聊天记录.{0,6}本地|本地sqlite|本地.{0,6}数据.{0,8}(存|放|散|到)|数据.{0,6}存得到处|跟服务器.{0,6}说|说了啥",
+          "mustAll": [
+            "本地|客户端|sqlite|桌面|电脑端|软件|app|数据|服务器|明文|存"
+          ],
+          "note": "thick SKILL.md 本地存储明文；约束桌面客户端语境。口语「炒股软件本地数据到处存，想看它跟服务器说了啥」同族"
+        }
       ]
     },
     "R33": {
       "label": "Go / Rust reverse",
       "skill": "go-rust-reverse/SKILL.md",
       "keywords": [
-        { "must": "(?<![a-z0-9_])golang(?![a-z0-9_])|(?<![a-z0-9_])rustc(?![a-z0-9_])|go.?binary|go.?二进|go.?语言|go.?程序|stripped.?go|gore.?sym|go.?malware|rust.?binary|go.?逆向|rust.?逆向" },
-        { "must": "go.?编译|rust.?编译|符号.{0,6}(剥|剥离)|剥.{0,4}符号|函数都认不出来|go.?写的|rust.?写的|pclntab|panic.{0,6}字符串|go.?后门", "note": "go-rust SKILL.md 剥离符号/pclntab/panic字符串/Go恶意软件" },
-        { "must": "新语言编出来|报错里带.{0,6}字符串|唯一的线索", "mustAll": ["样本|语言|编译|报错|字符串|编|线索"], "note": "canon-gap N083：新语言编译产物报错字符串（SKILL剥离符号/panic字符串/Go恶意软件）" }
+        {
+          "must": "(?<![a-z0-9_])golang(?![a-z0-9_])|(?<![a-z0-9_])rustc(?![a-z0-9_])|go.?binary|go.?二进|go.?语言|go.?程序|stripped.?go|gore.?sym|go.?malware|rust.?binary|go.?逆向|rust.?逆向"
+        },
+        {
+          "must": "go.?编译|rust.?编译|符号.{0,6}(剥|剥离)|剥.{0,4}符号|函数都认不出来|go.?写的|rust.?写的|pclntab|panic.{0,6}字符串|go.?后门",
+          "note": "go-rust SKILL.md 剥离符号/pclntab/panic字符串/Go恶意软件"
+        },
+        {
+          "must": "新语言编出来|报错里带.{0,6}字符串|唯一的线索",
+          "mustAll": [
+            "样本|语言|编译|报错|字符串|编|线索"
+          ],
+          "note": "canon-gap N083：新语言编译产物报错字符串（SKILL剥离符号/panic字符串/Go恶意软件）"
+        }
       ]
     },
     "R34": {
       "label": "Hardware / debug interfaces",
       "skill": "hardware-security/SKILL.md",
       "keywords": [
-        { "must": "uart|jtag|swd|debug.?pad|flashrom|硬件.?调试|串口.?shell|芯片.?提取|usb.?逆向|usb.?设备", "note": "USB 设备逆向归硬件调试接口" },
-        { "must": "拆机|串口.?日志|启动.?日志|波特率|读.?flash|flash.?提取|引导.?打断|(?<![a-z0-9_])jlink(?![a-z0-9_])|逻辑分析仪", "note": "hardware SKILL.md: 拆解设备/只读日志/波特率/Flash提取/引导打断/J-Link" },
-        { "must": "板子|排针|调试口|serial.?console|router.?board|闪存.?芯片|芯片.{0,8}读出|console口|没标的.{0,6}(排针|测试点)|找.{0,6}串口", "note": "hardware SKILL.md 调试口发现/串口console/拆机Flash提取" },
-        { "must": "提固件|读出.{0,6}(固件|镜像|flash)|提取镜像", "mustAll": ["拆|板|芯片|硬件|读出|flash"], "note": "hardware SKILL.md 拆机提取Flash镜像交接firmware；约束物理提取语境" }
+        {
+          "must": "uart|jtag|swd|debug.?pad|flashrom|硬件.?调试|串口.?shell|芯片.?提取|usb.?逆向|usb.?设备",
+          "note": "USB 设备逆向归硬件调试接口"
+        },
+        {
+          "must": "拆机|串口.?日志|启动.?日志|波特率|读.?flash|flash.?提取|引导.?打断|(?<![a-z0-9_])jlink(?![a-z0-9_])|逻辑分析仪",
+          "note": "hardware SKILL.md: 拆解设备/只读日志/波特率/Flash提取/引导打断/J-Link"
+        },
+        {
+          "must": "板子|排针|调试口|serial.?console|router.?board|闪存.?芯片|芯片.{0,8}读出|console口|没标的.{0,6}(排针|测试点)|找.{0,6}串口",
+          "note": "hardware SKILL.md 调试口发现/串口console/拆机Flash提取"
+        },
+        {
+          "must": "提固件|读出.{0,6}(固件|镜像|flash)|提取镜像",
+          "mustAll": [
+            "拆|板|芯片|硬件|读出|flash"
+          ],
+          "note": "hardware SKILL.md 拆机提取Flash镜像交接firmware；约束物理提取语境"
+        }
       ]
     },
     "R35": {
       "label": "Database security",
       "skill": "database-security/SKILL.md",
       "keywords": [
-        { "must": "database.?secur|(?<![a-z0-9_])mysql(?![a-z0-9_])|(?<![a-z0-9_])postgres|mongodb|redis.?secur|mssql|数据库.?安全|数据库.?渗透" },
-        { "must": "暴露在公网|直接暴露.{0,6}(公网|外网)|弱口令|公网.{0,6}(访问|暴露)|账号权限过大|权限大.{0,8}能执行|执行系统命令|数据库.{0,8}暴露", "mustAll": ["数据库|db|mysql|postgres|redis|mongo|账号|udf|xp_cmdshell|dba|sql"], "note": "db SKILL.md 暴露面/弱口令/权限过大/危险功能；约束数据库语境" },
-        { "must": "露在公网|密码还是默认", "mustAll": ["数据库|公网|密码|默认|露"], "note": "canon-gap N086：数据库露公网默认密码（SKILL暴露面/弱口令）" },
-        { "must": "权力大得能调起|连库.{0,6}身份", "mustAll": ["连库|身份|权力|权限|系统|收紧|库"], "note": "canon-gap N087：连库身份权限过大调系统（SKILL权限过大/危险功能；权力大口语）" }
+        {
+          "must": "database.?secur|(?<![a-z0-9_])mysql(?![a-z0-9_])|(?<![a-z0-9_])postgres|mongodb|redis.?secur|mssql|数据库.?安全|数据库.?渗透"
+        },
+        {
+          "must": "暴露在公网|直接暴露.{0,6}(公网|外网)|弱口令|公网.{0,6}(访问|暴露)|账号权限过大|权限大.{0,8}能执行|执行系统命令|数据库.{0,8}暴露",
+          "mustAll": [
+            "数据库|db|mysql|postgres|redis|mongo|账号|udf|xp_cmdshell|dba|sql"
+          ],
+          "note": "db SKILL.md 暴露面/弱口令/权限过大/危险功能；约束数据库语境"
+        },
+        {
+          "must": "露在公网|密码还是默认",
+          "mustAll": [
+            "数据库|公网|密码|默认|露"
+          ],
+          "note": "canon-gap N086：数据库露公网默认密码（SKILL暴露面/弱口令）"
+        },
+        {
+          "must": "权力大得能调起|连库.{0,6}身份",
+          "mustAll": [
+            "连库|身份|权力|权限|系统|收紧|库"
+          ],
+          "note": "canon-gap N087：连库身份权限过大调系统（SKILL权限过大/危险功能；权力大口语）"
+        }
       ]
     },
     "R36": {
       "label": "Email / phishing analysis",
       "skill": "email-security/SKILL.md",
       "keywords": [
-        { "must": "phish|spf|dkim|dmarc|bec(?![a-z0-9_])|email.?secur|钓鱼.?邮件|邮件.?安全" },
-        { "must": "冒充.{0,8}(老板|打款|财务)|打款.{0,8}(邮件|套路)|mail.?auth|spoofing|发件人.{0,6}伪造|邮件认证.{0,8}配置", "note": "email SKILL.md BEC欺诈模式/发件认证SPF-DKIM-DMARC" }
+        {
+          "must": "phish|spf|dkim|dmarc|bec(?![a-z0-9_])|email.?secur|钓鱼.?邮件|邮件.?安全"
+        },
+        {
+          "must": "冒充.{0,8}(老板|打款|财务)|打款.{0,8}(邮件|套路)|mail.?auth|spoofing|发件人.{0,6}伪造|邮件认证.{0,8}配置",
+          "note": "email SKILL.md BEC欺诈模式/发件认证SPF-DKIM-DMARC"
+        }
       ]
     },
     "R37": {
       "label": "Identity federation (SAML/OIDC)",
       "skill": "identity-federation/SKILL.md",
       "keywords": [
-        { "must": "saml|oidc|openid.?connect|oauth2|sso(?![a-z0-9_])|联邦.?身份|单点.?登录" },
-        { "must": "第三方登录|令牌.{0,8}审|对接完.{0,10}不踏实|回调地址.{0,8}利用|跳来跳去.{0,6}登录", "mustAll": ["登录|令牌|单点|oauth|对接|sso|saml|回调|jwt"], "note": "identity SKILL.md SSO/令牌/回调错配；约束联邦登录语境防吸走API-JWT查询" },
-        { "must": "跳回去.{0,6}地址|统一登录.{0,6}跳|一次登录.{0,8}到处|到处.{0,4}逛|异地.{0,4}顶号|被顶号|顶下线", "mustAll": ["登录|跳|地址|统一|票据|顶号|会话|令牌|联邦|sso|单点"], "note": "canon-gap N091/N096：统一登录跳回地址可做手脚 + 口语「一次登录到处逛的系统被异地顶号，查票据」（SKILL SSO 会话/令牌错配）" }
+        {
+          "must": "saml|oidc|openid.?connect|oauth2|sso(?![a-z0-9_])|联邦.?身份|单点.?登录"
+        },
+        {
+          "must": "第三方登录|令牌.{0,8}审|对接完.{0,10}不踏实|回调地址.{0,8}利用|跳来跳去.{0,6}登录",
+          "mustAll": [
+            "登录|令牌|单点|oauth|对接|sso|saml|回调|jwt"
+          ],
+          "note": "identity SKILL.md SSO/令牌/回调错配；约束联邦登录语境防吸走API-JWT查询"
+        },
+        {
+          "must": "跳回去.{0,6}地址|统一登录.{0,6}跳|一次登录.{0,8}到处|到处.{0,4}逛|异地.{0,4}顶号|被顶号|顶下线",
+          "mustAll": [
+            "登录|跳|地址|统一|票据|顶号|会话|令牌|联邦|sso|单点"
+          ],
+          "note": "canon-gap N091/N096：统一登录跳回地址可做手脚 + 口语「一次登录到处逛的系统被异地顶号，查票据」（SKILL SSO 会话/令牌错配）"
+        }
       ]
     },
     "R38": {
       "label": "RF / SDR research",
       "skill": "radio-sdr/SKILL.md",
       "keywords": [
-        { "must": "(?<![a-z0-9_])sdr(?![a-z0-9_])|hackrf|rtl-?sdr|gnu.?radio|(?<![a-z0-9_])urh(?![a-z0-9_])|射频|软件.?无线电|蓝牙|bluetooth|(?<![a-z0-9_])ble(?![a-z0-9_])", "note": "蓝牙/BLE 归射频研究" },
-        { "must": "433.?mhz|433.?信号|(?<![a-z0-9_])ads-?b(?![a-z0-9_])|遥控.?信号|无人机.?图传|对讲机", "note": "radio-sdr SKILL.md: 无线遥控/ADS-B协议研究" },
-        { "must": "车钥匙|钥匙信号|信号.{0,8}录下来|录信号|信号重放|重放信号|滚动码|遥控钥匙", "note": "radio-sdr SKILL.md 无线遥控RF接收识别/重放评估" },
-        { "must": "天线收到.{0,6}信号|断断续续.{0,6}解|解出来看看", "mustAll": ["天线|信号|解|收到|楼顶"], "note": "canon-gap N093：天线收信号解出（SKILL RF接收识别）" }
+        {
+          "must": "(?<![a-z0-9_])sdr(?![a-z0-9_])|hackrf|rtl-?sdr|gnu.?radio|(?<![a-z0-9_])urh(?![a-z0-9_])|射频|软件.?无线电|蓝牙|bluetooth|(?<![a-z0-9_])ble(?![a-z0-9_])",
+          "note": "蓝牙/BLE 归射频研究"
+        },
+        {
+          "must": "433.?mhz|433.?信号|(?<![a-z0-9_])ads-?b(?![a-z0-9_])|遥控.?信号|无人机.?图传|对讲机",
+          "note": "radio-sdr SKILL.md: 无线遥控/ADS-B协议研究"
+        },
+        {
+          "must": "车钥匙|钥匙信号|信号.{0,8}录下来|录信号|信号重放|重放信号|滚动码|遥控钥匙",
+          "note": "radio-sdr SKILL.md 无线遥控RF接收识别/重放评估"
+        },
+        {
+          "must": "天线收到.{0,6}信号|断断续续.{0,6}解|解出来看看",
+          "mustAll": [
+            "天线|信号|解|收到|楼顶"
+          ],
+          "note": "canon-gap N093：天线收信号解出（SKILL RF接收识别）"
+        }
       ]
     },
     "R40": {
       "label": "Case evidence review",
       "skill": "case-review/SKILL.md",
       "keywords": [
-        { "must": "case.?review|case.?audit|evidence.?chain|evidence.?graph|traceability|fixity.?check|证据.?链|证据.?图|可追溯性|案件.?审查|案例.?审计" },
-        { "must": "case.?folder|audit.{0,12}case|evidence.{0,10}links|timeline gaps|每条结论|结论.{0,8}证据|证据.{0,6}撑着|别留窟窿", "mustAll": ["case|audit|evidence|timeline|handoff|结论|证据|报告|审查|folder"], "note": "case SKILL.md 证据链可追溯性/结论证据支撑审查；约束案件审查语境" },
-        { "must": "交接前.{0,6}补|时间线.{0,6}断点|证据之间对不上", "mustAll": ["交接|时间线|断点|证据|补"], "note": "canon-gap N095：交接前时间线断点证据对不上（SKILL证据链时间线缺口审查）" }
+        {
+          "must": "case.?review|case.?audit|evidence.?chain|evidence.?graph|traceability|fixity.?check|证据.?链|证据.?图|可追溯性|案件.?审查|案例.?审计"
+        },
+        {
+          "must": "case.?folder|audit.{0,12}case|evidence.{0,10}links|timeline gaps|每条结论|结论.{0,8}证据|证据.{0,6}撑着|别留窟窿",
+          "mustAll": [
+            "case|audit|evidence|timeline|handoff|结论|证据|报告|审查|folder"
+          ],
+          "note": "case SKILL.md 证据链可追溯性/结论证据支撑审查；约束案件审查语境"
+        },
+        {
+          "must": "交接前.{0,6}补|时间线.{0,6}断点|证据之间对不上",
+          "mustAll": [
+            "交接|时间线|断点|证据|补"
+          ],
+          "note": "canon-gap N095：交接前时间线断点证据对不上（SKILL证据链时间线缺口审查）"
+        }
       ]
     },
     "R41": {
       "label": "CTF sandbox orchestrator",
       "skill": "ctf-sandbox/SKILL.md",
       "keywords": [
-        { "must": "(?<![a-z0-9_])ctf(?![a-z0-9_])|awd|靶场|比赛.?题|夺旗", "exclude": "pwn|(?<![a-z0-9_])rop(?![a-z0-9_])|栈溢出|堆溢出|ret2|新手|入门|组队|分工|攻略|战队|题解整理|writeup汇总", "note": "ctf-apk-diag A类+C类：夺旗裸词接住C06/C09类；入口意图exclude防反向吸走C01–C05（R47已接)" },
-        { "must": "misc|做题|刷题|解题|题解|闯关|打靶|pwn题|re题|web题|crypto题|隐写|取证题|交.?flag|flag.?格式", "mustAll": ["ctf|awd|靶场|夺旗|比赛|pwn|misc|strix|writeup|web题|re题|crypto题|pwn题|注入点|payload|flag"], "exclude": "新手|入门|组队|分工|攻略|战队|题解整理|writeup汇总", "note": "具体做题入口，需CTF语境；pwn专项由R17优先接手；ctf-apk-diag A类 must/mustAll 升级接住C11/C13/C28，exclude同步rule1（C05实际命中本条）" }
+        {
+          "must": "(?<![a-z0-9_])ctf(?![a-z0-9_])|awd|靶场|比赛.?题|夺旗",
+          "exclude": "pwn|(?<![a-z0-9_])rop(?![a-z0-9_])|栈溢出|堆溢出|ret2|新手|入门|组队|分工|攻略|战队|题解整理|writeup汇总",
+          "note": "ctf-apk-diag A类+C类：夺旗裸词接住C06/C09类；入口意图exclude防反向吸走C01–C05（R47已接)"
+        },
+        {
+          "must": "misc|做题|刷题|解题|题解|闯关|打靶|pwn题|re题|web题|crypto题|隐写|取证题|交.?flag|flag.?格式",
+          "mustAll": [
+            "ctf|awd|靶场|夺旗|比赛|pwn|misc|strix|writeup|web题|re题|crypto题|pwn题|注入点|payload|flag"
+          ],
+          "exclude": "新手|入门|组队|分工|攻略|战队|题解整理|writeup汇总",
+          "note": "具体做题入口，需CTF语境；pwn专项由R17优先接手；ctf-apk-diag A类 must/mustAll 升级接住C11/C13/C28，exclude同步rule1（C05实际命中本条）"
+        }
       ]
     },
     "R45": {
       "label": "Binary Ninja reverse",
       "skill": "binary-ninja-reverse/SKILL.md",
       "keywords": [
-        { "must": "binary.?ninja|binaryninja|(?<![a-z0-9_])binja(?![a-z0-9_])|binary[_-]ninja[_-]mcp|hlil|mlil", "note": "Binary Ninja GUI, IL, Python API, MCP, or localhost HTTP integration" },
-        { "must": "中间层(.{0,6}视图)?|中间表示|换个反编译器|不同反编译器|cross.?check.{0,12}data.?flow|commercial.{0,12}decompiler|free decompiler.{0,15}commercial|交叉验证", "mustAll": ["数据流|data.?flow|交叉|中间层|中间表示|hlil|mlil|llil|反编译|decompil"], "note": "binja SKILL.md ILs辅助数据流分析/独立交叉验证；约束反编译语境防吸走IDA/Ghidra查询" }
+        {
+          "must": "binary.?ninja|binaryninja|(?<![a-z0-9_])binja(?![a-z0-9_])|binary[_-]ninja[_-]mcp|hlil|mlil",
+          "note": "Binary Ninja GUI, IL, Python API, MCP, or localhost HTTP integration"
+        },
+        {
+          "must": "中间层(.{0,6}视图)?|中间表示|换个反编译器|不同反编译器|cross.?check.{0,12}data.?flow|commercial.{0,12}decompiler|free decompiler.{0,15}commercial|交叉验证",
+          "mustAll": [
+            "数据流|data.?flow|交叉|中间层|中间表示|hlil|mlil|llil|反编译|decompil"
+          ],
+          "note": "binja SKILL.md ILs辅助数据流分析/独立交叉验证；约束反编译语境防吸走IDA/Ghidra查询"
+        }
       ]
     },
     "R46": {
       "label": "Web application injection",
       "skill": "community/hack-hub/SKILL.md",
       "keywords": [
-        { "must": "xxe|ssti|prototype.?pollution|request.?smuggling|crlf.?injection|dns.?rebind|host.?header.?attack|clickjacking|cors.?misconfig|dangling.?markup|graphql.?hidden|web.?cache.?deception|web.?injection", "note": "Specialist web topics imported from hack-skills; API/SQLi/SSRF with a stronger canonical route keep their existing route" },
-        { "must": "csrf|跨站请求伪造|xslt.?injection|xslt.?注入|open.?redirect|开放重定向|不安全文件上传|文件上传漏洞|websocket.?安全|反序列化|deserializ|expression.?language.?injection|表达式注入|jndi.?注入|jndi.?injection|csp.?绕过|参数污染|parameter.?pollution|(?<![a-z0-9_])hpp(?![a-z0-9_])", "note": "Natural phrasings for hack-skills specialist records (csrf/xslt/open-redirect/upload/websocket/deserialization/EL/JNDI/CSP/HPP, 1-2 records each); sqli/ssrf/jwt/api families keep canonical routes" }
+        {
+          "must": "xxe|ssti|prototype.?pollution|request.?smuggling|crlf.?injection|dns.?rebind|host.?header.?attack|clickjacking|cors.?misconfig|dangling.?markup|graphql.?hidden|web.?cache.?deception|web.?injection",
+          "note": "Specialist web topics imported from hack-skills; API/SQLi/SSRF with a stronger canonical route keep their existing route"
+        },
+        {
+          "must": "csrf|跨站请求伪造|xslt.?injection|xslt.?注入|open.?redirect|开放重定向|不安全文件上传|文件上传漏洞|websocket.?安全|反序列化|deserializ|expression.?language.?injection|表达式注入|jndi.?注入|jndi.?injection|csp.?绕过|参数污染|parameter.?pollution|(?<![a-z0-9_])hpp(?![a-z0-9_])",
+          "note": "Natural phrasings for hack-skills specialist records (csrf/xslt/open-redirect/upload/websocket/deserialization/EL/JNDI/CSP/HPP, 1-2 records each); sqli/ssrf/jwt/api families keep canonical routes"
+        }
       ]
     },
     "R47": {
       "label": "CTF community hub",
       "skill": "community/ctf-hub/SKILL.md",
       "keywords": [
-        { "must": "ctf.?super|ctf.?beginner|ctf.?brainstorm|ctf.?writeup|ctf.?新手", "note": "Explicit community CTF UX request; generic CTF remains the canonical sandbox route" },
-        { "must": "题解", "mustAll": ["ctf|strix|awd|靶场|夺旗|writeup|比赛"], "note": "题解需CTF社区语境，防吸走数学/算法等通用题解；具体做题走R41，pwn专项走R17" },
-        { "must": "新手|入门|组队|分工|攻略|战队|新手村|刷题|夺旗|新手.?路线", "exclude": "入口", "note": "ctf-apk-diag A类：CTF/APK口语入口意图（新手/组队/战队/刷题/夺旗裸词）；做题语境由R41承载，R41 rule1/rule2已加入口exclude；exclude入口保golden x-gap-beginner（bare新手入口归R0，U9无归属记录不吸入口词）" },
-        { "must": "writeup", "mustAll": ["ctf|比赛|靶场|夺旗|战队"], "note": "ctf-apk-diag A类+B类联动：CTF语境下裸writeup归入口（防R20抢走C10）；mustAll刻意不含writeup自满足，保182-665裸writeup仍归R20" },
-        { "must": "strix|solve.?challenge|挑战调度", "note": "Strix tool-family and challenge-scheduler vocabulary owned by ctf-super-hub (21 strix-* records + solve-challenge of 35); no canonical route claims strix" },
-        { "must": "头脑风暴|brainstorm|自动分流", "mustAll": ["ctf|strix|夺旗|解题|靶场|题解|writeup|新手|分流"], "note": "Community triage UX (brainstorming + ctf-beginner-hub auto-triage records); CTF context required so generic product brainstorming is not absorbed" }
+        {
+          "must": "ctf.?super|ctf.?beginner|ctf.?brainstorm|ctf.?writeup|ctf.?新手",
+          "note": "Explicit community CTF UX request; generic CTF remains the canonical sandbox route"
+        },
+        {
+          "must": "题解",
+          "mustAll": [
+            "ctf|strix|awd|靶场|夺旗|writeup|比赛"
+          ],
+          "note": "题解需CTF社区语境，防吸走数学/算法等通用题解；具体做题走R41，pwn专项走R17"
+        },
+        {
+          "must": "新手|入门|组队|分工|攻略|战队|新手村|刷题|夺旗|新手.?路线",
+          "exclude": "入口",
+          "note": "ctf-apk-diag A类：CTF/APK口语入口意图（新手/组队/战队/刷题/夺旗裸词）；做题语境由R41承载，R41 rule1/rule2已加入口exclude；exclude入口保golden x-gap-beginner（bare新手入口归R0，U9无归属记录不吸入口词）"
+        },
+        {
+          "must": "writeup",
+          "mustAll": [
+            "ctf|比赛|靶场|夺旗|战队"
+          ],
+          "note": "ctf-apk-diag A类+B类联动：CTF语境下裸writeup归入口（防R20抢走C10）；mustAll刻意不含writeup自满足，保182-665裸writeup仍归R20"
+        },
+        {
+          "must": "strix|solve.?challenge|挑战调度",
+          "note": "Strix tool-family and challenge-scheduler vocabulary owned by ctf-super-hub (21 strix-* records + solve-challenge of 35); no canonical route claims strix"
+        },
+        {
+          "must": "头脑风暴|brainstorm|自动分流",
+          "mustAll": [
+            "ctf|strix|夺旗|解题|靶场|题解|writeup|新手|分流"
+          ],
+          "note": "Community triage UX (brainstorming + ctf-beginner-hub auto-triage records); CTF context required so generic product brainstorming is not absorbed"
+        }
       ]
     },
     "R48": {
       "label": "Full-stack delivery workflow",
       "skill": "community/delivery/SKILL.md",
       "keywords": [
-        { "must": "full.?stack.?deliver|全栈.?交付|delivery.?workflow|产品经理.?工作流|项目经理.?工作流|mvp.?实现|前后端联调|交付.?验收", "note": "Optional software-delivery orchestration layer; security actions return to canonical security routes" },
-        { "must": "ci.?cd|交付流程|devops|pipeline|(?<![a-z0-9_])dora(?![a-z0-9_])|milestone.?gate|里程碑门|e2e.?feature|端到端交付|(?<![a-z0-9_])prd(?![a-z0-9_])|需求文档|用户故事|user.?story", "note": "Natural delivery phrasings from ai-fullstack-delivery slugs (ci-cd-pipeline/ci-test-integration/e2e-feature-delivery/devops-engineer/rag-pipeline/dora-metrics/milestone-gate/prd-writing/user-story); bare 交付 excluded per U9 (template connective, no owning record)" }
+        {
+          "must": "full.?stack.?deliver|全栈.?交付|delivery.?workflow|产品经理.?工作流|项目经理.?工作流|mvp.?实现|前后端联调|交付.?验收",
+          "note": "Optional software-delivery orchestration layer; security actions return to canonical security routes"
+        },
+        {
+          "must": "ci.?cd|交付流程|devops|pipeline|(?<![a-z0-9_])dora(?![a-z0-9_])|milestone.?gate|里程碑门|e2e.?feature|端到端交付|(?<![a-z0-9_])prd(?![a-z0-9_])|需求文档|用户故事|user.?story",
+          "note": "Natural delivery phrasings from ai-fullstack-delivery slugs (ci-cd-pipeline/ci-test-integration/e2e-feature-delivery/devops-engineer/rag-pipeline/dora-metrics/milestone-gate/prd-writing/user-story); bare 交付 excluded per U9 (template connective, no owning record)"
+        }
       ]
     },
     "R49": {
       "label": "APK capability extension",
       "skill": "community/apk-extension/SKILL.md",
       "keywords": [
-        { "must": "apk.?doctor|apk.?capabilit|capability.?matrix|能力矩阵|dex.?patch.?bytes|dexutil|dart.?aot|lsposed|kernelsu|apk.?extension", "note": "Specific capability-registry or advanced APK tooling request; ordinary APK work remains R1; ctf-apk-diag A类追加能力矩阵（A16），protobuf.?raw已拆至独立scoped规则" },
-        { "must": "protobuf.?raw", "mustAll": ["apk|dex|smali|安卓|应用|app"], "note": "ctf-apk-diag C类：protobuf解析须APK语境（A28无APK字样时回R21）；独立成条以免整条加mustAll杀死dexutil/kernelsu等已命中项" },
-        { "must": "debloat|de-ad|去广告|sdk.?移除|ad.?移除|re-sign|重签名|重新签名|改包名|瘦身|dex.?patch|surgical.?dex|repack|anti-tamper|反篡改", "note": "Capability vocabulary of apk-reverse-community-293 (keywords + legacy_description: debloat/de-ad/re-sign/dex patching/surgical/ad-SDK removal/repack/anti-tamper); bare patch/frida/smali/重打包 stay R1" }
+        {
+          "must": "apk.?doctor|apk.?capabilit|capability.?matrix|能力矩阵|dex.?patch.?bytes|dexutil|dart.?aot|lsposed|kernelsu|apk.?extension",
+          "note": "Specific capability-registry or advanced APK tooling request; ordinary APK work remains R1; ctf-apk-diag A类追加能力矩阵（A16），protobuf.?raw已拆至独立scoped规则"
+        },
+        {
+          "must": "protobuf.?raw",
+          "mustAll": [
+            "apk|dex|smali|安卓|应用|app"
+          ],
+          "note": "ctf-apk-diag C类：protobuf解析须APK语境（A28无APK字样时回R21）；独立成条以免整条加mustAll杀死dexutil/kernelsu等已命中项"
+        },
+        {
+          "must": "debloat|de-ad|去广告|sdk.?移除|ad.?移除|re-sign|重签名|重新签名|改包名|瘦身|dex.?patch|surgical.?dex|repack|anti-tamper|反篡改",
+          "note": "Capability vocabulary of apk-reverse-community-293 (keywords + legacy_description: debloat/de-ad/re-sign/dex patching/surgical/ad-SDK removal/repack/anti-tamper); bare patch/frida/smali/重打包 stay R1"
+        }
       ]
     },
     "R0": {
       "label": "General reverse-engineering",
       "skill": "reverse-engineering/SKILL.md",
       "keywords": [
-        { "must": "ollvm|anti-?debug|unicorn|angr|gdb|deobfuscat|控制流平坦|反调试|unity|il2cpp|游戏.?逆向|game.?reverse|anti-?cheat|反作弊", "note": "Unity/游戏逆向归通用逆向 (seed-014)" },
-        { "must": "frida", "exclude": "(?<![a-z0-9_])apk(?![a-z0-9_])|smali|jadx|android|安卓", "note": "APK 语境下 frida 归 R1" },
-        { "must": "reverse|逆向", "exclude": "apk|js.?reverse|ios|mobile|\\.net|firmware|malware|安卓|固件|恶意|protocol|ghidra|extension|macos|mach|golang|rust|工控|厚客户端|取证|协议|扩展", "note": "泛逆向兜底；命中更具体域时让位" }
+        {
+          "must": "ollvm|anti-?debug|unicorn|angr|gdb|deobfuscat|控制流平坦|反调试|unity|il2cpp|游戏.?逆向|game.?reverse|anti-?cheat|反作弊",
+          "note": "Unity/游戏逆向归通用逆向 (seed-014)"
+        },
+        {
+          "must": "frida",
+          "exclude": "(?<![a-z0-9_])apk(?![a-z0-9_])|smali|jadx|android|安卓",
+          "note": "APK 语境下 frida 归 R1"
+        },
+        {
+          "must": "reverse|逆向",
+          "exclude": "apk|js.?reverse|ios|mobile|\\.net|firmware|malware|安卓|固件|恶意|protocol|ghidra|extension|macos|mach|golang|rust|工控|厚客户端|取证|协议|扩展",
+          "note": "泛逆向兜底；命中更具体域时让位"
+        }
+      ]
+    },
+    "R50": {
+      "label": "Web protocol reverse",
+      "skill": "web-protocol-reverse/SKILL.md",
+      "keywords": [
+        {
+          "must": "纯 ?python ?(重建|移植|复现)|browser-free|去浏览器依赖|cookie ?(溯源|来源|provenance)|jsvmp|js ?虚拟化|请求签名 ?(移植|重建)|a_bogus|x-bogus|msToken|反爬 ?(对抗|绕过|分析)|web ?协议 ?(逆向|还原)",
+          "note": "终局判据是「去掉浏览器依赖的纯 Python 采集器」；与 R3 js-reverse 区分：R3 是浏览器内取证，本条是把结果移植成无浏览器采集器"
+        },
+        {
+          "must": "cookie",
+          "mustAll": [
+            "provenance|溯源|来源|写入方|刷新路径|writer|刷新|轮换|rotate|session ?(契约|链)"
+          ],
+          "note": "cookie 溯源是本技能的独有增量（教条 11）"
+        },
+        {
+          "must": "jsvmp|js ?虚拟机|字节码解释器|opcode ?(dispatch|表)",
+          "mustAll": [
+            "js|javascript|前端|网页|web|浏览器|站点|目标"
+          ],
+          "note": "JSVMP 分析方法论；防止吸走 PE 侧自定义 VM（R4 dsl-vm-reverse）"
+        },
+        {
+          "must": "纯 ?python",
+          "mustAll": [
+            "重建|移植|复现|采集器|collector|签名|协议|web|前端|js"
+          ],
+          "note": "纯 Python 重建是终局交付形态，别被普通 Python 提问吸走"
+        },
+        {
+          "must": "分页|翻页|下一页|page|route|路由.{0,4}(切换|变了|换了)|challenge|验证挑战|风控请求|状态.{0,4}(看不懂|校验)",
+          "mustAll": [
+            "接口|endpoint|请求|api|抓|返回|响应|参数|协议|web|网页|网站|前端|js"
+          ],
+          "note": "分页 route pivot 与 challenge 状态建模是本技能 observe/state 两块的独有内容"
+        },
+        {
+          "must": "状态机|握手|预热|e2ee|端到端加密流|有状态流",
+          "mustAll": [
+            "web|网页|网站|前端|js|协议|请求|会话|session|cookie"
+          ],
+          "note": "stateful stream / session contract，归本技能 state 板块"
+        },
+        {
+          "must": "复现|移植|重建|还原|复刻|仿写|重写",
+          "mustAll": [
+            "采集|采集器|爬虫|collector|签名|参数|反爬|风控|协议|web|网页|前端|js|请求"
+          ],
+          "note": "「把某段前端逻辑复现成不依赖浏览器的采集脚本」是本技能的终局交付形态"
+        },
+        {
+          "must": "anti.?bot|reverse.?engineer|reproduce|port|replay|emulate|harvest|recover|signature|signer|bot.?detection|fingerprint|a_bogus|x-bogus|ms.?token|jsvmp|cookie.?provenance|browser.?free|pure.?python|collector|crawler|scraper",
+          "mustAll": [
+            "web|target|site|endpoint|request|api|js|javascript|frontend|node|collector|param|sign|token|cookie|envelope|challenge"
+          ],
+          "note": "英文 query 覆盖：把浏览器端 JS 协议还原成无浏览器依赖的采集器"
+        }
       ]
     }
   },
   "priority": [
-    "R4", "R49", "R1", "R2", "R3", "R30", "R31", "R33", "R5", "R9", "R21",
-    "R22", "R45", "R6", "R7", "R8", "R34", "R28", "R17", "R16", "R18", "R24",
-    "R37", "R23", "R35", "R25", "R44", "R36", "R29", "R38", "R32", "R26", "R27",
-    "R10", "R46", "R11", "R12", "R13", "R14", "R15", "R19", "R40", "R47", "R20", "R39", "R48", "R41", "R0"
+    "R4",
+    "R49",
+    "R1",
+    "R2",
+    "R3",
+    "R30",
+    "R31",
+    "R33",
+    "R5",
+    "R9",
+    "R21",
+    "R22",
+    "R45",
+    "R6",
+    "R7",
+    "R8",
+    "R34",
+    "R28",
+    "R17",
+    "R16",
+    "R18",
+    "R24",
+    "R37",
+    "R23",
+    "R35",
+    "R25",
+    "R44",
+    "R36",
+    "R29",
+    "R38",
+    "R32",
+    "R26",
+    "R27",
+    "R10",
+    "R46",
+    "R11",
+    "R12",
+    "R13",
+    "R14",
+    "R15",
+    "R19",
+    "R40",
+    "R47",
+    "R20",
+    "R39",
+    "R48",
+    "R41",
+    "R50",
+    "R0"
   ]
 }

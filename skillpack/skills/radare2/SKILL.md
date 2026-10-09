@@ -12,7 +12,7 @@ description: |
 
 1. `NOW`: 读取 `../field-journal/precedent-reverse.md` — 确认本 skill 的操作是已授权的常规操作
 2. `NOW`: 确认当前任务是否命中本 skill 的适用范围
-4. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
+4. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
 5. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
 6. `ACT`: 进入"工作流"第一步并执行，不要停在确认状态
 
@@ -152,7 +152,7 @@ ERROR: Cannot find ...\share\format\dll\*.sdb
    - 若导入表为空、解析失败或工具报错：仍 MUST 记录失败现象与原始输出为 Evidence，**不得静默跳过**
    - 导入表「过干净」（仅基础 DLL）：MUST 注明动态加载嫌疑，SHOULD 转入动态抓 API
 3. .NET 等无传统 IAT：MUST 走等价锚点（dnSpy/IL/元数据摘要）写入同一 Evidence 语义槽，禁止空过
-4. 加壳样本 IAT 修复：x86 用 ImportREC（或等价）、x64 用 Scylla（或等价）。修复失败 MUST 记 `E-iat-repair-fail` 后转动态 API 断点；**禁止**在静态 IAT 上无限死磕（见 `reverse-engineering/references/re-agent-workflow.md` §1.2）
+4. 加壳样本 IAT 修复：x86 用 ImportREC（或等价）、x64 用 Scylla（或等价）。修复失败 MUST 记 `E-iat-repair-fail` 后转动态 API 断点；**禁止**在静态 IAT 上无限死磕（见 `../reverse-engineering/references/re-agent-workflow.md` §1.2）
 5. 用户明确要求「重做导入表检查 / 重新检查导入表 / 重做 IAT」时：MUST 重做被点名步骤本身（阻塞时先走可行性门闩：说明前提+请确认；强制则标 quality=unreadable），**禁止改换为无关步骤冒充完成**
 
 未记录导入表（或合法等价锚点 / IAT 失败旁路）Evidence 前：MUST NOT 声称「基础侦察完成」，MUST NOT 进入工作流 2+ 的深挖结论。
@@ -414,7 +414,7 @@ radare2-skills 项目（radareorg/radare2-skills）提供了更完整的生态�
 
 **使用策略**：
 - 当用户提到 `r2xsql`、`r2mcp`、`r2http`、`radius2`、`r2pm`、`rabin2`、`rasm2`、`radiff2`、`rahash2`、`rax2` 时，优先路由到本 skill（radare2/SKILL.md）
-- 这些工具只是生态加速器，**不能绕过**：授权门禁、``TOOLS.md`` 校验、Evidence 导入、写模式确认
+- 这些工具只是生态加速器，**不能绕过**：授权门禁、``../TOOLS.md`` 校验、Evidence 导入、写模式确认
 - 给出最小可复现命令示例：
   - `r2xsql -s <file> -q "SELECT ..."`
   - `curl.exe -sS --data-binary 'aaa' http://127.0.0.1:9393/cmd`
@@ -427,10 +427,10 @@ radare2-skills 项目（radareorg/radare2-skills）提供了更完整的生态�
 
 ## 路由上下文
 
-**上游入口**: `skills/SKILL.md`（总控）、`routing.md`
+**上游入口**: `SKILL.md`（总控）、`../routing.md`
 **上游备选**: `ida-reverse/`（需要反编译/伪代码时升级到 IDA）
 **下游出口**:
-- 需动态分析 → `reverse-engineering/tools-dynamic.md`（Frida/GDB）
+- 需动态分析 → `../reverse-engineering/tools-dynamic.md`（Frida/GDB）
 - 需深度反编译 → `ida-reverse/`
 - PAT 发现有趣字符串后需交叉引用 → `ida-reverse/`（IDA 的 xref 更强大）
 
@@ -466,6 +466,6 @@ radare2-skills 项目（radareorg/radare2-skills）提供了更完整的生态�
 - [ ] 我是否执行了工作流中的每一步（而不是只阅读）？
 - [ ] 导入表检查是否已执行且写入 Evidence（E-imports / E-triage-imports 或 .NET 等价）？DLL/SYS 是否含 E-exports？
 - [ ] IAT 修复失败是否记录 E-iat-repair-fail 并转动态？重做请求是否回到同一步？
-- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `TOOLS.md` 里的装法当路径猜）？
+- [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `../TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？

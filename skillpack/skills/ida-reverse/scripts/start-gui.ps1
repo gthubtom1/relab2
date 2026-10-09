@@ -37,16 +37,31 @@ if ([string]::IsNullOrWhiteSpace($IdaDir)) {
         if (Test-IdaInstallDir $persisted) {
             $IdaDir = $persisted
         } else {
+            # Version-agnostic discovery: IDA dirs carry version numbers, so probe
+            # the usual roots one level deep and pick the newest hit.
+            $roots = @(
+                'C:\Program Files',
+                'C:\',
+                'D:\Tools',
+                'D:\',
+                (Join-Path $env:USERPROFILE 'Desktop'),
+                (Join-Path $env:USERPROFILE 'Tools')
+            ) | Where-Object { Test-Path -LiteralPath $_ }
             $candidates = @(
-                'C:\Program Files\IDA Professional 9.4',
-                'C:\Program Files\IDA Pro 9.4',
-                'C:\Program Files\IDA Pro',
-                (Join-Path $env:USERPROFILE 'Tools\IDAPro94'),
-                (Join-Path $env:USERPROFILE 'Tools\IDA Pro 9.4\App\IDA Pro'),
-                (Join-Path ([Environment]::GetFolderPath('Desktop')) 'IDA Pro 9.4\App\IDA Pro'),
-                (Join-Path $env:USERPROFILE 'Desktop\IDA Pro 9.4\App\IDA Pro')
+                foreach ($root in $roots) {
+                    Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue |
+                        Where-Object { $_.Name -match '(?i)^IDA\b|^IDA[_. ]' } |
+                        ForEach-Object {
+                            $_.FullName
+                            $app = Join-Path $_.FullName 'App\IDA Pro'
+                            if (Test-Path -LiteralPath $app) { $app }
+                        }
+                }
             )
-            $IdaDir = $candidates | Where-Object { Test-IdaInstallDir $_ } | Select-Object -First 1
+            $IdaDir = $candidates |
+                Where-Object { Test-IdaInstallDir $_ } |
+                Sort-Object LastWriteTime -Descending |
+                Select-Object -First 1
         }
     }
 }
@@ -58,7 +73,7 @@ if (-not (Test-IdaInstallDir $IdaDir)) {
 
 $env:IDADIR = [System.IO.Path]::GetFullPath($IdaDir)
 $portableRoot = Split-Path (Split-Path $env:IDADIR -Parent) -Parent
-# Desktop\IDA Pro 9.4\App\IDA Pro -> Desktop\IDA Pro 9.4
+# Layout <root>\IDA Pro <ver>\App\IDA Pro -> portable root is <root>\IDA Pro <ver>
 if ((Split-Path $env:IDADIR -Leaf) -eq 'IDA Pro') {
     $maybe = Split-Path (Split-Path $env:IDADIR -Parent) -Parent
     if (Test-Path (Join-Path $maybe 'Launch-IDA-Pro.cmd')) {

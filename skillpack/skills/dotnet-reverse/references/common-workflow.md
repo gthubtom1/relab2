@@ -153,7 +153,7 @@ catch (CustomException e) {
 4. 常见：AES-256-CBC with Key==IV（Codegate 2013 模式，见 reverse-engineering/tools.md .NET 段）
 ```
 
-参考 `references/sharp-tools.md` 里红队工具的具体配置结构。
+参考 `sharp-tools.md` 里红队工具的具体配置结构。
 
 ## 与 reverse-engineering 的边界
 
@@ -166,6 +166,6 @@ catch (CustomException e) {
 每次 .NET 逆向任务建议产出：
 - `target-original.exe`（原样本，不动）
 - `target-clean.exe`（de4dot 脱壳后）
-- `notes.md`（识别的混淆器、解密器 token、关键方法地址、配置/C2/key）
+- `notes.md`（本包未落地）（识别的混淆器、解密器 token、关键方法地址、配置/C2/key）
 - `target-patched.exe`（patch 后，如需要）
 - `il-diff.txt`（patch 前后 IL 对照，如做 patch）

@@ -25,7 +25,7 @@
 
 **MUST**：Finding 引用的 Evidence 至少 1 条；`repro_command` 第三方可跑或标明离线限制。
 
-**CLI helper**（写入 `work/<case>/evidence/E-*.md`）：
+**CLI helper**（写入 `work/<case>/evidence/E-*.md`（本包未落地））：
 
 ```powershell
 powershell -File skills/scripts/append-evidence.ps1 -CaseRoot work/<case> `
@@ -89,13 +89,13 @@ The review is read-only and checks scope fields, Evidence records, work item and
 
 `docs-generator` 安全报告 **MUST** 含：
 
-1. Scope 摘要（链到 case `scope.md`）  
+1. Scope 摘要（链到 case `../pentest-tools/templates/scope.md`）  
 2. Evidence 表或章节  
 3. Findings 列表（含 evidence_ids）  
 4. 至少 1 条 Path（攻击/调用/解题）  
-5. Timeline 摘要（可选全文链到 `timeline.md`）
+5. Timeline 摘要（可选全文链到 `../../examples/ctf-demo/timeline.md`）
 
-详见 `docs-generator/references/security-report-templates.md` 中 **Evidence Chain** 节。
+详见 `../docs-generator/references/security-report-templates.md` 中 **Evidence Chain** 节。
 
 ## 5. field-journal 挂钩
 
@@ -105,7 +105,7 @@ The review is read-only and checks scope fields, Evidence records, work item and
 - 1 条核心 Finding  
 - 可复用 Path 模式一句话  
 
-完整敏感内容只在用户项目报告中；journal **MUST** 脱敏（`anonymization.md`）。
+完整敏感内容只在用户项目报告中；journal **MUST** 脱敏（`../field-journal/anonymization.md`）。
 
 ## 6. 与 Z3r0 的差异（特色）
 

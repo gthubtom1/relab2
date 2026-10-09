@@ -76,9 +76,9 @@ nxc smb dc.domain.local -u svc -p 'CrackedPass' --ntds
 
 ## 对本包的改进建议
 
-- `pentest-tools/references/network-attack-defense.md` 应该有 Kerberoasting 完整章节
+- `../pentest-tools/references/network-attack-defense.md` 应该有 Kerberoasting 完整章节
 - BloodHound CE 已是主流，bootstrap-manifest 应明确装 `bloodhound-ce-cli`
-- 增加 `pentest-tools/references/ad-cheatsheet.md` 把 6 大 AD 攻击（Kerberoasting / AS-REP / DCSync / DCShadow / Constrained Delegation / Resource-Based Constrained Delegation / ESC1-ESC15）一页搞定
+- 增加 `pentest-tools/references/ad-cheatsheet.md`（本包未落地） 把 6 大 AD 攻击（Kerberoasting / AS-REP / DCSync / DCShadow / Constrained Delegation / Resource-Based Constrained Delegation / ESC1-ESC15）一页搞定
 
 ## 可复用的模式/脚本片段
 

@@ -7,7 +7,7 @@ description: Web、API、主机和应用安全专题适配层。将 hack-skills 
 
 ## ACTION REQUIRED
 
-1. `NOW`: 先读取 `skills/ops/scope-contract.md` 并完成 `case-init`；固定 URL、仓库、
+1. `NOW`: 先读取 `../../ops/scope-contract.md` 并完成 `case-init`；固定 URL、仓库、
    设备或组织名只定义目标，不自动授予扫描、利用或凭证操作权限。
 2. `NEXT`: 先画攻击面并确认角色（red-team、code-audit、blue、IR），再按观察到的
    行为选择 API、auth、injection、file、business-logic、recon 或主机方向。
@@ -52,4 +52,4 @@ python skills/scripts/community-route.py --hint "<观察到的行为>" --source 
 - 置信度 `confidence = best_score / hint 词数`，低于 0.35 为 `low_confidence`；
   首尾 wrapper 分差 ≤20% 为 `ambiguous_tie`，两者都进 `needs_review`。
 - 超预算后的确认格式：报出收窄后的 hint 与 `--source` 取值，等人工确认后再查。
-- 完整数字与 policy manifest 变更请求见 `docs/community/LOADING-BUDGET.md`。
+- 完整数字与 policy manifest 变更请求见 `../../../docs/community/LOADING-BUDGET.md`（本包未落地）。

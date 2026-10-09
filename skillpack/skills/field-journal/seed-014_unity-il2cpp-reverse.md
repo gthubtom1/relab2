@@ -94,8 +94,8 @@ IDA 静态 patch：
 
 ## 对本包的改进建议
 
-- `reverse-engineering/SKILL.md` 已覆盖 Unity，但缺 IL2CPP **完整工作链** 案例
-- `reverse-engineering/references/il2cpp-cheatsheet.md` 单独成文：dump 工具对比、frida-bridge 模板、加密 metadata 处理
+- `../SKILL.md` 已覆盖 Unity，但缺 IL2CPP **完整工作链** 案例
+- `reverse-engineering/references/il2cpp-cheatsheet.md`（本包未落地） 单独成文：dump 工具对比、frida-bridge 模板、加密 metadata 处理
 - bootstrap manifest 增加 frida-il2cpp-bridge
 
 ## 可复用的模式/脚本片段

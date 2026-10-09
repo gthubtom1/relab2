@@ -88,7 +88,7 @@ $r.Via         # 从哪找到的：env / PATH / map / scan
 | 3 | `D:\Tools\_map.json` 别名 | `map` | 目录名 ≠ 工具名，只能声明 |
 | 4 | 工具根递归 | `scan` | 兜底，可信度最低 |
 
-**为什么第 3、4 级不能省**：商业工具（IDA / JEB）在 `D:\Tools\disasm\IDA_Pro_v8.3_Portable\`
+**为什么第 3、4 级不能省**：商业工具（IDA / JEB）在 `D:\Tools\disasm\IDA Pro 9.3\`
 里，目录名不等于工具名，也不在 PATH 上。只跑 `Get-Command` 一个都找不到。
 
 **第 4 级有陷阱**，所以有 `deny` 规则：IDA 自带的裸 Python 没有 pip 包，误命中它，

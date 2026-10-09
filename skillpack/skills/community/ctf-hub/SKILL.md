@@ -15,7 +15,7 @@ description: CTF 任务的友好分诊与教学适配层。把自动分流、头
    `reverse-skill` 已有的 `ctf-sandbox`、`pwn-chain`、`apk-reverse`、
    `digital-forensics`、`malware-analysis`、`threat-intelligence` 等 canonical skill。
 4. `ACT`: 只有 scope/case 就绪后才进入题目操作。工具路径只认
-   `skillpack/skills/TOOLS.md`，不要运行上游安装脚本或隐式下载工具。
+   `../../TOOLS.md`，不要运行上游安装脚本或隐式下载工具。
 5. `DONE`: 按统一 Evidence→Finding→Path 记录样本、命令、产物 hash、置信度、
    失败分支和下一步；完成题解时转 `docs-generator` 或题解适配内容。
 
@@ -51,7 +51,7 @@ python skills/scripts/community-route.py --hint "<题面或附件描述>" --sour
 - 置信度 `confidence = best_score / hint 词数`，低于 0.35 为 `low_confidence`；
   首尾 wrapper 分差 ≤20% 为 `ambiguous_tie`，两者都进 `needs_review`。
 - 超预算后的确认格式：报出收窄后的 hint 与 `--source` 取值，等人工确认后再查。
-- 完整数字与 policy manifest 变更请求见 `docs/community/LOADING-BUDGET.md`。
+- 完整数字与 policy manifest 变更请求见 `../../../docs/community/LOADING-BUDGET.md`（本包未落地）。
 
 ## Unified output
 

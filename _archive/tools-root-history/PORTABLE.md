@@ -77,8 +77,9 @@ adb version                    # 期望 1.0.4x
 jadx --version                 # 期望 1.5.x
 java -jar apktool.jar --version
 tshark -v                      # 期望 TShark 4.6.x
-D:\Tools\disasm\IDA_Pro_v8.3_Portable\idat.exe -A <脚本> <样本>   # 无头模式，勿用 -h
+D:\Tools\disasm\IDA Pro 9.3\idat.exe -A <脚本> <样本>   # 无头模式，勿用 -h
 ```
+（历史：此行原为 8.3 路径，2026-10-10 删除 8.3 后改为当前唯一的 9.3 路径。）
 
 Python 生态验证：
 ```powershell

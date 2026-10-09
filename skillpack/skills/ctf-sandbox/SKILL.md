@@ -14,10 +14,51 @@ description: CTF/AWD sandbox entry — 当用户说要打CTF/做靶场题/比赛
 
 ## 为什么单独一层
 
-`CTF-Sandbox-Orchestrator/` 是 **GPL 旁路包**，授权默认是沙箱内部。核心路由包仍是 MIT + `scope.md` 门禁。本 skill 只做关键词入口，不把竞赛树并进核心。
+`CTF-Sandbox-Orchestrator/` 是 **GPL 旁路包**，授权默认是沙箱内部。核心路由包仍是 MIT + `../pentest-tools/templates/scope.md` 门禁。本 skill 只做关键词入口，不把竞赛树并进核心。
 
 ## 任务完成自检（声称完成前 MUST 通过）
 
 - [ ] 我是否先走了 case-init / scope，而不是把“用户说了 CTF”当成已授权外网？
 - [ ] 我是否打开了 sidecar orchestrator，而不是把 40 个子技能当 PRIMARY？
 - [ ] 若任务其实是 pwn/APK/IDA，我是否让更具体的 PRIMARY 接手？
+
+## 改编参考索引（open-reverselab `kb/ctf-website`）
+
+> 下列 reference 改编自 `LING71671/open-reverselab` 的 `kb/ctf-website/`（GPL-3.0）。
+> 每篇统一为「适用信号 / 前置 / 步骤 / 判据 / 坑 / 相关」+ 完整技术正文，
+> 「前置」含**本机实测**的工具状态表——照抄原库裸命令前先看那张表。
+> **仅限 CTF 靶场 / AWD 赛场 / 已授权环境**。
+
+### `references/` — （2 篇）
+
+- `references/index.md`
+- `references/attack-network.md`
+
+### `references/checklists/` — Web CTF 检查清单（前 30 分钟、攻击矩阵、Evidence 标准）（4 篇）
+
+- `references/checklists/index.md`
+- `references/checklists/attack-matrix.md`
+- `references/checklists/evidence.md`
+- `references/checklists/web-ctf-first-30-min.md`
+
+### `references/kb-index/` — kb 总索引（1 篇）
+
+- `references/kb-index/index.md`
+
+### `references/payloads/` — Payload 种子库（2 篇）
+
+- `references/payloads/index.md`
+- `references/payloads/web-payload-seeds.md`
+
+### `references/paywall/` — Paywall 检测与绕过（内容/头部/规则拦截/DOM-CSS）（5 篇）
+
+- `references/paywall/01-paywall-detection-bypass.md`
+- `references/paywall/02-http-header-manipulation.md`
+- `references/paywall/03-network-rule-blocking.md`
+- `references/paywall/04-content-extraction.md`
+- `references/paywall/05-dom-css-manipulation.md`
+
+### `references/workflow/` — 24h 攻防循环编排（1 篇）
+
+- `references/workflow/24h-loop-orchestration.md`
+
