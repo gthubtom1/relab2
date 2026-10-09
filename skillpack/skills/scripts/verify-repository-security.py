@@ -503,7 +503,15 @@ def main() -> int:
         payload_data = blob(PAYLOAD_PATH)
         if payload_data is None:
             errors.append(f"payload corpus unreadable from index: {PAYLOAD_PATH}")
-            return finish(errors)
+            # ★ 2026-10-10 修正：此处原为 `return finish(errors)`，
+            # 但 `finish` 在本文件从未定义（git HEAD 版本里定义数=0）——
+            # 潜伏 bug：errors 为空时走不到这条路径，门禁报 OK；
+            # 一旦真的出错，反而崩在 NameError 而不是报 FAIL。
+            # 正确行为与下方 line ~553 的错误分支一致：打印并返回 1。
+            print(f"FAIL verify-repository-security: {len(errors)} issue(s)")
+            for error in errors:
+                print(f"  {error}")
+            return 1
         actual_payload = hashlib.sha256(payload_data).hexdigest()
         if actual_payload != PAYLOAD_SHA256:
             errors.append(

@@ -62,7 +62,7 @@
       "license_declared": "NONE",
       "license_status": "missing-license",
       "third_party_review": "required",
-      "notice_file": null,
+      "notice_file": "community-raw/ai-fullstack/README.md",
       "maturity": "unverified",
       "distribution": "local-only",
       "adaptation_status": "imported",
