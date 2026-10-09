@@ -1553,6 +1553,40 @@
           "note": "英文 query 覆盖：把浏览器端 JS 协议还原成无浏览器依赖的采集器"
         }
       ]
+    },
+    "R51": {
+      "label": "Game client reverse",
+      "skill": "game-reverse/SKILL.md",
+      "keywords": [
+        {
+          "must": "游戏.{0,6}(逆向|外挂|作弊)|反作弊.{0,6}(机制|检测|绕过|研究)|anti.?cheat|游戏.{0,4}(客户端|封包|内存)|unity.{0,8}(逆向|il2cpp)|ue4.{0,8}(逆向|uobject)|游戏.{0,4}加速器|被判.{0,2}外挂",
+          "note": "来自 game-reverse/SKILL.md 自述；与 R9 恶意样本、R18 EDR 的区别是「目标是游戏客户端」"
+        },
+        {
+          "must": "游戏|game|gaming",
+          "mustAll": [
+            "逆向|reverse|外挂|作弊|cheat|封包|packet|客户端|client|内存|memory|il2cpp|unity|ue4"
+          ],
+          "note": "防吸走：R9 恶意样本分析（不带游戏语境的）"
+        }
+      ]
+    },
+    "R52": {
+      "label": "Linux kernel exploit analysis",
+      "skill": "kernel-exploit/SKILL.md",
+      "keywords": [
+        {
+          "must": "(linux|内核|kernel).{0,8}(漏洞|cve|提权|利用|exploit|escape|逃逸)|内核.{0,6}(缓解|bypass|绕过)|io_uring|use.?after.?free|double.?free|page.?cache|ioctl.{0,6}(提权|漏洞)|内核.{0,4}(rootkit|root 提权)",
+          "note": "来自 kernel-exploit/SKILL.md 自述；Linux 内核方向"
+        },
+        {
+          "must": "内核|kernel|io_uring|slab|page_cache|CVE-20",
+          "mustAll": [
+            "linux|提权|漏洞|exploit|绕过|bypass|缓解|逃逸|ioctl|root"
+          ],
+          "note": "防吸走：Windows 内核（走 R18 edr-bypass-re）"
+        }
+      ]
     }
   },
   "priority": [
@@ -1604,6 +1638,8 @@
     "R48",
     "R41",
     "R50",
+    "R51",
+    "R52",
     "R0"
   ]
 }

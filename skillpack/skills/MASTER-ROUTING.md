@@ -133,6 +133,8 @@ python skills/case-review/scripts/review_case.py work/<case> --verify-hashes --s
 | **R48** | 全栈交付 / 工作流编排 / 交付验收 | `community/delivery/` |
 | **R41** | CTF / AWD / 靶场（单入口，不展开 40 个子技能） | `ctf-sandbox/` |
 | **R50** | 浏览器端 JS 协议逆向 → 纯 Python 采集器 | `web-protocol-reverse/` |
+| **R51** | 游戏客户端逆向 / 反作弊机制评估 | `game-reverse/` |
+| **R52** | Linux 内核漏洞 / 利用链 / 缓解绕过 | `kernel-exploit/` |
 | **R0** | 通用逆向 / 反调试 / OLLVM / 未知二进制 | `reverse-engineering/` |
 
 未命中强关键词 → PRIMARY=`R0`，并提示打开 `routing.md`（歧义附录，不是第二套路由器）。

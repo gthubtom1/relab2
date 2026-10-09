@@ -120,44 +120,6 @@
         "revocation": "unimplemented",
         "note": "No verifiable signature exists for any candidate (17.15). Digest-only content stays local-only; redistributable promotion is refused by scripts/verify-canonical-base-lock.py."
       }
-    },
-    {
-      "id": "open-reverselab",
-      "source_kind": "adapted",
-      "source_url": "https://github.com/LING71671/open-reverselab",
-      "commit": "e44c351032b2530c926b2aea224276bbee591b16",
-      "tree_digest": null,
-      "source_manifest": null,
-      "snapshot_root": null,
-      "source_root": ".",
-      "license_declared": "GPL-3.0",
-      "license_status": "review-required",
-      "third_party_review": "required",
-      "notice_file": "docs/community/open-reverselab-THIRD_PARTY_NOTICES.md",
-      "maturity": "partial",
-      "distribution": "local-only",
-      "adaptation_status": "imported",
-      "importer_version": null,
-      "last_verified_at": "2026-10-09T18:46:17Z"
-    },
-    {
-      "id": "spider-king-skill",
-      "source_kind": "adapted",
-      "source_url": "https://github.com/aoyunyang/spider-king-skill",
-      "commit": "1ca713658524cadf5a1ca70cd3de3e1ec2b8073e",
-      "tree_digest": null,
-      "source_manifest": null,
-      "snapshot_root": null,
-      "source_root": ".",
-      "license_declared": "MIT",
-      "license_status": "review-required",
-      "third_party_review": "required",
-      "notice_file": "docs/community/spider-king-skill-THIRD_PARTY_NOTICES.md",
-      "maturity": "partial",
-      "distribution": "local-only",
-      "adaptation_status": "imported",
-      "importer_version": null,
-      "last_verified_at": "2026-10-09T18:46:17Z"
     }
   ],
   "wrappers": [

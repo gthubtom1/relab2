@@ -4,21 +4,19 @@
   "digest_contract": "skills-hub/importer-digest/1",
   "digest_contract_note": "Frozen contract, see docs/community/IMPORTER-LIFECYCLE.md section 4: file line b\"f\" NUL <path> NUL <content_sha256> LF, dir line b\"d\" NUL <path> NUL LF, NFC POSIX-relative paths, CRLF folded to LF (lone CR kept), LF manifest text, mode/uid/gid/mtime/inode/Windows attributes excluded, symlinks recorded as type=symlink plus link target and contribute no bytes.",
   "generated_at": "2026-10-10T00:00:00Z",
-  "generated_by": "T12+T14 (wave 2 card B), measured offline from read-only snapshots in ../upstream; reverse-skill base entry measured 2026-09-30T20:06:36Z per docs/community/CANONICAL-BASE-LOCK.md#attestation (T21b, independently recomputed) | 2026-10-10 追加两个 adapted 源（PM-CIAndDX 审查后对齐 registry）",
+  "generated_by": "T12+T14 (wave 2 card B), measured offline from read-only snapshots in ../upstream; reverse-skill base entry measured 2026-09-30T20:06:36Z per docs/community/CANONICAL-BASE-LOCK.md#attestation (T21b, independently recomputed)",
   "registry_expectation": {
     "schemaVersion": "1.0",
-    "sources": 7,
+    "sources": 5,
     "source_ids": [
       "ctf-super-hub",
       "hack-skills",
       "ai-fullstack-delivery",
       "apk-reverse-community",
-      "reverse-skill",
-      "open-reverselab",
-      "spider-king-skill"
+      "reverse-skill"
     ],
     "excluded": 55,
-    "note": "Counts are derived from skills/community/registry.json at lock time. verify-community-bundle.py re-derives them on every run; any drift blocks (T14 dynamic-stats check). 2026-10-10 追加 open-reverselab / spider-king-skill 两个 adapted 源（无快照，digest 字段为 null）。"
+    "note": "Counts are derived from skills/community/registry.json at lock time. verify-community-bundle.py re-derives them on every run; any drift blocks (T14 dynamic-stats check)."
   },
   "sources": [
     {
@@ -120,48 +118,6 @@
       "fetched_at": "2026-09-30T20:06:36Z",
       "fetch_tool_and_version": "git 2.55.0.windows.3",
       "attestation_method": "git-commit"
-    },
-    {
-      "id": "open-reverselab",
-      "upstream_url": "https://github.com/LING71671/open-reverselab",
-      "snapshot_repo": null,
-      "snapshot_rel": null,
-      "scan": null,
-      "resolved_commit": "e44c351032b2530c926b2aea224276bbee591b16",
-      "pinned_commit": "e44c351032b2530c926b2aea224276bbee591b16",
-      "default_branch_commit": null,
-      "default_branch_note": "null: adapted 源无 community-raw 快照；commit 由 `gh api repos/open-reverselab/commits/main --jq .sha` 于 2026-10-10 实测记录，非离线推导。",
-      "origin_head_commit": "e44c351032b2530c926b2aea224276bbee591b16",
-      "dirty": false,
-      "tree_digest": null,
-      "file_manifest_digest": null,
-      "file_count": null,
-      "dir_count": null,
-      "fetched_at": "2026-10-10T00:00:00Z",
-      "fetch_tool_and_version": "gh api (GitHub CLI)",
-      "attestation_method": "remote-commit-only",
-      "attestation_note": "★ adapted 源（改编进 skills/ 而非 vendored 进 community-raw/），无 importer-digest 契约可算，故 tree_digest / file_manifest_digest 如实为 null —— 不编造。17.28 要求字段被记录，不是被发明。"
-    },
-    {
-      "id": "spider-king-skill",
-      "upstream_url": "https://github.com/aoyunyang/spider-king-skill",
-      "snapshot_repo": null,
-      "snapshot_rel": null,
-      "scan": null,
-      "resolved_commit": "1ca713658524cadf5a1ca70cd3de3e1ec2b8073e",
-      "pinned_commit": "1ca713658524cadf5a1ca70cd3de3e1ec2b8073e",
-      "default_branch_commit": null,
-      "default_branch_note": "null: adapted 源无 community-raw 快照；commit 由 `gh api repos/spider-king-skill/commits/main --jq .sha` 于 2026-10-10 实测记录，非离线推导。",
-      "origin_head_commit": "1ca713658524cadf5a1ca70cd3de3e1ec2b8073e",
-      "dirty": false,
-      "tree_digest": null,
-      "file_manifest_digest": null,
-      "file_count": null,
-      "dir_count": null,
-      "fetched_at": "2026-10-10T00:00:00Z",
-      "fetch_tool_and_version": "gh api (GitHub CLI)",
-      "attestation_method": "remote-commit-only",
-      "attestation_note": "★ adapted 源（改编进 skills/ 而非 vendored 进 community-raw/），无 importer-digest 契约可算，故 tree_digest / file_manifest_digest 如实为 null —— 不编造。17.28 要求字段被记录，不是被发明。"
     }
   ]
 }
