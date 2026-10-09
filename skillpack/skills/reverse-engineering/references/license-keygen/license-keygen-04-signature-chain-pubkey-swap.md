@@ -21,7 +21,7 @@
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
 $floss = (Resolve-ReverseToolSpec -Name 'floss').Command
 $py   = 'D:\EXE\python\python.exe'    # pefile
-$py -m pip show cryptography          # 公钥/私钥生成
+& $py -m pip show cryptography       # 公钥/私钥生成
 ```
 
 ★ 若 `cryptography` 未安装：`& 'D:\EXE\python\python.exe' -m pip install cryptography`。

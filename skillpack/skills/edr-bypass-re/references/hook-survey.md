@@ -138,10 +138,10 @@ EDR 注册的常见内核回调（一律可被 `attack-chain` 中的 BYOVD 路�
 
 用 `HookHunter` 或自写脚本：
 
-```powershell
+```text
 # pseudo workflow，详见 references 提到的脚本
 $disk = Get-Content C:\Windows\System32\ntdll.dll -Encoding Byte
-$live = # 通过 OpenProcess + ReadProcessMemory 拿
+$live = <通过 OpenProcess + ReadProcessMemory 取>
 # 对比 .text 段每个 export 的前 16 字节
 ```
 
