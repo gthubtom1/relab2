@@ -46,7 +46,12 @@ from pathlib import Path
 HERE = Path(__file__).resolve()
 DEFAULT_ROOT = HERE.parents[1]
 
-REQUIRED_GITIGNORE_ENTRIES = (".candidates/", "__pycache__/", "`skillpack/skills/TOOLS.md`")
+# `skillpack/skills/TOOLS.md` 曾经被列在这里，但它不是缓存：
+#   文件开头自述「本文件是说明书，不是索引 / 不记录本机状态、不缓存路径」，
+#   并被 `skills/SKILL.md` 与 `MASTER-ROUTING.md` 当作装法说明书引用，
+#   已随仓库提交 7 次。把源文档当缓存要求 gitignore 会逼人删掉说明书，
+#   或逼人绕过门禁。2026-10-10 移出本清单。
+REQUIRED_GITIGNORE_ENTRIES = (".candidates/", "__pycache__/")
 
 DOCS_BY_SOURCE = {
     "ctf-super-hub": "docs/community/ctf-super-hub",

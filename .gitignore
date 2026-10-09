@@ -48,3 +48,6 @@ t.c
 unpacking/
 Hook.log
 IDAHook.log
+
+# 生成物缓存（社区 bundle 门禁要求排除）
+.candidates/
