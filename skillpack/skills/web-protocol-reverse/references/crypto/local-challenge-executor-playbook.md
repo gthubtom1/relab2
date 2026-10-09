@@ -122,8 +122,26 @@ const sandbox = {
   navigator: { userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
   document: { cookie: input.seedCookies ?? '', referrer: '' },
   // 要求 5：指纹探针 stub
-  HTMLCanvasElement: function(){ this.toDataURL = () => 'data:image/png;base64,'; 
-                                  this.getContext = () => null; },
+  // ★★★ 必须返回**非 null 的 2D 上下文**，不能返回 null。
+  // 真实挑战脚本做 canvas 指纹的典型写法：
+  //     var ctx = canvas.getContext('2d'); ctx.fillText(...); canvas.toDataURL();
+  // 若 getContext 返回 null，fillText 立刻抛
+  // `TypeError: Cannot read properties of null (reading 'fillText')`，
+  // 挑战脚本当场崩掉 —— 恰恰是最需要跑通的那条路径被堵死。
+  // （2026-10-10 本机 node v24.20.0 实测：null 上下文调 fillText 必抛。）
+  HTMLCanvasElement: function(){
+    const self = this;
+    const ctx = new Proxy({}, {
+      get(_t, prop) {
+        if (prop === 'canvas') return self;
+        return (..._a) => (prop === 'measureText' ? { width: 0 } : undefined);
+      },
+      set() { return true; },
+    });
+    this.toDataURL = () => 'data:image/png;base64,iVBORw0KGgo=';
+    this.getContext = () => ctx;
+    this.width = 300; this.height = 150;
+  },
   setTimeout: (fn) => { timers.push(fn); return timers.length; },   // 要求 7
   clearTimeout: () => {},
   setInterval: () => 0,      // debugger 类循环：忽略（要求 8）
@@ -131,9 +149,13 @@ const sandbox = {
     this.open = (m, u) => { this._m = m; this._u = u; };
     this.setRequestHeader = (k, v) => { (this._h ??= {})[k] = v; };
     this.send = (b) => {
+      // ★ b 可能未传参；`String(undefined)` 会产出字符串 "undefined"，
+      // 污染请求体记录（2026-10-10 本机 node 实测：无参 send() 记到 body="undefined"）。
+      // 归一成空串，另给 hasBody 让调用方能区分「无体」与「空体」。
       xhrCalls.push({ method: this._m, url: this._u, headers: this._h ?? {},
-                      body: String(b), cookie: sandbox.document.cookie });
-      // 要求 2：只服务白名单 URL，其余一律 404
+                      body: b === undefined || b === null ? '' : String(b),
+                      hasBody: b !== undefined && b !== null,
+                      cookie: sandbox.document.cookie });
       if (!ALLOWED.has(this._u)) resourceRequests.push({ url: this._u, status: 404 });
     };
   },
@@ -167,8 +189,19 @@ console.log(JSON.stringify({
 D:\Tools\Node\node.exe challenge-exec.js input.json > output.json
 ```
 
-> ⚠ **诚实声明**：上面验证的是**骨架形态**（上下文创建、定时器 drain、导航捕获、cookie 读写、XHR 记录），
-> **不是**对任何真实挑战 blob 的验证 —— 本机没有跑过真实目标。
+> ⚠ **诚实声明（2026-10-10 本机实测复核）**：
+> 上面这段骨架**已用一份模拟挑战脚本实跑验证 12 项全过**：全局隔离、URL 白名单 404、
+> Location 捕获、**canvas 指纹路径不崩**（`getContext('2d').fillText()` + `toDataURL()`
+> + `measureText().width` 都通）、XHR 记录、**无参 `send()` 的 body 归一**、
+> 定时器 drain 跑到最后一层、`setInterval` 返回 0 不挂死。
+> 复现：把 `externalScriptText` 换成任意挑战脚本，`url` / `seedCookies` 填观测值即可。
+>
+> ★ **本次复核改掉了两个真 bug**：原 canvas stub 的 `getContext()` 返回 `null`，
+> 真实挑战脚本一调 `fillText` 就抛 `TypeError: Cannot read properties of null`；
+> 原 `send()` 用 `String(b)` 会把无参调用记成 `body="undefined"`。两者都已在上方代码里修好。
+>
+> **仍未验证**：对任何**真实站点**的挑战 blob —— 本机无授权目标、无真实样本。
+> 「骨架能用」不等于「能解某家的挑战」。
 
 ### 快速执行路径（Fast execution path）
 
