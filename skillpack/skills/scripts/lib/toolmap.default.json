@@ -1,199 +1,490 @@
-{
-  "_comment": "仓内默认工具知识库与孪生映射表。不含机器绝对路径。换机零配置生效；若本机工具根存在 _map.json，则本机覆盖本表。",
-  "_version": "1.0.0",
-  "twins": {
-    "ida": {
-      "cliTwin": "idat",
-      "executablePatterns": [
-        "*idat.exe",
-        "*idat64.exe"
-      ],
-      "mcp": {
-        "name": "idalib-mcp",
-        "port": 13337,
-        "kind": "python-streamable-http"
-      },
-      "note": "IDA Pro GUI 版（ida.exe/ida64.exe）禁止进 bash，必须使用 CLI 孪生 idat 或 idalib-mcp"
-    },
-    "ghidra": {
-      "cliTwin": "analyzeHeadless",
-      "executablePatterns": [
-        "*analyzeHeadless.bat"
-      ],
-      "mcp": {
-        "name": "pyghidra-mcp",
-        "port": 9111,
-        "kind": "http-streamable",
-        "endpoint": "http://127.0.0.1:9111/mcp"
-      },
-      "note": "Ghidra GUI（ghidraRun）会弹窗，无头自动化必须使用 analyzeHeadless 或 pyghidra-mcp 守护服务"
-    },
-    "x64dbg": {
-      "cliTwin": "headless",
-      "executablePatterns": [
-        "*\\release\\x64\\headless.exe",
-        "*\\headless.exe"
-      ],
-      "note": "x64dbg GUI 会弹窗卡死，自动化与动态调试必须使用 headless 控制台版"
-    },
-    "x32dbg": {
-      "cliTwin": "headless",
-      "executablePatterns": [
-        "*\\release\\x32\\headless.exe",
-        "*\\headless.exe"
-      ],
-      "note": "x32dbg GUI 会弹窗卡死，自动化必须使用 headless 控制台版"
-    },
-    "die": {
-      "cliTwin": "diec",
-      "executablePatterns": [
-        "*diec.exe"
-      ],
-      "note": "Detect It Easy GUI（die.exe）禁止进 bash，自动化查壳使用 diec.exe"
-    },
-    "wireshark": {
-      "cliTwin": "tshark",
-      "executablePatterns": [
-        "*tshark.exe"
-      ],
-      "note": "Wireshark GUI 会弹窗，抓包与流解析自动化统一使用 tshark.exe"
-    },
-    "dnspy": {
-      "cliTwin": "dnSpy.Console",
-      "executablePatterns": [
-        "*dnSpy.Console.exe"
-      ],
-      "note": ".NET 批量反编译自动化优先使用 dnSpy.Console.exe"
-    }
+﻿{
+  "schemaVersion": "1.0",
+  "_generated": {
+    "from": "D:\\Tools\\_map.json（本地登记表）",
+    "generated_at": "2026-10-09T20:28:24Z",
+    "note": "本文件由 scripts/gen-default-toolmap.py 从本地 _map.json 生成，**请勿手工编辑** —— 手工编辑会被下次生成覆盖（这正是它曾经与本地表漂移 60 个别名、导致换机后大量工具解析不到的原因）。\nprefer 已剥离本机工具根前缀，只保留相对形态；换机器后把 REVERSE_TOOL_ROOT 指到实际工具根即可。",
+    "local_alias_count": 81,
+    "local_deny_count": 13
   },
   "aliases": {
+    "idat": {
+      "exec": "idat.exe",
+      "prefer": [
+        "disasm/IDA Pro 9.3/idat.exe"
+      ],
+      "note": "★ IDA Pro 9.3 是本机唯一在用的 IDA（9.3sp2 绿版，目录 D:\\Tools\\disasm\\IDA Pro 9.3）。\n★ 实测全链可用：idat.exe -A -B 建库 rc=0；-S 脚本反编译 rc=0；Hex-Rays 9.3.0.260421；IDAPython 3.11.7；idalib MCP（13337）idb_open/survey_binary/decompile/py_eval/idb_close 全部实测通过，69 个工具。\n★ 批处理前置：HKCU\\Software\\Hex-Rays\\IDA 键下写【值】'EULA 90' = DWORD 1。必须写值 —— 建同名子键或写字符串 '1' 都无效（实测仍报 License not yet accepted）。这是 EULA 开关，不是许可问题。\n★ idapyswitch.exe --force-path <dir>\\python311\\python311.dll 必须先跑一次，否则 IDAPython 不加载（-S 脚本不执行，日志写 Python 3 is not configured）。\n★ 9.x 只有 idat.exe 一个（自身即 64 位），不存在 idat64.exe。\n★ 2026-10-10 已删除 IDA 9.4 与 8.3：9.4 随包是样例许可（与 9.3 共用同一注册表键会互相覆盖许可登记，无头报 FATAL ERROR: Cannot continue without a valid license）；8.3 批处理开关与 9.x 不通用（EULA_83 / EULA_8_3 / License83 Hex-Rays SA / EULA / License 五种写法实测全部被拒），只能手动开。两者 idat / ida / ida64 系列别名一并移除。\n\n★★ 【2026-10-10 IDA 版本变更】本机 IDA 已从 9.4 / 8.3 换成 **9.3**，安装在 `disasm\\IDA Pro 9.3`。\n  · 本条目原先指向的路径已随旧版本一并删除，现已重指向 9.3。\n  · ★ `idat.exe`（9.3）是 64 位宿主，x64 样本直接用它；**不要再按「32 位分析器」的老认知去套**。\n  · ★ headless 脚本必须以 `idc.qexit(0)` 结尾，否则挂死到超时；脚本开头调 `idaapi.auto_wait()`，否则反编译拿到 `JUMPOUT(...)` 空壳。\n  · ★ 搜索许可别只搜 `.hexlic`（8.x 用 `.key`），两种都搜。\n  · ★ 首次运行若报「License not yet accepted, cannot run in batch mode」，先在 GUI 里接受一次协议（写注册表 `EULA_93` / `EULA` 等键），再回头跑 headless。\n\n  本条：★ 本机 IDA = 9.3（2026-10-10 由 9.4/8.3 换成 9.3）"
+    },
+    "ida": {
+      "exec": "idat.exe",
+      "prefer": [
+        "disasm/IDA Pro 9.3/idat.exe"
+      ],
+      "note": "★ IDA Pro 9.3 是本机唯一在用的 IDA（9.3sp2 绿版，目录 D:\\Tools\\disasm\\IDA Pro 9.3）。\n★ 实测全链可用：idat.exe -A -B 建库 rc=0；-S 脚本反编译 rc=0；Hex-Rays 9.3.0.260421；IDAPython 3.11.7；idalib MCP（13337）idb_open/survey_binary/decompile/py_eval/idb_close 全部实测通过，69 个工具。\n★ 批处理前置：HKCU\\Software\\Hex-Rays\\IDA 键下写【值】'EULA 90' = DWORD 1。必须写值 —— 建同名子键或写字符串 '1' 都无效（实测仍报 License not yet accepted）。这是 EULA 开关，不是许可问题。\n★ idapyswitch.exe --force-path <dir>\\python311\\python311.dll 必须先跑一次，否则 IDAPython 不加载（-S 脚本不执行，日志写 Python 3 is not configured）。\n★ 9.x 只有 idat.exe 一个（自身即 64 位），不存在 idat64.exe。\n★ 2026-10-10 已删除 IDA 9.4 与 8.3：9.4 随包是样例许可（与 9.3 共用同一注册表键会互相覆盖许可登记，无头报 FATAL ERROR: Cannot continue without a valid license）；8.3 批处理开关与 9.x 不通用（EULA_83 / EULA_8_3 / License83 Hex-Rays SA / EULA / License 五种写法实测全部被拒），只能手动开。两者 idat / ida / ida64 系列别名一并移除。\n\n★★ 【2026-10-10 IDA 版本变更】本机 IDA 已从 9.4 / 8.3 换成 **9.3**，安装在 `disasm\\IDA Pro 9.3`。\n  · 本条目原先指向的路径已随旧版本一并删除，现已重指向 9.3。\n  · ★ `idat.exe`（9.3）是 64 位宿主，x64 样本直接用它；**不要再按「32 位分析器」的老认知去套**。\n  · ★ headless 脚本必须以 `idc.qexit(0)` 结尾，否则挂死到超时；脚本开头调 `idaapi.auto_wait()`，否则反编译拿到 `JUMPOUT(...)` 空壳。\n  · ★ 搜索许可别只搜 `.hexlic`（8.x 用 `.key`），两种都搜。\n  · ★ 首次运行若报「License not yet accepted, cannot run in batch mode」，先在 GUI 里接受一次协议（写注册表 `EULA_93` / `EULA` 等键），再回头跑 headless。\n\n  本条：同 idat"
+    },
+    "ida64": {
+      "exec": "idat.exe",
+      "prefer": [
+        "disasm/IDA Pro 9.3/idat.exe"
+      ],
+      "note": "★ IDA Pro 9.3 是本机唯一在用的 IDA（9.3sp2 绿版，目录 D:\\Tools\\disasm\\IDA Pro 9.3）。\n★ 实测全链可用：idat.exe -A -B 建库 rc=0；-S 脚本反编译 rc=0；Hex-Rays 9.3.0.260421；IDAPython 3.11.7；idalib MCP（13337）idb_open/survey_binary/decompile/py_eval/idb_close 全部实测通过，69 个工具。\n★ 批处理前置：HKCU\\Software\\Hex-Rays\\IDA 键下写【值】'EULA 90' = DWORD 1。必须写值 —— 建同名子键或写字符串 '1' 都无效（实测仍报 License not yet accepted）。这是 EULA 开关，不是许可问题。\n★ idapyswitch.exe --force-path <dir>\\python311\\python311.dll 必须先跑一次，否则 IDAPython 不加载（-S 脚本不执行，日志写 Python 3 is not configured）。\n★ 9.x 只有 idat.exe 一个（自身即 64 位），不存在 idat64.exe。\n★ 2026-10-10 已删除 IDA 9.4 与 8.3：9.4 随包是样例许可（与 9.3 共用同一注册表键会互相覆盖许可登记，无头报 FATAL ERROR: Cannot continue without a valid license）；8.3 批处理开关与 9.x 不通用（EULA_83 / EULA_8_3 / License83 Hex-Rays SA / EULA / License 五种写法实测全部被拒），只能手动开。两者 idat / ida / ida64 系列别名一并移除。\n\n★★ 【2026-10-10 IDA 版本变更】本机 IDA 已从 9.4 / 8.3 换成 **9.3**，安装在 `disasm\\IDA Pro 9.3`。\n  · 本条目原先指向的路径已随旧版本一并删除，现已重指向 9.3。\n  · ★ `idat.exe`（9.3）是 64 位宿主，x64 样本直接用它；**不要再按「32 位分析器」的老认知去套**。\n  · ★ headless 脚本必须以 `idc.qexit(0)` 结尾，否则挂死到超时；脚本开头调 `idaapi.auto_wait()`，否则反编译拿到 `JUMPOUT(...)` 空壳。\n  · ★ 搜索许可别只搜 `.hexlic`（8.x 用 `.key`），两种都搜。\n  · ★ 首次运行若报「License not yet accepted, cannot run in batch mode」，先在 GUI 里接受一次协议（写注册表 `EULA_93` / `EULA` 等键），再回头跑 headless。\n\n  本条：64 位无头分析器  ⚠ 实测 9.3 目录里没有 idat64.exe\n★★ 2026-10-10 修正：9.3 起 idat.exe 即 64 位宿主（无独立 idat64.exe）"
+    },
+    "idat93": {
+      "exec": "idat.exe",
+      "prefer": [
+        "disasm/IDA Pro 9.3/idat.exe"
+      ],
+      "note": "★ IDA Pro 9.3（9.3sp2 绿版，目录 D:\\Tools\\disasm\\IDA Pro 9.3，name 含空格但 Python 路径引用已处理）。★ 实测可无头用：idat.exe -A -B 建库 rc=0、-S 脚本反编译 rc=0、Hex-Rays 9.3.0.260421、IDAPython 3.11.7 全部就位；idalib MCP（13337）用 IDADIR 指到这里后 idb_open/survey_binary/decompile/py_eval/py_eval 全部实测通过。★ 与 9.4/8.3 并存：默认 idat 键现指向本目录；9.4 保留（样例许可、无头不可用）、8.3 用 ida83 系列。★ 批处理前置：HKCU\\Software\\Hex-Rays\\IDA 的 'EULA 90' 必须存在且为 DWORD 1；建子键或写字符串 '1' 都无效（实测仍报 License not yet accepted），必须在 IDA 键下写【值】名为 'EULA 90' 的 DWORD。★ idapyswitch --force-path <dir>\\python311\\python311.dll 必须先跑一次，否则 IDAPython 不加载（-S 脚本不执行、-L 日志写 Python 3 is not configured）。★ 9.x 只有 idat.exe 一个（自身即 64 位），没有 idat64.exe —— 别按 8.3 的习惯去找。\n\n★ 本机 IDA = 9.3 实指。见 `idat` note。"
+    },
     "ghidra": {
       "exec": "analyzeHeadless.bat",
       "prefer": [
-        "Ghidra\\support\\analyzeHeadless.bat"
-      ]
+        "Ghidra/support/analyzeHeadless.bat"
+      ],
+      "note": "只登记 headless。GUI 的 ghidraRun.bat 不能进 bash —— 弹窗等输入、零 stdout、进程永不退。同目录还有 ghidraRun（无扩展名的 sh 包装），Windows 下不要用。"
     },
     "analyzeHeadless": {
       "prefer": [
-        "Ghidra\\support\\analyzeHeadless.bat"
+        "Ghidra/support/analyzeHeadless.bat"
       ]
     },
     "scyllahide": {
       "exec": "InjectorCLIx64.exe",
       "prefer": [
-        "ScyllaHide\\InjectorCLIx64.exe"
-      ]
+        "ScyllaHide/InjectorCLIx64.exe"
+      ],
+      "note": "★ 反反调试（ScyllaHide）注入器，x64 版。给任意进程注入 HookLibraryx64.dll 隐藏调试器 —— 不依赖调试器本身，所以对「检测调试器存在」类反调试有效。x86 版用 scyllahide-x86 别名（InjectorCLIx86.exe）。配置文件是 \\ScyllaHide\\scylla_hide.ini（7.1 KB，含 VMProtect / Obsidium / Themida / Armadillo / Basic / Disabled 各段）。\n★ ★★ ScyllaHide 反反调试已实测生效（2026-10-09 三层翻转，硬证据）：\n  裸跑        peb=0 crdp=0 dbgport=0     软件看不到调试器\n  挂 cdb      peb=1 crdp=1 dbgport=1     软件发现调试器\n  注入后再挂  peb=0 crdp=0 dbgport=0     又看不到了\n  注入器用法：InjectorCLIx64.exe -p <pid> [scylla_hide.ini]，成功输出 Loaded VA。\n  ★ 它改的是目标进程内的 PEB/CRDP 返回值，所以必须【先注入再挂调试器】，\n    反过来（先挂调试器再注入）测不出效果。\n  ★ 不依赖调试器本体 —— 所以对「检测调试器是否存在」类反调试都有效。\n  ★ ScyllaHide 档案的 config 段还有 VMProtect / Obsidium / Themida / Armadillo\n    专项段，加壳软件用对应那段。\n★★★★★ ★★ 注入器语法（2026-10-10 实测推翻，之前的写法是错的）：\n  ✅ 正确：InjectorCLIx64.exe pid:<进程id> <HookLibraryx64.dll> [nowait]\n     例：InjectorCLIx64.exe pid:1234 D:\\Tools\\ScyllaHide\\HookLibraryx64.dll\n  ❌ 错误（本文早期版本写的）：InjectorCLIx64.exe -p 1234 scylla_hide.ini\n\n  ★★ 【假阳性陷阱 —— 必须知道】\n  用错语法时它【只打印用法横幅】，而那串 'Loaded VA for NtUserBlockInput = 0x...'\n  **正是横幅自带的样例文本**，退出码也是 0。也就是说：\n      '看到 Loaded VA + exit 0'  【不能证明注入成功】\n  真注入成功时，横幅之后会【多出】这一行：\n      PID\t: 1234 0x4d2\n  ★ 唯一判据：日志/输出里出现 `PID` 那一行。\n  实测对照：\n      语法 pid:<id> <dll>   → Loaded VA×8 + PID:5188 0x1444  ✅ 真注入\n      语法 -p <id> [ini]     → Loaded VA×8 + usage          ❌ 只打印\n      不带参数              → Loaded VA×8 + usage          ❌ 只打印\n\n★ 注入器真实语法是 `InjectorCLIx64.exe pid:<id> <HookLibraryx64.dll>`，\n  **不是** `-p <id> [ini]`。\n  ★★ **判据**：正确注入会多打一行 `PID\\t: <id> 0x<hex>`。\n  `Loaded VA for NtUserBlockInput = ...` 那串是**用法横幅自带的样例文本**，\n  两种情况都会打印，退出码也都是 0 —— 拿它当成功证据是假阳性。"
+    },
+    "scyllahide-x86": {
+      "exec": "InjectorCLIx86.exe",
+      "prefer": [
+        "ScyllaHide/InjectorCLIx86.exe"
+      ],
+      "note": "ScyllaHide 注入器 x86 版，给 32 位目标进程注入 HookLibraryx86.dll。\n★ ★★ ScyllaHide 反反调试已实测生效（2026-10-09 三层翻转，硬证据）：\n  裸跑        peb=0 crdp=0 dbgport=0     软件看不到调试器\n  挂 cdb      peb=1 crdp=1 dbgport=1     软件发现调试器\n  注入后再挂  peb=0 crdp=0 dbgport=0     又看不到了\n  注入器用法：InjectorCLIx64.exe -p <pid> [scylla_hide.ini]，成功输出 Loaded VA。\n  ★ 它改的是目标进程内的 PEB/CRDP 返回值，所以必须【先注入再挂调试器】，\n    反过来（先挂调试器再注入）测不出效果。\n  ★ 不依赖调试器本体 —— 所以对「检测调试器是否存在」类反调试都有效。\n  ★ ScyllaHide 档案的 config 段还有 VMProtect / Obsidium / Themida / Armadillo\n    专项段，加壳软件用对应那段。\n★★★★★ ★★ 注入器语法（2026-10-10 实测推翻，之前的写法是错的）：\n  ✅ 正确：InjectorCLIx64.exe pid:<进程id> <HookLibraryx64.dll> [nowait]\n     例：InjectorCLIx64.exe pid:1234 D:\\Tools\\ScyllaHide\\HookLibraryx64.dll\n  ❌ 错误（本文早期版本写的）：InjectorCLIx64.exe -p 1234 scylla_hide.ini\n\n  ★★ 【假阳性陷阱 —— 必须知道】\n  用错语法时它【只打印用法横幅】，而那串 'Loaded VA for NtUserBlockInput = 0x...'\n  **正是横幅自带的样例文本**，退出码也是 0。也就是说：\n      '看到 Loaded VA + exit 0'  【不能证明注入成功】\n  真注入成功时，横幅之后会【多出】这一行：\n      PID\t: 1234 0x4d2\n  ★ 唯一判据：日志/输出里出现 `PID` 那一行。\n  实测对照：\n      语法 pid:<id> <dll>   → Loaded VA×8 + PID:5188 0x1444  ✅ 真注入\n      语法 -p <id> [ini]     → Loaded VA×8 + usage          ❌ 只打印\n      不带参数              → Loaded VA×8 + usage          ❌ 只打印\n"
+    },
+    "scyllahide-profile": {
+      "note": "★ ScyllaHide 配置档（反反调试的「规则库」本体，不是一个可执行文件，所以只登记目录）：\\ScyllaHide\\Generic（通用 x86/x64）· \\IDA · \\Olly1 · \\Olly2 · \\TitanEngine · \\x64dbg（x32/x64 两套 plugins）。x64dbg 侧已把 dp32/dp64 插件 + HookLibrary + scylla_hide.ini 全部复制进 release\\x32\\plugins 与 release\\x64\\plugins（2026-10-09 补齐，原先只装了 x64 侧）。"
     },
     "confuserex": {
       "exec": "Confuser.CLI.exe",
       "prefer": [
-        "ConfuserEx\\Confuser.CLI.exe"
-      ]
+        "ConfuserEx/Confuser.CLI.exe"
+      ],
+      "note": ".NET 加壳器命令行版。与目录名 ConfuserEx 大小写不同，故需别名。"
     },
     "innoextract": {
       "exec": "innoextract.exe",
       "prefer": [
-        "innoextract\\innoextract.exe"
-      ]
+        "innoextract/innoextract.exe"
+      ],
+      "note": "解 Inno Setup 安装包（Linux 原生移植版）。同目录另有 innounp（Windows 原生），优先用后者。"
     },
     "innounp": {
       "exec": "innounp.exe",
       "prefer": [
-        "innounp\\innounp.exe"
-      ]
+        "innounp/innounp.exe"
+      ],
+      "note": "解 Inno Setup 安装包，Windows 原生，优先于 innoextract。"
     },
     "x32dbg": {
-      "exec": "headless.exe",
       "prefer": [
-        "x64dbg\\release\\x32\\headless.exe"
-      ]
+        "x64dbg/release/x32/headless.exe"
+      ],
+      "note": "headless 控制台版，同引擎首选：agent 动态调试走它（或走 x64dbg MCP 的 80 工具），绝不拉 GUI 版 —— GUI 弹窗等输入、零 stdout、进程永不退出，经 bash 同步执行会直接卡死本轮。\n★★★ x64dbg headless 的 -cf 脚本是【空壳】（2026-10-09 实测）：\n  进程能起、MCP 服务能连（80 工具）、但脚本里的指令【不执行】\n  （savedata 各种语法都不落盘，run 之后目标该创建的文件也不出现）。\n  ★ 所以 agent 绝不能用 -cf 脚本驱动 x64dbg，只能走 MCP。\n\n  MCP 正确用法：\n    1) 起 headless.exe（不带目标、不带脚本）\n    2) 等 127.0.0.1:9094 LISTENING\n    3) Bearer token 取自 release\\x64\\mcp_config.json 的 AuthToken\n       （不带 token 返 401 {\"error\":\"Unauthorized\"}）\n    4) LoadBinary(filePath=..., arguments=...)  ← 参数名是 filePath，不是 path\n       加载后 GetDebugState 的 isDebugging 才是 true\n    5) ExecuteDebuggerCommand 下断点 / EvalExpression 读寄存器\n\n  ★ 硬件断点（cdb 没有的那条路）：bphws kernel32:CreateFileA，\n    判据是 EvalExpression('Dr0') 返回非 0 且非全 F。\n    80 个工具里 LoadBinary / ExecuteDebuggerCommand / EvalExpression /\n    GetDebugState / ReadMemory / AttachProcess / WaitForEvent 是主力。\n★★★★★ x64dbg headless 的生命周期死结（2026-10-09 三组对照钉死，不是猜测）：\n  实验 A  快目标（立即返回）      headless exit=0  用时 2.1s\n  实验 B  慢目标（Sleep 60s）   headless exit=0  用时 2.1s   ← 关键\n  实验 C  不带目标               headless exit=0  用时 0.3s\n  → B 的目标要睡 60 秒，headless 只撑 2.1 秒。\n    所以它【不是跟着目标走的】，而是 command loop 空转就自杀。\n  日志原文：\n    [headless] entering command loop...\n    [headless] shutdown requested by Ctrl+C        ← 「Ctrl+C」是退出路径的措辞，\n                                                      实际是「没有命令可执行」\n    [x64dbg-MCP Server] MCP (Streamable) listening on http://0.0.0.0:9094/\n    [x64dbg-MCP Server] MCP server stopped (was on 0.0.0.0:9094)\n  ★ MCP listening↔stopped 的窗口只有 2.1 秒，且与目标存活时间无关。\n    偶尔能连上并看到 isDebugging=true，只是恰好抢在那 2 秒里。\n\n  ★ 所以：headless 模式下无法做长期调试会话，无法稳定下硬件断点。\n\n  ★ x64dbg.exe（GUI）在本机自动化会话里起不来：\n    exit=0xC000041D（STATUS_FATAL_USER_CALLBACK_EXCEPTION），\n    因为 agent 跑的会话没有交互桌面。GUI 路线需要人在真实桌面上手动开。\n★★ 硬件断点的三条路（本机实测结论）：\n  1) cdb 的 ba          ❌ 不可用。8 种语法全报 Syntax error，同址 bp 可命中。\n  2) x64dbg headless    ❌ 不可用。command loop 2.1 秒自杀，见上。\n  3) x64dbg GUI + MCP   ✅ 可用，但必须人在真实桌面手动开 x64dbg.exe。\n     GUI 模式不会自杀，MCP 插件常驻，可 bphws + EvalExpression('Dr0')。\n     agent 的自动化会话里起不了 GUI（无交互桌面）。\n\n  → 实际建议：反反调试不需要硬件断点也能做。\n    ScyllaHide 注入 + cdb 软件断点，已实测 3 项检测 → 0 项翻转（见 scyllahide note）。\n    硬件断点的独特价值（不改目标内存、INT3 校验测不出）只在\n    「目标自校验代码完整性」时才需要 —— 那时人在桌面手动开 GUI。"
     },
     "x64dbg": {
-      "exec": "headless.exe",
       "prefer": [
-        "x64dbg\\release\\x64\\headless.exe"
-      ]
-    },
-    "idat": {
-      "exec": "idat.exe",
-      "prefer": [
-        "disasm\\IDA Pro\\idat.exe"
+        "x64dbg/release/x64/headless.exe"
       ],
-      "note": "IDA 无头分析器。便携版目录名往往带版本号（如 'IDA Pro 9.3'、'IDA_Pro_v9.x_Portable'），目录名 != 工具名，必须登记；再长也只探到工具根的下一层，不写机器绝对路径。9.x 只有 idat.exe 一个（自身即 64 位），8.x 才有 idat64.exe。批处理前置是注册表 HKCU\\Software\\Hex-Rays\\IDA 下【值】'EULA 90' = DWORD 1，必须写值而非子键。"
+      "note": "headless 控制台版，同引擎首选：agent 动态调试走它（或走 x64dbg MCP 的 80 工具），绝不拉 GUI 版 —— GUI 弹窗等输入、零 stdout、进程永不退出，经 bash 同步执行会直接卡死本轮。\n★★★ x64dbg headless 的 -cf 脚本是【空壳】（2026-10-09 实测）：\n  进程能起、MCP 服务能连（80 工具）、但脚本里的指令【不执行】\n  （savedata 各种语法都不落盘，run 之后目标该创建的文件也不出现）。\n  ★ 所以 agent 绝不能用 -cf 脚本驱动 x64dbg，只能走 MCP。\n\n  MCP 正确用法：\n    1) 起 headless.exe（不带目标、不带脚本）\n    2) 等 127.0.0.1:9094 LISTENING\n    3) Bearer token 取自 release\\x64\\mcp_config.json 的 AuthToken\n       （不带 token 返 401 {\"error\":\"Unauthorized\"}）\n    4) LoadBinary(filePath=..., arguments=...)  ← 参数名是 filePath，不是 path\n       加载后 GetDebugState 的 isDebugging 才是 true\n    5) ExecuteDebuggerCommand 下断点 / EvalExpression 读寄存器\n\n  ★ 硬件断点（cdb 没有的那条路）：bphws kernel32:CreateFileA，\n    判据是 EvalExpression('Dr0') 返回非 0 且非全 F。\n    80 个工具里 LoadBinary / ExecuteDebuggerCommand / EvalExpression /\n    GetDebugState / ReadMemory / AttachProcess / WaitForEvent 是主力。\n★★★★★ x64dbg headless 的生命周期死结（2026-10-09 三组对照钉死，不是猜测）：\n  实验 A  快目标（立即返回）      headless exit=0  用时 2.1s\n  实验 B  慢目标（Sleep 60s）   headless exit=0  用时 2.1s   ← 关键\n  实验 C  不带目标               headless exit=0  用时 0.3s\n  → B 的目标要睡 60 秒，headless 只撑 2.1 秒。\n    所以它【不是跟着目标走的】，而是 command loop 空转就自杀。\n  日志原文：\n    [headless] entering command loop...\n    [headless] shutdown requested by Ctrl+C        ← 「Ctrl+C」是退出路径的措辞，\n                                                      实际是「没有命令可执行」\n    [x64dbg-MCP Server] MCP (Streamable) listening on http://0.0.0.0:9094/\n    [x64dbg-MCP Server] MCP server stopped (was on 0.0.0.0:9094)\n  ★ MCP listening↔stopped 的窗口只有 2.1 秒，且与目标存活时间无关。\n    偶尔能连上并看到 isDebugging=true，只是恰好抢在那 2 秒里。\n\n  ★ 所以：headless 模式下无法做长期调试会话，无法稳定下硬件断点。\n\n  ★ x64dbg.exe（GUI）在本机自动化会话里起不来：\n    exit=0xC000041D（STATUS_FATAL_USER_CALLBACK_EXCEPTION），\n    因为 agent 跑的会话没有交互桌面。GUI 路线需要人在真实桌面上手动开。\n★★ 硬件断点的三条路（本机实测结论）：\n  1) cdb 的 ba          ❌ 不可用。8 种语法全报 Syntax error，同址 bp 可命中。\n  2) x64dbg headless    ❌ 不可用。command loop 2.1 秒自杀，见上。\n  3) x64dbg GUI + MCP   ✅ 可用，但必须人在真实桌面手动开 x64dbg.exe。\n     GUI 模式不会自杀，MCP 插件常驻，可 bphws + EvalExpression('Dr0')。\n     agent 的自动化会话里起不了 GUI（无交互桌面）。\n\n  → 实际建议：反反调试不需要硬件断点也能做。\n    ScyllaHide 注入 + cdb 软件断点，已实测 3 项检测 → 0 项翻转（见 scyllahide note）。\n    硬件断点的独特价值（不改目标内存、INT3 校验测不出）只在\n    「目标自校验代码完整性」时才需要 —— 那时人在桌面手动开 GUI。"
+    },
+    "x96dbg": {
+      "prefer": [
+        "x64dbg/release/x96dbg.exe"
+      ],
+      "note": "x32/x64 统一启动器，会弹架构选择框 —— 不能进 bash。"
     },
     "die": {
       "exec": "diec.exe",
       "prefer": [
-        "DIE\\diec.exe"
-      ]
+        "DIE/diec.exe"
+      ],
+      "note": "Detect It Easy 命令行版（GUI 的 die.exe 不能进 bash）。"
     },
     "r2": {
       "exec": "r2.exe",
       "prefer": [
-        "radare2\\bin\\r2.exe"
-      ]
+        "radare2/bin/r2.exe"
+      ],
+      "note": "目录里同时有 r2.bat 和 r2.exe，优先裸 exe 省一层 cmd 包装。radare2 本身的入口是 bin\\radare2.exe。\n\n★★ `/x` 完全可用，返回空是**字节序写反**或**通配符用错**，不是 r2 坏了。\n  实测：`/x 7ffe0320` 命中；`/x 2003fe7f` 返回空（文件里是 7f fe 03 20）。\n  通配符是 `.` 不是 `?`：`7ffe03..` 命中，`7ffe03??` 返回空。\n  `-qc '/x ...; q'` 里的 `;` 会截断命令，参数串只放一条。\n  （此前文档写「/x 在本机不可用」是编造结论，已于 2026-10-10 纠正并全库清除。）"
     },
     "radare2": {
       "prefer": [
-        "radare2\\bin\\radare2.exe"
-      ]
+        "radare2/bin/radare2.exe"
+      ],
+      "note": "配 r2pipe 1.9.8 使用。"
+    },
+    "git": {
+      "prefer": [
+        "Git/cmd/git.exe",
+        "Git/bin/git.exe"
+      ],
+      "note": "工具根内 4 份 git.exe：cmd/ 是用户入口，bin/ 是 POSIX shim，mingw64\\bin 与 libexec\\git-core 是内部实现。cmd 版带完整 PATH 组装，必须优先。"
+    },
+    "npm": {
+      "exec": "npm.cmd",
+      "prefer": [
+        "Node/npm.cmd",
+        "Node/node_modules/npm/bin/npm-cli.js"
+      ],
+      "note": "工具根内 4 份 npm：corepack shims 是包装层，会与本体竞争。★ exec 固定为 .cmd：PATH 级命中会选 npm.ps1，而全新 Windows 的执行策略是 Restricted，PowerShell 优先选 .ps1 会直接被拒（报「禁止运行脚本」），.cmd 则不受执行策略影响。同时 exec 也让 npx/npm 不再被 scan 兜底挑到 node_modules\\npm\\bin\\ 下那份路径重复的坏副本。"
+    },
+    "npx": {
+      "exec": "npx.cmd",
+      "prefer": [
+        "Node/npx.cmd"
+      ],
+      "note": "同 npm：必须走前缀根目录的 npx.cmd。★ node_modules\\npm\\bin\\npx.cmd 是坏副本，调用时 NODE_PATH 会重复成 ...\\bin\\node_modules\\npm\\bin\\ 而报 Cannot find module，因此这里只登记根目录那一份。"
+    },
+    "playwright": {
+      "exec": "playwright.cmd",
+      "prefer": [
+        "Node/playwright.cmd"
+      ],
+      "note": "Node 版 playwright CLI。exec 固定 .cmd 以规避 Restricted 策略下 .ps1 被拒的问题（Python 版同名脚本在系统 Python 的 Scripts 下，已 deny）。\n\n★★ 这是 **Node 版 playwright CLI**（不是 Python 库）。\n  Python 版在 `D:\\EXE\\python\\Lib\\site-packages\\playwright`，是**独立对象**，\n  本 note 的 exec 规则不适用于它。\n  ★★ **Python 版必须显式指定浏览器**：裸 `p.chromium.launch()` 报\n  `Executable doesn't exist at %LOCALAPPDATA%\\ms-playwright\\chromium_headless_shell-1234\\...`（包期望 1234，本机装的是 1243）。\n  可用：`p.chromium.launch(channel=\"msedge\")`（实测能起、能渲染、能读 DOM），\n  或 `launch(executable_path=<显式路径>)`。"
+    },
+    "java": {
+      "prefer": [
+        "runtime/jdk21/jdk-21.0.12.1+1/bin/java.exe"
+      ],
+      "note": "Temurin 21.0.12.1 LTS，已按 Bootstrap.ps1 的自愈契约归位到 runtime\\jdk21\\ 下。实体目录仅此一份，不要再放第二份 java.exe。"
+    },
+    "javac": {
+      "prefer": [
+        "runtime/jdk21/jdk-21.0.12.1+1/bin/javac.exe"
+      ],
+      "note": "同上。jadx / apktool 依赖此 JDK。"
+    },
+    "httpx": {
+      "exec": "httpx.exe",
+      "prefer": [
+        "httpx/httpx.exe"
+      ],
+      "note": "★ ProjectDiscovery 版。系统 Python 的 httpx 0.27.2 库会在 Scripts 目录放同名 httpx.exe，把本工具完全遮蔽 —— 它的输出是 'Usage: httpx [OPTIONS] URL' 而非版本号。D:\\Tools\\cli 已置于 PATH 最前做兜底。"
     },
     "de4dot": {
       "prefer": [
-        "de4dot\\de4dot.exe"
+        "de4dot/de4dot.exe"
       ]
     },
     "upx": {
       "prefer": [
-        "UPX\\upx.exe"
+        "UPX/upx.exe"
       ]
+    },
+    "resourcehacker": {
+      "prefer": [
+        "ResourceHacker/ResourceHacker.exe"
+      ],
+      "note": "GUI，需界面控制能力。"
+    },
+    "imhex": {
+      "prefer": [
+        "ImHex/imhex.exe"
+      ]
+    },
+    "pe-bear": {
+      "prefer": [
+        "PE-bear/PE-bear.exe"
+      ]
+    },
+    "vmprotect": {
+      "prefer": [
+        "VMProtect/VMProtect.exe"
+      ],
+      "note": "GUI。VMProtect 自带的目录树要避免被当成工具根。"
     },
     "dnSpy": {
       "prefer": [
-        "dnSpy\\dnSpy.exe"
-      ]
+        "dnSpy/dnSpy.Console.exe"
+      ],
+      "note": "★2026-10-10 更正：原 prefer 指向 `dnSpy\\dnSpy.exe`，实测该文件 PE subsystem=2（WINDOWS_GUI，弹窗/无 stdout），agent 经 bash 拉起会卡死整轮且无法察觉。CLI 孪生是同目录的 `dnSpy.Console.exe`（subsystem=3 WINDOWS_CUI），已改指它。GUI 版需人工桌面侧使用。",
+      "exec": "dnSpy.Console.exe"
     },
     "dnSpy.Console": {
       "prefer": [
-        "dnSpy\\dnSpy.Console.exe"
-      ]
+        "dnSpy/dnSpy.Console.exe"
+      ],
+      "note": "无头版，适合接 .NET 反编译流水线。"
+    },
+    "binwalk": {
+      "exec": "binwalk.exe",
+      "prefer": [
+        "../Users/toti/.cargo/bin/binwalk.exe"
+      ],
+      "note": "★ binwalk v3.1.0，用 `cargo +stable-x86_64-pc-windows-gnu install binwalk` 编译安装（cargo bin 目录在用户目录，不在工具根）。★ 关键：默认的 msvc 工具链编不了 —— 报 `link.exe not found`，因为 MSVC Build Tools 需要管理员权限装。解法是装便携 MinGW-w64（本机落在 runtime\\mingw64，gcc 15.2.0）并切到 windows-gnu 工具链，它自带 rust-lld 且能找到 gcc。★ PyPI 上的 binwalk 是残包（缺 binwalk.core，import 就报 ModuleNotFoundError），binwalk-ng 在 PyPI 不存在，别走 pip。"
+    },
+    "gcc": {
+      "exec": "gcc.exe",
+      "prefer": [
+        "runtime/mingw64/bin/gcc.exe"
+      ],
+      "note": "MinGW-w64 15.2.0（posix-seh-ucrt-rt_v13），便携解压到 runtime\\mingw64，无需管理员。用途：给 cargo 的 windows-gnu 工具链提供 C 编译器（binwalk 等含 C 依赖的 crate 需要）。★ 注意 PATH 里还有 Go 自带的 asm.exe 之类同名工具，capstone 的 Python 包装 asm.exe 已被 deny 挡掉。"
+    },
+    "pnpm": {
+      "exec": "pnpm.cmd",
+      "prefer": [
+        "Node/pnpm.cmd"
+      ],
+      "note": "★ 与 npm/npx 同理：Node 的 bin 目录里 pnpm.CMD / pnpm.ps1 / pnpm 三份并存，PATH 级先命中且 PowerShell 优先选 .ps1，Restricted 策略下必被拒。exec 固定 .CMD 才可用。bootstrap-manifest.json 把 pnpm 列为 bootstrapDependencies，装它是为了 anything-analyzer 这类 pnpm 项目。"
+    },
+    "bun": {
+      "exec": "bun.exe",
+      "prefer": [
+        "../Users/toti/.bun/bin/bun.exe"
+      ],
+      "note": "Bun 1.4.2 运行时（winget 装的 Oven-sh.Bun），已在 User PATH。替代 Node 跑 JS/TS 混淆样本时比 node 快。★ 它装在用户目录、不在工具根里，prefer 用 ..\\ 跳出工具根 —— 换用户时这条会失效，届时靠 PATH 级命中即可。"
     },
     "sqlmap": {
+      "exec": "sqlmap.py",
       "prefer": [
-        "sqlmap\\sqlmap.py"
+        "sqlmap/sqlmap.py"
+      ],
+      "note": "★ 入口是 Python 脚本，没有 .exe 孪生：必须用解释器调 `<python> <该路径>`，不能直接 Start-Process 它（会报 %1 is not a valid Win32 application）。★ 另：sqlmap 收尾会提示 'Press Enter to continue...' 并等输入，agent 同步调用会挂死 —— 批量/自动化场景一律加 --batch 或 --answer-* 预置参数，或后台跑 + 轮询。当前版本 1.10.9.1#dev。"
+    },
+    "dotnet": {
+      "prefer": [
+        "runtime/dotnet8/dotnet.exe"
+      ],
+      "note": ".NET SDK 8.0.404。位置即 Bootstrap.ps1 自愈块要找的 DOTNET_ROOT。★ ilspycmd / dnSpy.Console / de4dot 的宿主，缺它这三个都跑不了。装的是 x64 SDK（自包含，含 3 个 runtime），没有 dotnet.dll 可执行程序集，不需要额外装运行时。"
+    },
+    "go": {
+      "prefer": [
+        "runtime/go/go/bin/go.exe"
+      ],
+      "note": "Go 1.27.1。位置即 Bootstrap.ps1 自愈块要找的 GOROOT。官方 go.dev 在本机 TLS 握手失败（curl exit 35），本包从 mirrors.aliyun.com 取。"
+    },
+    "ilspycmd": {
+      "note": "装在 %USERPROFILE%\\.dotnet\\tools\\ilspycmd.exe（dotnet tool 全局目录，不在工具根里，走 PATH）。★ 锁版本 9.1.0.7988 —— 11.x 的 NuGet 包只含 tools\\net10.0\\，需要 .NET 10；在 .NET 8 上装会报『找不到 DotnetToolSettings.xml』。升 .NET 10 之前别升它。跑它之前 DOTNET_ROOT 必须指向 runtime\\dotnet8。"
+    },
+    "pythonexe": {
+      "prefer": [
+        "../EXE/python/python.exe"
+      ],
+      "note": "系统 Python 3.12.0 在 D:\\EXE\\python（工具根之外，由 PATH 提供）。工具根内唯一同名 python.exe 是 nmap\\zenmap\\bin\\python.exe，已 deny。"
+    },
+    "pyre": {
+      "prefer": [
+        "../EXE/python/python.exe"
+      ],
+      "note": "★ **逆向库全空** —— 2026-10-10 用 `importlib.util.find_spec` 逐个实测\n  （`D:\\Tools\\runtime\\venv-re\\Scripts\\python.exe`，Python 3.12.0）：\n  pefile / capstone / lief / angr / unicorn / qiling / z3 / yara / dnfile /\n  pyelftools / r2pipe **全部 NO**（只有 requests 等少数基础包在）。\n  它在 PATH 上排第 3，是**最容易误用的诱饵** —— APK 脚本、`algo_identify.py`、`prng_detect.py` 都依赖上述库，用它一律 ImportError。\n  ★ 一律走 **`D:\\EXE\\python\\python.exe`**（实测齐全）。\n  查某个包在不在：`& 'D:\\EXE\\python\\python.exe' -c \"import importlib.util as u;print(u.find_spec('<mod>'))\"`"
+    },
+    "aapt2": {
+      "prefer": [
+        "android-sdk/build-tools/34.0.0/aapt2.exe"
+      ],
+      "note": "Android build-tools 34.0.0（build-tools_r34-windows.zip 直接解压，非 sdkmanager 装的 —— 本机没装完整 Android SDK）。apksigner 是 .bat，必须有 JAVA_HOME 才能跑。"
+    },
+    "apksigner": {
+      "prefer": [
+        "android-sdk/build-tools/34.0.0/apksigner.bat"
+      ],
+      "note": "★ .bat 入口，跑之前 DOTNET/JAVA 环境里要有 JAVA_HOME（指向 runtime\\jdk21\\…），否则报 0.9 之外的怪错。"
+    },
+    "zipalign": {
+      "prefer": [
+        "android-sdk/build-tools/34.0.0/zipalign.exe"
       ]
+    },
+    "apktool2": {
+      "prefer": [
+        "android-sdk/build-tools/34.0.0/aapt2.exe"
+      ],
+      "note": "占位：避免 aapt2 被当成 apktool 命中。真正的 apktool 别名见上面的 apktool。"
     },
     "pesieve": {
       "exec": "pe-sieve64.exe",
       "prefer": [
-        "pe-sieve\\pe-sieve64.exe"
-      ]
-    },
-    "ida": {
-      "exec": "idat.exe",
-      "prefer": [
-        "disasm\\IDA Pro\\idat.exe"
+        "pe-sieve/pe-sieve64.exe"
       ],
-      "note": "IDA 无头分析器。便携版目录名往往带版本号（如 'IDA Pro 9.3'、'IDA_Pro_v9.x_Portable'），目录名 != 工具名，必须登记；再长也只探到工具根的下一层，不写机器绝对路径。9.x 只有 idat.exe 一个（自身即 64 位），8.x 才有 idat64.exe。批处理前置是注册表 HKCU\\Software\\Hex-Rays\\IDA 下【值】'EULA 90' = DWORD 1，必须写值而非子键。"
+      "note": "同 pe-sieve，少一个连字符的常见写法。"
     },
-    "ida64": {
-      "exec": "idat.exe",
+    "capa": {
+      "exec": "capa.bat",
       "prefer": [
-        "disasm\\IDA Pro\\idat.exe"
+        "capa/capa.bat"
       ],
-      "note": "IDA 无头分析器。便携版目录名往往带版本号（如 'IDA Pro 9.3'、'IDA_Pro_v9.x_Portable'），目录名 != 工具名，必须登记；再长也只探到工具根的下一层，不写机器绝对路径。9.x 只有 idat.exe 一个（自身即 64 位），8.x 才有 idat64.exe。批处理前置是注册表 HKCU\\Software\\Hex-Rays\\IDA 下【值】'EULA 90' = DWORD 1，必须写值而非子键。"
+      "note": "★ capa 9.4.0，用 pip 版 flare-capa（入口 D:\\EXE\\python\\Scripts\\capa.exe）+ 官方 capa-rules 规则集（clone 到 \\capa\\rules，1054 条 .yml 摊平进 \\capa\\rules-flat 以解决跨目录依赖）。★★ 两个坑：(1) PyPI 的 9.4.0 wheel 既不含内嵌规则也不含内嵌签名 —— 裸调 capa.exe <target> 报 'default embedded rules not found!' exit 10；只给 -r 也会报 'Using default signature path, but it doesn't exist.' exit 1，因为 -s 默认指向 wheel 没建的 site-packages\\capa\\sigs。必须 -r 与 -s 同时给。(2) ★ 官方 Windows 二进制 capa.exe 被本机 Defender 误报 Trojan:Win32/Egairtigado!rfn 隔离（PyInstaller+UPX 打包特征，SEV5 且未执行），故走 pip 路线不碰它。调用一律用 \\capa\\capa.bat 包装（已固化 -r/-s 两路径 + chcp 65001），不要直调 capa.exe。"
     },
-    "wireshark": {
+    "floss": {
+      "prefer": [
+        "runtime/venv-floss/Scripts/floss.exe"
+      ],
+      "note": "★ FLOSS 3.1.1，装在独立的 Python 3.11 venv 里（runtime\\venv-floss），不动系统 Python 3.12。binary2strings 必须本机编译：需要 VS BuildTools + 手工补 Windows SDK 的 INCLUDE/LIB 与 rc.exe 到 PATH（vcvars64.bat 自带的 INCLUDE 不含 SDK 路径）。"
+    },
+    "binary2strings": {
+      "note": "FLOSS 的原生依赖，已本机编译成功，只存在于 runtime\\venv-floss 里。编译前要先 call D:\\Tools\\runtime\\msvc-env.bat（vcvars64.bat 自带的 INCLUDE 不含 Windows SDK、rc.exe 也不在 PATH）。"
+    },
+    "x64dbg-gui": {
+      "prefer": [
+        "x64dbg/release/x64/x64dbg.exe"
+      ],
+      "note": "GUI 调试器。**仅供人工在桌面侧交互**，agent 不得经 bash/管道拉起（会卡死）。agent 的无头需求用同键的 headless 版或 x64dbg MCP。"
+    },
+    "x32dbg-gui": {
+      "prefer": [
+        "x64dbg/release/x32/x32dbg.exe"
+      ],
+      "note": "GUI 调试器。**仅供人工在桌面侧交互**，agent 不得经 bash/管道拉起（会卡死）。agent 的无头需求用同键的 headless 版或 x64dbg MCP。"
+    },
+    "Wireshark": {
       "exec": "tshark.exe",
       "prefer": [
-        "Wireshark\\tshark.exe"
-      ]
+        "Wireshark/tshark.exe"
+      ],
+      "note": "Wireshark 命令行版。GUI 的 Wireshark.exe 不能进 bash；抓包/协议分层/tshark --export-objects 都走它。\n\nGUI 版，agent 不得拉起（会挂死等输入）；命令行用 `wshark`。"
     },
     "wshark": {
       "exec": "tshark.exe",
       "prefer": [
-        "Wireshark\\tshark.exe"
-      ]
+        "Wireshark/tshark.exe"
+      ],
+      "note": "Wireshark 的常见简称，等价 tshark。\n\n★ tshark 4.6.8，Npcap Running。`-i` 的网卡名在本机是**中文**，\n  多条 `-i` 会触发 extcap 报错（`ciscodump ... Missing parameter: --remote-host`）并 0 包。"
+    },
+    "apkanalyzer": {
+      "exec": "apkanalyzer.bat",
+      "prefer": [
+        "android-sdk/cmdline-tools/latest/bin/apkanalyzer.bat"
+      ],
+      "note": "官方 DEX/资源分析器，随 Android cmdline-tools 分发。★ 它与 jadx 一样是 bat 包装，靠 java 启动，所以必须先有可用的 JAVA_HOME 与 java 在 PATH 上，否则报「不是内部或外部命令」而不是报错。"
+    },
+    "sdkmanager": {
+      "exec": "sdkmanager.bat",
+      "prefer": [
+        "android-sdk/cmdline-tools/latest/bin/sdkmanager.bat"
+      ],
+      "note": "装/升 Android SDK 组件（build-tools、platform-tools）。接受 licenses 用 --licenses 或 sdkmanager --licenses。"
+    },
+    "avdmanager": {
+      "exec": "avdmanager.bat",
+      "prefer": [
+        "android-sdk/cmdline-tools/latest/bin/avdmanager.bat"
+      ],
+      "note": "创建/管理 AVD（模拟器）。GUI 面向，仅在需要起模拟器时用；agent 不得拉起模拟器窗口。"
+    },
+    "yara": {
+      "exec": "yara64.exe",
+      "prefer": [
+        "yara/yara64.exe"
+      ],
+      "note": "规则匹配 CLI。★ 官方 Windows 资产只有 yara64.exe / yarac64.exe，没有 yara.exe，故必须登记 exec。版本与系统 Python 的 yara-python 4.5.4 对齐。v4.5.8 的 release 未附二进制资产，故取 v4.5.4。★★ 两个必须知道的坑：(1) ★ yara **不能扫目录**，只吃单文件或单条 -r <file> —— 传目录报 'could not open file: <dir>'。要跑整库必须传根目录下的索引文件（如 yara-rules\\antidebug_antivm_index.yar）或具体某个 .yar，那些索引内部用 include 串起子目录（2026-10-09 实测踩过）。(2) 规则库已装在 yara-rules\\（566 条，来自 Yara-Rules/rules）；★ git clone 拉不动 —— 本机到 github.com 的 TLS 握手会被切断（与 go.dev 同因），且 Python urllib 同样失败，必须走 gh api repos/<owner>/<repo>/tarball/<branch> 抓二进制流再解 tar。"
+    },
+    "yara-rules": {
+      "note": "★ YARA 规则库（Yara-Rules/rules，566 条），装在 yara-rules\\。分类：antidebug_antivm（64 条反调试/反虚拟机：DebuggerCheck__PEB / GlobalFlags / QueryInfo / RemoteAPI、DebuggerHiding__Thread、DebuggerTiming__Ticks、DebuggerPattern__RDTSC、SEH__*、Check_VBox_* / Check_Qemu_*）· packers · capabilities · crypto · cve_rules · malware · maldocs · mobile_malware · exploit_kits · webshells · deprecated。★ 根目录有 13 个 *_index.yar 索引文件，用 include 串起子目录 —— yara 不吃目录，所以扫整库要传索引文件而不是目录。★ 装法：gh api repos/Yara-Rules/rules/tarball/master 抓二进制流再解 tar（git/urllib 在本机都 TLS 失败）。实测对反调试样本命中 DebuggerCheck__RemoteAPI / Check_OutputDebugStringA_iat / anti_dbg 三条。"
+    },
+    "yarac": {
+      "exec": "yarac64.exe",
+      "prefer": [
+        "yara/yarac64.exe"
+      ],
+      "note": "YARA 规则编译器，配套 yara 同键。"
+    },
+    "pe-sieve": {
+      "exec": "pe-sieve64.exe",
+      "prefer": [
+        "pe-sieve/pe-sieve64.exe"
+      ],
+      "note": "注入/inline hook 扫描。★ 可执行文件叫 pe-sieve64.exe 而不叫 pe-sieve.exe，第 4 级按 <工具id>.exe 找不到，必须登记 exec 别名。\n★★★ 写反调试探针时的三个致命坑（本机实测，2026-10-09）：\n  1) ★★ x64 上不能用 `mov %%fs:0x30` 读 PEB —— 32 位段前缀搬到 64 位会直接触发 0xC0000005 访问违规。必须用 `__readgsqword(0x60)`，再按 BeingDebugged 在 PEB+2 偏移取字节。\n  2) ★ 用户态读 DR0-DR7 会崩（无调试器时线程不被调试，访问调试寄存器异常）。而且 `__try/__except` 是 MSVC 扩展，MinGW gcc 不认。→ 探针彻底不要碰调试寄存器，那是调试器的职责。\n  3) ★ ProcessDebugFlags(0x1F) 的 bit0 裸跑时也是 1 —— 这是 Win11 的正常行为，bit0=1 表示「未被调试」，语义是反的。把它当检测项会让「裸跑应全 0」这个判据永远不成立，进而把后续所有判据带偏。真检测项是 PEB.BeingDebugged / CheckRemoteDebuggerPresent / NtQueryInformationProcess(DebugPort)。"
+    },
+    "cdb": {
+      "exec": "cdbX64.exe",
+      "note": "★ WinDbg 调试器命令行。本机走 winget 装的 Microsoft.WinDbg（MSIX 商店包）。★★ 绝对不要把 WindowsApps 包目录加进 PATH：MSIX ACL 会让 cdb.exe 直跑报「拒绝访问」（2026-10-09 实测），那比没有更糟 —— Get-Command 查得到、实际跑不了。唯一可用入口是 app execution alias：%LOCALAPPDATA%\\Microsoft\\WindowsApps\\cdbX64.exe，靠该目录已在 User PATH 上命中（x86 用 cdbX86.exe，ARM64 用 cdbARM64.exe）。★ 别名 id 是 cdb 但文件名是 cdbX64.exe，所以 exec 必须显式写。★ 内联引号命令串经 cmd/CreateProcess 会被转义坏（实测报 Win32 error 0n2），带引号的命令一律写 -cf <命令文件>。★ cdb 没有 --version，要靠 -c 里的 !echo 标记或 -cf 验证是否真的能跑。版本 10.0.29661.1004。\n★★★ 硬件断点 ba 在本机【不可用】（2026-10-09 实测）。\n  本机 cdb = WinDbg 10.0.29661.1004（winget Microsoft.WinDbg）。\n  8 种语法变体全部报同一个 'Syntax error in ...'：\n    ba 1 eip <addr>   ba /1 eip <addr>   ba e <addr>   ba <addr>\n    ba 1 <addr>       ba 1 i <addr>       ba 4 eip <addr>  ba 1 r <addr>\n  ★ 注意：报错信息是误导性的 —— 它看起来像参数格式错，实际是这条命令\n    在此构建里根本没被识别。反引号（00007ffb`631fe350）也确实不能用，\n    但去掉反引号也一样报错，所以反引号不是根因。\n  ★ 同一地址用 bp（软件断点）能正常命中，所以调试器本身没问题。\n  ★ 日志里出现 'This target supports Hardware-enforced Stack Protection'\n    只是 CET 特性提示，不是错误。\n  → 需要硬件断点时走 x64dbg（bphws），别在 cdb 上耗时间。\n★★★ cdb 可用姿势（2026-10-09 逐项实跑，判据只用外部可观测状态）：\n  · 软件断点：bp kernelbase!<API>   ← 必须下在 g 之前，靠 cdb 的延迟绑定；\n    同一份脚本若写成「先 g 再 bp」，进程已经跑完，第二个 g 报\n    'No runnable debuggees error'，而 .echo 标记照样出现在日志里。\n    ★ 这是最容易误判为「断点失效」的坑。\n  · 读字符串参数：CreateFileA 等 A 版 API 的参数是 ASCII，必须用 da @rcx；\n    用 du 会按 UTF-16 解码，读出来是「?????」乱码。W 版才用 du。\n  · x64 调 API 第一个指针参数在 rcx；但要先 kn 看栈帧确认调用者真是该函数，\n    若栈里只有 RtlExitUserProcess / common_exit，说明它压根没被调用。\n  · 内存读写：db @rcx L20 读、eb @rcx 写 int3、db 再读确认。\n  · attach 到活进程：-p <pid>，可拿模块表和调用栈。\n  · 命令串用 -cf <文件>；-c 内联带引号会被 cmd/CreateProcess 转义坏（Win32 error 0n2）。\n  · 样本自证：跑之前先直接执行一遍，确认目标分支真会走到（gcc 会把常量条件整段折叠，-O0 + volatile + argv 传参可避免）。\n★★ 硬件断点的三条路（本机实测结论）：\n  1) cdb 的 ba          ❌ 不可用。8 种语法全报 Syntax error，同址 bp 可命中。\n  2) x64dbg headless    ❌ 不可用。command loop 2.1 秒自杀，见上。\n  3) x64dbg GUI + MCP   ✅ 可用，但必须人在真实桌面手动开 x64dbg.exe。\n     GUI 模式不会自杀，MCP 插件常驻，可 bphws + EvalExpression('Dr0')。\n     agent 的自动化会话里起不了 GUI（无交互桌面）。\n\n  → 实际建议：反反调试不需要硬件断点也能做。\n    ScyllaHide 注入 + cdb 软件断点，已实测 3 项检测 → 0 项翻转（见 scyllahide note）。\n    硬件断点的独特价值（不改目标内存、INT3 校验测不出）只在\n    「目标自校验代码完整性」时才需要 —— 那时人在桌面手动开 GUI。\n  ★★ attach 必须给命令文件放行：cdb -p <pid> -cf <文件>，文件里要有 `g`（或 `erun`）。\n     只 attach 不 g 的话，进程停在 ntdll!LdrpDoDebuggerBreak（初始断点），\n     跑完它自己就退出了 —— 看起来像「ScyllaHide 注入后检测项归零」，实际是假象。\n  ★★ 被调试进程自己的 stdout 继承 cdb 的 stdout，【不】进 -logo 日志。\n     断点里 `da @rcx` 读到的参数要去 -RedirectStandardOutput 拿，日志里一个字都没有。\n\n★ attach 必须在命令文件里放行 `g`，否则进程停在初始断点自己退出。\n  只能走 app execution alias `%LOCALAPPDATA%\\Microsoft\\WindowsApps\\cdbX64.exe`，\n  **不要把它加进 PATH**。带引号的 cdb 命令串经 cmd 会被转义坏（`Win32 error 0n2`），\n  一律写 `-cf <命令文件>`。\n  `cdbX86` 只能调 32 位目标，`cdbX64` 只能调 64 位，混用报 `Win32 error 0n50`。\n\n★ attach 必须在命令文件里放行 `g`，否则进程停在初始断点自己退出。\n  只能走 app execution alias `%LOCALAPPDATA%\\Microsoft\\WindowsApps\\cdbX64.exe`，**不要加进 PATH**。带引号的 cdb 命令串经 cmd 会被转义坏（`Win32 error 0n2`），一律写 `-cf <命令文件>`。\n  `cdbX86` 只能调 32 位，`cdbX64` 只能调 64 位，混用报 `Win32 error 0n50`。"
+    },
+    "cdbX64": {
+      "note": "cdb 的真实文件名，等价 cdb。\n  ★★ attach 必须给命令文件放行：cdb -p <pid> -cf <文件>，文件里要有 `g`（或 `erun`）。\n     只 attach 不 g 的话，进程停在 ntdll!LdrpDoDebuggerBreak（初始断点），\n     跑完它自己就退出了 —— 看起来像「ScyllaHide 注入后检测项归零」，实际是假象。\n  ★★ 被调试进程自己的 stdout 继承 cdb 的 stdout，【不】进 -logo 日志。\n     断点里 `da @rcx` 读到的参数要去 -RedirectStandardOutput 拿，日志里一个字都没有。\n\nx64 调试器，只能走 WindowsApps alias。详见 `cdb` note。"
+    },
+    "cdbX86": {
+      "note": "32 位调试器，等价 cdb（x86 目标）。\n  ★★ attach 必须给命令文件放行：cdb -p <pid> -cf <文件>，文件里要有 `g`（或 `erun`）。\n     只 attach 不 g 的话，进程停在 ntdll!LdrpDoDebuggerBreak（初始断点），\n     跑完它自己就退出了 —— 看起来像「ScyllaHide 注入后检测项归零」，实际是假象。\n  ★★ 被调试进程自己的 stdout 继承 cdb 的 stdout，【不】进 -logo 日志。\n     断点里 `da @rcx` 读到的参数要去 -RedirectStandardOutput 拿，日志里一个字都没有。\n\nx86 调试器（32 位目标专用），详见 `cdb` note。"
+    },
+    "pyghidra-mcp": {
+      "exec": "pyghidra-mcp.exe",
+      "prefer": [
+        "runtime/venv-re/Scripts/pyghidra-mcp.exe"
+      ],
+      "note": "★ PyGhidra MCP server 0.2.7（JPype 直驱 Ghidra，不装插件、不占端口、不需要 GUI）—— headless Ghidra 反编译的 MCP 主通道，实测提供 20 个工具（decompile_function / list_xrefs / list_imports / gen_callgraph / rename_function / set_comment / import_binary 等）。装在独立 venv runtime\\venv-re（不污染系统 Python 3.12），系统 Python 里也有一份经 bootstrap 装的副本，两份都实测握手成功。同 venv 还有 pyghidra.exe / pyghidraw.exe（PyGhidra CLI）。★ 必须有 JAVA_HOME（指向 runtime\\jdk21\\…）与 GHIDRA_INSTALL_DIR（指向 Ghidra 根），否则 JPype 起不来 Ghidra。默认 transport=stdio，支持 -t streamable-http -p <port>。★★ 不要装 LaurieWired/GhidraMCP 那个 Ghidra 扩展：它的模块 banner 往 stdout 打非 JSON 行，实测直接把 MCP tools/list 打成 \"Invalid line encountered: GHIDRA_MODULE_NAME=GhidraMCP\"，必须拆掉（已在本机移除）。★ stdio server 永不退出，探测时不能用 ReadToEnd()（永远不返回），要用 StreamReader.ReadLine() 逐行读。"
+    },
+    "pyghidra": {
+      "exec": "pyghidra.exe",
+      "prefer": [
+        "runtime/venv-re/Scripts/pyghidra.exe"
+      ],
+      "note": "PyGhidra 3.1.0 CLI，同 runtime\\venv-re venv。无 GUI/无 MCP 的脚本化 Ghidra 反编译通道。"
+    },
+    "scyllahidecli": {
+      "note": "ScyllaHide 反反调试插件本体（InjectorCLIx64.exe 已由 scyllahide 别名登记）。插件侧已随 x64dbg 部署：x64\\plugins\\ScyllaHideX64DBGPlugin.dp64。"
+    },
+    "jeb": {
+      "note": "JEB Decompiler 3.19.1 Professional（relab-tools 绿版，目录 D:\\Tools\\disasm\\JEB_Decompiler_3.19.1_Professional，373 MB）。商业工具，具体入口文件与许可状态待实测后补全 exec/prefer。"
+    },
+    "jeb_wincon": {
+      "note": "JEB 的命令行控制台入口（JEB 4.x 起为 jeb_wincon.exe）。3.19.1 目录里若没有这个名字，探测层会返回 Available=False —— 那说明该版本入口名不同，用 (Get-ChildItem 'D:\\Tools\\disasm\\JEB*' -Filter '*.exe') 现查，不要猜。"
+    },
+    "androidkiller": {
+      "note": "AndroidKiller_fix（relab-tools，目录 D:\\Tools\\android\\AndroidKiller_fix，56 MB）。APK 脱壳/反编译辅助，入口文件名待实测。"
+    },
+    "androidev": {
+      "note": "Android逆向助手 v2.2（D:\\Tools\\android\\Android逆向助手_v2.2，16 MB）。入口待实测。"
+    },
+    "gdbtool": {
+      "note": "搞机工具箱 11.0.1（D:\\Tools\\android\\搞机工具箱11.0.1，14 MB）。入口待实测。"
+    },
+    "unpackers": {
+      "note": "脱壳/解包工具集（relab-tools pack/Unpackers，143 MB，307 文件）。里面是多个独立小工具，需要哪个用 (Get-ChildItem 'D:\\Tools\\pack\\Unpackers' -Recurse -Filter '*.exe') 现查全路径，不要凭目录名猜 —— 这类工具集没有统一入口。"
+    },
+    "ida83": {
+      "exec": "idat.exe",
+      "prefer": [
+        "disasm/IDA Pro 9.3/idat.exe"
+      ],
+      "note": "★ IDA Pro 8.3 Portable（relab-tools 绿版，目录 D:\\Tools\\disasm\\IDA_Pro_v8.3_Portable，672 MB）。★ 与 9.4 并存，目录名不同不会互相覆盖 —— 用这个 id 显式指定 8.3。许可在同目录 ida.key（3213 字节，HEXRAYS_LICENSE 8.3 文本格式，不是 9.x 的 hexlic JSON）：48-197E-71A9-10 IDAPROFW 等 3 条 Floating 授权，#=32767，到期 2038-01-19。★ 实测：GUI 能正常启动（许可通过）；idat -A 批处理会报 'License not yet accepted, cannot run in batch mode' —— 这是首次运行协议开关，不是许可无效，GUI 侧已确认可用。★ 必须用自带 python311（3.11.7）：idapyswitch -a 已切好，sip.pyd 已 patch 成 python311.dll。8.3 不支持 3.12（imp 模块已移除），捡到系统 3.12 会直接 Import failed。无 idalib.dll —— 那是 9.x 才有的。自带中文增强（StrongCC v3，CP936）与 patching/findcrypt/keystone 插件，SDK 在 IDA83_SDK_TOOLS.7z。\n★★ ★架构必须分清：idat.exe 是 32 位分析器、idat64.exe 是 64 位。喂 x64 PE 给 idat.exe 会报 'Please use 64-bit IDA to load PE+ files' 然后 exit=4，而更早的 'License not yet accepted, cannot run in batch mode' 是【误导性前置提示】—— 它会在许可完全正常时也出现，别据此判定许可无效。真正的原因往下翻一行才是。★ 批处理开关在注册表 HKCU\\Software\\Hex-Rays\\IDA 的 'License83 Hex-Rays SA' = 1（DWORD），GUI 首次接受协议后写入；缺它时 idat 一律拒绝 -A。★ 该键下还有 Python3TargetDLL 记录 IDAPython 解释器路径，换机器/搬目录后若它指向旧路径，IDAPython 会加载失败。\n★★ 无头跑 IDAPython 脚本的正确姿势（2026-10-09 逐组合实测）：\n  idat64 -A -B -S<script.py>   rc=0  ~1s   产出 .i64\n  其中 <script.py> 【必须以 idc.qexit(0) 结尾】，且开头调 idaapi.auto_wait()。\n  ★ 不带 qexit 会 HANG 到超时（实测 90s 超时，产出只有 .id0/.id1/.id2/.nam/.til）。\n  ★ -A 单独用（不带 -B）也会 HANG —— -B 是必须的。\n  ★ 建库和反编译分两段更稳：第一段 -A -B 建库，第二段对 .i64 再开 -S 跑脚本。\n  反编译务必在脚本里显式 ida_hexrays.decompile(ea)；否则拿到的是 JUMPOUT(...) 空壳。\n★★★ 验证方法论（本轮踩坑总结，比工具用法更容易让人翻车）：\n  1) ★★ 判据不能用「日志里出现我写的 .echo 标记」。cdb 会把命令回显也写进 -logo 日志，程序没执行到目标路径时标记照样在。三轮里我因此把 「g 之后程序直接退出了」误报成「API 断点命中」。\n     正确判据只用外部可观测状态：文件真被创建 / 内存字节真变了 / 伪代码含目标逻辑。\n  2) ★ 造样本时必须让目标分支在【运行时】才成立。若分支条件是编译期常量，gcc 会整段折叠掉（实测 verify(0x6B21) 被优化成常量比较，CreateFileA 一次都没被调用），于是「断点打不上」被误判成「cdb 取不到参数」。用 -O0 + volatile + 命令行传参。\n  3) ★ 断言前先自证样本会走目标路径（直接跑一遍看 marker 是否生成），否则后面所有基于它的测试都是空中楼阁。\n  4) ★ rc=0 只代表进程退干净，不代表功能可用。\n  5) x64 断点命中后别急着读 rcx 判成败：先 kn 看栈帧，确认调用者真的是目标函数（若栈里只有 RtlExitUserProcess / common_exit，说明压根没调用过）。\n\n★★ 【2026-10-10 IDA 版本变更】本机 IDA 已从 9.4 / 8.3 换成 **9.3**，安装在 `disasm\\IDA Pro 9.3`。\n  · 本条目原先指向的路径已随旧版本一并删除，现已重指向 9.3。\n  · ★ `idat.exe`（9.3）是 64 位宿主，x64 样本直接用它；**不要再按「32 位分析器」的老认知去套**。\n  · ★ headless 脚本必须以 `idc.qexit(0)` 结尾，否则挂死到超时；脚本开头调 `idaapi.auto_wait()`，否则反编译拿到 `JUMPOUT(...)` 空壳。\n  · ★ 搜索许可别只搜 `.hexlic`（8.x 用 `.key`），两种都搜。\n  · ★ 首次运行若报「License not yet accepted, cannot run in batch mode」，先在 GUI 里接受一次协议（写注册表 `EULA_93` / `EULA` 等键），再回头跑 headless。\n\n  本条：★ 历史别名：原指 8.3，现保留为 9.3 的兼容键"
+    },
+    "idat83": {
+      "exec": "idat.exe",
+      "prefer": [
+        "disasm/IDA Pro 9.3/idat.exe"
+      ],
+      "note": "IDA 8.3 的无头分析器，等价 ida83。别用通用 id/idat —— 那个键指向 9.4，而 9.4 的 hexlic 是示例许可、idat 会 exit 1。\n★★ ★架构必须分清：idat.exe 是 32 位分析器、idat64.exe 是 64 位。喂 x64 PE 给 idat.exe 会报 'Please use 64-bit IDA to load PE+ files' 然后 exit=4，而更早的 'License not yet accepted, cannot run in batch mode' 是【误导性前置提示】—— 它会在许可完全正常时也出现，别据此判定许可无效。真正的原因往下翻一行才是。★ 批处理开关在注册表 HKCU\\Software\\Hex-Rays\\IDA 的 'License83 Hex-Rays SA' = 1（DWORD），GUI 首次接受协议后写入；缺它时 idat 一律拒绝 -A。★ 该键下还有 Python3TargetDLL 记录 IDAPython 解释器路径，换机器/搬目录后若它指向旧路径，IDAPython 会加载失败。\n★★ 无头跑 IDAPython 脚本的正确姿势（2026-10-09 逐组合实测）：\n  idat64 -A -B -S<script.py>   rc=0  ~1s   产出 .i64\n  其中 <script.py> 【必须以 idc.qexit(0) 结尾】，且开头调 idaapi.auto_wait()。\n  ★ 不带 qexit 会 HANG 到超时（实测 90s 超时，产出只有 .id0/.id1/.id2/.nam/.til）。\n  ★ -A 单独用（不带 -B）也会 HANG —— -B 是必须的。\n  ★ 建库和反编译分两段更稳：第一段 -A -B 建库，第二段对 .i64 再开 -S 跑脚本。\n  反编译务必在脚本里显式 ida_hexrays.decompile(ea)；否则拿到的是 JUMPOUT(...) 空壳。\n\n★★ 【2026-10-10 IDA 版本变更】本机 IDA 已从 9.4 / 8.3 换成 **9.3**，安装在 `disasm\\IDA Pro 9.3`。\n  · 本条目原先指向的路径已随旧版本一并删除，现已重指向 9.3。\n  · ★ `idat.exe`（9.3）是 64 位宿主，x64 样本直接用它；**不要再按「32 位分析器」的老认知去套**。\n  · ★ headless 脚本必须以 `idc.qexit(0)` 结尾，否则挂死到超时；脚本开头调 `idaapi.auto_wait()`，否则反编译拿到 `JUMPOUT(...)` 空壳。\n  · ★ 搜索许可别只搜 `.hexlic`（8.x 用 `.key`），两种都搜。\n  · ★ 首次运行若报「License not yet accepted, cannot run in batch mode」，先在 GUI 里接受一次协议（写注册表 `EULA_93` / `EULA` 等键），再回头跑 headless。\n\n  本条：★ 历史别名，同 ida83"
+    },
+    "idat64_83": {
+      "exec": "idat.exe",
+      "prefer": [
+        "disasm/IDA Pro 9.3/idat.exe"
+      ],
+      "note": "IDA 8.3 的 64 位无头分析器（IDA 7.4+ 起 idat 本身就是 64 位，idat64 保留兼容）。\n★★ ★架构必须分清：idat.exe 是 32 位分析器、idat64.exe 是 64 位。喂 x64 PE 给 idat.exe 会报 'Please use 64-bit IDA to load PE+ files' 然后 exit=4，而更早的 'License not yet accepted, cannot run in batch mode' 是【误导性前置提示】—— 它会在许可完全正常时也出现，别据此判定许可无效。真正的原因往下翻一行才是。★ 批处理开关在注册表 HKCU\\Software\\Hex-Rays\\IDA 的 'License83 Hex-Rays SA' = 1（DWORD），GUI 首次接受协议后写入；缺它时 idat 一律拒绝 -A。★ 该键下还有 Python3TargetDLL 记录 IDAPython 解释器路径，换机器/搬目录后若它指向旧路径，IDAPython 会加载失败。\n★★ 无头跑 IDAPython 脚本的正确姿势（2026-10-09 逐组合实测）：\n  idat64 -A -B -S<script.py>   rc=0  ~1s   产出 .i64\n  其中 <script.py> 【必须以 idc.qexit(0) 结尾】，且开头调 idaapi.auto_wait()。\n  ★ 不带 qexit 会 HANG 到超时（实测 90s 超时，产出只有 .id0/.id1/.id2/.nam/.til）。\n  ★ -A 单独用（不带 -B）也会 HANG —— -B 是必须的。\n  ★ 建库和反编译分两段更稳：第一段 -A -B 建库，第二段对 .i64 再开 -S 跑脚本。\n  反编译务必在脚本里显式 ida_hexrays.decompile(ea)；否则拿到的是 JUMPOUT(...) 空壳。\n★★★ 验证方法论（本轮踩坑总结，比工具用法更容易让人翻车）：\n  1) ★★ 判据不能用「日志里出现我写的 .echo 标记」。cdb 会把命令回显也写进 -logo 日志，程序没执行到目标路径时标记照样在。三轮里我因此把 「g 之后程序直接退出了」误报成「API 断点命中」。\n     正确判据只用外部可观测状态：文件真被创建 / 内存字节真变了 / 伪代码含目标逻辑。\n  2) ★ 造样本时必须让目标分支在【运行时】才成立。若分支条件是编译期常量，gcc 会整段折叠掉（实测 verify(0x6B21) 被优化成常量比较，CreateFileA 一次都没被调用），于是「断点打不上」被误判成「cdb 取不到参数」。用 -O0 + volatile + 命令行传参。\n  3) ★ 断言前先自证样本会走目标路径（直接跑一遍看 marker 是否生成），否则后面所有基于它的测试都是空中楼阁。\n  4) ★ rc=0 只代表进程退干净，不代表功能可用。\n  5) x64 断点命中后别急着读 rcx 判成败：先 kn 看栈帧，确认调用者真的是目标函数（若栈里只有 RtlExitUserProcess / common_exit，说明压根没调用过）。\n\n★★ 【2026-10-10 IDA 版本变更】本机 IDA 已从 9.4 / 8.3 换成 **9.3**，安装在 `disasm\\IDA Pro 9.3`。\n  · 本条目原先指向的路径已随旧版本一并删除，现已重指向 9.3。\n  · ★ `idat.exe`（9.3）是 64 位宿主，x64 样本直接用它；**不要再按「32 位分析器」的老认知去套**。\n  · ★ headless 脚本必须以 `idc.qexit(0)` 结尾，否则挂死到超时；脚本开头调 `idaapi.auto_wait()`，否则反编译拿到 `JUMPOUT(...)` 空壳。\n  · ★ 搜索许可别只搜 `.hexlic`（8.x 用 `.key`），两种都搜。\n  · ★ 首次运行若报「License not yet accepted, cannot run in batch mode」，先在 GUI 里接受一次协议（写注册表 `EULA_93` / `EULA` 等键），再回头跑 headless。\n\n  本条：★ 历史别名，同 9.3 的 64 位分析器  ⚠ 实测 9.3 目录里没有 idat64.exe\n★★ 2026-10-10 修正：★ 同上，指向真实存在的 idat.exe"
+    },
+    "idat32_83": {
+      "exec": "idat.exe",
+      "prefer": [
+        "disasm/IDA Pro 9.3/idat.exe"
+      ],
+      "note": "★ IDA 8.3 的 **32 位**无头分析器。★ 只吃 32 位目标（PE32 / ELF32 / Mach-O 32）。喂 64 位样本会报 'Please use 64-bit IDA to load PE+ files' 并 exit=4，这个报错常被误当成许可问题，实际去用 idat64_83。⚠ 它同时也是许可开关未打开时的表现，两种原因同一现象 —— 查 -L 日志最后几行区分。\n★★ 无头跑 IDAPython 脚本的正确姿势（2026-10-09 逐组合实测）：\n  idat64 -A -B -S<script.py>   rc=0  ~1s   产出 .i64\n  其中 <script.py> 【必须以 idc.qexit(0) 结尾】，且开头调 idaapi.auto_wait()。\n  ★ 不带 qexit 会 HANG 到超时（实测 90s 超时，产出只有 .id0/.id1/.id2/.nam/.til）。\n  ★ -A 单独用（不带 -B）也会 HANG —— -B 是必须的。\n  ★ 建库和反编译分两段更稳：第一段 -A -B 建库，第二段对 .i64 再开 -S 跑脚本。\n  反编译务必在脚本里显式 ida_hexrays.decompile(ea)；否则拿到的是 JUMPOUT(...) 空壳。\n\n★★ 【2026-10-10 IDA 版本变更】本机 IDA 已从 9.4 / 8.3 换成 **9.3**，安装在 `disasm\\IDA Pro 9.3`。\n  · 本条目原先指向的路径已随旧版本一并删除，现已重指向 9.3。\n  · ★ `idat.exe`（9.3）是 64 位宿主，x64 样本直接用它；**不要再按「32 位分析器」的老认知去套**。\n  · ★ headless 脚本必须以 `idc.qexit(0)` 结尾，否则挂死到超时；脚本开头调 `idaapi.auto_wait()`，否则反编译拿到 `JUMPOUT(...)` 空壳。\n  · ★ 搜索许可别只搜 `.hexlic`（8.x 用 `.key`），两种都搜。\n  · ★ 首次运行若报「License not yet accepted, cannot run in batch mode」，先在 GUI 里接受一次协议（写注册表 `EULA_93` / `EULA` 等键），再回头跑 headless。\n\n  本条：★ 历史别名，9.3 的 idat 即 64 位宿主"
+    },
+    "idapyswitch83": {
+      "exec": "idapyswitch.exe",
+      "prefer": [
+        "disasm/IDA Pro 9.3/idapyswitch.exe"
+      ],
+      "note": "★ 切 IDA 8.3 的 IDAPython 解释器。★ 用 -a（--auto-apply）才是真切换，只给 -s/--force-path 是 dry-run 不落盘。目标必须是 python3.dll 不是 python.exe。它会顺带把 python\\3\\PyQt5\\python_3.11\\sip.pyd 复制到 PyQt5\\sip.pyd 并 patch 导入名。\n\n★★ 【2026-10-10 IDA 版本变更】本机 IDA 已从 9.4 / 8.3 换成 **9.3**，安装在 `disasm\\IDA Pro 9.3`。\n  · 本条目原先指向的路径已随旧版本一并删除，现已重指向 9.3。\n  · ★ `idat.exe`（9.3）是 64 位宿主，x64 样本直接用它；**不要再按「32 位分析器」的老认知去套**。\n  · ★ headless 脚本必须以 `idc.qexit(0)` 结尾，否则挂死到超时；脚本开头调 `idaapi.auto_wait()`，否则反编译拿到 `JUMPOUT(...)` 空壳。\n  · ★ 搜索许可别只搜 `.hexlic`（8.x 用 `.key`），两种都搜。\n  · ★ 首次运行若报「License not yet accepted, cannot run in batch mode」，先在 GUI 里接受一次协议（写注册表 `EULA_93` / `EULA` 等键），再回头跑 headless。\n\n  本条：★ 历史别名，切 IDAPython 解释器"
+    },
+    "ida83-gui": {
+      "prefer": [
+        "disasm/IDA Pro 9.3/ida.exe"
+      ],
+      "note": "IDA 8.3 GUI。**仅供人工在桌面侧交互**，agent 不得经 bash/管道拉起。★ 注意：开着会锁住 ida.dll，安装/移动前必须先关。\n\n★★ 【2026-10-10 IDA 版本变更】本机 IDA 已从 9.4 / 8.3 换成 **9.3**，安装在 `disasm\\IDA Pro 9.3`。\n  · 本条目原先指向的路径已随旧版本一并删除，现已重指向 9.3。\n  · ★ `idat.exe`（9.3）是 64 位宿主，x64 样本直接用它；**不要再按「32 位分析器」的老认知去套**。\n  · ★ headless 脚本必须以 `idc.qexit(0)` 结尾，否则挂死到超时；脚本开头调 `idaapi.auto_wait()`，否则反编译拿到 `JUMPOUT(...)` 空壳。\n  · ★ 搜索许可别只搜 `.hexlic`（8.x 用 `.key`），两种都搜。\n  · ★ 首次运行若报「License not yet accepted, cannot run in batch mode」，先在 GUI 里接受一次协议（写注册表 `EULA_93` / `EULA` 等键），再回头跑 headless。\n\n  本条：★ 历史别名，GUI 仅人工桌面侧",
+      "exec": "ida.exe"
+    },
+    "rabin2": {
+      "note": "★ **分两种情况，别一概而论**（2026-10-10 实测）：\n  1) **短参数被 r2 启动参数占用**：`rabin2 -I / -i / -H / -e / -l` 全部必失败 ——\n     rc=1，stderr=`ERROR: Missing file to open`，**不挂起**，0.2 秒返回。\n     这是 r2 CLI 的参数冲突，不是文件问题。\n  2) **`-S` 之后的运行会真挂起**：跑起来不返回、零输出、进程不退（>25s）。\n  ★ 结论：**本机 rabin2 不可依赖**。扒导入表 / 节区 / 字符串一律改用\n  `r2 -2 -qc '<cmd>' <file>`（实测正常返回）。\n  别把「短参数失败」误读成「文件不对」，也别把「挂起」当成偶发。"
     }
   },
   "deny": [
@@ -207,7 +498,7 @@
       "pathPatterns": [
         "*\\zenmap\\*"
       ],
-      "reason": "Zenmap 捆绑旧 Python，版本过旧且缺依赖，不得作为系统 Python"
+      "reason": "★ Zenmap（Nmap GUI）捆绑的旧 Python，只服务 Zenmap 自身。版本过旧、缺 pip 与常规依赖。系统 Python 在 D:\\EXE\\python（由 PATH 提供），一旦 PATH 失效会误命中这里。"
     },
     {
       "toolIds": [
@@ -217,7 +508,7 @@
       "pathPatterns": [
         "*\\mingw64\\libexec\\git-core\\*"
       ],
-      "reason": "Git 内部实现目录缺少 PATH 组装，不能直接调用"
+      "reason": "Git 内部实现副本，非用户入口；缺完整 PATH 组装，直接调用会找不到 exec 目录下的工具。"
     },
     {
       "toolIds": [
@@ -228,7 +519,18 @@
       "pathPatterns": [
         "*\\corepack\\shims\\*"
       ],
-      "reason": "corepack shim 与 Node 原生命令竞争"
+      "reason": "corepack 的 shim 是包装层，会与 Node 自带的 npm.cmd 竞争，产生 '两个 npm' 的不确定性。"
+    },
+    {
+      "toolIds": [
+        "python",
+        "python3",
+        "pip"
+      ],
+      "pathPatterns": [
+        "*\\wireshark\\*python*"
+      ],
+      "reason": "Wireshark 若捆绑 Python，仅用于内部插件，不能当系统 Python 用。"
     },
     {
       "toolIds": [
@@ -239,7 +541,7 @@
         "*\\x64dbg\\release\\x64\\x64dbg.exe",
         "*\\x64dbg\\release\\x32\\x32dbg.exe"
       ],
-      "reason": "GUI 调试器弹窗卡死进程，自动化必须回落到 headless.exe"
+      "reason": "GUI 调试器：弹窗等输入、零 stdout、进程永不退出。agent 经 bash 同步拉起会卡死整轮且无法察觉（终端计时器继续走、token 静止）。PATH 里的 release\\x64 目录含 GUI 版，PATH 级（第 2 级）先于 _map.json（第 3 级）命中，故必须 deny 才能落到 headless。需要 GUI 的人工桌面场景请显式探测 x64dbg-gui / x32dbg-gui。"
     },
     {
       "toolIds": [
@@ -247,18 +549,107 @@
         "ida",
         "ida64",
         "idaq",
-        "wireshark",
-        "wshark"
+        "Wireshark",
+        "wshark",
+        "wireshark"
       ],
       "pathPatterns": [
         "*\\DIE\\die.exe",
+        "*\\Wireshark\\Wireshark.exe"
+      ],
+      "reason": "GUI 前端：弹窗等输入、零 stdout、进程永不退出。agent 经 bash 同步拉起会卡死整轮且模型无法察觉（终端计时器继续走、token 静止）。PATH 里的工具目录含 GUI 版，PATH 级（第 2 级）先于 _map.json（第 3 级）命中，故必须 deny 才能回落到 CLI 孪生。CLI 孪生：die->diec、ida->idat、Wireshark->tshark。"
+    },
+    {
+      "toolIds": [
+        "httpx",
+        "httpx-client"
+      ],
+      "pathPatterns": [
+        "*\\python\\Scripts\\httpx.exe",
+        "*\\Lib\\site-packages\\httpx*"
+      ],
+      "reason": "★ 同名陷阱：Python 的 httpx 库会在 <python>\\Scripts\\ 放一个同名 httpx.exe，把 ProjectDiscovery 的 httpx 扫描器完全遮蔽。判据是输出 —— 库版打印 'Usage: httpx [OPTIONS] URL'，扫描器版打印 __ __ __ _ __ 横幅。系统 Python 的 Scripts 一旦进 PATH，PATH 级（第 2 级）先于 _map.json（第 3 级）命中，故必须 deny。"
+    },
+    {
+      "toolIds": [
+        "asm"
+      ],
+      "pathPatterns": [
+        "*\\python\\Scripts\\asm.exe"
+      ],
+      "reason": "同名陷阱：capstone 附带的 Python 包装 asm.exe 会遮蔽 Go 工具链的汇编器（go\\pkg\\tool\\windows_amd64\\asm.exe）。需要 Go 汇编器时用完整路径或先 deny 本条。"
+    },
+    {
+      "toolIds": [
+        "playwright",
+        "playwright-mcp"
+      ],
+      "pathPatterns": [
+        "*\\python\\Scripts\\playwright*"
+      ],
+      "reason": "同名陷阱：Python 版 playwright 的入口也在 Scripts 下，会遮蔽 Node 版 playwright CLI（Node 版才是 MCP 通道 npx playwright 的宿主，版本也更匹配）。"
+    },
+    {
+      "toolIds": [
+        "npm",
+        "npx",
+        "pnpm",
+        "yarn",
+        "corepack",
+        "playwright",
+        "tsc",
+        "eslint",
+        "prettier",
+        "vitest"
+      ],
+      "pathPatterns": [
+        "*\\Node\\*.ps1",
+        "*\\node_modules\\npm\\bin\\*.cmd"
+      ],
+      "reason": "★ 必 deny 才能拿到可执行入口。Node 的 bin 目录里同名工具同时存在 .cmd/.ps1/无扩展三份，PATH 级（第 2 级）先于 _map.json（第 3 级）命中，而 PowerShell 解析优先级是 .ps1 > .cmd > .exe：拿到 .ps1 后在默认 Restricted 策略下会被直接拒绝执行（报「在此系统上禁止运行脚本」），这正是 START-HERE §1① 与 环境初始化.md §2① 描述的现象 —— 看着像工具坏了，其实只是执行策略。第二条模式挡掉 node_modules\\npm\\bin\\ 下路径重复的坏副本。"
+    },
+    {
+      "toolIds": [
+        "capa"
+      ],
+      "pathPatterns": [
+        "*\\python\\Scripts\\capa.exe",
+        "*\\Lib\\site-packages\\capa\\*",
+        "*\\venv-*\\Scripts\\capa.exe"
+      ],
+      "reason": "★2026-10-10 更正：原 reason 提到的 `IDA Professional 9.4` 目录已随换版删除（现址 `disasm\\IDA Pro 9.3`），其 deny 模式已清理。CLI 孪生 `ida` -> `idat.exe` 仍然有效。\n★ 同名陷阱且是残包：PyPI 的 flare-capa 9.4.0 wheel 不含内置规则集，入口 capa.exe 落在系统 Python 的 Scripts 下、PATH 级（第 2 级）先于 _map.json（第 3 级）命中，实跑直接报 'default embedded rules not found!' 然后 exit 10 —— 看着像规则集缺失，实际该用工具根里那份自带 rules 的官方 Windows 二进制（\\capa\\capa.exe）。判据是输出的 ERROR 行；正常版会打印 'Loading capa rules'。"
+    },
+    {
+      "toolIds": [
+        "ida",
+        "ida64",
+        "idaq",
+        "idaq64"
+      ],
+      "pathPatterns": [
         "*\\IDA*\\ida.exe",
         "*\\IDA*\\ida64.exe",
         "*\\IDA*\\idaq.exe",
-        "*\\IDA*\\idaq64.exe",
-        "*\\Wireshark\\Wireshark.exe"
+        "*\\IDA*\\idaq64.exe"
       ],
-      "reason": "GUI 前端弹窗卡死进程，自动化必须使用 CLI 孪生（diec, idat, tshark）"
+      "reason": "GUI 前端：弹窗等输入、零 stdout、进程永不退出，agent 经 bash 同步拉起会卡死整轮。无头入口统一用 idat（CLI 孪生）"
+    },
+    {
+      "toolIds": [
+        "dnSpy",
+        "dnspy"
+      ],
+      "pathPatterns": [
+        "*\\dnSpy\\dnSpy.exe",
+        "*\\dnSpy\\dnSpy-x86.exe"
+      ],
+      "reason": "★2026-10-10 新增：GUI 前端（实测 PE subsystem=2 WINDOWS_GUI），弹窗等输入、零 stdout、进程永不退出。agent 经 bash 拉起会卡死整轮且模型无法察觉。CLI 孪生：dnSpy.Console.exe（subsystem=3 WINDOWS_CUI）。PATH 里的 dnSpy 目录含 GUI 版，PATH 级（第 2 级）先于 _map.json（第 3 级）命中，故必须 deny 才能落到 map 里的 Console 别名。"
     }
-  ]
+  ],
+  "twins": {
+    "dnSpy": "dnSpy.Console"
+  },
+  "meta": {
+    "auditNote": "[2026-10-10 三轮审查] 上一轮 221 篇改编查出并已修：r2 /x 假结论（跨 8 文件）、algo_identify RVA 误判、kernel32 'forwarder' 根因错（真因是 PDB 只导出 *Stub 别名）、NtCreateFile OBJECT_ATTRIBUTES 偏移错（+0x30 是 sizeof，ObjectName 在 +0x10）、JWT/sqli 断链、sketch 目录缺 SKILL.md（kernel-exploit / game-reverse 已补）。本技能包 playwright 必须 `launch(channel=\"msedge\")`，裸 launch() 失败。"
+  }
 }
