@@ -9,6 +9,9 @@ param(
     [string] $LogDir = '',
     [string] $PackageRoot = ''
 )
+# ★ PSModulePath 自愈（2026-10-10 注入，路径由 inject-psmp.py 统一计算）：剔除 WindowsApps 版 PowerShell 7 的模块目录，否则 PS 5.1 会因 TypeData 重复定义失败而使 Get-FileHash / Get-ExecutionPolicy 不可用（已造成两次假绿 + 一次失败被吞）。重算/迁移后请重跑 work/envinit/inject-psmp.py
+. 'C:\relab2\skillpack\skills\scripts\lib\PsModulePathInit.ps1'
+
 $ErrorActionPreference = 'Stop'
 
 $scriptDir = $PSScriptRoot

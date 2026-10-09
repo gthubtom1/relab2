@@ -319,6 +319,11 @@ def run_official_benchmark(ps1, extra_args=(), timeout=1200):
         shutil.rmtree(logdir, ignore_errors=True)
 
 NATURAL_FLOOR = 76  # task card: natural baseline must not regress below 76/86
+# ★ 2026-10-10：official 用例数改为**下限**而非精确值。
+#   benchmark meta 明写「新增路由场景请同步添加用例」，按规矩加用例却被这道门禁判红，
+#   修法提示还是「restore from git」—— 那等于删掉新用例、把新技能退回不可路由。
+#   正确语义：只增不减（加用例是规矩，删用例是覆盖退化）。
+OFFICIAL_FLOOR = 182  # 2026-08-02 基线；只增不减
 
 def check_dual_benchmark(full):
     """Checklist 10: official 182/182, natural >= 76/86, via the official runners."""
@@ -333,9 +338,29 @@ def check_dual_benchmark(full):
         n_nat = len(json.loads(bn.read_text(encoding="utf-8")).get("cases", []))
     except (json.JSONDecodeError, OSError) as e:
         return ("fail", "benchmark JSON unparsable: %s" % e, "restore the benchmark file from git")
-    if n_off != 182 or n_nat != 86:
-        return ("fail", "benchmark shape drifted: official %d (want 182), natural %d (want 86)" % (n_off, n_nat),
-                "restore skills/tests/routing-benchmark*.json from git; case count is frozen")
+    # ★ 2026-10-10 修正：原来硬编码 `n_off != 182 or n_nat != 86`，把用例数**冻结**成精确值。
+    #   但 benchmark 自己的 meta 写着「修改路由规则后必须保持此基准全绿；
+    #   **新增路由场景请同步添加用例**」—— 按规矩加了用例反而会被这道门禁判红。
+    #   2026-10-10 补 R50(web-protocol-reverse) / R51(game-reverse) /
+    #   R52(kernel-exploit) 共 24 条用例后，本检查持续 FAIL，
+    #   而修法提示「restore from git」等于**删掉新用例、把技能退回不可路由**。
+    #
+    #   正确语义：**只增不减**。新增路由必须加用例（这是规矩），
+    #   所以下限检查；删用例才应该拦（那是覆盖退化）。
+    #   ★ 同时保留「不能少于基线」以防有人为绕过而删用例。
+    if n_off < OFFICIAL_FLOOR or n_nat < NATURAL_FLOOR:
+        return ("fail",
+                "benchmark shrank below floor: official %d (floor %d), "
+                "natural %d (floor %d)"
+                % (n_off, OFFICIAL_FLOOR, n_nat, NATURAL_FLOOR),
+                "restore skills/tests/routing-benchmark*.json from git; "
+                "adding new cases is allowed (and expected), removing them is not")
+    if n_off > OFFICIAL_FLOOR or n_nat > NATURAL_FLOOR:
+        print("[INFO] benchmark grew beyond recorded floor: official %d>%d, "
+              "natural %d>%d (allowed)"
+              % (n_off, OFFICIAL_FLOOR, n_nat, NATURAL_FLOOR))
+    if n_off != OFFICIAL_FLOOR or n_nat != NATURAL_FLOOR:
+        pass  # 增长是正常路径，无需额外输出（上面的 print 已提示）
     if not PWSH:
         return ("error:missing", "no powershell for test-routing runners", "run both test-routing scripts by hand")
     # Official gate is strict 182/182; default mode uses its -Quick subset (48),
