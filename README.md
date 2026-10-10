@@ -2,7 +2,7 @@
 
 **给 AI 智能体用的一套东西：怎么做事（kernel）+ 会做什么（skillpack）+ 工具怎么找（TOOLS.md）。**
 
-项目根固定是 **`C:\relab2`**，工具根固定是 **`D:\Tools`** —— 这是定死的约定，**换机也是这两个**，
+本机当前部署在 **`C:\relab2`**（工具根 **`D:\Tools`**）—— 但这**不是约定**：入口脚本全部按 `$PSScriptRoot` 上溯定位，换机可以 clone 到任何位置，别把绝对路径写进命令。
 命令里直接写，不用占位符。探测层内置这两个默认值；万一某台机器还没按约定建好，
 它会自推导并给出警告（`REVERSE_SKILL_ROOT` 指向 skills 根 / 包根 / 仓库根三种写法都认）。
 新机第一步见 [`环境初始化.md`](环境初始化.md) 开头。
@@ -72,7 +72,7 @@ C:\relab2\
 **工具定位是运行时行为，不是数据。** 没有需要维护、会过期的工具清单文件。
 
 ```powershell
-. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1
+. .\skillpack\skills\scripts\lib\Bootstrap.ps1
 $r = Resolve-ReverseToolSpec -Name 'idat'
 $r.Available   # 有没有
 $r.Command     # 在哪

@@ -21,7 +21,7 @@
 ```powershell
 # 1. 走探测层（唯一正确入口，内含四级递进 + PATH/DOTNET_ROOT 自愈）
 #    探测层自定位（本文件在 skills\ 下）：相对本文件载入，不需要任何环境变量
-. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1   # 本机固定路径；万一这台机器还没建好、该文件不存在，回退到本文件所在目录的 .\scripts\lib\Bootstrap.ps1
+. ..\scripts\lib\Bootstrap.ps1   # 相对本文件（skillpack/skills/TOOLS.md）走，不用写死绝对路径；万一这台机器还没建好、该文件不存在，回退到本文件所在目录的 .\scripts\lib\Bootstrap.ps1
 $r = Resolve-ReverseToolSpec -Name <工具id>
 $r.Available; $r.Command; $r.Via
 
@@ -57,7 +57,7 @@ $r.Available; $r.Command; $r.Via
 脚本里直接用探测层，不要自己写查找：
 
 ```powershell
-. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1   # 本机固定路径；万一这台机器还没建好、该文件不存在，回退到本文件所在目录的 .\scripts\lib\Bootstrap.ps1
+. ..\scripts\lib\Bootstrap.ps1   # 相对本文件（skillpack/skills/TOOLS.md）走，不用写死绝对路径；万一这台机器还没建好、该文件不存在，回退到本文件所在目录的 .\scripts\lib\Bootstrap.ps1
 $r = Resolve-ReverseToolSpec -Name 'idat'
 $r.Available   # 有没有
 $r.Command     # 在哪（用完整路径调用，不要依赖 cwd）

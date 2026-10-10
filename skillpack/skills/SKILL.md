@@ -13,9 +13,9 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 1. `NOW`：跑平台原生 router（Windows `scripts/master-route.ps1`；Linux/macOS/Kali `scripts/master-route.sh`），从 `config/routing.json` 定 PRIMARY；疑难再读 `routing.md` 三轴附录。
 2. `NOW`：平台原生 `case-init` 落地当前分析项目的 `work/<case>/scope.md`（本包未落地）；**auth 未 granted 禁止对目标 ACT**。本地离线样本使用 `offline-sample` preset + explicit sample；Force 不得绕过硬门。
 3. `ACT`：立即打开 PRIMARY `SKILL.md` 执行 ACTION REQUIRED。
-4. `NEXT`：工具路径**当场探测本机** —— 唯一入口是探测层。本机固定路径：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`，然后 `Resolve-ReverseToolSpec -Name <工具id>`（`env → PATH → 别名表 → 工具根递归` 四级递进，返回 `Available`/`Command`/`Via`，调用前自动自愈 PATH 与 `DOTNET_ROOT`）。
-   **两个根是主人定死的约定，换机不变：仓库 `C:\relab2`、工具根 `D:\Tools`。命令里直接写，不必用占位符。**
-   （万一某台机器还没按约定建好、上面那条路径不存在：从本文件所在目录往上两级找 `scripts\lib\Bootstrap.ps1`（即 `<技能包根>\skills\scripts\lib\Bootstrap.ps1`），或用 `REVERSE_SKILL_ROOT` 指向技能包根 / 仓库根 / skills 根——探测层三种写法都认。都没有就把情况报出来问人，不许自己找地方新建一份。）
+4. `NEXT`：工具路径**当场探测本机** —— 唯一入口是探测层。先按仓内相对路径 dot-source `..\scripts\lib\Bootstrap.ps1`（即 `<技能包根>\skills\scripts\lib\Bootstrap.ps1`），然后 `Resolve-ReverseToolSpec -Name <工具id>`（`env → PATH → 别名表 → 工具根递归` 四级递进，返回 `Available`/`Command`/`Via`，调用前自动自愈 PATH 与 `DOTNET_ROOT`）。
+   **当前部署在 `C:\relab2`（工具根 `D:\Tools`），但这不是约定**（2026-10-10 修正）：2026-10-10 全项目审查给 30 个入口脚本去掉了硬编码 `C:\relab2\...`，全部改成按 `$PSScriptRoot` 逐级上溯定位；`relab2-root.ps1` 也会在多个常见位置里找仓根。**所以换机可以 clone 到任何位置，命令里不要写死路径。**
+   （若某台机器上相对路径找不到：设 `REVERSE_SKILL_ROOT` 指向技能包根 / 仓库根 / skills 根——探测层三种写法都认。都没有就把情况报出来问人，不许自己找地方新建一份。）
    - ⚠️ **`Get-Command <id>` 返回空 ≠ 本机缺该工具**（2026-10-08 实测事故：工具整体迁目录后注册表已更新，但 agent 进程仍持有启动时的旧 PATH 快照，`Get-Command` 对 `diec`/`r2`/`idat`/`ghidraRun` 全部返回空，agent 据此误判「本机缺工具」并直接停手，实际工具全都在）。**排除办法见 `references/env-selfcheck.md`。**
    - 只有当**四级探测全部 `Available=False`**、且已排除「PATH 快照」「环境变量错位（如 `IDADIR`/`DOTNET_ROOT` 指向死目录时 exe 静默失败）」「GUI/CLI 孪生选错」三种情况后，才允许报「本机缺该工具」。禁止伪造路径。
    - `TOOLS.md` / `.json` 只说「干什么用 / 怎么装」，**不含本机探测结果**，不得当本机事实直接用。工具定位永远以探测层返回的 `Command` 为准；**没有探测过就不要拼路径**。缺工具 → 平台原生 bootstrap（仅 manifest）。
@@ -83,7 +83,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 ## EXECUTION ENVIRONMENT（运行环境）
 
 > 架构（2026-10-05 起）：**单机 · 无跨机假设**。你只操作自己运行所在的这一台机器，不存在宿主↔客户机的跨设备控制。
-> **技能包根与工具根是主人定死的约定：`C:\relab2`（仓库）与 `D:\Tools`（工具）。** 换机也是这两个，命令里直接写。
+> **技能包根与工具根：当前这台机器是 `C:\relab2` 与 `D:\Tools`，但**不要**当约定写死**（2026-10-10 修正）。30 个入口脚本已改成按 `$PSScriptRoot` 上溯定位，`relab2-root.ps1` 也会在多个常见位置找仓根，换机可以 clone 到任何路径。用相对路径或 `REVERSE_SKILL_ROOT`，别拼绝对路径。
 > 但**工具具体在哪个子目录**不靠声明 —— `winget` 装的进 `C:\Program Files\`、pip 的进用户 `Scripts\`、SDK 的进 `%LOCALAPPDATA\`，所以工具的**具体路径**一律用探测层现场求，不要自己拼子目录。
 > 正确做法：用探测层 —— dot-source `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（配置好的机器；若不存在则从本文件往上两级找 `scripts\lib\Bootstrap.ps1`），调 `Resolve-ReverseToolSpec -Name <工具id>`，它按 `env` → `PATH` → 别名表（仓内 `scripts/lib/toolmap.default.json`，本机 `D:\Tools\_map.json` 可覆盖）→ 工具根递归 四级递进，返回 `Available` / `Command` / `Via`。
 > `Via=scan` 的可信度最低（靠文件名扫出来的），用之前先实跑一次版本输出确认身份。四级说明见 `TOOLS.md` §0；MCP 通道见 `references/tool-registry.md`。
@@ -211,7 +211,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 1. 平台原生 router（Windows `scripts/master-route.ps1`；Linux/macOS/Kali `scripts/master-route.sh`）→ PRIMARY（`config/routing.json`）
 2. 平台原生 `case-init` → `pentest-tools/templates/scope.md`
 3. 打开 PRIMARY `SKILL.md`
-4. 疑难时读 `routing.md`；需要本机工具路径时**走探测层**：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <工具id>`（`Get-Command` 只是其中一级，返回空不等于缺工具，见 `references/env-selfcheck.md`；`TOOLS.md` 是装法说明书，不是路径索引）
+4. 疑难时读 `routing.md`；需要本机工具路径时**走探测层**：`. ..\scripts\lib\Bootstrap.ps1`（相对本文件） → `Resolve-ReverseToolSpec -Name <工具id>`（`Get-Command` 只是其中一级，返回空不等于缺工具，见 `references/env-selfcheck.md`；`TOOLS.md` 是装法说明书，不是路径索引）
 
 社区适配层只在 `R46`–`R49` 或 canonical 专项 wrapper 已选中后按需读取：
 `skills/community/registry.json` 是 provenance/maturity/risk 目录，

@@ -92,7 +92,7 @@ Linux/macOS/Kali：`./skillpack/skills/scripts/master-route.sh`
 ```powershell
 # ★ 载入探测层必须带 -ExecutionPolicy Bypass
 #   （全新 Windows 默认 Get-ExecutionPolicy = Restricted，不带必被拒 —— 这不是工具缺失）
-powershell -NoProfile -ExecutionPolicy Bypass -Command ". 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'; Resolve-ReverseToolSpec -Name 'idat'"
+powershell -NoProfile -ExecutionPolicy Bypass -Command ". .\skillpack\skills\scripts\lib\Bootstrap.ps1; Resolve-ReverseToolSpec -Name 'idat'"
 
 # 若本会话里已经 dot-source 过，就直接调（用「不带扩展名」的工具 id）：
 #   $r = Resolve-ReverseToolSpec -Name 'idat'
