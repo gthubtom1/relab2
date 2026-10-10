@@ -1,4 +1,4 @@
-# reverse-skill 技能导航索引
+﻿# reverse-skill 技能导航索引
 
 > 本文件由 `skills/scripts/extract-summaries.ps1` 自动生成，**请勿手改**。
 > 修改摘要请编辑对应模块 `SKILL.md` 的 frontmatter `description`，然后重跑脚本。
@@ -30,15 +30,14 @@
 | [edr-bypass-re](edr-bypass-re/SKILL.md) | EDR绕过研究 — 当已授权红队要在EDR驻守主机上投递载荷，或说“Defender老杀我马怎么办”“怎么做unhook过EDR”“ETW和AMSI怎么处理”时使用。Use when EDR bypass, unhook, syscall in authorized test. |
 | [email-security](email-security/SKILL.md) | Email security review — 当用户收到可疑邮件或要查域名邮箱配置，或说“这封邮件是钓鱼吗”“帮我查下SPF配对没”“BEC诈骗长啥样”时使用。Use when phishing analysis, SPF/DKIM/DMARC check. |
 | [firmware-pentest](firmware-pentest/SKILL.md) | 固件/IoT渗透链 — 当用户拿到一份固件想解包仿真挖洞，或说“这个路由器固件能解开吗”“binwalk解不出文件系统”“想用QEMU跑起这个固件”时使用。Use when firmware extraction, emulation, IoT audit. |
+| [game-reverse](game-reverse/SKILL.md) | 游戏客户端逆向与反作弊研究（DLL/内存结构/封包协议/反作弊机制评估）。用于安全研究与自有客户端审计，产出可复现证据而非可直接分发的对抗工具。 |
 | [ghidra-reverse](ghidra-reverse/SKILL.md) | Ghidra逆向 — 当用户没IDA想用免费工具看二进制，或说“用Ghidra帮我反编译这个”“批量headless怎么跑”“字符串交叉引用在哪”时使用。Use when Ghidra decompile, cross-refs, headless analysis. |
 | [go-rust-reverse](go-rust-reverse/SKILL.md) | Go/Rust逆向 — 当目标是Go或Rust编译的、符号被剥了，或说“这个Go马函数名全没了”“Rust panic字符串怎么定位”“pclntab怎么恢复”时使用。Use when Go Rust stripped binary, runtime recovery. |
 | [hardware-security](hardware-security/SKILL.md) | Hardware interface research — 当用户能摸到板子想找调试口提镜像，或说“这个UART口在哪”“JTAG能连上吗”“Flash怎么dump出来”时使用。Use when UART JTAG discovery, firmware extraction. |
 | [ida-reverse](ida-reverse/SKILL.md) | IDA Pro 逆向分析辅助技能。当用户提到逆向、反编译、分析二进制/PE/ELF/APK/DLL/SO、破解、找密码、漏洞分析、病毒分析、firmware 固件分析，或需要分析 exe/dll/so/elf/macho/sys 等文件时，务必使用此技能。 |
 | [identity-federation](identity-federation/SKILL.md) | Use for authorized assessment of federated identity systems including SAML, OIDC, OAuth2 flows, SSO misconfiguration, and token confusion issues. |
 | [js-reverse](js-reverse/SKILL.md) | 在使用 js-reverse-mcp 做前端 JavaScript 逆向时使用，适用于签名链路定位、页面观察取证、运行时采样、本地补环境复现与证据化输出。优先适配当前环境里的 js-reverse_* 工具，需要更强的浏览器/CDP/Hook 面时联动 jshookmcp。 |
-| [game-reverse](game-reverse/SKILL.md) | 游戏客户端逆向与反作弊机制评估（DLL/内存结构/封包协议），安全研究与自有客户端审计视角 |
-| [kernel-exploit](kernel-exploit/SKILL.md) | Linux 内核漏洞利用链分析（CVE 复现、根因定位、利用原语推导、缓解绕过） |
-| [web-protocol-reverse](web-protocol-reverse/SKILL.md) | 浏览器端 JS 协议逆向 → 纯 Python 采集器（cookie 溯源 / JSVMP / 去浏览器依赖） | 改编自 spider-king-skill (MIT) |
+| [kernel-exploit](kernel-exploit/SKILL.md) | Linux 内核漏洞利用链分析（CVE 复现、根因定位、利用原语推导、缓解绕过）。用于研究用途，优先做根因与缓解评估而非实机利用。 |
 | [llm-security](llm-security/SKILL.md) | Use for authorized security assessment of LLM applications and AI agents, including prompt injection, tool abuse, RAG exposure, memory poisoning, and model s... |
 | [macos-reverse](macos-reverse/SKILL.md) | Use for authorized macOS and Mach-O reverse engineering including codesign, Objective-C/Swift recovery, endpoint security surfaces, and Apple platform malwar... |
 | [malware-analysis](malware-analysis/SKILL.md) | Use when analyzing suspected malware through static, dynamic, and behavioral techniques, including IOC extraction, YARA or Sigma rules, sandboxing, and anti-... |
@@ -57,6 +56,7 @@
 | [thick-client](thick-client/SKILL.md) | Use for authorized security testing of desktop thick clients including local storage, update channels, IPC, traffic, and client-side trust boundaries. |
 | [threat-hunting](threat-hunting/SKILL.md) | Use for blue-team threat hunting, detection engineering with Sigma/YARA, SIEM query design, and incident detection validation. |
 | [threat-intelligence](threat-intelligence/SKILL.md) | Use for authorized OSINT and cyber threat intelligence that enriches IOCs, campaigns, impersonation, scams, or threat actors from public sources. Includes bo... |
+| [web-protocol-reverse](web-protocol-reverse/SKILL.md) | 把"看起来只能靠浏览器跑"的敌意 Web 客户端，还原成不依赖浏览器的纯 Python 协议采集器。当目标是 web sign/token/cookie 签名链路、响应解码、挑战/challenge、bootstrap 状态、WebSocket/GraphQL/protobuf 包裹、WebAssembly 签名... |
 | [wifi-wireless](wifi-wireless/SKILL.md) | Use for authorized wireless security assessment including Wi-Fi capture, WPA handshake analysis, rogue AP detection research, and lab-only deauth testing. |
 | [windows-ad](windows-ad/SKILL.md) | Use for authorized Active Directory and Windows identity attacks including Kerberos, AD CS, BloodHound paths, NTLM relay, and domain privilege escalation res... |
 
@@ -86,12 +86,14 @@ skills/dotnet-reverse/SKILL.md/
 skills/edr-bypass-re/SKILL.md/
 skills/email-security/SKILL.md/
 skills/firmware-pentest/SKILL.md/
+skills/game-reverse/SKILL.md/
 skills/ghidra-reverse/SKILL.md/
 skills/go-rust-reverse/SKILL.md/
 skills/hardware-security/SKILL.md/
 skills/ida-reverse/SKILL.md/
 skills/identity-federation/SKILL.md/
 skills/js-reverse/SKILL.md/
+skills/kernel-exploit/SKILL.md/
 skills/llm-security/SKILL.md/
 skills/macos-reverse/SKILL.md/
 skills/malware-analysis/SKILL.md/
@@ -110,6 +112,7 @@ skills/supply-chain-security/SKILL.md/
 skills/thick-client/SKILL.md/
 skills/threat-hunting/SKILL.md/
 skills/threat-intelligence/SKILL.md/
+skills/web-protocol-reverse/SKILL.md/
 skills/wifi-wireless/SKILL.md/
 skills/windows-ad/SKILL.md/
 ```
@@ -117,7 +120,7 @@ skills/windows-ad/SKILL.md/
 ## 路由
 
 PRIMARY 路由由 `skills/config/routing.json`（唯一事实源）驱动，用 `master-route.ps1 -Hint "<任务>"` 分诊。
-歧义场景读 `routing.md` 全矩阵；CTF 多类型任务走 `CTF-Sandbox-Orchestrator/`。
+歧义场景读 `skills/routing.md` 全矩阵；CTF 多类型任务走 `CTF-Sandbox-Orchestrator/`。
 
 ## 症状 / 知识库索引
 
