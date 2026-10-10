@@ -134,14 +134,15 @@ ci-gates 负控够不着裸 run 门禁 -> 三个门禁不在清单里
 ---
 
 ## 四、当前状态（全部当前实跑）
-
 ```
-全链路门禁          19 / 19 通过
+全链路门禁          23 / 23 通过
 selfcheck           通过 7 / 失败 0 / 提醒 0，工具链 25 / 25
 路由回归            199 / 199
 自然说法基准        93 / 93
-CI 负控             7 条全 PASS，baseline green
+CI 负控             7 条全 PASS，baseline green，第 7 条已具区分度
 文档代码负控        25 常规 + 8 对抗，漏报 0 / 误报 0 / 绕过 0
+围栏门禁负控        10 个用例，四个出口全覆盖
+CI 引用检查+负控    4 workflow / 27 引用 / 0 缺失；负控 5 个用例
 kernel 场景套件     151 / 151（进场的 144/148）
 ps1 语法            54 / 54
 BOM 门禁            0 问题（含双 BOM 检查）
@@ -154,25 +155,36 @@ pwsh 7 vs PS 5.1    输出逐行相同
 
 ## 五、诚实列出：还没解决的
 
-### 1. 三个门禁的负控覆盖不足
+### 1. 三个门禁不在 `ci-gates.json` 清单里（已知取舍，非缺陷）
 
 `check-fences.py` / `audit-doc-code.py` / `test-audit-doc-code-negctl.py`
-不在 `ci-gates.json` 的 23 个清单里，只在 `ci.yml` 以裸 `run:` 调用。
+只在 `ci.yml` 以裸 `run:` 调用，不在 23 个清单里。
 后果：`test-ci-negative-controls.py` 的 7 条负控**够不着它们**。
 
 > 为什么没塞进清单：那个清单是 **skillpack 内部门禁**的登记，
 > `script` 路径按 skillpack 根解析（`run-ci-gates.py:58`），
 > 而这些脚本在仓根另一层。硬塞会破坏 resolve 语义，
 > 也会让 `verify-gate-wiring` 的「清单↔workflow 对撞」失真。
-> 三个脚本已有**独立**的负控（`test-audit-doc-code-negctl.py` 的 8 个对抗用例），
-> 但 `check-fences.py` **一个负控都没有**。
 
-### 2. `negctl` 的第 7 条负控不具区分度
+**这一轮的补救**：三者都有了**独立**负控，且已接进 `ci.yml`：
+`test-audit-doc-code-negctl.py`（25 常规 + 8 对抗）、
+`test-check-fences-negctl.py`（10 个，覆盖全部四个出口）、
+`test-verify-workflow-refs-negctl.py`（5 个）。
 
-`broken-kernel-active-link` 注入断链后门禁确实转红了，
-但 `default-active` 的 `**` 兜底规则会吸收任何路径，
-所以它**分不清「ROOT 修好了」和「ROOT 又坏了」**。
-一个断言在两种相反状态下都成立的负控，不是负控。
+### 2. CI 里 3 处指向空气的 step（**已修**）
+
+```
+ci.yml:227                 bash skillpack/kali/scripts/test-pwntools-discovery.sh
+ci.yml:231                 bash skillpack/skills/scripts/test-client-neutral-bootstrap.sh
+macos-bash-compat.yml:42   /bin/bash .../test-client-neutral-bootstrap.sh
+```
+
+这三个脚本**从未存在过**（`git log --all -- <path>` 无记录），只有 PS 孪生。
+它们之所以一直没被发现：那些 step 带 `runner.os` 条件或只跑在 macOS runner 上，
+**Windows 本机根本执行不到** —— 一句话，本机一切正常，只有 runner 会红。
+
+已移除并加注释说明要补的是**脚本本身**。配套新增
+`verify-workflow-refs.py` 把这类问题挪到本地发现（4 workflow / 27 引用 / 0 缺失）。
 
 ### 3. 许可证方案未决（需要你拍板）
 
@@ -190,7 +202,9 @@ pwsh 7 vs PS 5.1    输出逐行相同
 
 ### 4. 覆盖不到的地方
 
-- Linux / macOS 下的实际行为（本机只有 Windows；CI 有 ubuntu runner 但我没跑过）
+- **Linux / macOS 下的实际行为**：本机只装了 `wsl.exe` 本体、**没有发行版**，
+  无法本地跑。已做的是静态核验（CI 引用的 27 个文件全部存在），
+  实际行为仍依赖 ubuntu / macOS runner。
 - `community-raw/` 1089 个文件（占全仓 38%）逐个功能测试
 - 任何真实目标上的效果
 - `07-kernel-sweep/` 约 190 个一次性调试脚本的功能正确性
