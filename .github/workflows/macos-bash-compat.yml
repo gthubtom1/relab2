@@ -37,9 +37,11 @@ jobs:
             echo "syntax OK: $f"
           done
 
-      - name: Client-neutral bootstrap/discovery
-        shell: bash
-        run: /bin/bash skillpack/skills/scripts/test-client-neutral-bootstrap.sh
+      # ★ 2026-10-10 移除：调用的 `test-client-neutral-bootstrap.sh`
+      #   在本仓库**从未存在过**（`git log --all -- <path>` 无记录），
+      #   只有 PS 版（skillpack/skills/scripts/test-client-neutral-bootstrap.ps1）。
+      #   这条 step 在 macOS runner 上必然失败。2026-10-10 审查抓到。
+      #   要覆盖 macOS/bash 侧就补 .sh 脚本本身，而不是引用一个空气路径。
 
       - name: Run bash workflow regression (portable sed; case-guard reject paths)
         shell: bash

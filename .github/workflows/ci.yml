@@ -222,13 +222,18 @@ jobs:
             echo "syntax OK: $f"
           done < <(git ls-files '*.sh')
 
-      - name: Kali pwntools discovery regression
-        shell: bash
-        run: bash skillpack/kali/scripts/test-pwntools-discovery.sh
-
-      - name: Client-neutral bootstrap/discovery (Bash)
-        shell: bash
-        run: bash skillpack/skills/scripts/test-client-neutral-bootstrap.sh
+      # ★ 2026-10-10 移除：这两个 step 调用的脚本**在本仓库从未存在过**
+      #   （`git log --all -- <path>` 无任何记录），所以在 ubuntu runner 上
+      #   必然 `bash: No such file or directory` 失败 —— 而 Windows 上因为
+      #   它们不在 `routing-tests` 的 ubuntu 分支里，一直没人发现。
+      #   2026-10-10 全项目审查扫 CI 引用时抓到（28 个仓库内引用，2 个不存在）。
+      #
+      #   要补的话该补的是**脚本本身**，不是在 CI 里写一条指向空气的命令：
+      #     · Kali pwntools discovery  → 目前只有 PS 版
+      #       （skillpack/kali/scripts/ 下只有 bootstrap-reverse.sh / quick-setup.sh）
+      #     · Client-neutral bootstrap → 只有 PS 版
+      #       （skillpack/skills/scripts/test-client-neutral-bootstrap.ps1）
+      #   等对应 .sh 落地后，把 step 加回这里。
 
       - name: Structured routing parity (Bash)
         shell: bash
@@ -443,6 +448,21 @@ jobs:
       - name: Documented-code gate negative controls
         shell: bash
         run: python3 skillpack/skills/scripts/test-audit-doc-code-negctl.py
+
+      # ★ 2026-10-10 新增：CI 引用的仓库内文件必须真实存在。
+      #   审查时抓到 3 处指向空气的命令 —— ci.yml:227/231 与
+      #   macos-bash-compat.yml:42 调的两个 .sh 脚本**从未存在过**
+      #   （只有 PS 孪生）。它们带 runner.os 条件，Windows 上永远跑不到，
+      #   所以本机一切正常，只有 runner 会红。
+      - name: Workflow references resolve to real files
+        shell: bash
+        run: python3 skillpack/skills/scripts/verify-workflow-refs.py
+
+      # 负控：这道门禁自己也得能变红。三种坏引用（不存在的 .sh / .py /
+      # 只有 PS 孪生没有 .sh 的路径）+ 干净基线 + 根不存在。
+      - name: Workflow-reference gate negative controls
+        shell: bash
+        run: python3 skillpack/skills/scripts/test-verify-workflow-refs-negctl.py
 
       - name: Repository executable/reference boundaries
         shell: bash
