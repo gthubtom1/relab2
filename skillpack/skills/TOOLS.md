@@ -208,8 +208,11 @@ GUI 程序弹窗等输入、零 stdout、进程永不退出。**agent 不得经 
 | 工具 | 干什么 | 装法 | 许可 |
 |---|---|---|---|
 | **jadx** | DEX→Java，APK 反编译第一源 | GitHub jadx releases → `D:\Tools\jadx\` | 🟢 |
-| **apktool** | 资源完整还原 + 回编译 | GitHub Apktool jar + `apktool.bat` 包装 → `D:\Tools\apktool\` | 🟢 |
-| **Android SDK platform-tools** (`adb`) | 装机/驱动/截图 | `winget install --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity Google.PlatformTools` | 🟢 |
+| **apktool** | 资源完整还原 + 回编译 | GitHub Apktool jar + `apktool.bat` 包装 → `D:\Tools\apktool\`（本机登记用的是 `android\AndroidKiller_fix\bin\apktool\` 那份，已登记进 `_map.json`） | 🟢 |
+| **Android SDK platform-tools** (`adb`) | 装机/驱动/截图 | `winget install ... Google.PlatformTools`，或 `sdkmanager "platform-tools"`。★ 见 §4.3 六个 adb 抢端口 | 🟢 |
+| **scrcpy** | 投屏 + 自带能用的 adb | `winget install --id Genymobile.scrcpy --source winget` | 🟢 |
+| **bundletool** | AAB/APKS 处理（分析 .apk 用不到） | jar + wrapper → `D:\Tools\bundletool\`，见 §4.2 | 🟢 |
+| **emulator** | 模拟器（**本包不建议**，见 §4.1） | `sdkmanager "emulator"` + `system-images;android-34;google_apis;x86_64` | 🟢 |
 | **apksigner / zipalign** | 重签名 / 对齐 | 随 Android SDK build-tools，`sdkmanager "build-tools;35.0.0"` | 🟢 |
 | **apkanalyzer / aapt2** | 官方 smali 反汇编、资源解析 | 随 SDK cmdline-tools / build-tools | 🟢 |
 | **frida-tools** (`frida` / `frida-ps`) | 动态插桩 | `pip install frida-tools` | 🟢 |
@@ -219,6 +222,86 @@ GUI 程序弹窗等输入、零 stdout、进程永不退出。**agent 不得经 
 
 > **frida 版本铁律**：Android 端的 `frida-server` 版本必须与本机 `frida` **严格一致**，不匹配直接连不上。
 > **不手写解析器**：DEX/AXML/Manifest 事实一律用官方工具，拿不到就报「工具缺失」，不要自己撸解析器顶上。
+
+### 4.1 Android 动态调试：优先真机，不要模拟器
+
+2026-10-11 实测结论。**做 APK 逆向不需要模拟器。**
+
+| 方案 | 电脑内存 | 启动 | agent 全自动 | 抗 APP 检测 |
+|---|---|---|---|---|
+| **真机（推荐）** | **0**（吃手机电池） | 秒开 | 是（adb 全命令行） | 是（真实硬件） |
+| 官方模拟器 | **2 GB** | 1–5 分钟 | 是 | **否**（模拟器特征极易被检测） |
+| 雷电 / MuMu / 夜神 | **1.5–3 GB 常驻** | 快 | 需另外 `adb connect` | 否 |
+
+本包的选择：真机 + `apk-debug.ps1`（见 §4.4）。工具箱的四个动作——
+`inspect`（静态拆包）/ `install`（装机）/ `log`（抓日志）/ `frida`（动态插桩）——
+全是命令行、输出全是文本，不需要 agent 去看任何图形界面。
+
+> 不要为了跑模拟器去开 Windows「虚拟机平台」（HypervisorPlatform / WHPX）：
+> 它需要管理员权限 + 重启，而且**会削弱 WinDbg 内核调试能力**。
+> 本包的核心工作（PC 软件调试、游戏辅助测试）会直接受损，而 APK 逆向用真机就够。
+
+### 4.2 一次装齐（真机链路）
+
+```powershell
+# SDK 组件
+sdkmanager --sdk_root=D:\Tools\android-sdk "platform-tools"
+sdkmanager --sdk_root=D:\Tools\android-sdk "emulator"
+sdkmanager --sdk_root=D:\Tools\android-sdk "system-images;android-34;google_apis;x86_64"
+
+# 许可必须**本人**点接受（法律条款，智能体不得代按），
+# 或自己跑 sdkmanager --licenses 并逐条输入 y
+
+# scrcpy（投屏 + 自带能用的 adb）
+winget install --id Genymobile.scrcpy --source winget
+```
+
+`bundletool`（只处理 AAB/APKS，分析 `.apk` 用不到）：下载 `bundletool-all-*.jar`
+到 `D:\Tools\bundletool\`，同目录放一个调 `java -jar` 的 `bundletool.bat`
+（**必须 GBK 编码 + CRLF**，否则 cmd 读 UTF-8 会把中文注释当命令执行）。
+
+### 4.3 六个 adb 抢端口（本包实测踩过，最易误诊）
+
+```
+ERROR: cannot connect to daemon at tcp:5037
+adb server version (32) doesn't match this client (41); killing...
+```
+
+**症状**：设备在 `adb devices` 里**时有时无**；查是空的，过一会儿又能查到。
+
+**真因不是驱动没装**（2026-10-11 误诊过一次）。是机器上有**多个 `adb.exe`**，
+daemon 全监听 5037，版本不同就互相 `killing`。第三方助手（AndroidKiller /
+搞机工具箱）常自带旧版 1.0.32。
+
+**处置**（不要删第三方助手里的文件，会破坏它们）：
+
+```powershell
+adb kill-server
+Get-Process adb -ErrorAction SilentlyContinue | Stop-Process -Force
+D:\Tools\android-sdk\platform-tools\adb.exe start-server
+D:\Tools\android-sdk\platform-tools\adb.exe devices -l   # 设备应稳定出现
+```
+
+`apk-debug.ps1` 启动时会自动做这件事。
+
+### 4.4 用起来
+
+```powershell
+# 环境自检（每项实跑，不只查「装没装」）
+.\skillpack\skills\apk-reverse\scripts\apk-debug.ps1 doctor
+
+# 静态拆包：aapt2 权限 + apktool smali + jadx 源码 + 签名
+.\skillpack\skills\apk-reverse\scripts\apk-debug.ps1 inspect -Apk app.apk
+
+# 动态
+.\skillpack\skills\apk-reverse\scripts\apk-debug.ps1 install -Apk app.apk
+.\skillpack\skills\apk-reverse\scripts\apk-debug.ps1 run   com.example.app
+.\skillpack\skills\apk-reverse\scripts\apk-debug.ps1 log   com.example.app
+.\skillpack\skills\apk-reverse\scripts\apk-debug.ps1 shot  out.png
+.\skillpack\skills\apk-reverse\scripts\apk-debug.ps1 frida com.example.app -s agent.js
+```
+
+> `frida` 挂的是**运行中的进程**：先 `run` 再 `frida`，否则脚本会直接告诉你「进程不在」。
 
 ---
 

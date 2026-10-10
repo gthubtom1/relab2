@@ -296,12 +296,6 @@
         "android-sdk/build-tools/34.0.0/zipalign.exe"
       ]
     },
-    "apktool2": {
-      "prefer": [
-        "android-sdk/build-tools/34.0.0/aapt2.exe"
-      ],
-      "note": "占位：避免 aapt2 被当成 apktool 命中。真正的 apktool 别名见上面的 apktool。"
-    },
     "pesieve": {
       "exec": "pe-sieve64.exe",
       "prefer": [
@@ -485,6 +479,48 @@
     },
     "rabin2": {
       "note": "★ **分两种情况，别一概而论**（2026-10-10 实测）：\n  1) **短参数被 r2 启动参数占用**：`rabin2 -I / -i / -H / -e / -l` 全部必失败 ——\n     rc=1，stderr=`ERROR: Missing file to open`，**不挂起**，0.2 秒返回。\n     这是 r2 CLI 的参数冲突，不是文件问题。\n  2) **`-S` 之后的运行会真挂起**：跑起来不返回、零输出、进程不退（>25s）。\n  ★ 结论：**本机 rabin2 不可依赖**。扒导入表 / 节区 / 字符串一律改用\n  `r2 -2 -qc '<cmd>' <file>`（实测正常返回）。\n  别把「短参数失败」误读成「文件不对」，也别把「挂起」当成偶发。"
+    },
+    "adb": {
+      "prefer": [
+        "android-sdk/platform-tools/adb.exe"
+      ],
+      "note": "官方 platform-tools 1.0.41。★ 换机必读：本机曾有 6 个 adb.exe（AndroidKiller/搞机工具箱/两份 platform-tools/scrcpy 自带），其中两个是旧的 1.0.32。adb daemon 全监听 5037，版本不同就互相 killing，表现为设备在 `adb devices` 里时有时无 —— **看着像驱动没装好，其实不是**。务必确认 PATH 上只有一个 adb，或用本条 prefer 指的那个。"
+    },
+    "apktool": {
+      "prefer": [
+        "android/AndroidKiller_fix/bin/apktool/apktool.bat"
+      ],
+      "note": "2026-10-11 补登记。此前零登记，只能靠工具根递归 scan-ambiguous 猜到第三方助手目录下那份 —— 能跑但不可控，换工具根就可能解析到别的东西。"
+    },
+    "aapt": {
+      "prefer": [
+        "android/Android逆向助手_v2.2/lib/apktool/aapt.exe"
+      ],
+      "note": "2026-10-11 补登记。此前靠 scan-ambiguous 猜。"
+    },
+    "fastboot": {
+      "prefer": [
+        "android-sdk/platform-tools/fastboot.exe"
+      ],
+      "note": "2026-10-11 补登记：官方 platform-tools，与 adb 同目录。"
+    },
+    "bundletool": {
+      "prefer": [
+        "bundletool/bundletool.bat"
+      ],
+      "note": "2026-10-11 新增。jar 放 D:\\Tools\\bundletool\\，配 bundletool.bat wrapper（需要 JAVA_HOME）。处理 AAB/APKS —— 分析 .apk 用不到它。"
+    },
+    "emulator": {
+      "prefer": [
+        "android-sdk/emulator/emulator.exe"
+      ],
+      "note": "2026-10-11 新增：sdkmanager 装的 emulator。★ 本机**起不来**：x86_64 镜像需要硬件加速，而 Windows 的『虚拟机平台』(HypervisorPlatform) 是 Disabled。开它需要管理员 + 重启，且会削弱 WinDbg 内核调试能力 —— 做 PC 调试 / 游戏辅助测试时不要开。Android 逆向用真机 adb 就够，不必开模拟器。"
+    },
+    "scrcpy": {
+      "prefer": [
+        "C:\\Users\\toti\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Genymobile.scrcpy_Microsoft.Winget.Source_8wekyb3d8bbwe\\scrcpy-win64-v4.1\\scrcpy.exe"
+      ],
+      "note": "2026-10-11 新增。winget install Genymobile.scrcpy（v4.1），装在用户目录不在工具根内，所以 prefer 用绝对路径。★ 它的价值不只是投屏：它**自带的 adb 版本与设备驱动匹配**，换机器时如果 adb 认不出设备，先装 scrcpy 试一次。换机器后请按本机实际路径更新这条。"
     }
   },
   "deny": [
@@ -650,6 +686,21 @@
     "dnSpy": "dnSpy.Console"
   },
   "meta": {
-    "auditNote": "[2026-10-10 三轮审查] 上一轮 221 篇改编查出并已修：r2 /x 假结论（跨 8 文件）、algo_identify RVA 误判、kernel32 'forwarder' 根因错（真因是 PDB 只导出 *Stub 别名）、NtCreateFile OBJECT_ATTRIBUTES 偏移错（+0x30 是 sizeof，ObjectName 在 +0x10）、JWT/sqli 断链、sketch 目录缺 SKILL.md（kernel-exploit / game-reverse 已补）。本技能包 playwright 必须 `launch(channel=\"msedge\")`，裸 launch() 失败。"
+    "auditNote": "[2026-10-10 三轮审查] 上一轮 221 篇改编查出并已修：r2 /x 假结论（跨 8 文件）、algo_identify RVA 误判、kernel32 'forwarder' 根因错（真因是 PDB 只导出 *Stub 别名）、NtCreateFile OBJECT_ATTRIBUTES 偏移错（+0x30 是 sizeof，ObjectName 在 +0x10）、JWT/sqli 断链、sketch 目录缺 SKILL.md（kernel-exploit / game-reverse 已补）。本技能包 playwright 必须 `launch(channel=\"msedge\")`，裸 launch() 失败。",
+    "android_sync_20261011": {
+      "removed": [
+        "apktool2"
+      ],
+      "added_or_updated": [
+        "adb",
+        "apktool",
+        "aapt",
+        "fastboot",
+        "bundletool",
+        "emulator",
+        "scrcpy"
+      ],
+      "scrcpy_absolute_path": "C:\\Users\\toti\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Genymobile.scrcpy_Microsoft.Winget.Source_8wekyb3d8bbwe\\scrcpy-win64-v4.1\\scrcpy.exe"
+    }
   }
 }
