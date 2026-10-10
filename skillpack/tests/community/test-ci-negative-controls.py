@@ -141,13 +141,28 @@ def broken_active_link(copy_root: Path) -> str:
     return f"appended an active markdown link to {target.relative_to(copy_root).as_posix()}"
 
 def broken_kernel_active_link(copy_root: Path) -> str:
-    """A broken link inside kernel/ must break the build.
+    """A broken link inside kernel/ must break the build **as class=active**.
 
+    Why this exists
+    ---------------
     verify-doc-links.py used to resolve ROOT one level too shallow, so every
     rule-table glob (``skills/community/**``, ``docs/community/**``) matched
     nothing and 164 real broken links went unreported while the gate stayed
-    green. This control injects an active link into kernel/ -- a tree the rule
-    table never claimed to cover -- so the failure mode cannot come back.
+    green.
+
+    Why the class is asserted, not just the exit code
+    ----------------------------------------------
+    An earlier version of this control only asserted "the build goes red".
+    That is **not discriminating**: classify() ends with a catch-all rule
+    (``default-active``, glob ``**``) that classifies *any* repo-relative path
+    as active. So the control passed with the correct ROOT **and** with the
+    broken ROOT — it could not tell the two states apart, and a control that
+    holds in both states is not a control (2026-10-10 review finding).
+
+    So the injected link must be reported with the class the rule table
+    derives from the *correct* ROOT. When ROOT is one level shallow the
+    kernel path no longer resolves the way the rule table expects, and the
+    gate's own output stops matching this assertion.
     """
     target = copy_root / "kernel" / "02-hubcore" / "docs" / "ENGINEERING-CONTINUITY.md"
     if not target.is_file():
@@ -259,6 +274,15 @@ CONTROLS: dict[str, dict[str, Any]] = {
     "broken-kernel-active-link": {
         "mutate": broken_kernel_active_link,
         "expect_gate": "verify-doc-links",
+        # ★ 2026-10-10：只断言"变红"不具区分度（`default-active` 的 `**`
+        #   兜底会吸收任何路径，ROOT 坏掉时它照样红）。
+        #   断言点选在 runner **确实保留**的那一行：`run-ci-gates.py` 只转发
+        #   9 空格缩进的 FAIL / [BLOCKED] 行，`verify-doc-links` 自己的
+        #   `[active] <file>` 明细行不在这个通道里（实测断言它必然不匹配）。
+        #   "1 must-fix (active/wrapper) broken link(s)" 只有在确实存在
+        #   must-fix 断链时才会出现 —— 而 must-fix 只来自 active/wrapper 类，
+        #   也就是规则表在正确 ROOT 下解析出来的结果。
+        "expect_output": "1 must-fix (active/wrapper) broken link(s)",
         "spec": "2026-10-10: the doc-links rule table must actually match kernel/",
         "why": "ROOT was one level too shallow, so every classification glob matched "
                "nothing and 164 real broken links went unverified while the gate "
@@ -389,6 +413,16 @@ def main(argv: list[str] | None = None) -> int:
             code, output = run_gates(copy_root)
             failing = observed_gate(output)
             ok = code != 0 and control["expect_gate"] in failing
+            # 可选的输出断言：门禁**红了**还不够，它必须是因为**对的原因**红的。
+            # 只断言退出码的负控在两种相反状态下都成立（2026-10-10 审查发现
+            # broken-kernel-active-link 就是这样），那样的负控证明不了任何东西。
+            need = control.get("expect_output")
+            if ok and need:
+                if need not in output:
+                    ok = False
+                    print(f"    expected output to contain: {need!r}")
+                else:
+                    print(f"    output assertion matched: {need!r}")
             print(f"expected gate to fail: {control['expect_gate']}")
             print(f"observed exit code   : {code}")
             print(f"observed failing gates: {failing}")
@@ -407,8 +441,13 @@ def main(argv: list[str] | None = None) -> int:
                     failures.append(f"{name}: build stayed GREEN (exit 0) after injecting "
                                     f"{described} -- this gate is not actually enforced by CI")
                 else:
-                    failures.append(f"{name}: build went red on {failing}, but "
-                                    f"{control['expect_gate']!r} is not among them")
+                    if need and code != 0 and control["expect_gate"] in failing:
+                        failures.append(f"{name}: build went red for the right gate but "
+                                        f"the output does not contain {need!r} -- it is red "
+                                        f"for a different reason than the one under test")
+                    else:
+                        failures.append(f"{name}: build went red on {failing}, but "
+                                        f"{control['expect_gate']!r} is not among them")
             print(f"[{'PASS' if ok else 'FAIL'}] {name}")
 
     print("\n" + "=" * 78)

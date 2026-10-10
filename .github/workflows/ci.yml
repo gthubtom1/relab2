@@ -429,6 +429,13 @@ jobs:
         shell: bash
         run: python3 skillpack/skills/scripts/audit-doc-code.py --root skillpack/skills --workers 4
 
+      # 负控：check-fences.py 此前**一个负控都没有**，而 2026-10-10 审查查出
+      # 它报绿却从来没真正工作过（--root 被忽略、默认根算错一层、
+      # 只收小写 .md、扫到 0 个文件时报绿）。四个出口都要有人盯着。
+      - name: Code-fence gate negative controls
+        shell: bash
+        run: python3 skillpack/skills/scripts/test-check-fences-negctl.py
+
       # 负控：证明上一条门禁真的在拦东西。
       # 没有它，「零真错」和「门禁早就不检查了」在汇总数字上完全一样。
       # 这条门禁被收紧到零误报（2026-10-10），误报率一旦反弹，
