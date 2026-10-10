@@ -57,13 +57,9 @@ param(
   # 默认 30 分钟 —— 宁可慢也别让它无声卡死。
   [int] $JadxTimeoutSec = 1800,
 
-  # inspect 用：apktool 解包超时（秒）。它比 jadx 慢一个数量级
-  # （实测 84 MB 的包要 20 分钟以上），默认 40 分钟。
-  [int] $ApktoolTimeoutSec = 2400,
-
-  # inspect 用：连 apktool smali/资源一起解。**默认不做** ——
-  # 逆向主要用 jadx 的源码，apktool 只在改资源或回编译时才需要。
-  [switch] $Full
+  # inspect 用：apktool 解包超时（秒）。官方 3.0.3 多线程实测 84 MB 包只要 12 秒，
+  # 2400s 是留给极端样本的天花板。
+  [int] $ApktoolTimeoutSec = 2400
 )
 
 $ErrorActionPreference = 'Stop'
@@ -154,35 +150,41 @@ if ($__adbSpec -and $__adbSpec.Available -and $__adbSpec.Command) {
 }
 
 function Invoke-Probe {
-    # ★ 2026-10-11：取版本串的四种失败姿势与正解。
+    # ★ 2026-10-11：取版本串的失败姿势与正解。
     #
-    #   aapt2 把**正常的版本输出写 stderr**，于是：
+    #   aapt2 把**正常的版本输出写 stderr**。三种失败姿势实测：
     #     · `& $exe version`          -> NativeCommandError 红字，成功的自检被报成失败
-    #     · `2>$null`                 -> 拦不住（那是原生 exe 的错误流）
-    #     · `cmd /c ... 2^>nul`      -> 拦不住（cmd 把 stderr 转发回 PowerShell）
-    #     · `Start-Process -RedirectStandardOutput NUL`
-    #       -> NUL 在 Windows 上不是合法重定向目标，Start-Process 直接返回 $null
-    #   正解：**让 cmd 自己把两个流都写进文件**，PowerShell 只读文件。
-    #   直接 `& cmd.exe /c` + 文件重定向，实测可用（aapt2 拿到 51 字节版本串）。
+    #     · `2>$null`                 -> 拦不住（那是原生 exe 自己的错误流）
+    #     · `cmd /c ... 2^>nul`      -> 拦不住，且引入 cmd.exe 转义这一层脆弱依赖
+    #   正解：`Start-Process` + stdout/stderr **两个不同文件**重定向，
+    #   PowerShell 只读文件。两个流写同一个文件会被 Start-Process 直接拒
+    #   （"RedirectStandardOutput 和 RedirectStandardError 相同"）。
+    #   实测 aapt2：exit=0，stdout 空、stderr 是 51 字节版本串。
     param([string]$Exe, [string[]]$ProbeArgs, [switch]$Last)
 
-    $tmp = [IO.Path]::GetTempFileName()
+    $outFile = [IO.Path]::GetTempFileName()
+    $errFile = [IO.Path]::GetTempFileName()
     try {
-        $q = '"' + $Exe + '"'
-        if ($ProbeArgs) { $q += ' ' + ($ProbeArgs -join ' ') }
-        # cmdline 直接拼，**不要**给整条再套一层引号 ——
-        # 实测套了会变成 '""D:\...exe" version"'，cmd 把第一个引号当字面量，
-        # 输出的是命令回显而不是版本串。
-        $cmdline = $q + ' > "' + $tmp + '" 2>&1'
-        $null = & cmd.exe /c $cmdline 2>$null
-        if (-not (Test-Path -LiteralPath $tmp)) { return '' }
-        $lines = @(Get-Content -LiteralPath $tmp -Encoding UTF8 -ErrorAction SilentlyContinue |
+        $startArgs = @{ }
+        if ($ProbeArgs) { $startArgs['ArgumentList'] = $ProbeArgs }
+        $null = Start-Process -FilePath $Exe @startArgs `
+                              -RedirectStandardOutput $outFile `
+                              -RedirectStandardError $errFile `
+                              -WindowStyle Hidden -PassThru -Wait
+        # 原生工具的版本串常在 stderr，但两流都收，谁先有内容用谁
+        $lines = @()
+        foreach ($f in @($outFile, $errFile)) {
+            $t = @(Get-Content -LiteralPath $f -Encoding UTF8 -ErrorAction SilentlyContinue |
                    Where-Object { $_.Trim() })
+            if ($t.Count) { $lines = $t; break }
+        }
         if ($lines.Count -eq 0) { return '' }
         $pick = if ($Last) { $lines[-1] } else { $lines[0] }
         return $pick.Trim()
+    } catch {
+        return ''
     } finally {
-        Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $outFile, $errFile -Force -ErrorAction SilentlyContinue
     }
 }
 
@@ -250,6 +252,11 @@ function Adb {
     $adb = Require-Tool 'adb' ''
     $dev = Get-Device
     & $adb '-s' $dev @Args_ 2>&1
+    # ★ 2026-10-11 退出码走独立变量，不混进返回值。
+    #   原因：函数返回值里既有 stdout 文本又有退出码时，`$rc = Adb ...`
+    #   拿到的是数组，`$rc -ne 0` 恒为真 —— install 会永远走「安装失败」分支。
+    #   这里把退出码放进脚本作用域，调用点显式读 $script:AdbRc。
+    $script:AdbRc = $LASTEXITCODE
 }
 
 # ── 从 APK 猜包名：优先 aapt2，其次读 manifest 文本 ───────────────────
@@ -328,7 +335,7 @@ switch ($Action) {
     }
 
     'inspect' {
-        if (-not $Apk) { Die '用法：apk-debug.ps1 inspect -Apk <path> [-Out <dir>] [-Full]' }
+        if (-not $Apk) { Die '用法：apk-debug.ps1 inspect -Apk <path> [-Out <dir>]' }
         if (-not (Test-Path -LiteralPath $Apk)) { Die "文件不存在: $Apk" }
         if (-not $Out) {
             $Out = Join-Path (Split-Path -Parent (Resolve-Path $Apk)) `
@@ -340,15 +347,21 @@ switch ($Action) {
         Say "输出目录: $Out"
 
         # ★ 2026-10-11 修正步骤顺序与超时。
-        #   原来顺序是 aapt2 -> apktool -> jadx。对 84 MB 的包（709 个二进制 XML +
-        #   184 张图 + 3 个 dex）实测：aapt2 只要 0.1 秒，jadx 约 60 秒，
-        #   而 **apktool 要 20 分钟以上** —— 卡在它上面，后面真正需要的 jadx
-        #   根本跑不到。整个 inspect 因此「看起来像卡死」。
+        #   原来顺序是 aapt2 -> apktool -> jadx，apktool 排在 jadx 前面。
+        #   对 84 MB 的包（709 个二进制 XML + 184 张图 + 3 个 dex）实测：
+        #     · aapt2  0.1 秒
+        #     · jadx   约 60-90 秒（8179 个 .java）
+        #     · apktool 取决于**哪个 apktool**：指向 AndroidKiller 里的
+        #       ShakaApktool 2.5.0 单线程魔改版时读不动 Android 16 (API 36)
+        #       的资源格式，会在 framework 循环里打转 20 分钟以上；
+        #       官方 Apktool 3.0.3 多线程只要 12 秒。
+        #   卡在 apktool 上，后面真正需要的 jadx 根本跑不到 ——
+        #   整个 inspect 因此「看起来像卡死」。
         #
         #   改法：
         #     · jadx 提到最前（逆向主用途，先拿到能读的源码）
-        #     · apktool 移到 -Full 之后（只在改资源/回编译时才需要）
         #     · 每步都有独立超时 + 进度提示，不再无声挂死
+        #     · apktool 用官方 3.0.3（已登记进 toolmap.default.json）
         $ErrorActionPreference = 'Continue'
 
         Step '1/4 aapt2 —— 包信息与权限（秒级）'
@@ -458,14 +471,14 @@ switch ($Action) {
         $pk = Get-PackageName -ApkPath $apkFull
         if ($pk) { Say "包名: $pk" }
         Step "安装到真机"
-        $rc = Adb 'install' '-r' '-d' $apkFull
-        if ($rc -ne 0) {
+        $null = Adb 'install' '-r' '-d' $apkFull
+        if ($script:AdbRc -ne 0) {
             Warn2 '常规安装失败，试试卸载后重装（会清掉该 app 的数据）'
             if ($pk) {
                 Say "  adb uninstall $pk"
                 Say "  adb install $apkFull"
             }
-            exit $rc
+            exit $script:AdbRc
         }
         Ok "已安装: $apkFull"
         break
@@ -484,8 +497,8 @@ switch ($Action) {
         }
         Step "启动 $Target"
         # 先试 monkey（通用），再试 am start（需要精确 activity）
-        $rc = Adb 'shell' 'monkey' '-p' $Target '-c' 'android.intent.category.LAUNCHER' '1'
-        if ($rc -ne 0) {
+        $null = Adb 'shell' 'monkey' '-p' $Target '-c' 'android.intent.category.LAUNCHER' '1'
+        if ($script:AdbRc -ne 0) {
             Warn2 'monkey 启动失败。该 app 可能没有 LAUNCHER activity（库/服务型）'
             Say '  用 aapt2 dump badging <apk> 看 launchable-activity 后用 am start -n <pkg>/<activity>'
         } else { Ok "已启动 $Target" }

@@ -163,7 +163,12 @@ foreach ($r in $rows) {
 $newContent = $sb.ToString()
 # 统一 LF 行尾：与 .gitattributes (*.md eol=lf) 保持一致，保证 clone 后 -Check 幂等
 $newContent = $newContent -replace "`r`n", "`n"
-$utf8 = New-Object System.Text.UTF8Encoding $true
+# ★ 2026-10-11 去掉 BOM。`.gitattributes` 的 `text=auto` 只做行尾归一化，
+#   不碰 BOM：生成器写出 BOM -> git 存进去 -> -Check 读到 BOM -> 永远 out of date。
+#   症状是「每次跑 -Check 都红」，根因是写入端与校验端的编码契约不一致。
+#   校验端 `[System.IO.File]::ReadAllText` 会自动剥掉 UTF-8 BOM，
+#   所以写入端也必须不写 BOM，两边才对称。
+$utf8 = New-Object System.Text.UTF8Encoding $false
 
 if ($Check) {
     if (-not (Test-Path -LiteralPath $indexPath)) {
