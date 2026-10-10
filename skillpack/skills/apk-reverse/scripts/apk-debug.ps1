@@ -250,7 +250,6 @@ function Adb {
     $adb = Require-Tool 'adb' ''
     $dev = Get-Device
     & $adb '-s' $dev @Args_ 2>&1
-    return $LASTEXITCODE
 }
 
 # ── 从 APK 猜包名：优先 aapt2，其次读 manifest 文本 ───────────────────
@@ -585,12 +584,12 @@ Frida 挂的是**运行中的进程**，所以顺序必须是：
     'info' {
         if (-not $Target) { Die '用法：apk-debug.ps1 info <包名>' }
         Step "dumpsys $Target"
-        Adb 'shell' 'dumpsys' 'package' $Target |
+        @(Adb 'shell' 'dumpsys' 'package' $Target) |
             Select-String -Pattern 'versionName|versionCode|firstInstallTime|lastUpdateTime|targetSdk|minSdk|granted=true' |
             Select-Object -First 20 | ForEach-Object { '  ' + $_.Line.Trim() }
         Step "进程状态"
-        Adb 'shell' 'dumpsys' 'activity' 'processes' |
-            Select-String -Pattern [regex]::Escape($Target) |
+        @(Adb 'shell' 'dumpsys' 'activity' 'processes') |
+            Select-String -SimpleMatch $Target |
             Select-Object -First 5 | ForEach-Object { '  ' + $_.Line.Trim() }
         break
     }
