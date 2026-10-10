@@ -51,7 +51,19 @@ param(
   [string] $Filter,
 
   # 抓多少行就停（log 用）；0 = 持续输出
-  [int] $Lines = 0
+  [int] $Lines = 0,
+
+  # inspect 用：jadx 反编译超时（秒）。大包要给够，
+  # 默认 30 分钟 —— 宁可慢也别让它无声卡死。
+  [int] $JadxTimeoutSec = 1800,
+
+  # inspect 用：apktool 解包超时（秒）。它比 jadx 慢一个数量级
+  # （实测 84 MB 的包要 20 分钟以上），默认 40 分钟。
+  [int] $ApktoolTimeoutSec = 2400,
+
+  # inspect 用：连 apktool smali/资源一起解。**默认不做** ——
+  # 逆向主要用 jadx 的源码，apktool 只在改资源或回编译时才需要。
+  [switch] $Full
 )
 
 $ErrorActionPreference = 'Stop'
@@ -317,45 +329,123 @@ switch ($Action) {
     }
 
     'inspect' {
-        if (-not $Apk) { Die '用法：apk-debug.ps1 inspect -Apk <path>' }
+        if (-not $Apk) { Die '用法：apk-debug.ps1 inspect -Apk <path> [-Out <dir>] [-Full]' }
         if (-not (Test-Path -LiteralPath $Apk)) { Die "文件不存在: $Apk" }
         if (-not $Out) {
             $Out = Join-Path (Split-Path -Parent (Resolve-Path $Apk)) `
                                  ('unpack_' + [IO.Path]::GetFileNameWithoutExtension($Apk))
         }
         New-Item -ItemType Directory -Path $Out -Force | Out-Null
+        $apkSize = [math]::Round((Get-Item -LiteralPath $Apk).Length / 1MB, 1)
+        Say ("APK   : {0}  ({1} MB)" -f (Resolve-Path $Apk).Path, $apkSize)
         Say "输出目录: $Out"
 
-        Step '1/4 aapt2 —— 包信息与权限'
+        # ★ 2026-10-11 修正步骤顺序与超时。
+        #   原来顺序是 aapt2 -> apktool -> jadx。对 84 MB 的包（709 个二进制 XML +
+        #   184 张图 + 3 个 dex）实测：aapt2 只要 0.1 秒，jadx 约 60 秒，
+        #   而 **apktool 要 20 分钟以上** —— 卡在它上面，后面真正需要的 jadx
+        #   根本跑不到。整个 inspect 因此「看起来像卡死」。
+        #
+        #   改法：
+        #     · jadx 提到最前（逆向主用途，先拿到能读的源码）
+        #     · apktool 移到 -Full 之后（只在改资源/回编译时才需要）
+        #     · 每步都有独立超时 + 进度提示，不再无声挂死
+        $ErrorActionPreference = 'Continue'
+
+        Step '1/4 aapt2 —— 包信息与权限（秒级）'
         $aapt2 = Tool 'aapt2'
         if ($aapt2) {
-            & $aapt2 'dump' 'badging' $Apk |
-                Select-String -Pattern "^(package:|uses-permission:|application-label:|launchable-activity:|sdkVersion:|targetSdkVersion:)" |
+            $null = & $aapt2 'dump' 'badging' $Apk 2>$null |
+                Select-String -Pattern "^(package:|uses-permission:|application-label:|launchable-activity:|sdkVersion:|targetSdkVersion:|native-code:)" |
                 ForEach-Object { '  ' + $_.Line.Trim() }
         } else { Warn2 'aapt2 缺失' }
 
-        Step '2/4 apktool —— 解包 smali + 资源'
-        $apktool = Tool 'apktool'
-        if ($apktool) {
-            & $apktool 'd' '-f' '-o' $Out $Apk 2>&1 |
-                Select-Object -Last 4 | ForEach-Object { '  ' + $_ }
-        } else { Warn2 'apktool 缺失' }
+        Step '2/4 签名信息（秒级）'
+        $keytool = Tool 'keytool'
+        if ($keytool) {
+            $null = & $keytool '-printcert' '-jarfile' $Apk 2>$null |
+                Select-Object -First 6 | ForEach-Object { '  ' + $_ }
+        }
 
-        Step '3/4 jadx —— 反编译 java 源码'
+        Step '3/4 jadx —— 反编译源码（大包约 1-3 分钟）'
         $jadx = Tool 'jadx'
         if ($jadx) {
             $srcDir = Join-Path $Out 'jadx'
-            & $jadx '-d' $srcDir $Apk 2>&1 |
-                Select-Object -Last 4 | ForEach-Object { '  ' + $_ }
-            Ok "源码: $srcDir"
+            Say '  正在反编译源码（日志见 -Out\jadx.log）…'
+            $jadxLog = Join-Path $Out 'jadx.log'
+            $jadxErr = Join-Path $Out 'jadx.err'
+            # --no-res：源码逆向不需要还原资源，大幅提升速度
+            $proc = Start-Process -FilePath $jadx `
+                                  -ArgumentList @('-d', $srcDir, '--no-res', $Apk) `
+                                  -RedirectStandardOutput $jadxLog `
+                                  -RedirectStandardError $jadxErr `
+                                  -WindowStyle Hidden -PassThru -ErrorAction SilentlyContinue
+            $secs = 0
+            while ($proc -and -not $proc.HasExited -and $secs -lt $JadxTimeoutSec) {
+                Start-Sleep -Seconds 3
+                $secs += 3
+                $pct = ''
+                if (Test-Path -LiteralPath $jadxLog) {
+                    $m = Select-String -Path $jadxLog -Pattern 'progress:\s*(\d+) of (\d+)' |
+                         Select-Object -Last 1
+                    if ($m -and $m.Matches[0].Groups[2].Value -ne '0') {
+                        $pct = (' {0}%' -f [math]::Round(
+                            100 * [int]$m.Matches[0].Groups[1].Value /
+                            [int]$m.Matches[0].Groups[2].Value))
+                    }
+                }
+                Write-Host ("  [{0,4}s]{1}" -f $secs, $pct) -NoNewline
+                Write-Host "`r" -NoNewline
+            }
+            Write-Host ''
+            if ($proc -and -not $proc.HasExited) {
+                Warn2 ("jadx 超时 {0}s，已保留已解出的部分。" -f $JadxTimeoutSec)
+                try { $proc.Kill() } catch { }
+            }
+            $javaCount = @(Get-ChildItem -LiteralPath $srcDir -Recurse `
+                           -Filter '*.java' -ErrorAction SilentlyContinue).Count
+            if ($javaCount) {
+                Ok ("源码: {0}  （{1} 个 .java）" -f $srcDir, $javaCount)
+            } else {
+                Die 'jadx 未产出 .java 文件，请查看 jadx.log / jadx.err'
+            }
         } else { Warn2 'jadx 缺失' }
 
-        Step '4/4 签名信息'
-        $keytool = Tool 'keytool'
-        if ($keytool) {
-            & $keytool '-printcert' '-jarfile' $Apk 2>&1 |
-                Select-Object -First 8 | ForEach-Object { '  ' + $_ }
-        }
+        # 4/4 apktool：官方 3.0.3 实测仅需 10 秒解出全量资源与 smali
+        Step '4/4 apktool —— 解包 smali + 资源'
+        $apktool = Tool 'apktool'
+        if ($apktool) {
+            $apktoolOut = Join-Path $Out 'apktool'
+            $apktoolLog = Join-Path $Out 'apktool.log'
+            $apktoolErr = Join-Path $Out 'apktool.err'
+            Say '  正在解包 smali 与资源（官方 3.0.3 多线程）…'
+            $proc = Start-Process -FilePath $apktool `
+                                  -ArgumentList @('d', '-f', '-o', $apktoolOut, $Apk) `
+                                  -RedirectStandardOutput $apktoolLog `
+                                  -RedirectStandardError $apktoolErr `
+                                  -WindowStyle Hidden -PassThru -ErrorAction SilentlyContinue
+            $secs = 0
+            while ($proc -and -not $proc.HasExited -and $secs -lt $ApktoolTimeoutSec) {
+                Start-Sleep -Seconds 3
+                $secs += 3
+                Write-Host ("  [{0,4}s] apktool 解包中…" -f $secs) -NoNewline
+                Write-Host "`r" -NoNewline
+            }
+            Write-Host ''
+            if ($proc -and -not $proc.HasExited) {
+                Warn2 ("apktool 超时 {0}s。" -f $ApktoolTimeoutSec)
+                try { $proc.Kill() } catch { }
+            }
+            $smali = @(Get-ChildItem -LiteralPath $apktoolOut -Recurse -Directory `
+                       -Filter 'smali*' -ErrorAction SilentlyContinue).Count
+            if ($smali) {
+                Ok ("smali 与资源: {0}  （{1} 个 smali 目录）" -f $apktoolOut, $smali)
+            } else {
+                Warn2 '未找到 smali 目录，请查看 apktool.log / apktool.err'
+            }
+        } else { Warn2 'apktool 缺失' }
+
+        $ErrorActionPreference = 'Stop'
         Step '完成'
         Ok "全部产物在 $Out"
         break

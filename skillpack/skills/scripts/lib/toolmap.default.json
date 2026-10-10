@@ -488,9 +488,9 @@
     },
     "apktool": {
       "prefer": [
-        "android/AndroidKiller_fix/bin/apktool/apktool.bat"
+        "apktool/apktool.bat"
       ],
-      "note": "2026-10-11 补登记。此前零登记，只能靠工具根递归 scan-ambiguous 猜到第三方助手目录下那份 —— 能跑但不可控，换工具根就可能解析到别的东西。"
+      "note": "官方 Apktool 3.0.3 (多线程反编译+支持现代 Android 资源格式)。"
     },
     "aapt": {
       "prefer": [
