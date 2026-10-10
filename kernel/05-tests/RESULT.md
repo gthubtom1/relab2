@@ -13,26 +13,26 @@
 <!-- BEGIN AUTO-RUN -->
 
 > 本段由 `python run_all.py` 自动生成，数字全部来自实跑，不要手改。
-> 生成时间：2026-10-10 18:37:14　·　Python 3.12.0
+> 生成时间：2026-10-10 19:26:53　·　Python 3.12.0
 
 ## 一句话总判定
 
 | 项 | 结果 |
 |---|---|
 | 场景数 | 9（全套 1–9） |
-| 断言 | 148 条，146 通过，2 红 |
-| 有红的场景 | 场景 9 |
+| 断言 | 151 条，151 通过，0 红 |
+| 有红的场景 | 无 |
 | 真仓库零改动（层 1） | 是 |
-| 退出码 | 3 |
-| 总用时 | 8823.7 ms |
+| 退出码 | 0 |
+| 总用时 | 8973.9 ms |
 
 ## 场景 1　普通新任务：不会因为历史记录自动加载大量无关内容
 
-用时 249.0 ms，12/12 条断言通过。
+用时 246.6 ms，12/12 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
-| 通过 | 1.1 pack 成功 | bytes=`2320`；ms=`71.9` | rc=0 |
+| 通过 | 1.1 pack 成功 | bytes=`2320`；ms=`73.0` | rc=0 |
 | 通过 | 1.2 预算硬顶 | bytes=`2320`；budget=`6000`；headroom=`3680` | 配置 pack_budget_bytes=6000 |
 | 通过 | 1.3 包自报的 budget 与配置一致 | budget=`6000` | — |
 | 通过 | 1.4 无 README.md 正文片段 | shingles=`755`；hits=`0`；sample=`` | 比对 755 个 30 字 shingle，命中 0 个 |
@@ -49,7 +49,7 @@
 
 ## 场景 2　连续任务：当前任务状态能正确延续，不累积回灌
 
-用时 249.5 ms，8/8 条断言通过。
+用时 255.0 ms，8/8 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
@@ -60,11 +60,11 @@
 | 通过 | 2.4 两包大小之差 < 预算一半 | bytes1=`2320`；bytes2=`2343`；diff=`23`；limit=`3000` | 预算一半 = 3000 |
 | 通过 | 2.5 两次都在预算内 | bytes1=`2320`；bytes2=`2343`；budget=`6000` | — |
 | 通过 | 2.6 除意图行外两次包逐字节相同（无累积回灌） | same_bytes=`True` | 长度 2271 vs 2271 |
-| 通过 | 2.7 两次 indexed_events 相同（同一份索引，没被重灌） | events=`0`；doc_count=`63`；ms1=`72.5`；ms2=`74.6` | — |
+| 通过 | 2.7 两次 indexed_events 相同（同一份索引，没被重灌） | events=`0`；doc_count=`63`；ms1=`78.3`；ms2=`73.2` | — |
 
 ## 场景 3　自动记录：工作过程仍然能正常保存，没有被关掉
 
-用时 969.4 ms，14/14 条断言通过。
+用时 986.3 ms，14/14 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
@@ -88,7 +88,7 @@
 
 ## 场景 4　历史查询：用户明确需要过去资料时能找到并按需读取
 
-用时 588.7 ms，22/22 条断言通过。
+用时 602.4 ms，22/22 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
@@ -101,7 +101,7 @@
 | 通过 | 4.4 read 无 --intent 退出码 2 | rc=`2` | {'ok': False, 'refused': True, 'why': '没有意图就不给正文。先说清为什么现在需要它。'} |
 | 通过 | 4.4b refused 为真 | — | {'ok': False, 'refused': True, 'why': '没有意图就不给正文。先说清为什么现在需要它。'} |
 | 通过 | 4.4c 拒绝时不回正文 | — | 拒绝体里没有 ok=true |
-| 通过 | 4.5 read --intent 成功 | rc=`0`；crashed=`False` | rc=0 stdout 前 120 字='{\n  "ok": true,\n  "receipt": {\n    "ts": "2026-10-10T10:37:06Z",\n    "target": "docs/history/spec-v1.md",\n    "intent": ' |
+| 通过 | 4.5 read --intent 成功 | rc=`0`；crashed=`False` | rc=0 stdout 前 120 字='{\n  "ok": true,\n  "receipt": {\n    "ts": "2026-10-10T11:26:45Z",\n    "target": "docs/history/spec-v1.md",\n    "intent": ' |
 | 通过 | 4.5b 正文真的回来了 | text_chars=`4157` | — |
 | 通过 | 4.7 compare --intent 成功 | rc=`0` | rc=0 stdout 前 120 字='{\n  "base": "docs/history/spec-v1.md",\n  "head": "docs/history/spec-v2.md",\n  "base_lines": 125,\n  "head_lines": 131,\n  ' stderr='' |
 | 通过 | 4.7b 返回里有差异摘要字段 | added=`129`；removed=`123`；similarity=`0.0156` | added=129 removed=123 similarity=0.0156 hunks=2 |
@@ -119,7 +119,7 @@
 
 ## 场景 5　项目更新：第二版来了要能对比第一版、快速定位变化
 
-用时 519.9 ms，15/15 条断言通过。
+用时 540.4 ms，15/15 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
@@ -143,7 +143,7 @@
 
 ## 场景 6　上下文压缩：压缩后不会把整个历史项目塞回当前上下文
 
-用时 367.5 ms，19/19 条断言通过。
+用时 381.8 ms，19/19 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
@@ -172,31 +172,31 @@
 
 ## 场景 7　大量历史文件：资料越来越多也不会每次自动读一大片
 
-用时 3184.7 ms，14/14 条断言通过。
+用时 3284.8 ms，14/14 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
-| 通过 | 7.0 假产品造好了 | files=`2001`；bytes=`24655620`；ledger_bytes=`16413620`；make_ms=`876.6` | 2001 文件 / 24655620 字节（历史文件 2000×4096 B，账本 5000 事件 / 16413620 字节） |
-| 通过 | 7.1 index 耗时 < 15000 ms | elapsed_ms=`915.0`；ledger_ms=`361.2`；ledger_read_bytes=`16413620` | 整条命令（含解释器启动 + 文档扫描 + 账本增量） |
+| 通过 | 7.0 假产品造好了 | files=`2001`；bytes=`24655620`；ledger_bytes=`16413620`；make_ms=`884.9` | 2001 文件 / 24655620 字节（历史文件 2000×4096 B，账本 5000 事件 / 16413620 字节） |
+| 通过 | 7.1 index 耗时 < 15000 ms | elapsed_ms=`962.3`；ledger_ms=`412.6`；ledger_read_bytes=`16413620` | 整条命令（含解释器启动 + 文档扫描 + 账本增量） |
 | 通过 | 7.2 索引库远小于源（比值 < 10%） | index_bytes=`1576960`；src_bytes=`24655620`；ratio=`0.063959`；shrink=`15.6` | 索引 1576960 字节 / 源 24655620 字节 = 0.06396 |
 | 通过 | 7.3 索引 doc 表有 2000 行 | doc_rows=`2000`；history_rows=`2000` | {'history': 2000} |
-| 通过 | 7.3b 100 文件的对照产品也索引好了 | indexed=`100`；ms=`487.0` | — |
-| 通过 | 7.4 2000 文件下 pack ≤ 预算 | bytes=`2661`；budget=`6000`；pack_ms=`79.7` | — |
-| 通过 | 7.4b 100 文件下 pack ≤ 预算 | bytes=`2658`；budget=`6000`；pack_ms=`74.2` | — |
+| 通过 | 7.3b 100 文件的对照产品也索引好了 | indexed=`100`；ms=`511.4` | — |
+| 通过 | 7.4 2000 文件下 pack ≤ 预算 | bytes=`2661`；budget=`6000`；pack_ms=`80.3` | — |
+| 通过 | 7.4b 100 文件下 pack ≤ 预算 | bytes=`2658`；budget=`6000`；pack_ms=`74.3` | — |
 | 通过 | 7.4c 两个产品的索引行数一样多（比较才公平） | listed_2000=`10`；listed_100=`10` | 2000 文件列 10 行，100 文件列 10 行 |
 | 通过 | 7.5 包里的索引行数 ≤ pack_max_index_rows × 类别数 | listed_rows=`10`；max_rows=`10` | — |
 | 通过 | 7.6 其余资料进 omitted，并写明怎么取 | omitted=`1` | history 资料还有 1990 份未列（全量：`ctxiso archive list --kind history`，那是索引不是正文） |
 | 通过 | 7.6b omitted 里的份数算得对 | — | 期望 1990 份未列 |
 | 通过 | 7.7 2000 文件 vs 100 文件，包大小差 < 500 B | bytes_2000=`2661`；bytes_100=`2658`；diff=`3`；limit=`500` | 2661 B vs 2658 B，差 3 B |
-| 通过 | 7.8 第二次 index 账本 read_bytes = 0（增量） | first_read_bytes=`16413620`；second_read_bytes=`0`；attempts=`1`；first_ms=`915.0`；second_ms=`492.0` | 第1次 read_bytes=0 new_events=0 492.0ms　（第一次全量 read_bytes=16413620 字节） |
+| 通过 | 7.8 第二次 index 账本 read_bytes = 0（增量） | first_read_bytes=`16413620`；second_read_bytes=`0`；attempts=`1`；first_ms=`962.3`；second_ms=`510.1` | 第1次 read_bytes=0 new_events=0 510.1ms　（第一次全量 read_bytes=16413620 字节） |
 | 通过 | 7.8b 第二次 index 没有新增事件 | new_events=`0` | — |
 
-> 7.8 允许跑两次取最后一次：同机别的进程也会跑 ctxiso index，撞同一份索引库时 read_bytes 可能不为 0。增量逻辑本身是对的（store.refresh_ledger 按 meta.ledger_cursor seek 到新增字节）。本轮跑了 1 次：第1次 read_bytes=0 new_events=0 492.0ms
-> 文档索引每次都会重算全部 2000 个文件的 sha 与行数（refresh_docs 没有按 mtime 短路），所以第二次账本 read_bytes=0 但整条命令仍要 492.0 ms
+> 7.8 允许跑两次取最后一次：同机别的进程也会跑 ctxiso index，撞同一份索引库时 read_bytes 可能不为 0。增量逻辑本身是对的（store.refresh_ledger 按 meta.ledger_cursor seek 到新增字节）。本轮跑了 1 次：第1次 read_bytes=0 new_events=0 510.1ms
+> 文档索引每次都会重算全部 2000 个文件的 sha 与行数（refresh_docs 没有按 mtime 短路），所以第二次账本 read_bytes=0 但整条命令仍要 510.1 ms
 
 ## 场景 8　长期项目维护：跑很久以后仍能按需取回必要信息
 
-用时 821.7 ms，16/16 条断言通过。
+用时 850.4 ms，16/16 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
@@ -221,14 +221,17 @@
 
 ## 场景 9　新旧系统并存：新开发系统没有破坏原来的中枢
 
-用时 1873.2 ms，26/28 条断言通过。
+用时 1826.1 ms，31/31 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
-| **红** | 9.1 真仓库 guard check | rc=`3` | rc=3 {   "ok": false,   "why": "还没有基线，先跑 ctxiso guard snapshot" } —— 侧车状态目录里没有基线，本轮不新建（会覆盖统筹的基线） |
+| 通过 | 9.1 真仓库 guard check：ok=true | guard_ok=`True` | 中枢原有 24 个受控文件全部逐字节未变。 |
+| 通过 | 9.1b changed 为空 | changed=`0` | [] |
+| 通过 | 9.1c missing 为空 | — | [] |
+| 通过 | 9.1d 非 append-only 的改动为空 | baseline_at=`2026-10-10T11:26:43Z` | [] |
 | 通过 | 9.1e guard snapshot/check 基线自洽：changed/missing 都空 | guarded=`24`；guard_ok=`True` | 受控 24 个文件：中枢原有 24 个受控文件全部逐字节未变。 |
 | 通过 | 9.1f guard 能抓出真改动（不是空转） | caught=`['02-hubcore/CORE.md']`；restored=`True` | 改一个字后 changed=['02-hubcore/CORE.md'] / ok=False；改回去后 ok=True |
-| **红** | 9.2 git status --porcelain 工作区干净（测试自己的输出文件除外） | lines=`84`；raw=` M .github/workflows/ci.yml |  M .gitignore |  M README.md |  M START-HERE.md |  M docs/AUDIT-2026-10-10.md` | 实际 84 行：[' M .github/workflows/ci.yml', ' M .gitignore', ' M README.md', ' M START-HERE.md', ' M docs/AUDIT-2026-10-10.md'] |
+| 通过 | 9.2 git status --porcelain 工作区干净（测试自己的输出文件除外） | lines=`0`；raw=`` | 实际 0 行：[] |
 | 通过 | 9.3 旧系统 state.py 全流程跑通（init→plan→require→work→status） | steps_ok=`5`；steps=`5` | init=0 \| plan=0 \| require=0 \| work --define=0 \| status=0 |
 | 通过 | 9.3b status 输出含 MISSION 与当前阶段/下一步 | out_chars=`1022`；has_mission=`True` | ---------------------------------------- \| 产品：fake-old　类型：cli-tool \| 路径：C:\relab2\kernel\05-tests\TEMP\fake-old-system \| MISSION r1：让演示产品的导出失败原因一眼看得见 \| 可观察成功：导出命令失败时退出码非 0 且把原因打在标准错误上 \| 当前路线：先收原话，再用 state work 累积责任 \| 源码档 |
 | 通过 | 9.4 白名单之外的 UNKNOWN 写句柄数为 0 | calls=`19`；suspect=`0`；unregistered=`0` | 扫了 19 个写句柄，自动认不出落点的 0 个，其中未登记 0 个。白名单： |
@@ -243,9 +246,9 @@
 | 通过 | 9.5b 装出来的东西搜不到源仓路径 / context-isolation / github.com / http:// / user-skills | scanned=`91`；hits=`0`；real_hits=`0`；whitelisted=`0` | 扫了 91 个文件，命中 0 处；白名单排除 0 处 |
 | 通过 | 9.5c 每一处命中都在明明白白的白名单里（不许静默跳过） | whitelist=`0` | 无 |
 | 通过 | 9.5d 02-hubcore 已被临时改名（源树此刻不在原位） | renamed=`True` | 改名成功=True；02-hubcore 在原位=False |
-| 通过 | 9.5e 假宿主里 python hub/tools/state.py --help 成功 | rc=`0`；ms=`144.2` | usage: state.py [-h]                 {init,plan,status,gate,work,probe,accept-closed,accept-seen,confirm,attempt,reopen,record,require,verif |
-| 通过 | 9.5f 假宿主里 python hub/ctxiso/cli.py status --product <假产品> 成功 | rc=`0`；ms=`107.6` | {   "ok": true,   "product": "C:\\relab2\\kernel\\05-tests\\TEMP\\fake-home-prod",   "state_dir": "C:\\relab2\\kernel\\05-tests\\TEMP\\fake- |
-| 通过 | 9.5g 假宿主里 python -m ctxiso status --product <假产品> 成功 | rc=`0`；ms=`75.9` | {   "ok": true,   "product": "C:\\relab2\\kernel\\05-tests\\TEMP\\fake-home-prod",   "state_dir": "C:\\relab2\\kernel\\05-tests\\TEMP\\fake- |
+| 通过 | 9.5e 假宿主里 python hub/tools/state.py --help 成功 | rc=`0`；ms=`142.6` | usage: state.py [-h]                 {init,plan,status,gate,work,probe,accept-closed,accept-seen,confirm,attempt,reopen,record,require,verif |
+| 通过 | 9.5f 假宿主里 python hub/ctxiso/cli.py status --product <假产品> 成功 | rc=`0`；ms=`83.3` | {   "ok": true,   "product": "C:\\relab2\\kernel\\05-tests\\TEMP\\fake-home-prod",   "state_dir": "C:\\relab2\\kernel\\05-tests\\TEMP\\fake- |
+| 通过 | 9.5g 假宿主里 python -m ctxiso status --product <假产品> 成功 | rc=`0`；ms=`71.6` | {   "ok": true,   "product": "C:\\relab2\\kernel\\05-tests\\TEMP\\fake-home-prod",   "state_dir": "C:\\relab2\\kernel\\05-tests\\TEMP\\fake- |
 | 通过 | 9.5h 02-hubcore 名字已改回来（try/finally + 重试 + atexit 兜底） | restored=`True`；leftover=`False` | 回到原位=True；残留改名目录=False；回滚函数返回=True |
 | 通过 | 9.5i 新包的状态写在包内 .state/（不落在源仓任何地方） | state_in_pkg=`True`；children=`['573ca44604cb']` | 包内 .state/ = True |
 | 通过 | 9.5j check_dist_sync.py 退出 0（产物与源码同源） | rc=`0`；checked=`91` | 产物是当前源码构建出来的 |
@@ -277,6 +280,9 @@
 跑完 `<hubcore>/state/` 现有内容：`b8b4b57a808e`
 
 <!-- END AUTO-RUN -->
+
+
+
 
 
 
