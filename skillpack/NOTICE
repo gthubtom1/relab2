@@ -65,8 +65,15 @@ Copyright (c) 2026 zhaoxuya520
 | `open-reverselab` | https://github.com/LING71671/open-reverselab | `e44c351032b2530c926b2aea224276bbee591b16` | `GPL-3.0` | `review-required` | `docs/community/open-reverselab-THIRD_PARTY_NOTICES.md` |
 | `spider-king-skill` | https://github.com/aoyunyang/spider-king-skill | `1ca713658524cadf5a1ca70cd3de3e1ec2b8073e` | `MIT` | `review-required` | `docs/community/spider-king-skill-THIRD_PARTY_NOTICES.md` |
 
-⚠ **`open-reverselab` 是 GPL-3.0（copyleft）**，改编内容达 220 篇，已覆盖
-`api-security` / `database-security` / `ctf-sandbox` / `attack-chain` / `cloud-k8s` /
-`identity-federation` / `reverse-engineering` 等技能。
-**对外分发前必须先决定整体许可策略** —— 见 `docs/community/open-reverselab-THIRD_PARTY_NOTICES.md`
-的「许可证含义」一节。本文件不代替该决定。
+⚠ **`open-reverselab` 是 GPL-3.0（copyleft）**，改编内容 218 篇（2026-10-10 实测），
+全部位于 `skillpack/skills/*/references/` 下，零例外。
+
+**许可策略已决定（2026-10-10）：方案 C —— 保持现状。**
+该决定只在**不对外分发**的前提下成立：GPL-3.0 的分发义务在向他人交付时触发，
+纯私有自用不构成分发。一旦开源、对外分发、或他人 clone 后自用本仓库的
+`skills/*/references/` 内容，义务立刻生效，届时必须二选一：整体转 GPL-3.0，
+或隔离那 12 个 `references/` 目录。
+
+完整决策记录（含依据、代价、重审触发条件）见仓根 `LICENSE` 的
+「许可策略决策记录」一节。上游许可的逐条含义见
+`docs/community/open-reverselab-THIRD_PARTY_NOTICES.md`。

@@ -458,6 +458,26 @@ jobs:
         shell: bash
         run: python3 skillpack/skills/scripts/verify-workflow-refs.py
 
+      # 许可策略（方案 C：保持现状）的守卫。
+      # 方案 C 只在**不对外分发**时成立，而这件事会沉默失效 ——
+      # 仓库一直是私有的，哪天有人把 remote 改成公开、或发个 release，
+      # GPL 分发义务立刻生效，没有任何东西会提醒。
+      # 这道门禁查真实可见性（gh repo view --json visibility），
+      # 不只看 remote URL —— 私有 GitHub 仓库同样不构成分发，
+      # 只看域名会把它误判成公开。
+      - name: GPL distribution boundary (license decision C)
+        shell: bash
+        run: python3 skillpack/skills/scripts/verify-gpl-distribution-boundary.py
+
+      # 负控：许可边界守卫的三个失效模式（缺决策记录 / 远端转公开 /
+      # 可见性查不到）。可见性用假 gh 驱动，不碰网络也不碰真实远端。
+      # GH_BIN 是为这个而加的：Windows 上 shutil.which 按 PATHEXT 解析，
+      # 改 PATH 塞不进无扩展名的假 gh，会落到真的 gh.exe 上 ——
+      # 负控就成了在测网络而不是在测门禁。
+      - name: GPL boundary gate negative controls
+        shell: bash
+        run: python3 skillpack/skills/scripts/test-verify-gpl-distribution-boundary-negctl.py
+
       # 负控：这道门禁自己也得能变红。三种坏引用（不存在的 .sh / .py /
       # 只有 PS 孪生没有 .sh 的路径）+ 干净基线 + 根不存在。
       - name: Workflow-reference gate negative controls

@@ -8,7 +8,8 @@
   },
   "homepage": "https://reverse.apivix.com/",
   "repository": "https://github.com/zhaoxuya520/reverse-skill",
-  "license": "MIT",
+  "license": "SEE-PARENT-REPO",
+  "licenseNote": "不要把这个字段当成 SPDX 许可标识。原仓库包含 GPL-3.0 改编内容（见 ../../NOTICE），整个 checkout 不是单一 MIT 分发物。本 manifest 只覆盖本适配层代码。完整口径见仓根 LICENSE。",
   "keywords": [
     "cybersecurity",
     "reverse-engineering",

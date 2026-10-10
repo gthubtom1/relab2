@@ -33,7 +33,44 @@ SOFTWARE.
 | `kernel/` | MIT | 见 `kernel/LICENSE` |
 | `skillpack/` 框架代码 | MIT | 见 `skillpack/LICENSE` |
 | `skillpack/skills/` 下约 220 篇改编文档 | **GPL-3.0** | 改编自 `LING71671/open-reverselab`，见 `skillpack/docs/community/open-reverselab-THIRD_PARTY_NOTICES.md` |
-| `skillpack/community-raw/`、`skillpack/CTF-Sandbox-Orchestrator/`、`skillpack/burp-mcp-full/` | 各不相同 | 见 `skillpack/NOTICE` 的 `sources[]` 与 `skillpack/docs/COMMUNITY-LICENSE-MATRIX.md` |
-| `skillpack/plugins/reverse-skill/.codex-plugin/plugin.json` 的 `"license": "MIT"` | ⚠ 不准确 | 该 manifest 指向含 GPL 内容的仓库。插件再分发前必须先解决隔离问题 |
+| `skillpack/plugins/reverse-skill/.codex-plugin/plugin.json` | `SEE-PARENT-REPO` | 2026-10-10 已改：原来写 `"MIT"`，与事实不符（本仓含 GPL 内容）。现指向本文件 |
 
 完整来源、锁定提交与许可状态：`skillpack/NOTICE`。
+
+---
+
+## 许可策略决策记录（2026-10-10）
+
+**决定：方案 C —— 保持现状，不整体转 GPL-3.0，也不隔离 GPL 内容。**
+
+### 依据
+
+仓库含 **218 个文件**（实测自述改编自 `LING71671/open-reverselab`），
+全部位于 `skillpack/skills/*/references/` 下，合计约 92 000 行，
+占全仓 md 的 **10.9% 文件 / 17.9% 行**。
+
+C 成立的前提是 **不对外分发**：GPL-3.0 的分发义务只在「向他人交付」时触发，
+纯私有自用不构成分发。
+
+### C 的代价（知情承担）
+
+1. **一旦对外分发或开源，义务立刻生效**。届时必须在分发前二选一：
+   整体转 GPL-3.0，或隔离那 12 个 `references/` 目录
+   （12 个 `SKILL.md` 引用自己的 references 约 563 处，机械成本可算但需逐处改）。
+2. GPL 内容集中在 12 个 `references/` 目录内，**边界清晰、零例外** ——
+   这意味着将来改走方案 B 的成本是可估算的，不是无底洞。
+3. `plugin.json` 原先写 `"license": "MIT"`，**是三者中最脆的组合**
+   （主动声称 MIT + 实际含 GPL）。已改为 `SEE-PARENT-REPO` 指向本文件。
+
+### 什么时候必须重审
+
+出现以下任一情况，本决策立即失效并须重新评估：
+
+- 仓库被 push 到任何**公开**远端，或以任何形式交付给他人
+- 有人 clone 本仓库并在**自己的项目**里使用 `skills/*/references/` 下的内容
+- 引入新的 GPL / AGPL / SSPL 上游内容
+- 上游 `LING71671/open-reverselab` 的许可发生变化
+
+决策人：仓库所有者。决策日期：2026-10-10。
+证据与实测数据见 `docs/AUDIT-2026-10-10-FINAL.md` 与
+`skillpack/docs/community/open-reverselab-THIRD_PARTY_NOTICES.md`。
