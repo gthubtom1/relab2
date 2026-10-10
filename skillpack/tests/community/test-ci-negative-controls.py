@@ -51,16 +51,36 @@ import tempfile
 from pathlib import Path
 from typing import Any, Callable
 
-ROOT = Path(__file__).resolve().parents[2]
-RUNNER = ROOT / "skills" / "tests" / "run-ci-gates.py"
-WIRING = ROOT / "skills" / "tests" / "verify-gate-wiring.py"
+# ★ 2026-10-10 修正：原来写 `parents[2]`。本文件在
+#   <仓根>/skillpack/tests/community/ 下，`parents[2]` 只上溯到 **skillpack/**，
+#   于是 ROOT=C:\relab2\skillpack —— 副本里根本没有 `.github/workflows/ci.yml`，
+#   `unpinned-action` 这条负控每次都在 `path.read_text()` 上抛
+#   FileNotFoundError（实测 traceback 指向 unpinned-action\.github\workflows\ci.yml）。
+#   也就是说**这条负控从来没有真正验证过 SHA pin 门禁**。
+#   正解是上溯 3 层到仓根。RUNNER/WIRING 也要跟着改（它们在 skillpack/ 之下）。
+ROOT = Path(__file__).resolve().parents[3]
+SKILLPACK = ROOT / "skillpack"
+RUNNER = SKILLPACK / "skills" / "tests" / "run-ci-gates.py"
+WIRING = SKILLPACK / "skills" / "tests" / "verify-gate-wiring.py"
 
 # Copy everything except .git: this is the release-bundle run-skin of spec 17.18,
 # not a partial tree. An earlier version copied a hand-picked subset of directories
 # and the untouched baseline came out red, because several gates read community-raw/
 # and other trees the list did not mention -- a control harness that starts red
 # proves nothing about the defect it injects.
-EXCLUDE = shutil.ignore_patterns(".git", "__pycache__", "*.pyc", ".candidates", ".worktrees")
+# ★ 2026-10-10 追加排除本机运行时目录。
+#   原因一（崩溃）：work/ 下有 240 个 master-route-<时间戳>/ 目录，
+#     _audit_tmp/、pyghidra_mcp_projects/ 同理。copytree 会把它们全复制到
+#     副本里，路径一深就撞 Windows 的 MAX_PATH，copytree 直接抛异常 ——
+#     实测负控在 unpinned_action 这一步 traceback 崩掉。
+#   原因二（耗时）：它们全是运行时垃圾，复制一遍要几百秒
+#     （实测整个负控 355 秒，绝大部分花在复制上）。
+#   这些目录都在 .gitignore 里，**不在版本库中**，所以排除它们
+#   不改变「release-bundle run-skin」的性质 —— 客户拿到手的东西本来就没有它们。
+EXCLUDE = shutil.ignore_patterns(
+    ".git", "__pycache__", "*.pyc", ".candidates", ".worktrees",
+    "work", "_audit_tmp", "pyghidra_mcp_projects", ".hub",
+    "node_modules", "unpacking")
 
 def make_copy(destination: Path, label: str) -> Path:
     """A no-git copy of the checkout: the customer run-skin, not the dev tree."""
@@ -87,7 +107,9 @@ def run_gates(copy_root: Path) -> tuple[int, str]:
     all six controls reported a false green. This is the same failure mode as a
     control that asserts nothing, so it is worth stating plainly.
     """
-    runner = copy_root / "skills" / "tests" / "run-ci-gates.py"
+    # ★ ROOT 现在是仓根（2026-10-10 修正），副本里的 runner 在 skillpack/ 之下。
+    #   原来写 copy_root/"skills"/... 少了 skillpack 这一层。
+    runner = copy_root / "skillpack" / "skills" / "tests" / "run-ci-gates.py"
     if not runner.is_file():
         raise FileNotFoundError(f"copied CI entrypoint missing: {runner}")
     completed = subprocess.run(
@@ -110,13 +132,31 @@ def broken_active_link(copy_root: Path) -> str:
     upstream provenance breaks, and an unregistered active break is the exact
     case verify-doc-links.py is required to reject.
     """
-    target = copy_root / "docs" / "community" / "ROUTE-RANKING.md"
+    target = copy_root / "skillpack" / "docs" / "community" / "ROUTE-RANKING.md"
     if not target.is_file():
-        target = copy_root / "skills" / "MASTER-ROUTING.md"
+        target = copy_root / "skillpack" / "skills" / "MASTER-ROUTING.md"
     text = target.read_text(encoding="utf-8")
     injection = "\n\n[active-link-negative-control](t10-invented-active-link-xyz.md)\n"
     target.write_text(text + injection, encoding="utf-8")
     return f"appended an active markdown link to {target.relative_to(copy_root).as_posix()}"
+
+def broken_kernel_active_link(copy_root: Path) -> str:
+    """A broken link inside kernel/ must break the build.
+
+    verify-doc-links.py used to resolve ROOT one level too shallow, so every
+    rule-table glob (``skills/community/**``, ``docs/community/**``) matched
+    nothing and 164 real broken links went unreported while the gate stayed
+    green. This control injects an active link into kernel/ -- a tree the rule
+    table never claimed to cover -- so the failure mode cannot come back.
+    """
+    target = copy_root / "kernel" / "02-hubcore" / "docs" / "ENGINEERING-CONTINUITY.md"
+    if not target.is_file():
+        return ""
+    text = target.read_text(encoding="utf-8")
+    injection = "\n\n[kernel-active-link-negctl](t10-invented-kernel-link-xyz.md)\n"
+    target.write_text(text + injection, encoding="utf-8")
+    return "appended an active markdown link to kernel/02-hubcore/docs/ENGINEERING-CONTINUITY.md"
+
 
 def handoff_mismatch(copy_root: Path) -> str:
     """Spec T10 acceptance: a handoff mismatch must break the build.
@@ -133,7 +173,7 @@ def handoff_mismatch(copy_root: Path) -> str:
     gate recomputes content hashes from it. Both edits below are values a
     plausible mistake produces.
     """
-    path = copy_root / "skills" / "community" / "registry.json"
+    path = copy_root / "skillpack" / "skills" / "community" / "registry.json"
     document = json.loads(path.read_text(encoding="utf-8"))
     skills = document.get("skills") or []
     if not skills:
@@ -151,7 +191,7 @@ def raw_entrypoint(copy_root: Path) -> str:
     Reproduces exactly the CR-002 regression: a raw vendor SKILL.md is written
     back under the client discovery root, where a plain recursive walk finds it.
     """
-    raw = copy_root / "skills" / "community" / "t10-leaked-raw-skill"
+    raw = copy_root / "skillpack" / "skills" / "community" / "t10-leaked-raw-skill"
     raw.mkdir(parents=True, exist_ok=True)
     (raw / "SKILL.md").write_text(
         "---\n"
@@ -171,7 +211,7 @@ def routing_signal_regression(copy_root: Path) -> str:
     of 293 records. If routing-signals verification were not wired into CI, this
     regression would pass the build silently.
     """
-    path = copy_root / "skills" / "community" / "routing-signals.json"
+    path = copy_root / "skillpack" / "skills" / "community" / "routing-signals.json"
     document = json.loads(path.read_text(encoding="utf-8"))
     present = list(document.get("short_tokens") or [])
     if "ai" not in present:
@@ -198,7 +238,7 @@ def gate_removed_from_wiring(copy_root: Path) -> str:
     from skills/tests/ci-gates.json, which is the same class of defect as the
     self-exempting triage registry found on 2026-09-29.
     """
-    path = copy_root / "skills" / "tests" / "ci-gates.json"
+    path = copy_root / "skillpack" / "skills" / "tests" / "ci-gates.json"
     document = json.loads(path.read_text(encoding="utf-8"))
     gates = document.get("gates") or []
     removed = [g.get("id") for g in gates if g.get("id") == "test-community-decoys"]
@@ -215,6 +255,15 @@ CONTROLS: dict[str, dict[str, Any]] = {
         "spec": "T10 acceptance: active links",
         "why": "A registered-provenance link is allowed to break; an *active* link "
                "is not, and it must not be registrable.",
+    },
+    "broken-kernel-active-link": {
+        "mutate": broken_kernel_active_link,
+        "expect_gate": "verify-doc-links",
+        "spec": "2026-10-10: the doc-links rule table must actually match kernel/",
+        "why": "ROOT was one level too shallow, so every classification glob matched "
+               "nothing and 164 real broken links went unverified while the gate "
+               "reported green. A gate whose rule table matches nothing looks exactly "
+               "like a gate that found nothing.",
     },
     "handoff-mismatch": {
         "mutate": handoff_mismatch,

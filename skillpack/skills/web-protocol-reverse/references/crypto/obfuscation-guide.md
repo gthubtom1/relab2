@@ -82,10 +82,18 @@ vm.createContext(ctx);
 // 关键：把「数组声明 + decoder 定义 + rotate IIFE」这一段喂进去，
 // 捕获 decoder 函数句柄，而不是执行整个 bundle。
 // 具体切分范围因 bundle 而异，这里不给通用正则 —— 会骗人。
-vm.runInContext(src.slice(0, /* rotate IIFE 结束位置 */), ctx);
+//
+// ★ 下面三个 <占位符> 必须由你按实际 bundle 替换后才能跑。
+//   直接照抄会在 node --check 就报 SyntaxError（空注释不能充当表达式）。
+//   替换后请先 `node --check dump-table.js` 确认语法。
+const ROTATE_IIFE_END = 0;      // <占位：rotate IIFE 在 src 中的结束偏移>
+const DECODER_NAME   = '_0x1';  // <占位：decoder 在 ctx 上的属性名>
+const TABLE_LEN      = 256;      // <占位：字符串表长度>
 
-const decoder = ctx[/* decoder 的实际名字 */];
-for (let i = 0; i < /* 表长度 */; i++) {
+vm.runInContext(src.slice(0, ROTATE_IIFE_END), ctx);
+
+const decoder = ctx[DECODER_NAME];
+for (let i = 0; i < TABLE_LEN; i++) {
   try { table[i.toString(16)] = decoder(i); } catch (_) {}
 }
 console.log(JSON.stringify(table, null, 1));

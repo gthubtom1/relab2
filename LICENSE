@@ -1,0 +1,39 @@
+MIT License
+
+Copyright (c) 2026 zhaoxuya520
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## ⚠ 本文件不覆盖全部内容（必读）
+
+`LICENSE` 只覆盖**本仓库自身代码**。仓库内含**第三方内容与 GPL-3.0 衍生内容**，
+它们的许可各不相同，再分发前必须逐条核对。**不要把整个 checkout 当成单一 MIT
+许可的分发物。**
+
+| 范围 | 许可 | 说明 |
+|---|---|---|
+| `kernel/` | MIT | 见 `kernel/LICENSE` |
+| `skillpack/` 框架代码 | MIT | 见 `skillpack/LICENSE` |
+| `skillpack/skills/` 下约 220 篇改编文档 | **GPL-3.0** | 改编自 `LING71671/open-reverselab`，见 `skillpack/docs/community/open-reverselab-THIRD_PARTY_NOTICES.md` |
+| `skillpack/community-raw/`、`skillpack/CTF-Sandbox-Orchestrator/`、`skillpack/burp-mcp-full/` | 各不相同 | 见 `skillpack/NOTICE` 的 `sources[]` 与 `skillpack/docs/COMMUNITY-LICENSE-MATRIX.md` |
+| `skillpack/plugins/reverse-skill/.codex-plugin/plugin.json` 的 `"license": "MIT"` | ⚠ 不准确 | 该 manifest 指向含 GPL 内容的仓库。插件再分发前必须先解决隔离问题 |
+
+完整来源、锁定提交与许可状态：`skillpack/NOTICE`。

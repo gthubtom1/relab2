@@ -335,7 +335,7 @@ RAILS_PAYLOADS = [
 
     # === accepts_nested_attributes_for 绕过 ===
     # 如果 Post has_many Comments:
-    {"post": {"title": "x", "comments_attributes": {"0": {"body": "first", "admin_only": True}}},
+    {"post": {"title": "x", "comments_attributes": {"0": {"body": "first", "admin_only": True}}}},
 
     # === 使用数组索引 ===
     {"user": {"roles_attributes": {"0": {"name": "admin"}}}},

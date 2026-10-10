@@ -10,21 +10,58 @@ param(
   [string] $SkillRoot = '',
   [string] $ToolRoot  = ''
 )
-
+# $repoRoot 必须**先**算出来：下一行要用它定位 PsModulePathInit.ps1。
 $repoRoot = $PSScriptRoot
 if (-not $repoRoot) { $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path }
-if (-not $SkillRoot) {
-    $SkillRoot = if ($env:REVERSE_SKILL_ROOT) { $env:REVERSE_SKILL_ROOT } else { $repoRoot }
-}
-if (-not $ToolRoot) {
-    $ToolRoot = if ($env:REVERSE_TOOL_ROOT) { $env:REVERSE_TOOL_ROOT }
-                elseif (Test-Path 'D:\Tools') { 'D:\Tools' }
-                else { '' }
+
+# ★ PSModulePath 自愈（2026-10-10 注入）：剔除 WindowsApps 版 PowerShell 7 的模块目录，
+#   否则 PS 5.1 会因 TypeData 重复定义失败而使 Get-FileHash / Get-ExecutionPolicy
+#   不可用（已造成两次假绿 + 一次失败被吞）。重算/迁移后请重跑 inject-psmp.py。
+#
+# ★ 2026-10-10 修正硬编码路径：本行原来无条件 dot-source `C:\relab2\...`，
+#   导致把仓库 clone 到任何别的位置（AI-INSTALL.md 明确建议用 `~/reverse-skill`）
+#   的用户在第一步自检就炸在「找不到 PsModulePathInit.ps1」。
+#   现在按 $repoRoot 定位；本机原位时行为不变，换机时按仓内相对路径走。
+$psModulePathInit = Join-Path $repoRoot 'skillpack\skills\scripts\lib\PsModulePathInit.ps1'
+if (Test-Path -LiteralPath $psModulePathInit) {
+    . $psModulePathInit
+} elseif (Test-Path -LiteralPath 'C:\relab2\skillpack\skills\scripts\lib\PsModulePathInit.ps1') {
+    . 'C:\relab2\skillpack\skills\scripts\lib\PsModulePathInit.ps1'
 }
 
-# 确保当前会话继承环境变量
-if (-not $env:REVERSE_SKILL_ROOT) { $env:REVERSE_SKILL_ROOT = $SkillRoot }
-if (-not $env:REVERSE_TOOL_ROOT -and $ToolRoot) { $env:REVERSE_TOOL_ROOT = $ToolRoot }
+# ★ 2026-10-10 修正优先级倒置：原来用 `if (-not $env:X) { $env:X = ... }`，
+#   也就是**已存在的进程环境变量会压过显式传入的参数**。后果实测：
+#     powershell -File selfcheck.ps1 -ToolRoot 'E:\no-such-toolroot'
+#   同一次运行里会同时打印「工具根: E:\no-such-toolroot」（参数）
+#   和「工具根（探测层求得）= D:\Tools」（实际探测用的环境变量）——
+#   参数只影响显示、不影响探测，等于没有这个参数。
+#   正确顺序：**显式参数 > 环境变量 > 默认探测**，用 $PSBoundParameters 区分
+#   「用户传了」和「用了默认值」。这也顺带修掉了「进程里残留一个陈旧/错误
+#   REVERSE_* 值就再也传不进正确值」的问题（本机实测 Process 级残留
+#   E:\nope-not-here 时，每次 selfcheck 第 3 项都 FAIL）。
+$skillRootExplicit = $PSBoundParameters.ContainsKey('SkillRoot')
+$toolRootExplicit  = $PSBoundParameters.ContainsKey('ToolRoot')
+
+if (-not $skillRootExplicit) {
+    if ($env:REVERSE_SKILL_ROOT) {
+        $SkillRoot = $env:REVERSE_SKILL_ROOT
+    } else {
+        $SkillRoot = $repoRoot
+    }
+}
+if (-not $toolRootExplicit) {
+    if ($env:REVERSE_TOOL_ROOT) {
+        $ToolRoot = $env:REVERSE_TOOL_ROOT
+    } elseif (Test-Path 'D:\Tools') {
+        $ToolRoot = 'D:\Tools'
+    } else {
+        $ToolRoot = ''
+    }
+}
+
+# 确保子进程继承：显式参数优先（无条件写），否则只在为空时补
+if ($skillRootExplicit -or -not $env:REVERSE_SKILL_ROOT) { $env:REVERSE_SKILL_ROOT = $SkillRoot }
+if ($toolRootExplicit  -or (-not $env:REVERSE_TOOL_ROOT -and $ToolRoot)) { $env:REVERSE_TOOL_ROOT = $ToolRoot }
 
 $targetScript = Join-Path $repoRoot "skillpack\skills\scripts\selfcheck-newmachine.ps1"
 if (-not (Test-Path $targetScript)) {

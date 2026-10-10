@@ -98,11 +98,21 @@ import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# ★ 2026-10-10 修正：原来上溯 3 层，落在 `<仓根>/skillpack/`。
+#   而下面所有规则表用的都是**仓根相对**路径：
+#     TRIAGE_REL = "docs/community/link-triage.json"
+#     glob = "skills/community/*/SKILL.md" / "docs/community/**"
+#   它们真实位置是 `<仓根>/docs/community/...` 与 `<仓根>/skillpack/skills/community/...`。
+#   ROOT 少一层 = 整张规则表匹配不到任何文件 —— 这个门禁一直在对着空气工作。
+#   在主仓之所以"看着能跑"，是因为有 .git 时 snapshot_paths() 走 git 分支，
+#   而 git 索引里的路径恰好是仓根相对的，掩盖了 ROOT 的错位。
+#   证据：CI 负控在无 .git 的副本里报它 BLOCKED（git 分支失效，暴露真因）。
+#   正解：上溯 4 层到仓根。
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__)))))
 
-TRIAGE_REL = "docs/community/link-triage.json"
+TRIAGE_REL = "skillpack/docs/community/link-triage.json"
 BANNER_MARKER = "<!-- link-triage: reference-only -->"
-
 MUST_FIX_CLASSES = ("active", "wrapper")
 CLASS_ORDER = ("active", "wrapper", "provenance")
 # Dispositions a `registered_open` entry may carry: the link stays broken and
@@ -123,7 +133,7 @@ ENTRY_STATUSES = ("fixed", "registered_open")
 CLASSIFICATION_RULES = [
     {
         "id": "wrapper-entry",
-        "glob": "skills/community/*/SKILL.md",
+        "glob": "skillpack/skills/community/*/SKILL.md",
         "class": "wrapper",
         "scope_detail": "wrapper_entry",
         "rationale": (
@@ -134,7 +144,7 @@ CLASSIFICATION_RULES = [
     },
     {
         "id": "community-skill-entry",
-        "glob": "skills/community/**/SKILL.md",
+        "glob": "skillpack/skills/community/**/SKILL.md",
         "class": "wrapper",
         "scope_detail": "community_skill_entry",
         "rationale": (
@@ -145,7 +155,7 @@ CLASSIFICATION_RULES = [
     },
     {
         "id": "community-archive-skills-root",
-        "glob": "skills/community/**",
+        "glob": "skillpack/skills/community/**",
         "class": "provenance",
         "scope_detail": "community_archive",
         "rationale": (
@@ -155,12 +165,25 @@ CLASSIFICATION_RULES = [
     },
     {
         "id": "community-archive-docs",
-        "glob": "docs/community/**",
+        "glob": "skillpack/docs/community/**",
         "class": "provenance",
         "scope_detail": "community_archive",
         "rationale": (
             "upstream README / RULES / workflow copies kept as the source archive; their "
             "relative links address the upstream repository layout (spec 6.1)"
+        ),
+    },
+    {
+        "id": "kernel-acceptance-snapshot",
+        "glob": "kernel/03-bundle/patches/_acceptance/**",
+        "class": "provenance",
+        "scope_detail": "kernel_evidence_snapshot",
+        "rationale": (
+            "_acceptance/{hubcore_before,hubcore_after} are whole-tree snapshots taken "
+            "around the dead-ref patch run. Their broken links ARE the evidence that the "
+            "patch fixed something (DEAD-REFS.md records the before/after counts), so "
+            "they must never be rewritten -- doing so would destroy the baseline. "
+            "Classified provenance: registered, not must-fix."
         ),
     },
     {
@@ -301,26 +324,107 @@ def read_text(path):
     raise RuntimeError(f"cannot read Markdown file: {path}")
 
 def links_in(text):
-    """Yield (lineno, target) for local links outside fenced code blocks."""
+    """Yield (lineno, target) for local links outside fenced code blocks
+    **and outside HTML comment blocks**.
+
+    ★ 2026-10-10 修正：原来只跳过围栏（``` / ~~~），不管 HTML 注释。
+      kernel 侧大量使用 `<!-- hubcore: deadrefs-fixed-by ... -->` 这类归档块，
+      里面**逐字保留改写前的原文**（含当时的裸路径 `[catalog.md](catalog.md)`）。
+      kernel 自带的 check_dead_refs.py 规则 R2 明确写着「落在 <!-- --> 里的行不收」，
+      但本门禁不知道这条约定，于是把 100+ 条**已归档的历史原文**判成 must-fix 断链。
+      证据：02-hubcore 的活文本第 22/26/30 行用的是正确的 `browser-automation/catalog.md`，
+      只有归档块里的旧原文是裸路径。
+      归档块的旧原文不是活引用 —— 渲染时不可见，也没人会点它。
+    """
     in_fence = False
+    in_comment = False
     for lineno, line in enumerate(text.splitlines(), 1):
         if FENCE.match(line):
             in_fence = not in_fence
             continue
         if in_fence:
             continue
+        # HTML 注释：可能跨行，<!-- 开 --> 闭
+        #
+        # ★ 2026-10-10 收紧：原来判据是「行内出现 `<!--`」，这会把
+        #   **散文里提到注释标记**的普通文本误判成开注释，而且因为后面的
+        #   `-->` 永远不会出现，从那行到文件末的**全部内容**都逃过链接审计 ——
+        #   这是我自己引入的假绿入口。实测活例：
+        #     kernel/03-bundle/patches/RESULT.md:76
+        #     「…检测到 `<!-- hubcore: matrix-replaced-by` 标记后彻底禁用兜底锚点…」
+        #   这一行在解释补丁器的行为，**不是**注释，后面的 162 行全没被审计。
+        #   正确判据按 CommonMark：**块级 HTML 注释要求 `<!--` 在行首**
+        #   （允许前导空格）。行内出现的按普通文本处理。
+        if in_comment:
+            if "-->" in line:
+                in_comment = False
+                rest = line.split("-->", 1)[1]
+                # 同一行闭合后可能还有活链接
+                for m in LINK.finditer(INLINE_CODE.sub("", rest)):
+                    tgt = _clean_target(m)
+                    if tgt:
+                        yield lineno, tgt
+            continue
+        m_open = re.match(r"^[ ]{0,3}<!--", line)
+        if m_open:
+            tail = line[m_open.end():]
+            if "-->" in tail:
+                # 单行闭合的块注释：只保留闭合之后的活内容
+                line = tail.split("-->", 1)[1]
+            else:
+                in_comment = True
+                continue
+        elif "<!--" in line and "-->" in line:
+            # 行内成对注释：剥掉注释段，保留前后活内容
+            line = line.split("<!--", 1)[0] + " " + line.split("-->", 1)[1]
         for m in LINK.finditer(INLINE_CODE.sub("", line)):
-            raw = m.group(1).strip().strip("<>")
-            if not raw:
+            tgt = _clean_target(m)
+            if tgt:
+                yield lineno, tgt
+
+
+def unclosed_comment_start(text):
+    """★ 2026-10-10：未闭合的块级 HTML 注释会让后面**全部内容**逃过链接审计。
+
+    返回开注释的行号；没有则返回 None。
+    判据与 links_in 的注释状态机完全一致（围栏优先、块级注释才认），
+    所以判据漂移不会让两条路径给出不同答案。
+    """
+    in_fence = False
+    in_comment = False
+    start = 0
+    for lineno, line in enumerate(text.splitlines(), 1):
+        if FENCE.match(line):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if in_comment:
+            if "-->" in line:
+                in_comment = False
+            continue
+        m_open = re.match(r"^[ ]{0,3}<!--", line)
+        if m_open:
+            if "-->" in line[m_open.end():]:
                 continue
-            target = raw.split()[0].split("#")[0].split("?")[0]
-            if not target:
-                continue
-            if target.lower().startswith(SKIP_PREFIX):
-                continue
-            if "`TOOLS.md`" in target or SKIP_CHARS & set(target):
-                continue
-            yield lineno, target
+            in_comment = True
+            start = lineno
+    return start if in_comment else None
+
+
+def _clean_target(m):
+    """Normalise one markdown-link match into a target, or None to skip it."""
+    raw = m.group(1).strip().strip("<>")
+    if not raw:
+        return None
+    target = raw.split()[0].split("#")[0].split("?")[0]
+    if not target:
+        return None
+    if target.lower().startswith(SKIP_PREFIX):
+        return None
+    if "`TOOLS.md`" in target or SKIP_CHARS & set(target):
+        return None
+    return target
 
 def resolve(md, target):
     if target.startswith("/"):
@@ -329,18 +433,40 @@ def resolve(md, target):
         base = os.path.join(os.path.dirname(md), target)
     return os.path.normpath(base).replace(os.sep, "/")
 
+# ★ 2026-10-10：整树证据快照不进链接审计。
+#   kernel/03-bundle/patches/_acceptance/{hubcore_before,hubcore_after} 是
+#   「打补丁前 / 补丁后」的整树副本（DEAD-REFS.md 记录 before 56 -> after 0）。
+#   它们的断链**就是证据本身** —— 改掉就毁掉「补丁修好了什么」这个凭据。
+#   为什么不能登记成 registered_open：
+#     · 登记要求唯一键 (file,line,target)，而同一行可能有多条断链，
+#       实测会产生 13 条 duplicate 冲突；
+#     · 登记还要求文件带 reference-only banner，
+#       给证据快照加「仅供参考」横幅同样破坏它作为基线的性质。
+#   为什么不能归 provenance：provenance 语义是「上游原文存档」，仍属活文档。
+#   正确做法是整个文件不参与活链接审计 —— 它是历史，不是文档。
+EVIDENCE_SNAPSHOT_PREFIX = "kernel/03-bundle/patches/_acceptance/"
+
 def collect(files, dirs):
     """Return (broken, all_targets, unreadable) for every Markdown file."""
     broken = []
     all_targets = {}
     unreadable = []
     for md in sorted(p for p in files if p.endswith(".md")):
+        # 证据快照不进活链接审计（理由见 EVIDENCE_SNAPSHOT_PREFIX 的注释）
+        if md.startswith(EVIDENCE_SNAPSHOT_PREFIX):
+            continue
         try:
             text = read_text(md)
         except RuntimeError as exc:
             unreadable.append(str(exc))
             continue
         targets = []
+        # 未闭合的块级注释会让后面内容逃过审计（假绿）。
+        # 保守处理：把它**报出来**，而不是默默放行。
+        if unclosed_comment_start(text):
+            unreadable.append(
+                "%s: 未闭合的块级 HTML 注释（起于第 %d 行），"
+                "其后的内容未被链接审计" % (md, unclosed_comment_start(text)))
         for lineno, target in links_in(text):
             resolved = resolve(md, target)
             targets.append(target)

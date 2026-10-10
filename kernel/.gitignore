@@ -20,6 +20,18 @@ hostlist/
 .env
 *.log
 
+# 07-kernel-sweep 的调用凭据。读我.md:68 明确写了这三处会落盘：
+#   ① 环境变量 HUBCORE_API_TOKEN
+#   ② 本目录 .token
+#   ③ ~/.codex/config.toml
+# ② 是仓库内的文件，之前没有任何规则拦它 —— 照文档配好后一次
+# `git add .` 就会把 API 令牌提交进来。2026-10-10 全项目审查发现。
+.token
+.base
+*.token
+kernel-sweep-data/
+data/
+
 # 编辑器
 .vscode/
 .idea/

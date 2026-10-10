@@ -191,6 +191,7 @@ Redis 采用 RESP (REdis Serialization Protocol) 纯文本协议交互。若内�
 ## 2. DNS Rebinding (DNS 重绑定) 实战
 
 许多后端采用“先检查，后请求”的模式处理 SSRF，如：
+<!-- ▲ 脆弱性逻辑伪代码（片段，函数未定义） -->
 ```python
 # 脆弱性逻辑伪代码
 ip = dns_resolve(url.host)

@@ -414,6 +414,29 @@ jobs:
         shell: bash
         run: python3 skillpack/skills/scripts/verify-doc-links.py
 
+      # ★ 2026-10-10 新增：文档代码围栏配对体检。
+      #   未闭合的围栏会让后续整篇内容被 Markdown 当成代码块渲染，
+      #   读者看到的是完全错乱的文档 —— 而 verify-doc-links 查不出这个。
+      - name: Markdown code fences are balanced
+        shell: bash
+        run: python3 skillpack/skills/scripts/check-fences.py
+
+      # ★ 2026-10-10 新增：把文档里的代码块逐个编译/执行。
+      #   已用它抓出 4 处真错（YARA 无标识 string、condition 漏引用、
+      #   powershell 块混裸 python、伪代码块标成可编译语言）。
+      #   注意：块内代码片段（FRAGMENT）不算错，只有 SYNTAX_ERR 会让本门禁失败。
+      - name: Documented code blocks compile
+        shell: bash
+        run: python3 skillpack/skills/scripts/audit-doc-code.py --root skillpack/skills --workers 4
+
+      # 负控：证明上一条门禁真的在拦东西。
+      # 没有它，「零真错」和「门禁早就不检查了」在汇总数字上完全一样。
+      # 这条门禁被收紧到零误报（2026-10-10），误报率一旦反弹，
+      # 人会直接绕过它 —— 负控就是防这件事的。
+      - name: Documented-code gate negative controls
+        shell: bash
+        run: python3 skillpack/skills/scripts/test-audit-doc-code-negctl.py
+
       - name: Repository executable/reference boundaries
         shell: bash
         run: python3 skillpack/skills/scripts/verify-repository-security.py
@@ -424,6 +447,18 @@ jobs:
       - name: CI gate negative controls
         shell: bash
         run: python3 skillpack/tests/community/test-ci-negative-controls.py
+
+      # ★ 2026-10-10 接入：kernel/ 的 148 条场景断言此前**从未被任何 job 调用**。
+      # 它红着也没人知道 —— 2026-10-10 审查时实测出 4 条红，其中 1 条
+      # 是打包器拒绝产物（CORE.md 引用了仓内路径），另 3 条是场景 1/2
+      # 漏了前置 index（pack 只读索引库、state/ 又被 gitignore）。
+      # 为什么单列一个 job 而不是塞进 ci-gates.json：
+      #   那个清单是 **skillpack 内部门禁**的机器可读登记，script 路径按
+      #   skillpack 根解析（run-ci-gates.py:58 `ROOT = parents[2]`），
+      #   而 kernel/ 在仓根的**另一层**。硬塞进去会既破坏 resolve，
+      #   也会让 verify-gate-wiring 的「清单↔workflow 对撞」语义失真。
+      - name: kernel hubcore scenario suite (148 assertions)
+        run: python3 kernel/05-tests/run_all.py
 
   gradle-wrapper-validation:
     name: Gradle wrapper validation

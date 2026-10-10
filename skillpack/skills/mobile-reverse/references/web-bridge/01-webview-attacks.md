@@ -615,7 +615,7 @@ class WebViewBridgeFuzzer:
                 }
             } catch(e) {}
         }
-        fetch('''' + self.server_url + '''/probe?data=' + encodeURIComponent(JSON.stringify(bridges)));
+        fetch(self.server_url + "/probe?data=" + encodeURIComponent(JSON.stringify(bridges)));
         '''
         
         # 对每个发现的桥接方法，尝试调用

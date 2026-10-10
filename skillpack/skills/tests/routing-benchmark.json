@@ -954,11 +954,13 @@
     },
     {
       "hint": "把这个签名字段移植成纯 Python 采集器，不要依赖 Node",
-      "expect": "R50"
+      "expect": "R50",
+      "quick": false
     },
     {
       "hint": "抓到个 cookie 每次刷新就失效，想搞清楚是谁写的、怎么刷新的",
-      "expect": "R50"
+      "expect": "R50",
+      "quick": false
     },
     {
       "hint": "游戏客户端逆向，看看它的封包协议",
@@ -997,8 +999,9 @@
     },
     {
       "hint": "cifs spnego 身份混淆漏洞的缓解措施评估",
-      "expect": "R52",
-      "quick": true
+      "expect": "R24",
+      "quick": true,
+      "_note": "2026-10-10 订正：原期望 R52（kernel-exploit）是手写后从未跑通的错值 —— cifs/spnego 是 SMB 认证，不是 Linux 内核。本轮给 R24（windows-ad）补了 SMB/CIFS/Spnego/NTLM 漏洞类规则，实跑落 R24。"
     }
   ]
 }

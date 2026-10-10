@@ -24,9 +24,31 @@ param(
   [string] $ToolRoot  = ''
 )
 # ★ PSModulePath 自愈（2026-10-10 注入，路径由 inject-psmp.py 统一计算）：剔除 WindowsApps 版 PowerShell 7 的模块目录，否则 PS 5.1 会因 TypeData 重复定义失败而使 Get-FileHash / Get-ExecutionPolicy 不可用（已造成两次假绿 + 一次失败被吞）。重算/迁移后请重跑 work/envinit/inject-psmp.py
-. 'C:\relab2\skillpack\skills\scripts\lib\PsModulePathInit.ps1'
-
-
+# ★ 2026-10-10 去掉硬编码 `C:\relab2\...` 绝对路径。
+#   原来无条件 dot-source 固定路径：仓库 clone 到别处时它静默失效 ——
+#   错误写到 stderr，但 $ErrorActionPreference 在后面才设，主流程照跑，
+#   于是「PSModulePath 自愈」悄悄没了，只留一屏红字。
+#   现在按本文件位置逐级上溯，找到含 skillpack/skills/scripts/lib/ 的仓根为止。
+#   三个变量包在函数里：函数体内的赋值天然是局部的，出了函数就没了。
+#   这一点很重要 —— README/START-HERE/TOOL-CHAIN 都教用户 dot-source 这些脚本
+#   进交互会话，不隔离的话 $__psmpDir 等会落进用户的全局会话并覆盖同名变量
+#   （2026-10-10 实测复现）。
+function Resolve-Relab2PsModulePathInit {
+    $dir = $PSScriptRoot
+    if (-not $dir) { $dir = Split-Path -Parent $MyInvocation.MyCommand.Path }
+    while ($dir) {
+        $init = Join-Path $dir 'skillpack\skills\scripts\lib\PsModulePathInit.ps1'
+        if (Test-Path -LiteralPath $init) { return $init }
+        $parent = Split-Path -Parent $dir
+        if (-not $parent -or $parent -eq $dir) { break }
+        $dir = $parent
+    }
+    return $null
+}
+$__psmpInit = Resolve-Relab2PsModulePathInit
+if ($__psmpInit) { . $__psmpInit }
+Remove-Variable -Name __psmpInit -ErrorAction SilentlyContinue
+Remove-Variable -Name Resolve-Relab2PsModulePathInit -ErrorAction SilentlyContinue
 $ErrorActionPreference = 'Continue'
 $pass = 0; $fail = 0; $warn = 0
 function Ok   ($m) { $script:pass++; Write-Host ("  [OK]   " + $m) -ForegroundColor Green }
@@ -111,13 +133,23 @@ if (-not (Test-Path $boot)) {
       . $boot
     }
     $r = Resolve-ReverseToolSpec -Name 'idat'
-    if ($r.Available) { Ok ("探测层可用，且能找到 idat（Via=" + $r.Via + "）") }
-    else              { Warn "探测层能跑，但 idat 没找到 —— IDA 可能没装；装法见包根 TOOL-CHAIN.md" }
+    # ★ 2026-10-10：工具根指错时不能报「IDA 可能没装」。
+    #   探测层此时直接早退，idat 与任何工具一样找不到 —— 这跟装没装 IDA 无关。
+    $toolRootEarly = ($r.Via -eq 'tool-root-missing')
+    if ($r.Available) {
+      Ok ("探测层可用，且能找到 idat（Via=" + $r.Via + "）")
+    } elseif ($toolRootEarly) {
+      Warn "探测层能跑，但工具根不可用 —— idat 未探测，不是 IDA 没装"
+    } else {
+      Warn "探测层能跑，但 idat 没找到 —— IDA 可能没装；装法见包根 TOOL-CHAIN.md"
+    }
 
-    # ★ 验证 -Name 'xxx.exe' 的假缺失行为（这是探测层的已知特性，不是你用错了）
+    # ★ 验证 -Name 'xxx.exe' 的假缺失行为（这是探测层的既定契约，不是缺陷）。
+    #   GUI 交互式程序（die.exe / ida.exe / Wireshark.exe）一律被 deny 规则挡住，
+    #   「不带扩展名找得到、带扩展名找不到」是**正确行为**，因此不再报 WARN。
     $r2 = Resolve-ReverseToolSpec -Name 'idat.exe'
     if ($r.Available -and -not $r2.Available) {
-      Warn "确认：'idat' 能找到、'idat.exe' 找不到 —— 带扩展名是假缺失。用不带扩展名的 id。"
+      Write-Host ("      - 确认：'idat' 可用、'idat.exe' 不可用 —— GUI 孪生被 deny 规则挡住，属预期。用 'idat'。") -ForegroundColor Gray
     }
     # 工具根可能不是环境变量给的 —— 载入探测层后就知道真实值了，补报一次
     try {
@@ -186,10 +218,38 @@ try {
     foreach ($p in $toolMap.PSObject.Properties) { $entries[$p.Name] = $p.Value }
   }
   $totalCount = $entries.Count
+  # ★ 2026-10-10：工具根指错时，全部 25 条都会带 Via='tool-root-missing'。
+  #   旧代码把这种情况统计成「工具没就绪」，报出 9/25 就绪 —— 与「工具真没装」
+  #   完全无法区分，主人只能自己去猜到底缺了什么。
+  #   现在先把工具根校验摆在最前面，指错就直说指错了，别拿工具数背锅。
+  $toolRoot = Get-ReverseToolRoot
+  # ★ 2026-10-10 修正文案：原来只判「存在且是目录」，两类坏情况都报
+  #   「路径不存在」—— 但「路径存在、只是它是文件」是完全不同的错误
+  #   （实测把 REVERSE_TOOL_ROOT 指到 D:\Tools\README.md 时就是这么报的）。
+  #   诊断信息指错方向，主人会照着去查一个并不存在的问题。
+  $toolRootMissing = -not ($toolRoot -and (Test-Path -LiteralPath $toolRoot -ErrorAction SilentlyContinue))
+  $toolRootNotDir  = ($toolRoot -and -not $toolRootMissing -and
+                      -not (Test-Path -LiteralPath $toolRoot -PathType Container -ErrorAction SilentlyContinue))
+  $toolRootExists  = -not ($toolRootMissing -or $toolRootNotDir)
+  if ($toolRootMissing) {
+    $rootShown = if ($toolRoot) { $toolRoot } else { '(未设置)' }
+    Warn "工具根不可用: $rootShown —— 路径不存在，工具探测已全部跳过"
+    Warn '  这一项报的是**工具根指错**，不是「工具没装」。设对再重跑：'
+    Warn '  $env:REVERSE_TOOL_ROOT = ''D:\Tools'''
+  } elseif ($toolRootNotDir) {
+    Warn "工具根不可用: $toolRoot —— 路径存在，但它是个**文件**，不是工具根目录"
+    Warn '  工具根必须是一个目录（里面放各工具的子目录）。指向一个文件时，'
+    Warn '  四级探测的第 3/4 级（map 别名 + 工具根递归）都无从下手。'
+    Warn '  典型成因：把某个文件（如 README.md）当成了工具根。'
+  }
   $missing = @($entries.GetEnumerator() | Where-Object { $_.Value.Available -ne $true } | ForEach-Object { $_.Key })
   $availCount = $totalCount - $missing.Count
-  Ok ("核心逆向工具就绪: $availCount / $totalCount（已缓存至 $snapFile）")
-  if ($missing.Count) {
+  if ($toolRootExists) {
+    Ok ("核心逆向工具就绪: $availCount / $totalCount（已缓存至 $snapFile）")
+  } else {
+    Warn ("核心逆向工具就绪: $availCount / $totalCount —— **该数字无效**，工具根指错导致探测未真正执行")
+  }
+  if ($missing.Count -and $toolRootExists) {
     Write-Host ("      - 未就绪: " + ($missing -join ', ')) -ForegroundColor Yellow
     Write-Host '        逐条核实：四级探测全失败才算真缺，见 references/env-selfcheck.md' -ForegroundColor Gray
   }

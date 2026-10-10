@@ -29,6 +29,13 @@ safebox/
 # 而且等于把主人的目录结构公开出去。带前导斜杠，只挡仓根这一个。
 # （实测 2026-10-09：.gitignore 漏了这条，git add -A 会把它扫进仓库。）
 /.hub/
+# ★ 2026-10-10 补：selfcheck-newmachine.ps1:169 用
+#   Split-Path -Parent (Split-Path -Parent $PSScriptRoot) 推导快照目录，
+#   实际落在 <仓根>\skillpack\.hub\ —— 而上面那条带前导斜杠只挡仓根一个。
+#   实测 git check-ignore skillpack/.hub/tools.local.json 返回「未忽略」，
+#   每次跑自检就在未忽略目录生成本机绝对路径快照。
+skillpack/.hub/
+*/.hub/
 
 # 敏感：别把凭据带进仓库
 *.env
@@ -40,6 +47,24 @@ pyghidra_mcp_projects/
 *.gpr
 *.rep/
 *.lock~
+# IDA 数据库产物（.id0/.id1/.id2/.nam/.til）——
+# 2026-10-10 实测有 32 个这样的文件躺在 skillpack/scripts/ 下，
+# 是用 IDA 开脚本时生成的，绝不能进库。
+*.id0
+*.id1
+*.id2
+*.nam
+*.til
+*.dmp
+*.pdb
+
+# 底模卡片的备份副本（07-kernel-sweep 调试时留的，8 个文件）
+# 与 kernel/04-console/cards/base/ 内容重复，仓里只留一份。
+kernel/07-kernel-sweep/_backup-*/
+
+# diagram-generator 脚本吐的临时样例（sample.svg / .mmd / .dot / .puml）。
+# 2026-10-10 实测这 4 个文件无任何文档或脚本引用，是运行残留。
+/samples/
 
 # 调试残留（本包不该出现的测试产物）
 t.exe

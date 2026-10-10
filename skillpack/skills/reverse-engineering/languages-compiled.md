@@ -411,7 +411,8 @@ strings binary | grep "konan"
 
 D language binaries have unique symbol mangling different from C++. Template instantiation at compile-time produces many function variants.
 
-```bash
+<!-- ▲ D 语言识别特征笔记（不是可执行脚本） -->
+```text
 # Recognition: D binaries use different mangling than C++
 # Symbols contain "_D" prefix and numeric length-prefixed names
 # Example: _D4mainQaFNaNbNfZv

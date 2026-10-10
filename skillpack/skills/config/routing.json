@@ -957,6 +957,13 @@
             "域|用户|权限|管事|摸"
           ],
           "note": "canon-gap N059：低权域用户提权摸管事机（SKILL普通域账号提权）"
+        },
+        {
+          "must": "smb|cifs|spnego|\\\\\\\\|psexec|smbclient|samba|ntlm|srvsvc|netlogon|签名验证|认证绕过|身份混淆|relay",
+          "mustAll": [
+            "漏洞|绕过|缓解|利用|exploit|bypass|评估|防护|加固|漏洞|vuln"
+          ],
+          "note": "canon-gap 2026-10-10：SMB/CIFS/Spnego/NTLM 认证类漏洞原无归属，benchmark 里 'cifs spnego 身份混淆漏洞的缓解措施评估' 一直落 R0。必须带漏洞语义词才命中，避免把普通 SMB 运维问题吸走。"
         }
       ]
     },

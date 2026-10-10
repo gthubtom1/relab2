@@ -11,7 +11,13 @@
 #
 # 规整规则：保留 Machine 级干净值 + 用户自定义目录，剔除 WindowsApps 路径。
 # 幂等：Machine 级本来就干净时不做任何修改。
-if (-not $script:PSModulePathHealed) {
+# ★ 2026-10-10 修正：原来直接写 `if (-not $script:PSModulePathHealed)`。
+#   在 `Set-StrictMode -Version Latest` 下，**读一个从未定义过的变量会抛错**
+#   （VariableIsUndefined），而不是返回 $null —— 于是任何开了 StrictMode 的
+#   调用方（bootstrap-reverse.ps1 / test-client-neutral-bootstrap.ps1）
+#   一 dot-source 本文件就崩。实测 test-client-neutral-bootstrap.ps1 因此常红。
+#   正确写法：用 Get-Variable 显式探测存在性。
+if (-not (Get-Variable -Name PSModulePathHealed -Scope Script -ErrorAction SilentlyContinue)) {
     $script:PSModulePathHealed = $true
     try {
         $machinePP = [Environment]::GetEnvironmentVariable('PSModulePath', 'Machine')

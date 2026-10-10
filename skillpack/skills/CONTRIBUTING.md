@@ -488,7 +488,8 @@ bootstrap 会把 headers 写入配置。用户后续需要把 `<PLACEHOLDER_TOKE
 
 如果 MCP 是本地 HTTP 服务，建议在 skill 目录下写一个 `scripts/start.ps1`：
 
-```powershell
+<!-- ▲ 目录结构示意，不是可运行脚本。 -->
+```text
 # <skill-name>/scripts/start.ps1
 param(
     [int]$Port = <default-port>

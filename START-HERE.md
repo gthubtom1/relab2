@@ -60,7 +60,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\selfcheck.ps1
 | 层 | 解决什么 | 入口 | 必需 |
 |---|---|---|---|
 | **① 行为卡片层** | agent **怎么做事** —— 身份、纪律、输出契约 | `kernel/04-console/cards/guest/全能专精指引.md` | 是 |
-| **② 能力路由层** | agent **会做什么** —— 50 个技能的方法论与工具用法 | `skillpack/skills/SKILL.md` | 是 |
+| **② 能力路由层** | agent **会做什么** —— 50 个技能模块（46 顶层 + 4 community wrapper）的方法论与工具用法 | `skillpack/skills/SKILL.md` | 是 |
 | **③ 物理兜底层** | agent **卡住时有人拉它一把** —— 补 timeout、拦 GUI 二进制 | `extensions/pi/cmd-guard/README.md` | 否（仅 pi 宿主） |
 
 ③ 是 **pi 专有扩展**，换别的宿主就没有这层，①②照样完整可用 ——

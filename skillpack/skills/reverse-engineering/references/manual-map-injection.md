@@ -159,6 +159,9 @@ def apply_relocations(remote, data, delta):
 def fill_iat_in_target(image_base_in_target):
     """这段代码必须跑在【目标进程】里（作为 shellcode 或注入线程）。
 
+    遍历导入描述符表，逐个解析并写入目标进程的 IAT。
+    """
+
     remote = image_base_in_target
     rva  = opt.DATA_DIRECTORY[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress
     off  = rva
@@ -186,6 +189,7 @@ def fill_iat_in_target(image_base_in_target):
             write_qword(p_iat, proc)
             p_ilt += 8; p_iat += 8
         off += 20
+    return iat_rva
 ```
 
 ★ **`LdrGetProcedureAddress`** 是解析 IAT 的正确入口（它处理 forwarder 和 API set）。
@@ -234,6 +238,7 @@ def build_dllmain_shellcode(image_base, entry_point):
 
 ### 7. 跑起来
 
+<!-- ▲ CTypes 调用片段（缺 import 与函数上下文，片段） -->
 ```python
 sc_addr = VirtualAllocEx(h, None, len(sc), MEM_COMMIT|MEM_RESERVE, PAGE_EXECUTE_READWRITE)
 WriteProcessMemory(h, sc_addr, sc, len(sc), &n)

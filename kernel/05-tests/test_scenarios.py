@@ -338,6 +338,18 @@ def scenario_1():
     budget = int(cfg["pack_budget_bytes"])
     max_rows = int(cfg["pack_max_index_rows"])
 
+    # ★ 2026-10-10 修正（2026-10-10 审查）：本场景原先**直接**调 pack，
+    #   漏了前置 index。pack 只 SELECT 索引库、自己不扫目录（见 pack.py:49 与
+    #   1027 行的注释「不 index 就没有索引行可列」），而 kernel/state/ 被
+    #   .gitignore 忽略 —— 每台机器 / 每次 fresh clone 的 doc 表都从 0 行开始。
+    #   结果：1.5「出现长期资料的索引行」与 1.7「omitted 写清没展开什么」
+    #   恒定判红，而**数据源一个都没被删**（实测 index 后 doc 表 63 份）。
+    #   场景 4/5/6/7/8 全都先调 index，唯独场景 1 与 2 漏了 ——
+    #   那个红是测试流程自己造的，不是产品缺陷。
+    rci, soi, sei, _ = run_ctxiso("index", "--product", REPO, timeout=300)
+    if rci != 0:
+        s.fail(RuntimeError("index 失败 rc=%d %s" % (rci, sei.strip()[:300])))
+        return s
     rc, so, se, ms = run_ctxiso("pack", "--product", REPO,
                                 "--intent", "给主人解释载入流程", "--stage", "0-spec",
                                 "--json")
@@ -462,6 +474,12 @@ def scenario_2():
     budget = int(cfg["pack_budget_bytes"])
     half = budget // 2
 
+    # 同场景 1：pack 只读索引库，state/ 又被 gitignore ——
+    # 必须先 index，否则这个场景跑在一张空索引上。
+    rci, soi, sei, _ = run_ctxiso("index", "--product", REPO, timeout=300)
+    if rci != 0:
+        s.fail(RuntimeError("index 失败 rc=%d %s" % (rci, sei.strip()[:300])))
+        return s
     i1, i2 = "给主人解释载入流程", "查清 state status 为什么会回灌历史缺口"
     rc1, so1, se1, ms1 = run_ctxiso("pack", "--product", REPO, "--intent", i1,
                                     "--stage", "0-spec", "--json")

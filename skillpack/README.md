@@ -77,7 +77,7 @@ User task
 
 | Routing rules | Regression benchmark | Core skill modules | CI platforms | Client model |
 |---:|---:|---:|---|---|
-| 48 (R0–R49, with reserved gaps) | 182 cases | Canonical modules + namespaced adapters | Windows + Ubuntu ([trust boundary](docs/CI-TRUST-BOUNDARY.md): runner YAML never executed on real runners; Linux/macOS unverified) | Client-neutral |
+| 51 (R0-R52, gaps at R42/R43) | 199 cases | Canonical modules + namespaced adapters | Windows + Ubuntu ([trust boundary](docs/CI-TRUST-BOUNDARY.md): runner YAML never executed on real runners; Linux/macOS unverified) | Client-neutral |
 
 The routing core is driven by one structured configuration, validated by cross-platform CI, and kept separate from optional client adapters.
 
@@ -161,13 +161,20 @@ PRIMARY ladder: [skills/MASTER-ROUTING.md](skills/MASTER-ROUTING.md) · Full mat
 - **A code AI client** — Claude Code, Codex, Cursor, OpenCode, or another compatible client
 
 ### Installation
-
 ```bash
-git clone https://github.com/gthubtom1/all-skills-hub.git
-cd <the clone directory>
+git clone https://github.com/gthubtom1/relab2.git
+cd relab2
 ```
 
-> 上面这条就是本仓库的地址（私有库）。**换托管地址时改这一行**；README 顶部 badge 与文末 「Acknowledgments / License」里的上游出处链接**保留不动**。
+> **仓库里出现的三个 GitHub 地址，各是什么**（2026-10-10 澄清，此前从未说明）：
+>
+> | 地址 | 角色 |
+> |---|---|
+> | `gthubtom1/relab2` | **本仓库**。clone 就用这个。 |
+> | `zhaoxuya520/reverse-skill` | **skillpack 层的上游**。本仓 `skillpack/` 由它派生（`VERSION` = 1.0.1，锁定 `cab634bd`）。顶部 badge 与文末 License 段的链接**指向上游是正确的** —— 它们是出处信息，不是安装指令。 |
+> | `gthubtom1/hubcore` | **kernel 层的上游**。`kernel/` 由它派生，见 `kernel/README.md`。 |
+>
+> 换托管地址时只改上面「安装」这一处；badge 与 License 段的上游链接是出处，别动。
 > 本文件顶部的徽章、License 段，以及 `docs/COMMUNITY-LICENSE-MATRIX.md`、`docs/community/CANONICAL-BASE-LOCK.md`
 > 里的上游地址属于**出处信息**，要**保留**——只有"安装用"的这一条是指令。
 
@@ -175,15 +182,24 @@ cd <the clone directory>
 让它读 **[AI-INSTALL.md](AI-INSTALL.md)** —— 那里有分平台的取包/索引/自检步骤、给用户的报告模板，
 以及"装完怎么用"的三种用法（含可直接粘贴到项目 `AGENTS.md` / `CLAUDE.md` 的配置片段）。
 
-手动安装也可以，三步：clone → 生成工具索引 → 自检。**工具索引必须在新机器上跑一次**（它按机器生成、不入库）：
+手动安装三步：clone → 自检 → 路由。**不需要生成任何索引**：
 
 | Platform | Command |
 |----------|---------|
+| Windows PowerShell | `.\relab2-root.ps1` 然后 `.\selfcheck.ps1` |
+| bash（Git Bash / Linux / macOS） | `pwsh -File ./relab2-root.ps1` 然后 `pwsh -File ./selfcheck.ps1` |
 
-跑完上面的刷新命令后，包根目录会生成 `skillpack/skills/TOOLS.md`（按机器生成、gitignored，所以 fresh clone 里没有这个文件）——
-打开它就能看到检测到的工具清单。在刷新之前，先别按"文件应该存在"去找它。
+> **为什么没有「生成工具索引」这一步**：工具定位是**运行时行为**，不是数据。
+> `skillpack/skills/TOOLS.md` 是**随包分发的手写说明书**（怎么装、锁哪个版本、许可与坑），
+> 不是本机探测结果 —— 见该文件开头的自述。真实工具路径由探测层
+> `skills/scripts/lib/Bootstrap.ps1` 的 `Resolve-ReverseToolSpec` 在**运行时**解析，
+> 命中即用，不落盘、不缓存。完整口径见 [AI-INSTALL.md](AI-INSTALL.md) §2 与
+> [TOOL-CHAIN.md](TOOL-CHAIN.md)。
 
-> 上面这些命令是**写操作**（生成索引文件）。按本包的同意门（[README_AI.md](README_AI.md) §0）：
+> 自检**只测量不修改**。但它会读 Machine 级 PSModulePath 并在必要时**写回**
+> （剔除 WindowsApps 版 PowerShell 7 的模块目录，属自愈）。
+> `relab2-root.ps1` 会**写用户级环境变量**（不写 Machine 级）。
+> 两者都是本包设计内的动作，按同意门（[README_AI.md](README_AI.md) §0）
 > **先给用户看命令、拿到同意再跑**；只是阅读本仓库不等于授权执行。
 
 Platform-specific docs:
@@ -237,12 +253,12 @@ Platform-specific docs:
 | [skills/routing.md](skills/routing.md) | Task → skill routing matrix |
 | [skills/SKILL.md](skills/SKILL.md) | Master entry point |
 | [skills/INDEX.md](skills/INDEX.md) | Auto-generated, client-neutral skill navigation index |
-| [skills/config/routing.json](skills/config/routing.json) | **Routing single source of truth** (48 rules, R0–R49 with reserved gaps) |
+| [skills/config/routing.json](skills/config/routing.json) | **Routing single source of truth** (51 rules, R0-R52, gaps at R42/R43) |
 | `skillpack/skills/TOOLS.md` | Local tool status — **generated on this machine by the refresh command above; not shipped, so no link here** |
 | [skills/scripts/master-route.ps1](skills/scripts/master-route.ps1) | One-shot PRIMARY triage (reads routing.json) |
 | [skills/scripts/case-init.ps1](skills/scripts/case-init.ps1) | Case dir: scope / timeline / workitems |
 | [skills/case-review/](skills/case-review/) | Read-only Evidence graph review and artifact fixity checks |
-| [skills/scripts/test-routing.ps1](skills/scripts/test-routing.ps1) | Routing regression runner (182 benchmark cases) |
+| [skills/scripts/test-routing.ps1](skills/scripts/test-routing.ps1) | Routing regression runner (199 benchmark cases) |
 | [skills/scripts/verify-routing-coherence.ps1](skills/scripts/verify-routing-coherence.ps1) | Structure + supply-chain pin gate checks |
 | [skills/scripts/extract-summaries.ps1](skills/scripts/extract-summaries.ps1) | Regenerates INDEX.md from skill frontmatter |
 | [skills/ops/](skills/ops/) | Scope, Evidence chain, roles, timeline (skill-router form) |
@@ -250,7 +266,7 @@ Platform-specific docs:
 ### Testing (run after any routing/config change)
 
 ```powershell
-# 1. Routing regression — 182 (hint → expected PRIMARY) cases, fails CI on any mismatch
+# 1. Routing regression — 199 (hint -> expected PRIMARY) cases, fails CI on any mismatch
 powershell -NoProfile -ExecutionPolicy Bypass -File skills/scripts/test-routing.ps1
 # 2. Structure coherence + supply-chain pin gate (unpinned auto-install fails)
 powershell -NoProfile -ExecutionPolicy Bypass -File skills/scripts/verify-routing-coherence.ps1

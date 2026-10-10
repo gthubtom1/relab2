@@ -82,7 +82,7 @@ bash skills/scripts/master-route.sh --hint "把这段 smali 里的日志调用�
 > ⚠️ **这个自检会在你当前所在目录生成一个 `work/master-route-<时间戳>/` 子目录**（路由脚本的既定行为）。
 > 所以**一定要在 `<安装目录>` 里跑**，别在用户的项目里跑；跑完可以按需保留或删除。
 > 想更彻底一点（可选，约 1 分钟）：
-> - Windows：`powershell -NoProfile -ExecutionPolicy Bypass -File skills/scripts/test-routing.ps1` → 预期 `TOTAL=182 PASS=182`
+> - Windows：`powershell -NoProfile -ExecutionPolicy Bypass -File skills/scripts/test-routing.ps1` → 预期 `TOTAL=199 PASS=199`
 > - Linux / macOS / Kali：`bash skills/scripts/test-routing.sh` → 同上
 
 ## 4. 给用户的安装报告（照这个格式说）

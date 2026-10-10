@@ -133,7 +133,7 @@ Before finalizing:
 
 Use this structure for most diagram answers:
 
-```markdown
+````markdown
 下面是可编辑的 [language] 版本：
 
 ```[language]
@@ -144,7 +144,7 @@ Assumptions:
 - [only if needed]
 
 Rendered file: [link] [only if generated]
-```
+````
 
 For English user requests, respond in English. For Chinese user requests, respond in Chinese unless they ask otherwise.
 

@@ -562,7 +562,10 @@ class SourceMapExtractor:
                 if any(kw in f.lower() for kw in ['admin', 'secret', 'internal', 'hidden', 'debug']):
                     endpoints["functions"].add(f)
             # 硬编码密钥
-            keys = re.findall(r'(?:api[_-]?key|secret|token|password)\s*[:=]\s*['\"`]([A-Za-z0-9_\-=]{16,})['\"`]', content, re.IGNORECASE)
+            # ★ 2026-10-10 修正：原文把字符类 ['\"`] 直接写在 r'...' 单引号串里，
+            # 那个 ' 提前闭合了字符串 -> SyntaxError: unexpected character after
+            # line continuation character（2026-10-10 实测）。改成三引号 r"""..."""。
+            keys = re.findall(r"""(?:api[_-]?key|secret|token|password)\s*[:=]\s*['\"`]([A-Za-z0-9_\-=]{16,})['\"`]""", content, re.IGNORECASE)
             for k in keys:
                 endpoints["api_keys"].add(k)
 

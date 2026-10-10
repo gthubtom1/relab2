@@ -77,7 +77,7 @@
 
 | 路由规则 | 回归基准 | 核心 Skill | CI 平台 | 客户端模型 |
 |---:|---:|---:|---|---|
-| 48 条（R0–R49，含保留编号） | 182 条用例 | 核心模块 + 命名空间适配层 | Windows + Ubuntu（[信任边界](docs/CI-TRUST-BOUNDARY.md)：runner YAML 从未在真实 runner 上执行；Linux/macOS 未验证） | 平台无关 |
+| 51 条（R0–R52，缺 R42/R43） | 199 条用例 | 核心模块 + 命名空间适配层 | Windows + Ubuntu（[信任边界](docs/CI-TRUST-BOUNDARY.md)：runner YAML 从未在真实 runner 上执行；Linux/macOS 未验证） | 平台无关 |
 
 路由核心由单一结构化配置驱动，通过跨平台 CI 验证，并与各客户端的可选适配层保持分离。
 
@@ -161,13 +161,24 @@ PRIMARY 快路径：[skills/MASTER-ROUTING.md](skills/MASTER-ROUTING.md) · 全�
 ### 安装
 
 ```
-git clone https://github.com/gthubtom1/all-skills-hub.git
-cd <clone 出来的目录>
+git clone https://github.com/gthubtom1/relab2.git
+cd relab2
 ```
 
-> 上面这条就是本仓库的地址（私有库）。换托管地址时改这一行；其余上游出处链接保留不动。
-> 本文件顶部的徽章、License 段，以及 `docs/COMMUNITY-LICENSE-MATRIX.md`、`docs/community/CANONICAL-BASE-LOCK.md`
-> 里的上游地址属于**出处信息**，要**保留**；只有上面这条安装指令用占位。
+> **仓库里出现的三个 GitHub 地址，各是什么**（2026-10-10 澄清）：
+>
+> | 地址 | 角色 |
+> |---|---|
+> | `gthubtom1/relab2` | **本仓库**。clone 就用这个。 |
+> | `zhaoxuya520/reverse-skill` | **skillpack 层的上游**，本仓 `skillpack/` 由它派生。顶部 badge 与 License 段的链接指向上游是正确的 —— 它们是出处信息，不是安装指令。 |
+> | `gthubtom1/hubcore` | **kernel 层的上游**，见 `kernel/README.md`。 |
+>
+> 换托管地址时只改安装那一处。
+
+> 上面这条就是本仓库的地址（私有库）。换托管地址时改上面「安装」这一处；
+> 本文件顶部的徽章、License 段，以及 `docs/COMMUNITY-LICENSE-MATRIX.md`、
+> `docs/community/CANONICAL-BASE-LOCK.md` 里的上游地址属于**出处信息**，要**保留** ——
+> 只有「安装」这一条是指令。
 
 ### 初次使用
 
@@ -221,12 +232,12 @@ cd <clone 出来的目录>
 | [skills/routing.md](skills/routing.md) | 路由矩阵（场景 → Skill） |
 | [skills/SKILL.md](skills/SKILL.md) | 总控入口 |
 | [skills/INDEX.md](skills/INDEX.md) | 自动生成的平台无关 Skill 导航索引 |
-| [skills/config/routing.json](skills/config/routing.json) | 路由单一事实源（48 条规则，R0–R49，含保留编号） |
+| [skills/config/routing.json](skills/config/routing.json) | 路由单一事实源（51 条规则，R0–R52（缺 R42/R43）） |
 | [`skillpack/skills/TOOLS.md`](`skillpack/skills/TOOLS.md`) | 本机工具索引（自动生成） |
 | [skills/scripts/master-route.ps1](skills/scripts/master-route.ps1) | 一键分诊 |
 | [skills/scripts/case-init.ps1](skills/scripts/case-init.ps1) | 作战 case 目录（scope/timeline） |
 | [skills/case-review/](skills/case-review/) | 只读 Evidence 图审查与 artifact fixity 校验 |
-| [skills/scripts/test-routing.ps1](skills/scripts/test-routing.ps1) | 182 条路由回归基准 |
+| [skills/scripts/test-routing.ps1](skills/scripts/test-routing.ps1) | 199 条路由回归基准 |
 | [skills/scripts/verify-routing-coherence.ps1](skills/scripts/verify-routing-coherence.ps1) | 结构一致性与供应链版本固定门禁 |
 | [skills/ops/](skills/ops/) | Scope / 证据链 / 角色 / 时间线 / skill 供应链安全 |
 | [skills/references/community-security-skills.md](skills/references/community-security-skills.md) | 社区安全 skill 生态对照（借鉴不并库） |
@@ -234,7 +245,7 @@ cd <clone 出来的目录>
 ### 修改后验证
 
 ```powershell
-# 路由回归（182 条）
+# 路由回归（199 条）
 powershell -NoProfile -ExecutionPolicy Bypass -File skills/scripts/test-routing.ps1
 # 结构一致性 + 供应链版本固定门禁
 powershell -NoProfile -ExecutionPolicy Bypass -File skills/scripts/verify-routing-coherence.ps1

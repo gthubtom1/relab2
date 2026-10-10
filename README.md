@@ -45,7 +45,7 @@ C:\relab2\
 │  └─ 07-kernel-sweep\          提示词实测与调优工具链
 │
 ├─ skillpack\              ② 能力层 —— agent 会做什么
-│  ├─ skills\                   ★ 50 个技能模块，主入口 SKILL.md
+│  ├─ skills\                   ★ 50 个技能模块（46 顶层 + 4 community wrapper），主入口 SKILL.md
 │  │  ├─ TOOLS.md               ★ 工具清单与装法（机器无关）
 │  │  ├─ references\tool-registry.md   MCP 通道登记模板
 │  │  └─ scripts\lib\Bootstrap.ps1    探测层（纯测量）
