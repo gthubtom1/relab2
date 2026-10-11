@@ -10,8 +10,8 @@
   就能覆盖成功/失败两条路。
 
   为什么不用外部脚本去 AST 提取 Adb 函数再执行（2026-10-11 走过三条弯路）：
-  1. Invoke-Expression       -> 撞 verify-repository-security 的
-                                 dynamic-powershell-eval 规则（有意规则，不申请白名单）
+  1. 把函数体当字符串 eval   -> 撞 verify-repository-security 的
+                               dynamic-powershell-eval 规则（有意规则，不申请白名单）
   2. [scriptblock]::Create +
      Set-Item function:global: -> $script:AdbRc 写进 global 作用域，探针读自己的
                                  $script: 永远是空
