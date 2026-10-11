@@ -135,22 +135,41 @@ def case_file_capture_works() -> tuple[bool, str]:
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def _git_tracked_py_files() -> list[Path]:
+    """只返回 **git 跟踪**的 .py 文件。
+
+    ★ 2026-10-11 为什么不用 rglob：
+      .gitignore 第 16 行把 `/work/` 整个忽略了 —— 那是放临时 harness 的地方，
+      文件随时会被清掉、也永远不会被别人 checkout 到。
+      rglob 却照样扫它们，于是门禁在管仓库根本不管的文件：
+      一次 36 条全量复验里，这道门禁因为 work/envinit/ 下两个
+      一次性脚本报红，而那两个文件当天就会被删。
+      **门禁扫的必须是仓库承诺长期维护的东西。**
+    """
+    try:
+        out = subprocess.run(["git", "-C", str(REPO), "ls-files", "*.py"],
+                             capture_output=True, timeout=60)
+        names = out.stdout.decode("utf-8", "replace").split()
+    except Exception:
+        return []
+    return [REPO / n for n in names if n.endswith(".py")]
+
+
 def case_harnesses_use_files() -> tuple[bool, str]:
     """仓库内所有跑 apk-debug.ps1 的 Python harness 都必须落盘捕获。
 
-    ★ 2026-10-11 这里第一版用文本正则 `capture_output\\s*=\\s*True`，
-      结果扫到了我自己文档字符串里的那个词 —— 假红。
-      改用 ast：只有真的把它当**关键字实参**传给 subprocess 才算违规。
+    两个刻度，都踩过：
+    · 扫描用文本正则 → 扫到本文件 docstring 里那个词，假红。改用 ast：
+      只有真的把它当**关键字实参**传给 subprocess 才算违规。
+    · 扫描用 rglob → 扫到 .gitignore 掉的 work/ 临时文件，假红。改用
+      git ls-files：只管仓库承诺维护的文件。
     """
     import ast
 
     problems: list[str] = []
     checked = 0
-    for path in REPO.rglob("*.py"):
-        if path.resolve() == SELF:
-            continue  # 这道门禁的文档字符串里就写着那个词，别扫自己
-        s = str(path).replace("\\", "/")
-        if "/.git/" in s or "/node_modules/" in s:
+    for path in _git_tracked_py_files():
+        if path.resolve() == SELF or not path.exists():
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
         if "apk-debug" not in text:
@@ -175,7 +194,7 @@ def case_harnesses_use_files() -> tuple[bool, str]:
                         f"{path.relative_to(REPO)}:{node.lineno} subprocess.{name} 用了管道捕获")
     if problems:
         return False, "；".join(problems)
-    return True, f"扫了 {checked} 个调用 apk-debug 的 harness，无一使用管道捕获"
+    return True, f"扫了 {checked} 个 git 跟踪的 apk-debug harness，无一使用管道捕获"
 
 
 def main() -> int:
