@@ -284,6 +284,42 @@ D:\Tools\android-sdk\platform-tools\adb.exe devices -l   # 设备应稳定出现
 
 `apk-debug.ps1` 启动时会自动做这件事。
 
+### 4.3b 设备 SDK 低于 APK 的 minSdk 就装不上（2026-10-11 实测撞到）
+
+```
+adb: failed to install app.apk: Failure [INSTALL_FAILED_OLDER_SDK:
+  Failed parse during installPackageLI: /data/app/vmdl1317489361.tmp/base.apk
+  (at Binary XML file line #7): Requires newer sdk version #31 (current version is #30)]
+```
+
+**症状**：`install` 秒失败，报错里有个看不懂的 `#31` / `#30`。
+
+**先对这两个数**（aapt2 拿 APK 的，adb 拿设备的）：
+
+```powershell
+& 'D:\Tools\android-sdk\build-tools\34.0.0\aapt2.exe' dump badging app.apk |
+  Select-String "sdkVersion"
+& 'D:\Tools\android-sdk\platform-tools\adb.exe' shell getprop ro.build.version.sdk
+```
+
+`minSdk 31` = 要 Android 12；设备 `30` = Android 11 —— **差一个版本，且无法绕过**。
+
+> **这不是操作问题。** 手动点安装、scrcpy 拖拽、任何方式都装不上：
+> Android 11 没有 Android 12 的运行时，系统层面就拒绝。
+> scrcpy 只是屏幕镜像 + 反向控制，安装包仍然走 adb 那条路。
+
+三条出路：
+
+| 方案 | 代价 |
+|---|---|
+| 刷一台 Android 12+ 的手机 | 最干净 |
+| 官方模拟器 + Android 12 镜像 | 占 2 GB 内存，启动 1-5 分钟 |
+| 换一个 `minSdk ≤ 设备SDK` 的 APK 来验证动态链路 | 立刻可做，验证的是链路本身 |
+
+> **静态逆向完全不受影响。** jadx / apktool / aapt2 全离线，
+> 80 MB 的包实测 125 秒出 8179 个 `.java` + 18423 个 `.smali`，
+> 不需要任何设备。
+
 ### 4.4 用起来
 
 ```powershell
