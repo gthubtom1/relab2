@@ -93,16 +93,24 @@ def case_file_capture_works() -> tuple[bool, str]:
         took = time.time() - started
         text = _decode(out_f) + _decode(err_f)
         ok = rc == 0 and "APK" in text
-        return ok, f"落盘模式 {took:.1f}s 返回 rc={rc}，中文解码正常={text.count('自检') > 0}"
+        return ok, (f"落盘模式 {took:.1f}s 返回 rc={rc}，"
+                    f"中文解码正常={text.count('自检') > 0}")
 
 
 def case_harnesses_use_files() -> tuple[bool, str]:
-    """仓库内所有跑 apk-debug.ps1 的 Python harness 都必须落盘捕获。"""
+    """仓库内所有跑 apk-debug.ps1 的 Python harness 都必须落盘捕获。
+
+    ★ 2026-10-11 这里第一版用文本正则 `capture_output\\s*=\\s*True`，
+      结果扫到了我自己文档字符串里的那个词 —— 假红。
+      改用 ast：只有真的把它当**关键字实参**传给 subprocess 才算违规。
+    """
+    import ast
+
     problems: list[str] = []
     checked = 0
     for path in REPO.rglob("*.py"):
         if path.resolve() == SELF:
-            continue  # 这道门禁的文档字符串里就写着 capture_output=True，别扫自己
+            continue  # 这道门禁的文档字符串里就写着那个词，别扫自己
         s = str(path).replace("\\", "/")
         if "/.git/" in s or "/node_modules/" in s:
             continue
@@ -110,9 +118,23 @@ def case_harnesses_use_files() -> tuple[bool, str]:
         if "apk-debug" not in text:
             continue
         checked += 1
-        for m in re.finditer(r"capture_output\s*=\s*True", text):
-            line = text[: m.start()].count("\n") + 1
-            problems.append(f"{path.relative_to(REPO)}:{line} 用了管道捕获")
+        try:
+            tree = ast.parse(text, filename=str(path))
+        except SyntaxError as exc:
+            problems.append(f"{path.relative_to(REPO)} 语法错误，无法判定: {exc}")
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            fn = node.func
+            name = fn.attr if isinstance(fn, ast.Attribute) else getattr(fn, "id", "")
+            if name not in ("run", "Popen"):
+                continue
+            for kw in node.keywords:
+                if kw.arg == "capture_output" and isinstance(kw.value, ast.Constant) \
+                        and kw.value.value is True:
+                    problems.append(
+                        f"{path.relative_to(REPO)}:{node.lineno} subprocess.{name} 用了管道捕获")
     if problems:
         return False, "；".join(problems)
     return True, f"扫了 {checked} 个调用 apk-debug 的 harness，无一使用管道捕获"
