@@ -55,7 +55,7 @@
     "fallback": "若需要把两个流彻底分开（aapt2 这类只写 stderr 的工具），改用 Start-Process + 两个不同临时文件重定向；两个流写同一个文件会被 Start-Process 直接拒。"
   },
   "validation": {
-    "lastVerifiedAt": "2026-10-11",
+    "lastVerifiedAt": "2026-10-12",
     "command": "python skillpack/skills/scripts/experience-card.py validate"
   },
   "links": {

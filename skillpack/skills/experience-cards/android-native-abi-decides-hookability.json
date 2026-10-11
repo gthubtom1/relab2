@@ -56,7 +56,7 @@
     "fallback": "必须调试 ARM-only 的包时：① 用雷电的 ARM 版本实例；② 用真机（ARM 原生，无翻译层）；③ 只做静态（jadx/apktool 不需要设备）。"
   },
   "validation": {
-    "lastVerifiedAt": "2026-10-11",
+    "lastVerifiedAt": "2026-10-12",
     "command": "python skillpack/skills/scripts/experience-card.py validate"
   },
   "links": {

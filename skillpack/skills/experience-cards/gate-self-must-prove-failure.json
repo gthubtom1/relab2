@@ -60,7 +60,7 @@
     "fallback": "无法构造外部标志物时，改为对比前后差分（字节 diff / 端口前后快照）并说明为什么差分能证明目标路径被执行。"
   },
   "validation": {
-    "lastVerifiedAt": "2026-10-11",
+    "lastVerifiedAt": "2026-10-12",
     "command": "python skillpack/skills/scripts/experience-card.py validate"
   },
   "links": {

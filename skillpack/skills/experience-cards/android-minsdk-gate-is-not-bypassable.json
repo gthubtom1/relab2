@@ -53,7 +53,7 @@
     "fallback": "只做静态逆向：jadx / apktool / aapt2 全离线，不需要任何设备。"
   },
   "validation": {
-    "lastVerifiedAt": "2026-10-11",
+    "lastVerifiedAt": "2026-10-12",
     "command": "python skillpack/skills/scripts/experience-card.py validate"
   },
   "links": {

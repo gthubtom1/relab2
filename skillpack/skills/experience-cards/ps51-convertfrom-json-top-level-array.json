@@ -55,7 +55,7 @@
     "fallback": "改用 `(ConvertFrom-Json ...).Count` 加索引遍历；或用 jadx/aapt2 等官方工具直接给结构化输出，避开这一层语义差异。"
   },
   "validation": {
-    "lastVerifiedAt": "2026-10-11",
+    "lastVerifiedAt": "2026-10-12",
     "command": "python skillpack/skills/scripts/experience-card.py validate"
   },
   "links": {

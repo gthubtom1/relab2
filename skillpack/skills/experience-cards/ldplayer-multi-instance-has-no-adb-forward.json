@@ -54,7 +54,7 @@
     "fallback": "确实必须多开且必须 adb 时，换 MuMu（其 MuMuManager info 会自报每实例的 adb_port）。"
   },
   "validation": {
-    "lastVerifiedAt": "2026-10-11",
+    "lastVerifiedAt": "2026-10-12",
     "command": "python skillpack/skills/scripts/experience-card.py validate"
   },
   "links": {

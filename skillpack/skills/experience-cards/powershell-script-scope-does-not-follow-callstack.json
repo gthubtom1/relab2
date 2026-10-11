@@ -62,7 +62,7 @@
     "fallback": "确实需要黑盒单测时，改写成模块（.psm1），用 Import-Module + InModuleScope 测试，作用域语义可控。"
   },
   "validation": {
-    "lastVerifiedAt": "2026-10-11",
+    "lastVerifiedAt": "2026-10-12",
     "command": "python skillpack/skills/scripts/experience-card.py validate"
   },
   "links": {

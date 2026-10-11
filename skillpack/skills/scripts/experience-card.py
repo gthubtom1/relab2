@@ -95,10 +95,20 @@ def resolve_ref(rel: str) -> Path:
 
 # ── 基础设施 ──────────────────────────────────────────────────────
 def sha256_of(path: Path) -> str:
+    """fixture 的 SHA-256，**对换行符归一化**。
+
+    ★ 2026-10-12 实测：不归一化会在新克隆上假红。
+      `.gitattributes` 声明 `eol=lf`，所以**提交时** CRLF 被转成 LF；
+      但检出端若 `core.autocrlf=true`，又会转回 CRLF。
+      后果：同一份 fixture，本地 1417 字节 / 克隆 1460 字节，
+      哈希不同（559cc96f… vs 01514f88…）——**卡过不了门禁**，
+      而且只在「换了机器/重新克隆」时才暴露。
+      归一化后两边一致，且不损失任何判据强度（内容有实质改动时哈希照样变）。
+    """
     h = hashlib.sha256()
     with path.open("rb") as fh:
         for chunk in iter(lambda: fh.read(65536), b""):
-            h.update(chunk)
+            h.update(chunk.replace(b"\r\n", b"\n"))
     return h.hexdigest()
 
 
