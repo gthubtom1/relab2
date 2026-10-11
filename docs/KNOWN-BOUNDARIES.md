@@ -100,6 +100,40 @@ test-audit-doc-code-negctl.py
 
 ---
 
+## 6. 测量假象：长跑脚本不能用后台子 shell 测
+
+**这不是项目缺陷，是操作陷阱** —— 但长期使用一定会重复踩，所以写在这里。
+
+**现象**：用 `( ... &)` 或 `cmd &` 在后台跑长脚本，然后 `sleep N` 去看日志，
+会看到「零输出」「卡住几百秒」。**全是假象** —— 后台子 shell 被回收时
+输出一起丢了。
+
+**实例**：`apk-debug doctor` 先后测出「150 秒零输出」「710 秒」，
+实际前台跑**只要 21.7 秒**、rc=0。围绕这个假象排查了很久，
+还一度以为是自己新加的代码把脚本拖慢了。
+
+**正确做法**：
+
+```powershell
+# ✅ 前台 + 重定向到文件，用工具的 timeout 兜底
+time (timeout 600 powershell -File script.ps1 > "$TEMP/out.log" 2>&1)
+tail -5 "$TEMP/out.log"
+
+# ❌ 后台子 shell —— 输出会随进程被回收而丢失
+( powershell -File script.ps1 > log.txt 2>&1 & ) ; sleep 90 ; cat log.txt
+```
+
+**同类陷阱**（今天都踩过）：
+- `Invoke-Native` 原本只收 stdout —— dumpcap 的进度全在 stderr，
+  抓到 17227 包却报「什么都没抓到」
+- 门禁运行**期间**改文件 → 后面几条读到中间态，报出假红
+  （`kernel hubcore` / `verify-routing-coherence` / `test-p0-friction`
+   三条都这样红过一次，干净复跑全绿）
+
+**判断影响**：遇到「脚本卡住」时，**先换个测量方式再下结论**。
+
+---
+
 ## 附：这份清单本身怎么维护
 
 1. **不要把它变成待办列表** —— 待办在 `docs/HANDOFF-*.md`，那份会随工作推进更新。
