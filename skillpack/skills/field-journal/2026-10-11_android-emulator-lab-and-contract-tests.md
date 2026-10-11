@@ -63,9 +63,10 @@ APK 逆向 / 环境能力层 / 工具链建设
 ## 工具链发现
 
 - 探测层已覆盖：`adb` / `tshark` / `dumpcap` / `mitmproxy` 12.2.3 / `frida` 17.17.0 /
-  `frida-ps` / `objection` 1.12.5 / `emulator` 37.2.12.0 / `avdmanager` / `scrcpy` 4.1
+  `frida-ps` / `objection` 1.12.5 / `emulator` 37.2.12（build 16428233）/ `avdmanager` / `scrcpy` 4.1
 - `avdmanager` 没有 `--version`；`emulator -version` 有
 - 本机 `.android/avd` 里已有 1 个 AVD 定义（官方 emulator 起不来，见 TOOLS.md §4.1）
+
 
 ## 关键命令
 
