@@ -4,7 +4,7 @@
 >
 > **什么时候用**：要把**一条反复出现的决策规则或确定性操作**保存下来时。经验卡（experience card）**不是** case 报告，**不是**某个目标的专用配方，**也不是**「历史产出在当前目标上可信」的许可证。
 >
-> **平台与本机状态**：本文是 schema 与规程，不依赖具体本机工具。需要本机注意的只有两条：**(1)** 源文档的晋级目标目录 `references/experience-cards/` 在本包**尚未建立**（未创建），因此候选先落 `<project>/js_reverse_cache/tasks/<id>/experience-candidate.json`；**(2)** 经验卡里常被引用的 `iv8-local-runtime` 边界，本机无 iv8（社区运行时，PyPI 无发行版），相关卡片在本机**无法复验**，消费前须按 `./skill-maintenance.md` 的验证命令实跑。本包**没有** `scripts/` 目录，源文档引用的 `../triage/forward-testing-playbook.md` 等扁平路径已改为实际路径。
+> **平台与本机状态**：本文是 schema 与规程，不依赖具体本机工具。需要本机注意的只有两条：**(1)** 晋级目标目录在 2026-10-11 定为**仓级共享目录** `skills/experience-cards/`（跨技能、可被 `skills/scripts/experience-card.py search` 检索），源文档原本指向 `web-protocol-reverse/references/experience-cards/` 的单技能路径已改为仓级；**(2)** 经验卡里常被引用的 `iv8-local-runtime` 边界，本机无 iv8（社区运行时，PyPI 无发行版），相关卡片在本机**无法复验**，消费前须按 `./skill-maintenance.md` 的验证命令实跑。本包**没有** `scripts/` 目录，源文档引用的 `../triage/forward-testing-playbook.md` 等扁平路径已改为实际路径。
 
 ---
 
@@ -35,9 +35,9 @@
 <project>/js_reverse_cache/tasks/<task-id>/experience-candidate.json
 ```
 
-> **本机现状**：`references/experience-cards/` 目录**在本包尚未建立**。在该目录被创建之前，所有晋级后的卡片**仍以候选形态留在任务本地**，由 `../../../field-journal/KB-INDEX.md` 做检索入口。源文档的晋级目标路径如实保留在文中，但**在目录建立前不可用**。
+> **本机现状（2026-10-11 更新）**：晋级目标目录已定为仓级共享目录 `skills/experience-cards/`（本包相对路径 `../../../experience-cards/`），由 `skills/scripts/experience-card.py` 维护：`new` / `search` / `validate` / `stamp`。**卡是跨技能的** —— 一条卡可以挂在 `apk-reverse` 也可以挂在 `web-protocol-reverse`，`links.skill` 只是索引字段。**不满足晋级门一律不能进这个目录**：`new` 默认建 `candidate`，`validate` 对非 `promoted` 直接报错。
 
-把一张卡晋级进 `references/experience-cards/<card-id>.json`，只有两个前提同时成立：**正在维护本技能（spider-king）**，且 `./skill-maintenance.md` 的「可复现经验门（Reproducible Experience Gate）」已经通过。
+把一张卡晋级进 `skills/experience-cards/<card-id>.json`，只有两个前提同时成立：**该卡的不变量已在两个独立任务里复现**，且 `./skill-maintenance.md` 的「可复现经验门（Reproducible Experience Gate）」已经通过。晋级门由 `skills/scripts/experience-card.py validate` 机械执行（晋级门 7 条 + 无秘密检查，见下文 §判据 A/C），`test-experience-card.py` 用 8 类坏卡作反例控制组证明这道门会红。
 
 **晋级后的卡及其 fixture 必须无秘密（secret-free）。**
 **绝不**把原始任务抓取、目标 URL、账号、cookie、token、key、header 或私有响应拷进技能包。脱敏规范见 `../../../field-journal/anonymization.md`。
@@ -47,7 +47,7 @@
 | | 候选（candidate） | 晋级卡（promoted） |
 |---|---|---|
 | `status` | `candidate` | `promoted` |
-| 落点 | 任务本地 `experience-candidate.json` | `references/experience-cards/<card-id>.json`（本机尚未建立该目录） |
+| 落点 | 任务本地 `experience-candidate.json` | `skills/experience-cards/<card-id>.json`（仓级共享，跨技能） |
 | 允许不完整 | **是**，故意允许 | 否 |
 | 缺失的证据 | 用 `null`，并逐条列进 `missingPromotionRequirements` | 不允许有 `null` |
 | 能否被当作可复用卡消费 | **否** | 是（且须过消费规则） |
@@ -246,7 +246,7 @@
 - `../crypto/iv8-runtime-cheatsheet.md` —— `iv8-local-runtime` 边界的参考（**本机无 iv8，该文档形态未在本机验证**）
 - `../../../field-journal/_template.md` —— 晋级为通用经验后落脱敏 case 的模板
 - `../../../field-journal/anonymization.md` —— 脱敏占位符总表与自动检测脚本
-- `../../../field-journal/KB-INDEX.md` —— 已沉淀经验的检索入口（`references/experience-cards/` 建立前的实际入口）
+- `../../../experience-cards/INDEX.md` —— 已沉淀经验卡的**检索入口**（症状 → 规则，自动生成）
 - `../../SKILL.md` —— `content_hash` / `repro_command` 等证据字段的校验流程
 
 ---
@@ -254,7 +254,7 @@
 ## 源文档勘误（改编时修正）
 
 1. **源文档 `## Contents` 目录块指向英文锚点**。已删除，改为中文六段式结构下的自然导航。
-2. **源文档的晋级目标目录 `references/experience-cards/` 在本包不存在**（未创建）。源文档把它写成既成事实，容易让读者以为落盘即可完成。已在「存储生命周期」处明确标注「该目录尚未建立」，并指明在建立前候选留在 `js_reverse_cache/tasks/<id>/experience-candidate.json`、检索走 `../../../field-journal/KB-INDEX.md`。
+2. **源文档的晋级目标目录 `references/experience-cards/` 在本包不存在**（未创建）。源文档把它写成既成事实，容易让读者以为落盘即可完成。2026-10-11 已把它落到仓级共享目录 `skills/experience-cards/`（本包相对路径 `../../../experience-cards/`），并由 `skills/scripts/experience-card.py` 维护（`new` 默认建 candidate、`validate` 卡晋级门 7 条、`stamp` 回填 fixture 哈希并重建 INDEX）。源文档的任务本地候选路径 `js_reverse_cache/tasks/<id>/experience-candidate.json` 属上游仓库形态，本包不使用。
 3. **源文档引用 `skill-maintenance.md`** 为扁平路径，实际该文件在同目录 `references/contract/`。已改为 `./skill-maintenance.md`。
 4. **源文档 `## Promoted Shape` 的 `decision.preferredRoute` 写 "Spider route name"**，而本包已不复用 Spider King 的路线命名体系。JSON 占位说明属 schema 内文本，**保持原样**（它是字段语义说明而非枚举取值），中文译文相应改为「Spider 路线名」并在此注明。
 5. **源文档 `## Consumption Rule` 第 4 条只写了停止条件，没有定义「退役」的判据数量**。本文把紧随其后的最后一句（「Retire a card when its fixture cannot be reproduced…」）显式提升为独立小节，因为它是硬性退役判据而非使用规则。
@@ -263,3 +263,4 @@
 8. **源文档未与 `../../field-journal/`、`../../case-review/` 建立任何联系**。改编按任务要求补了「步骤」第三节的对齐映射表（经验卡字段 → E-id 证据字段、`content_hash`、`repro_command`、`severity`、`linked_workitem`），并**逐条标注哪些映射是改编补入**。`severity` 与 `linked_workitem` 在经验卡 schema 中**没有对应字段**，映射表中已如实标明「卡中无对应字段」，未虚构 schema 字段。
 9. **源文档 `validation.command` 要求「从干净 checkout 或拷贝后的技能目录跑通」，但本包没有 `scripts/` 目录可供这样的命令调用**。本文未编造任何验证命令，只保留了这条要求本身，并说明涉及 `iv8-local-runtime` 的卡在本机无法复验。
 10. **源文档全文无一处提及 `scripts/*` 工具**，故本文也未引用；但同批其它文档确有引用不存在的 `scripts/` 工具的情况，已在其它篇处理。
+11. **2026-10-11 落地后补入**：源文档的晋级门只写了「正在维护 spider-king 这个技能」这一条前提。本包是**多技能共仓**，经验卡定为仓级共享目录，因此把该前提改为「不变量已在两个独立任务里复现」（这本来就是晋级门第 1 条的实质），并把机械执行交给 `skills/scripts/experience-card.py validate`。同时补了 `links.skill` 索引字段与 `symptoms` 检索字段 —— 后者是本仓库唯一的机器检索入口，缺了它卡就搜不到。

@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "id": "ps-native-stderr-breaks-strict-mode",
+  "status": "promoted",
+  "title": "PowerShell 全局 ErrorActionPreference='Stop' 会把原生进程的正常 stderr 包成异常并中断脚本",
+  "invariant": "在 ErrorActionPreference='Stop' 的脚本里调用原生 exe 时，该 exe 写到 stderr 的任何一行（包括进度信息与正常诊断）都会被 PowerShell 包成 NativeCommandError 并抛出，从而在子进程跑完之前中止整个脚本；解法是调用点局部 ErrorActionPreference='Continue'，退出码仍从 $LASTEXITCODE 取。",
+  "scope": {
+    "family": "powershell-native-bridge",
+    "boundary": "runtime",
+    "appliesWhen": [
+      "脚本里设了 $ErrorActionPreference = 'Stop'（本包所有入口脚本都设）",
+      "脚本调用原生 exe（adb / frida / tshark / aapt2 / dumpcap / tshark 等）",
+      "该 exe 会往 stderr 写非致命信息"
+    ],
+    "stopsWhen": [
+      "被调用的 exe 从不写 stderr",
+      "脚本已经全局用了 ErrorActionPreference='Continue'"
+    ]
+  },
+  "reproductions": [
+    {
+      "jobFingerprint": "apk-debug-install-realdevice-2026-10-11",
+      "observedAt": "2026-10-11",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "真机 install：adb 输出 Performing Streamed Install 到 stderr，脚本死在调用点，退出码 1，与安装本身无关。"
+    },
+    {
+      "jobFingerprint": "invoke-probe-aapt2-version-2026-10-11",
+      "observedAt": "2026-10-11",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "aapt2 version 把版本串写 stderr：& $exe version 报红字，2>$null 拦不住，cmd /c 2^>nul 也拦不住。正解是 Start-Process + stdout/stderr 两个不同文件重定向。"
+    }
+  ],
+  "fixture": {
+    "path": "skillpack/skills/scripts/experience-cards/fixtures/fake-native-exit.cmd",
+    "sha256": "b689d0f4ad8ebb1a72ddaf4d559ddeb95339b25c5a47682e61d0bba1ec13d41a",
+    "generator": "skillpack/skills/scripts/experience-card.py stamp",
+    "secretFree": true,
+    "note": "输出固定文本到 stdout 与 stderr，并用 exit /b <code> 给出可控退出码。"
+  },
+  "oracles": {
+    "positive": "运行 fixture 并把 $LASTEXITCODE 传回调用方：exit /b 0 -> 观察到 0；exit /b 255 -> 观察到 255，且 stderr 文本被原样收到。",
+    "negative": "把 fixture 的 stderr 一行删掉后重跑：若此时脚本不再中断，则说明中断确实由 stderr 触发，而不是别的原因。"
+  },
+  "firstDivergence": {
+    "stage": "调用原生 exe 的那一行",
+    "path": "& $exe @args 2>&1",
+    "kind": "state"
+  },
+  "decision": {
+    "preferredRoute": "scripts/experience-card.py native",
+    "action": "调用点包一层 Invoke-Native：局部 ErrorActionPreference='Continue'，输出与 $script:NativeRc 分别落到 $script:NativeOut / $script:NativeRc，调用方读退出码判断成败。",
+    "fallback": "若需要把两个流彻底分开（aapt2 这类只写 stderr 的工具），改用 Start-Process + 两个不同临时文件重定向；两个流写同一个文件会被 Start-Process 直接拒。"
+  },
+  "validation": {
+    "lastVerifiedAt": "2026-10-11",
+    "command": "python skillpack/skills/scripts/experience-card.py validate"
+  },
+  "links": {
+    "skill": "apk-reverse",
+    "script": "apk-reverse/scripts/emulator-lab.ps1",
+    "journal": "field-journal/2026-10-11_android-emulator-lab-and-contract-tests.md",
+    "derivation": "web-protocol-reverse/references/contract/experience-card-schema.md"
+  },
+  "symptoms": [
+    "脚本在调用某个 exe 的那一行直接死掉，退出码 1",
+    "红色 NativeCommandError 文字，内容其实是正常信息",
+    "2>$null 拦不住",
+    "执行成功被报成失败"
+  ]
+}

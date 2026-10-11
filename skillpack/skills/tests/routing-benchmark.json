@@ -1002,6 +1002,36 @@
       "expect": "R24",
       "quick": true,
       "_note": "2026-10-10 订正：原期望 R52（kernel-exploit）是手写后从未跑通的错值 —— cifs/spnego 是 SMB 认证，不是 Linux 内核。本轮给 R24（windows-ad）补了 SMB/CIFS/Spnego/NTLM 漏洞类规则，实跑落 R24。"
+    },
+    {
+      "hint": "雷电模拟器 adb 连接",
+      "expect": "R1",
+      "quick": true
+    },
+    {
+      "hint": "模拟器里 frida 调试",
+      "expect": "R1",
+      "quick": true
+    },
+    {
+      "hint": "模拟器抓包",
+      "expect": "R1",
+      "quick": false
+    },
+    {
+      "hint": "蓝叠模拟器怎么连 adb",
+      "expect": "R1",
+      "quick": false
+    },
+    {
+      "hint": "MuMu 模拟器装 apk",
+      "expect": "R1",
+      "quick": false
+    },
+    {
+      "hint": "emulator apk install adb connect",
+      "expect": "R1",
+      "quick": false
     }
   ]
 }

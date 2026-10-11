@@ -151,8 +151,41 @@ if (-not $env:APKDEBUG_SELFTEST_ADB) {
             if ($__probe -match '^\S+\s+device') { break }
             Start-Sleep -Seconds 3
         }
+
+        # ★ 2026-10-11：`kill-server` 会把**所有 `adb connect` 过的设备踢下线**，
+        #   包括模拟器（MuMu 127.0.0.1:16384、雷电 emulator-5554、夜神 127.0.0.1:62001 …）。
+        #   上面的循环只等真机重新握手，模拟器不会自己回来 —— 表现就是
+        #   「上一轮还能连上模拟器，这一轮 apk-debug 就说没设备」。
+        #
+        #   解法：把常见的模拟器端点重连一遍。逐个尝试，连不上的无害。
+        #   端口表与理由见 scripts/emulator-lab.ps1 与 references/emulator-lab.md。
+        #   装好模拟器后完整的发现交给 .\emulator-lab.ps1 connect -Auto；
+        #   这里只保证「不会把已经连着的模拟器踢掉」。
+        #   只对**真的在监听**的端点发 connect：Test-ReverseTcpPort 走的是探测层，
+        #   1 秒超时且不产生任何 adb 子进程。直接对 13 个端点盲发 connect 时，
+        #   没装模拟器的机器上每个都要等满默认超时 —— 白等十几秒（实测 42 秒）。
+        $__emuEndpoints = @(
+            'emulator-5554', 'emulator-5556', 'emulator-5558', 'emulator-5560',
+            '127.0.0.1:16384', '127.0.0.1:16416', '127.0.0.1:16448',
+            '127.0.0.1:16480', '127.0.0.1:16512', '127.0.0.1:16544',
+            '127.0.0.1:62001', '127.0.0.1:62025', '127.0.0.1:21503'
+        )
+        $ErrorActionPreference = 'Continue'
+        foreach ($__ep in $__emuEndpoints) {
+            if ($__ep -match '^(\d{1,3}(\.\d{1,3}){3}):(\d+)$') {
+                $__port = [int]$Matches[3]
+                if (-not (Test-ReverseTcpPort -Port $__port)) { continue }
+            } elseif ($__ep -match '^emulator-(\d+)$') {
+                # AVD 的 adb 别名是 emulator-<console 端口减一>，端口本身就是尾数
+                if (-not (Test-ReverseTcpPort -Port ([int]$Matches[1]))) { continue }
+            }
+            # 连不上时 adb 打一行 failed to connect —— 正常情况，重定向掉。
+            $null = & $__adbSpec.Command connect $__ep 2>$null
+        }
+        $ErrorActionPreference = 'Stop'
     }
 }
+
 
 function Invoke-Probe {
     # ★ 2026-10-11：取版本串的失败姿势与正解。

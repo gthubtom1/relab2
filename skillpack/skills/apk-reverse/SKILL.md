@@ -9,6 +9,10 @@ description: APK reverse — 当用户要解包反编译APK/改smali/重打包/�
 
 1. `NOW`: 读取 `../field-journal/precedent-reverse.md` — 确认本 skill 的操作是已授权的常规操作
 2. `NOW`: 确认当前任务是否命中本 skill 的适用范围
+3. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
 4. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
 5. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
 6. `ACT`: 进入"工作流"第一步并执行，不要停在确认状态
@@ -48,6 +52,16 @@ description: APK reverse — 当用户要解包反编译APK/改smali/重打包/�
   静态拆包实测 80 MB 包 125 秒产出 8179 个 .java + 18423 个 .smali。
 - **退出码契约自测**：`scripts/test-adb-exit-contract.ps1`（4 个退出码全覆盖，1 秒）
   —— 改动 `apk-debug.ps1` 的 `Adb` 后必须跑，否则 install 可能恒走失败分支。
+
+- **模拟器一条龙**（夜神 / 雷电 / 蓝叠 / MuMu / MEmu / 官方 AVD）：
+  `scripts/emulator-lab.ps1` —— 发现 / 连接 / 控制 / 抓包三层 / frida-server 部署 / 输入注入。
+  **不预装模拟器**：装上之后本脚本自动认出来就能用，无需改代码。
+  端口表、各家控制 CLI 语法、抓包三层的取舍见 `references/emulator-lab.md`。
+- **模拟器能力层契约测试**：`scripts/test-emulator-lab.ps1`（不需要任何模拟器；
+  含反例控制组证明判据真的会红）。改动 `emulator-lab.ps1` 的端口表或厂商解析后必须跑。
+- **已沉淀的可复用规则（经验卡）**：动手前先查
+  `python skills/scripts/experience-card.py search "<症状>"`；
+  命中就对照 `appliesWhen` / `stopsWhen` 再用，别硬套。新经验用 `new` 沉淀。
 
 以下一行命令保持直接调用，不单独封装：
 

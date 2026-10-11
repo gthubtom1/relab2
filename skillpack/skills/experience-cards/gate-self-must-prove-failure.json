@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "id": "gate-self-must-prove-failure",
+  "status": "promoted",
+  "title": "门禁的判据不能是「我自己写的标记」，控制组必须真的复现故障",
+  "invariant": "断言成功与否只能依赖三类外部可观测事实：文件真的被创建、字节真的被改、伪代码真的包含目标逻辑。命令回显（.echo / Write-Host 打在日志里的标记）会与程序自身输出混在一起，程序没走到目标路径时标记照样出现 —— 据此判绿会连续多轮把「程序直接退出」误报成「API 断点命中」。门禁的控制组必须真的复现故障，否则它与同义反复无异。",
+  "scope": {
+    "family": "gate-design",
+    "boundary": "runtime",
+    "appliesWhen": [
+      "为某个能力写自动化门禁（尤其动态调试、抓包、注入类）",
+      "判据要依赖「程序内部走到了某一步」"
+    ],
+    "stopsWhen": [
+      "判据本身是外部可观测的（落盘文件、改动字节、协议响应）"
+    ]
+  },
+  "reproductions": [
+    {
+      "jobFingerprint": "cdb-api-breakpoint-marker-echo-2026-10-10",
+      "observedAt": "2026-10-10",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "实测连打三轮把「g 之后程序直接退出」误报成 CreateFileA 断点命中。program 先裸跑自证 marker 生成，再谈断点。"
+    },
+    {
+      "jobFingerprint": "negative-control-startjob-decoy-2026-10-10",
+      "observedAt": "2026-10-10",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "门禁第一版用 Start-Job 造故障，结果没复现任何东西，永远 PASS —— 同义反复。"
+    },
+    {
+      "jobFingerprint": "adbg-probe-x86-peb-read-2026-10-10",
+      "observedAt": "2026-10-10",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "x64 上用 mov %fs:0x30 读 PEB 触发访问违规；__try/__except 是 MSVC 扩展，MinGW gcc 不认。三处坑让自研探针长期假红。"
+    }
+  ],
+  "fixture": {
+    "path": "skillpack/skills/scripts/experience-cards/fixtures/gate-negative-control.md",
+    "sha256": "06edab62749e7629fae87393d98773bd734b3a4f9a4a82a6e3c17063ffb685d1",
+    "generator": null,
+    "secretFree": true,
+    "note": "反例底册：列出本包里出现过的同义反复门禁与其真实判据。"
+  },
+  "oracles": {
+    "positive": "故意把被测能力弄坏（改一个字节 / 换一条路径），门禁必须转红；恢复后转绿。",
+    "negative": "若不改动任何东西门禁也会红，则前提已变（工具行为变了），必须重写而不是继续 PASS。"
+  },
+  "firstDivergence": {
+    "stage": "读取断言结果的那一步",
+    "path": "日志中出现的自定义标记",
+    "kind": "framing"
+  },
+  "decision": {
+    "preferredRoute": "scripts/experience-card.py validate",
+    "action": "先裸跑一遍确认外部标志物会生成，再把它作为判据；每个动态类门禁配一条真会失败的反例用例。",
+    "fallback": "无法构造外部标志物时，改为对比前后差分（字节 diff / 端口前后快照）并说明为什么差分能证明目标路径被执行。"
+  },
+  "validation": {
+    "lastVerifiedAt": "2026-10-11",
+    "command": "python skillpack/skills/scripts/experience-card.py validate"
+  },
+  "links": {
+    "skill": "reverse-engineering",
+    "script": "skills/scripts/test-subprocess-capture-deadlock.py",
+    "journal": "field-journal/2026-10-11_android-emulator-lab-and-contract-tests.md",
+    "derivation": "web-protocol-reverse/references/contract/experience-card-schema.md"
+  },
+  "symptoms": [
+    "门禁一直绿但功能是坏的",
+    "日志里有我的标记就以为程序跑到了那里",
+    "改坏功能门禁也不红",
+    "控制组其实什么故障都没复现"
+  ]
+}

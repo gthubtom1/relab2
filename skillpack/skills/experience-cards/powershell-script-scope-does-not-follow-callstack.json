@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "powershell-script-scope-does-not-follow-callstack",
+  "status": "promoted",
+  "title": "$script: 变量绑定在定义它的脚本块上，把函数体搬出去执行绕不开它",
+  "invariant": "PowerShell 里 $script:X 里的 script 指**定义该函数的那个脚本块**，不随调用栈走；因此把函数体抽成字符串或 ScriptBlock、在外部执行时，函数内写的 $script:X 与被测脚本的 $script:X 不是同一个变量槽，外部永远读到空。解法是让脚本自己跑自己的函数（隐藏的 selftest 动作）。",
+  "scope": {
+    "family": "powershell-scoping",
+    "boundary": "runtime",
+    "appliesWhen": [
+      "要测一个 PowerShell 脚本内部函数的行为（不是黑盒跑整个脚本）",
+      "该函数读写 $script: 级变量",
+      "测试需要注入假的外部命令（假 adb / 假 frida 等）"
+    ],
+    "stopsWhen": [
+      "被测函数只用参数与局部变量，不用 $script:",
+      "改成模块级（.psm1 + Import-Module）后 $script: 语义不同"
+    ]
+  },
+  "reproductions": [
+    {
+      "jobFingerprint": "apk-adb-exit-contract-selector-2026-10-11",
+      "observedAt": "2026-10-11",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "方案一：函数体当字符串 eval，撞 verify-repository-security 的 dynamic-powershell-eval 规则。"
+    },
+    {
+      "jobFingerprint": "apk-adb-exit-contract-setitem-global-2026-10-11",
+      "observedAt": "2026-10-11",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "方案二：[scriptblock]::Create + Set-Item function:global: -> 函数把 $script:AdbRc 写进 global 作用域，探针读自己的 $script: 永远是空。"
+    },
+    {
+      "jobFingerprint": "apk-adb-exit-contract-setitem-script-2026-10-11",
+      "observedAt": "2026-10-11",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "方案三：同上但 function:script: -> ScriptBlock 内的 $script: 指向它自己的 script 作用域。"
+    }
+  ],
+  "fixture": {
+    "path": "skillpack/skills/scripts/experience-cards/fixtures/scope-probe.ps1",
+    "sha256": "559cc96f913f9bb3e04cf839d73f7343d0e66f42d5e323a0002dd429be314496",
+    "generator": "skillpack/skills/scripts/experience-card.py stamp",
+    "secretFree": true,
+    "note": "被测脚本自带 selftest 动作，走自己的 Adb/Invoke-Native，外部注入假 exe。"
+  },
+  "oracles": {
+    "positive": "selftest 动作打印 ADBCONTRACT=<n>，n 与注入的假 exe 退出码一致；4 个退出码 0/1/3/255 全覆盖，1 秒内跑完。",
+    "negative": "让假 exe 的退出码与期望不一致时，该用例必须 FAIL —— 若全绿说明判据读的不是真退出码。"
+  },
+  "firstDivergence": {
+    "stage": "外部探针读取 $script: 变量的那一行",
+    "path": "$script:AdbRc",
+    "kind": "state"
+  },
+  "decision": {
+    "preferredRoute": "scripts/experience-card.py native",
+    "action": "在被测脚本里加一个隐藏的 selftest 动作，让脚本自己跑自己的函数并打印结果；外部测试用环境变量注入假 exe。",
+    "fallback": "确实需要黑盒单测时，改写成模块（.psm1），用 Import-Module + InModuleScope 测试，作用域语义可控。"
+  },
+  "validation": {
+    "lastVerifiedAt": "2026-10-11",
+    "command": "python skillpack/skills/scripts/experience-card.py validate"
+  },
+  "links": {
+    "skill": "apk-reverse",
+    "script": "apk-reverse/scripts/apk-debug.ps1",
+    "journal": "field-journal/2026-10-11_android-emulator-lab-and-contract-tests.md",
+    "derivation": "web-protocol-reverse/references/contract/experience-card-schema.md"
+  },
+  "symptoms": [
+    "外部探针永远读到空",
+    "函数明明写了变量，调用方看不到",
+    "把函数搬到测试文件里就不对了",
+    "同名变量在不同文件里互不可见"
+  ]
+}

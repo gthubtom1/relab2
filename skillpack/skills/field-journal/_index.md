@@ -6,16 +6,17 @@
 
 ## 统计
 
-- 真实项目数：21
+- 真实项目数：22
 - 种子参考数：17
-- 总条目数：38
-- 最近更新：2026-09-03
+- 总条目数：39
+- 最近更新：2026-10-11
 
 ## 按场景分类
 
 ### APK / Android 逆向
 
 - [2026-08-20 Flutter AOT 服务端驱动广告去除（Blutter + 等长字符串替换）](./2026-08-20_apk-flutter-banner-ad-removal.md)
+- [2026-10-11 安卓模拟器能力层 + 经验卡体系落地](./2026-10-11_android-emulator-lab-and-contract-tests.md)
 - [2026-05-15-cellular-pro-mumu-ksad-fragment-fix](./2026-05-15-cellular-pro-mumu-ksad-fragment-fix.md)
 - [[种子] seed-008_apk-okhttp-ssl-pin-bypass](./seed-008_apk-okhttp-ssl-pin-bypass.md)
 
@@ -67,6 +68,7 @@
 - [2026-08-14 Windows PowerShell 原生命令退出码 PR 审查](./2026-08-14_windows-powershell-native-exit-code-pr-review.md)
 - [2026-08-08 平台无关结构化路由 PR 集成](./2026-08-08_client-neutral-structured-routing-pr-integration.md)
 - [2026-07-20_reverse-toolchain-windows-bootstrap](./2026-07-20_reverse-toolchain-windows-bootstrap.md)
+- [安卓模拟器能力层（夜神/雷电/蓝叠/MuMu/MEmu/AVD）三路发现与抓包三层、经验卡体系落地](./2026-10-11_android-emulator-lab-and-contract-tests.md)
 
 ### 其他
 
@@ -81,6 +83,14 @@
 - [Resolve-ReverseHostExe 统一子进程入口、r2 .bat fallback、StrictMode hashtable 安全访问](./2026-08-17_tool-index-r2-fallback-powershell-pwsh-host-fix.md)
 - [原生命令后立即保存退出码、Windows PowerShell 5.1 实宿主复现、PR head 固定](./2026-08-14_windows-powershell-native-exit-code-pr-review.md)
 - [单一 routing.json、多入口 parity、实际安装命令 pin](./2026-08-08_client-neutral-structured-routing-pr-integration.md)
+
+### 安卓模拟器与工具桥接
+
+- [模拟器三路发现（厂商 CLI JSON + 端口扫描 + adb devices）、抓包三层、frida-server gzip 推送、经验卡晋级门与反例控制组](./2026-10-11_android-emulator-lab-and-contract-tests.md)
+
+### PowerShell 原生桥接与门禁自证
+
+- [ErrorActionPreference='Stop' 下原生 stderr 中断脚本、$script: 作用域不可跨脚本块搬运、门禁判据必须外部可观测](./2026-10-11_android-emulator-lab-and-contract-tests.md)
 
 ### 固件自定义封装
 
@@ -101,14 +111,19 @@
 
 - [应用/驻留 bootloader 边界与虚拟磁盘写入链路](./2026-08-06_cortex-m-msc-firmware-self-keyed-rotate-xor.md)
 
+### 安卓设备与调试链路
+
+- [设备 SDK 低于 APK minSdk 不可绕过、模拟器能力层作为兜底路径](./2026-10-11_android-emulator-lab-and-contract-tests.md)
+
 ## 知识库文档索引（非实战记录）
 
-本目录另有两份**技术文档索引**，它们不是实战 case，不计入上面的统计：
+本目录另有两份**技术文档索引**，以及仓根的一份**规则索引**，它们不是实战 case，不计入上面的统计：
 
 | 文件 | 用途 | 什么时候读 |
 |---|---|---|
 | [KB-INDEX.md](./KB-INDEX.md) | 外部知识库 153 篇技术文档的**症状索引**（现象 → 读哪一篇） | 已经知道在某个技能里了，但不知道该读 `references/` 里的哪一篇 |
 | [KB-SOURCES.md](./KB-SOURCES.md) | 来源（`LING71671/open-reverselab`，GPL-3.0）、改编规则、以及**源文档被本机实测推翻的 27 条清单** | 照着某篇文档跑之前核对命令；命令和本机表现不一致时先查这里 |
+| [../experience-cards/INDEX.md](../experience-cards/INDEX.md) | **可判定规则**的症状索引（现象 → 一条带 fixture 与正负 oracle 的规则） | 动手前想省掉从零摸索：`python skills/scripts/experience-card.py search "<症状>"` |
 
 ## 使用说明
 

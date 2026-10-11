@@ -227,5 +227,25 @@
       "executes_vendor_code": false,
       "why": "docs/EVOLUTION-CHECKLIST.md as one command: 10 checks (doc links, signal layer fail-closed, routing entry, community reachability, tool manifest, registry consistency, script inventory, coherence, spec structure, dual benchmark). Built by b124d76 and previously called by no entrypoint."
     }
+    ,
+    {
+      "id": "test-experience-card",
+      "script": "skills/scripts/test-experience-card.py",
+      "args": [],
+      "blocking_exits": [1],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "经验卡晋级门 + 8 类反例控制组。经验卡是 skills/experience-cards/ 下已晋级的结构化规则；没有这道门，一张编造 fixture 路径、或只复现过一次的卡会被当成可复用经验消费。"
+    },
+    {
+      "id": "test-emulator-lab",
+      "script": "skills/apk-reverse/scripts/test-emulator-lab.ps1",
+      "args": [],
+      "blocking_exits": [1],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "runtime": "powershell",
+      "why": "模拟器能力层的契约测试：厂商端口表、厂商名解析、原生退出码如实传出（注入假 exe 覆盖 0/1/3/255），以及一组反例证明判据真的会红。不需要装任何模拟器。"
+    }
   ]
 }

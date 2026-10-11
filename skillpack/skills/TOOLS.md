@@ -223,23 +223,31 @@ GUI 程序弹窗等输入、零 stdout、进程永不退出。**agent 不得经 
 > **frida 版本铁律**：Android 端的 `frida-server` 版本必须与本机 `frida` **严格一致**，不匹配直接连不上。
 > **不手写解析器**：DEX/AXML/Manifest 事实一律用官方工具，拿不到就报「工具缺失」，不要自己撸解析器顶上。
 
-### 4.1 Android 动态调试：优先真机，不要模拟器
+### 4.1 Android 动态调试：真机优先，模拟器补位
 
-2026-10-11 实测结论。**做 APK 逆向不需要模拟器。**
+2026-10-11 实测结论。**两条路都要留**：真机打主力，模拟器补上真机给不了的东西。
 
-| 方案 | 电脑内存 | 启动 | agent 全自动 | 抗 APP 检测 |
-|---|---|---|---|---|
-| **真机（推荐）** | **0**（吃手机电池） | 秒开 | 是（adb 全命令行） | 是（真实硬件） |
-| 官方模拟器 | **2 GB** | 1–5 分钟 | 是 | **否**（模拟器特征极易被检测） |
-| 雷电 / MuMu / 夜神 | **1.5–3 GB 常驻** | 快 | 需另外 `adb connect` | 否 |
+| 方案 | 电脑内存 | 启动 | agent 全自动 | 抗 APP 检测 | 能拿到 Android 12+ | 代价 |
+|---|---|---|---|---|---|---|
+| **真机（首选）** | **0**（吃手机电池） | 秒开 | 是 | **是** | 看手机 | 手机 SDK 版本不可控（见 §4.3b） |
+| **第三方模拟器** | 1.5–3 GB 常驻 | 30–120 秒 | 是 | 否 | **是** | 占内存；模拟器特征易被 APP 检测 |
+| 官方 AVD | 2 GB | 1–5 分钟 | 是 | 否 | 是 | 需开 WHPX（见下），且**削弱 WinDbg 内核调试** |
 
-本包的选择：真机 + `apk-debug.ps1`（见 §4.4）。工具箱的四个动作——
-`inspect`（静态拆包）/ `install`（装机）/ `log`（抓日志）/ `frida`（动态插桩）——
-全是命令行、输出全是文本，不需要 agent 去看任何图形界面。
+本包的选择：**真机 + `apk-debug.ps1` 打底，模拟器 + `emulator-lab.ps1` 兜底**（见 §4.6）。
+两个工具箱的动作——`inspect`（静态拆包）/ `install`（装机）/ `log`（抓日志）/ `frida`（动态插桩）
+——全是命令行、输出全是文本，不需要 agent 去看任何图形界面。
 
-> 不要为了跑模拟器去开 Windows「虚拟机平台」（HypervisorPlatform / WHPX）：
-> 它需要管理员权限 + 重启，而且**会削弱 WinDbg 内核调试能力**。
-> 本包的核心工作（PC 软件调试、游戏辅助测试）会直接受损，而 APK 逆向用真机就够。
+**为什么必须留模拟器这条路**：真机版本不由你决定。2026-10-11 实测：80 MB 的包
+minSdk 31（要 Android 12+），手上这台是 Android 11 → `INSTALL_FAILED_OLDER_SDK`，
+手动点安装 / scrcpy 拖拽**都装不上**，这不是操作问题（详见 §4.3b）。
+模拟器是你**唯一能随时拿到指定 Android 版本**的手段。
+
+> 第三方模拟器（MuMu / 雷电 / 夜神）**自带虚拟化引擎，不依赖 Windows WHPX** ——
+> 这是它们相对官方 AVD 的实际优势。不要为了跑官方 AVD 去开「虚拟机平台」
+> （HypervisorPlatform）：需要管理员权限 + 重启，而且**会削弱 WinDbg 内核调试能力**。
+> 本包的核心工作（PC 软件调试、游戏辅助测试）会直接受损。
+
+> 经验卡 `android-minsdk-gate-is-not-bypassable` 记了这条边界的判据与三条出路。
 
 ### 4.2 一次装齐（真机链路）
 
@@ -359,6 +367,60 @@ python .\skillpack\skills\scripts\test-subprocess-capture-deadlock.py
 
 第二道门禁的第一用例是**控制组**：它真的去跑一次管道捕获并确认它会挂。
 哪天它不挂了，说明根因不是管道，**这条门禁的前提就变了，必须重写而不是继续 PASS**。
+
+### 4.6 安卓模拟器（夜神 / 雷电 / 蓝叠 / MuMu / MEmu / 官方 AVD）
+
+**先不装模拟器也能用** —— 本包已经把能力层预制好，装上就自动认出来，不需要改代码。
+
+```powershell
+# 1. 自检：能力链 + 厂商 CLI + 已连设备（每项实跑）
+.\skillpack\skills\apk-reverse\scripts\emulator-lab.ps1 doctor
+
+# 2. 发现：厂商 CLI + 端口扫描 + adb devices 三路合并去重
+.\skillpack\skills\apk-reverse\scripts\emulator-lab.ps1 scan
+
+# 3. 连接：把发现的实例全接进 adb
+.\skillpack\skills\apk-reverse\scripts\emulator-lab.ps1 connect -Auto
+
+# 4. 画像：装包前先对 API 级别与 ABI
+.\skillpack\skills\apk-reverse\scripts\emulator-lab.ps1 profile
+```
+
+| 能力 | 命令 | 说明 |
+|---|---|---|
+| 实例启停 | `emulator-lab.ps1 start -Vendor mumu -Index 0` | 走厂商 CLI（MuMu/雷电/夜神/MEmu）。蓝叠无官方 CLI，会明确报「需手动起」 |
+| 输入注入 | `emulator-lab.ps1 tap <serial> <x> <y>` / `swipe` / `key home` / `text` | 走 `adb shell input`，任何设备通吃 |
+| 截图 | `emulator-lab.ps1 shot out.png` | |
+| 抓包 ①设备侧 | `emulator-lab.ps1 pcap tcpdump` | 全量包（含回环） |
+| 抓包 ②PC 侧 | `emulator-lab.ps1 iflist` → `pcap dumpcap -Interface <n>` | 抓虚拟网卡，**不动设备** |
+| 抓包 ③解密 | `emulator-lab.ps1 proxy on -Port 8080` + `cert install` | 改全局代理 + 装 CA，**HTTP(S) 明文** |
+| 动态调试 | `emulator-lab.ps1 frida deploy -Server <路径>` / `frida check` | 自动 gzip 推 frida-server、校验版本、adb forward |
+
+**端口表不写死**：MuMu 16384+/雷电 5555-5561/夜神 62001/MEmu 21503/蓝叠 5555+，
+多开会变、版本会变、用户能自己改。脚本用「厂商 CLI 自报 + 端口扫描 + adb devices」
+三路合并，任何一条命中即可。端口表与各家 CLI 语法见
+[`apk-reverse/references/emulator-lab.md`](apk-reverse/references/emulator-lab.md)。
+
+> `apk-debug.ps1` 启动时会重连常见的模拟器端点 —— `adb kill-server` 会把
+> **所有 `adb connect` 过的设备**踢下线，包括模拟器（2026-10-11 实测踩到）。
+
+### 4.7 经验卡：已沉淀的可复用规则（2026-10-11 建）
+
+```powershell
+# 动手前先查：按症状命中已沉淀的规则
+python .\skillpack\skills\scripts\experience-card.py search "stderr 中断 退出码"
+
+# 沉淀一条新经验（默认 candidate，不给证据就不能当经验消费）
+python .\skillpack\skills\scripts\experience-card.py new my-rule --title "..." --symptom "..."
+
+# 校验全部卡（晋级门 7 条 + 无秘密检查），并重建症状索引
+python .\skillpack\skills\scripts\experience-card.py --today 2026-10-11 stamp
+python .\skillpack\skills\scripts\experience-card.py validate
+```
+
+经验卡在 [`experience-cards/`](experience-cards/)：每张是一**条可判定的规则**
+（什么条件下、做什么、怎么算成功），带 fixture 与正负 oracle。
+与 `field-journal/` 的分工：**规则 vs 现场**，不合并（详见 `experience-cards/INDEX.md`）。
 
 ---
 

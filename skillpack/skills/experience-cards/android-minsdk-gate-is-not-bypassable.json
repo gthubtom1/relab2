@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "id": "android-minsdk-gate-is-not-bypassable",
+  "status": "promoted",
+  "title": "设备 SDK 低于 APK minSdk 时装不上，任何操作方式都绕不开",
+  "invariant": "当 adb install 报 INSTALL_FAILED_OLDER_SDK（APK minSdk=N，设备 sdk=M<N），这不是操作问题而是系统层拒绝：Android M 没有 Android N 的运行时，手动点安装、scrcpy 拖拽、任何方式都装不上。唯一出路是换设备/换镜像/换样本，不能靠参数绕过。",
+  "scope": {
+    "family": "android-install-boundary",
+    "boundary": "runtime",
+    "appliesWhen": [
+      "adb install 报 INSTALL_FAILED_OLDER_SDK",
+      "报错里的 #N / #M 两个数字看不懂"
+    ],
+    "stopsWhen": [
+      "设备 sdk >= APK minSdk"
+    ]
+  },
+  "reproductions": [
+    {
+      "jobFingerprint": "dsh-remote-android-8440-smartisan-r2-2026-10-11",
+      "observedAt": "2026-10-11",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "dsh-remote-android-v0.4.17.apk（80.7 MB / minSdk 31 / targetSdk 36）装到 Smartisan R2（Android 11 / SDK 30）失败，脚本正确走了失败分支。"
+    },
+    {
+      "jobFingerprint": "adb-manual-install-smartisan-r2-2026-10-11",
+      "observedAt": "2026-10-11",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "手动点安装与 scrcpy 拖拽同样失败 —— 两种与 adb 无关的安装方式各自复现了同一条系统级拒绝。"
+    }
+  ],
+  "fixture": {
+    "path": "skillpack/skills/apk-reverse/references/emulator-lab.md",
+    "sha256": "62a055c3a4cfbc2b717a39d18ea8722408110d60bc4dab7d91ba6b2bb720954c",
+    "generator": null,
+    "secretFree": true,
+    "note": "决策底册：三条出路的代价对照。"
+  },
+  "oracles": {
+    "positive": "两条命令读出的数字可比：aapt2 dump badging 取 APK 的 minSdk，adb shell getprop ro.build.version.sdk 取设备的。",
+    "negative": "把 APK 换成 minSdk <= 设备的包后安装成功 —— 说明失败确实由版本差造成，不是脚本或连接问题。"
+  },
+  "firstDivergence": {
+    "stage": "安装前的版本比对",
+    "path": "minSdk vs ro.build.version.sdk",
+    "kind": "value"
+  },
+  "decision": {
+    "preferredRoute": "apk-reverse/scripts/emulator-lab.ps1 profile",
+    "action": "先跑 profile 对一遍 API 级别与 ABI，再决定装不装；装不上就换设备或换样本，不要在参数上耗时间。",
+    "fallback": "只做静态逆向：jadx / apktool / aapt2 全离线，不需要任何设备。"
+  },
+  "validation": {
+    "lastVerifiedAt": "2026-10-11",
+    "command": "python skillpack/skills/scripts/experience-card.py validate"
+  },
+  "links": {
+    "skill": "apk-reverse",
+    "script": "apk-reverse/scripts/emulator-lab.ps1",
+    "journal": "field-journal/2026-10-11_android-emulator-lab-and-contract-tests.md",
+    "derivation": "web-protocol-reverse/references/contract/experience-card-schema.md"
+  },
+  "symptoms": [
+    "INSTALL_FAILED_OLDER_SDK",
+    "报错里有两个看不懂的数字",
+    "手动点安装也装不上",
+    "scrcpy 拖拽也没用"
+  ]
+}

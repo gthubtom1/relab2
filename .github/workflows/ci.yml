@@ -143,6 +143,20 @@ jobs:
         shell: pwsh
         run: ./skillpack/skills/scripts/verify-doc-facts.ps1
 
+      # 经验卡：晋级门 + 8 类反例控制组。没有它，一张编造 fixture 路径或
+      # 只复现过一次的卡会被当成可复用经验消费。
+      - name: Experience cards (promotion gate + negative controls)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: python skillpack/skills/scripts/test-experience-card.py
+
+      # 模拟器能力层契约：厂商端口表 / 厂商名解析 / 原生退出码如实传出。
+      # 不需要装任何模拟器 —— 它测的是零安装状态下能力层是否自洽。
+      - name: Emulator lab contract (no emulator required)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: ./skillpack/skills/apk-reverse/scripts/test-emulator-lab.ps1
+
   integration-gates:
     name: integration gates (spec + community)
     runs-on: ubuntu-latest
