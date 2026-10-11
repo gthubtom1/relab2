@@ -159,6 +159,49 @@ def main() -> int:
         else:
             print(f"  [PASS] INDEX.md 覆盖全部 {len(real_cards)} 张卡")
 
+    # ── 4. 检索质量（正例 + 反例）─────────────────────────────
+    # 为什么必须测检索：2026-10-11 实测两处**静默失效** ——
+    #   * 把整段中文当一个词做 `in` 匹配 → 永远不命中（卡里没有这几个字连在一起）
+    #   * 把 scope 整个 JSON 塞进语料 → 「stops 条件」这种查询命中每一张卡（实测 4/4）
+    # 两者都不报错，都「有输出」，所以不测就只能靠人肉发现。
+    import importlib.util as _ilu
+    _spec = _ilu.spec_from_file_location(
+        "experience_card_mod", str(TOOL.parent / "experience-card.py"))
+    ec = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(ec)
+
+    print()
+    print("=== 检索质量 ===")
+
+    def qcase(label: str, ok: bool, detail: str = "") -> None:
+        nonlocal fails
+        if ok:
+            print(f"  [PASS] {label}")
+        else:
+            print(f"  [FAIL] {label}  {detail}")
+            fails += 1
+
+    terms = ec.search_terms("安装失败 闪退")
+    qcase("中文症状能二元切词", "失败" in terms and "安装" in terms,
+          f"实得 {terms}")
+    latin = ec.search_terms("adb install 失败")
+    qcase("英文术语整词保留", "adb" in latin and "install" in latin,
+          f"实得 {latin}")
+
+    by_id = {c.get("id"): c for _, c in ec.load_cards()}
+    scope_card = by_id.get("powershell-script-scope-does-not-follow-callstack")
+    if not scope_card:
+        qcase("作用域卡存在（检索用例的前提）", False, "卡片文件缺失")
+    else:
+        hay = ec.card_search_text(scope_card)
+        hit = sum(1 for t in ec.search_terms("变量读不到") if t in hay)
+        qcase("「变量读不到」能命中作用域卡", hit > 0,
+              f"一个症状词都没命中；卡片语料前 80 字={hay[:80]}")
+        # 反例：键名一旦进入语料，「stops 条件」这类查询就会命中每一张卡
+        qcase("scope 键名不进入检索语料",
+              "applieswhen" not in hay and "stopswhen" not in hay,
+              "键名泄漏会让无关查询命中全部卡（2026-10-11 实测 4/4）")
+
     print()
     if fails:
         print(f"结论：{fails} 项失败")

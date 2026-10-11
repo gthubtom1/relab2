@@ -247,39 +247,99 @@ def cmd_validate(args: argparse.Namespace) -> int:
     return 0
 
 
+def search_terms(query: str) -> list[str]:
+    """把一段中文症状描述切成可匹配的词。
+
+    2026-10-11 实测两处失灵：
+      * 「安装失败 闪退」整段当一个词去 `in` 匹配 → 永远不命中（卡里没有这四个字连在一起）
+      * 只按空格切 → 中文长句退化成整句，等于没有检索
+    所以：先按标点/空格切，再对每段做**二元切分**（中文相邻两字也算一个词），
+    长度 1 的碎片丢掉（命中不了任何有意义的字段）。
+    """
+    q = query.strip().lower()
+    parts = [p for p in re.split(r"[\s,，、;；/|]+", q) if p]
+    terms: list[str] = []
+    for part in parts:
+        terms.append(part)
+        # 二元切分：中文相邻两字、拉丁字母或数字的相邻两字符，都算一个候选词。
+        # 早先写成 `if re.search(r"[a-z0-9]", bigram)` —— 汉字在那个字符类里
+        # **不匹配**，于是纯中文片段一个 bigram 都切不出来（「安装失败」切词后
+        # 仍然只有「安装失败」四个字，退化成无检索）。
+        for i in range(len(part) - 1):
+            terms.append(part[i:i + 2])
+    seen = set()
+    out: list[str] = []
+    for t in terms:
+        if len(t) < 2 or t in seen:
+            continue
+        seen.add(t)
+        out.append(t)
+    return out
+
+
+def card_search_text(card: dict) -> str:
+    """检索语料：只取**人写的字段** + scope 的条件句。
+
+    不把 scope 整个 JSON 塞进去 —— 那样 `appliesWhen` / `stopsWhen` 这些**键名**
+    也会成为可匹配文本，于是「stops 条件」这种查询会命中每一张卡（实测 4/4 全中）。
+    """
+    scope = card.get("scope") or {}
+    parts = [
+        card.get("title", ""),
+        card.get("invariant", ""),
+        " ".join(card.get("symptoms", []) or []),
+        " ".join(scope.get("appliesWhen", []) or []),
+        " ".join(scope.get("stopsWhen", []) or []),
+        (card.get("links") or {}).get("skill", ""),
+        (card.get("decision") or {}).get("action", ""),
+    ]
+    return " ".join(str(x) for x in parts if x).lower()
+
+
 def cmd_search(args: argparse.Namespace) -> int:
     cards = load_cards()
-    q = args.query.strip().lower()
-    terms = [t for t in re.split(r"[\s,，/]+", q) if t]
-    hits = []
-    for p, c in cards:
-        hay = " ".join([
-            c.get("title", ""), c.get("invariant", ""),
-            " ".join(c.get("symptoms", []) or []),
-            json.dumps(c.get("scope", {}), ensure_ascii=False),
-            (c.get("links") or {}).get("skill", ""),
-        ]).lower()
-        score = sum(1 for t in terms if t in hay)
-        if score:
-            hits.append((score, p, c))
-    if not hits:
-        print(f"没有经验卡命中「{args.query}」。")
-        print("这张表是活的：新症状没被收录时，用 `new` 建一张候选，晋级门见 "
-              f"{SCHEMA_DOC.relative_to(ROOT).as_posix()}。")
+    terms = search_terms(args.query)
+    if not terms:
+        print(f"查询「{args.query}」切不出可匹配的词，换个说法再试。")
         return 0
-    hits.sort(key=lambda x: -x[0])
-    limit = args.limit if args.limit > 0 else len(hits)
-    print(f"命中 {len(hits)} 张经验卡（按症状词匹配，显示前 {limit}）")
-    for score, p, c in hits[:limit]:
+    scored = []
+    for p, c in cards:
+        hay = card_search_text(c)
+        matched = [t for t in terms if t in hay]
+        if not matched:
+            continue
+        # 覆盖率优先：命中词占查询词的比重，而不是命中词的个数 ——
+        # 否则一个长查询只要撞上任意一个短词就会被排到最前。
+        score = len(matched) / len(terms)
+        title = (c.get("title", "") + " " +
+                 " ".join(c.get("symptoms", []) or [])).lower()
+        if any(t in title for t in matched):
+            score += 0.5
+        scored.append((score, len(matched), p, c))
+    if not scored:
+        print(f"没有经验卡命中「{args.query}」（切词 {len(terms)} 个）。")
+        print("这张表是活的：新症状没被收录时，用 `new` 建一张候选，晋级门见 "
+              f"{SCHEMA_DOC.relative_to(REPO).as_posix()}。")
+        return 0
+    scored.sort(key=lambda x: (-x[0], -x[1]))
+    limit = args.limit if args.limit > 0 else len(scored)
+    print(f"命中 {len(scored)} 张经验卡（查询词 {len(terms)} 个，显示前 {limit}）")
+    for score, nmatch, p, c in scored[:limit]:
         print()
         print(f"[{c.get('id')}]  {c.get('title')}")
-        print(f"  文件: {p.relative_to(ROOT).as_posix()}")
-        print(f"  技能: {(c.get('links') or {}).get('skill', '?')}   命中词: {score}")
+        print(f"  文件: {p.relative_to(REPO).as_posix()}")
+        print(f"  技能: {(c.get('links') or {}).get('skill', '?')}"
+              f"   覆盖率: {score:.0%} ({nmatch}/{len(terms)} 词)")
         print(f"  规则: {c.get('invariant', '')[:150]}")
-        print(f"  先读: {(c.get('links') or {}).get('script', '-')}")
+        link = (c.get("links") or {}).get("script")
+        if link:
+            print(f"  先读: {link}")
         aw = (c.get("scope") or {}).get("appliesWhen") or []
         if aw:
             print(f"  前提: {aw[0]}")
+        sw = (c.get("scope") or {}).get("stopsWhen") or []
+        if sw:
+            print(f"  何时停: {sw[0]}")
     return 0
 
 
