@@ -26,6 +26,27 @@
 模拟器装在 `D:\Program Files\<厂商>\` 或 `C:\Program Files\<厂商>\` 下是常态 ——
 不在工具根、也不在 PATH，所以探测层通常认不出厂商 CLI；这时走「手动起 + `connect -Auto`」。
 
+> **2026-10-11 实测补充（雷电 14，路径 `D:\Tools\android\LDPlayer\LDPlayer14`）**：
+>
+> | 事实 | 值 |
+> |---|---|
+> | adb 端口 | **2222**（不是雷电 9 的 5555-5561） |
+> | adb 别名 | `emulator-5554`（真实端口 2222 也会注册成这个别名） |
+> | 控制 CLI | `ldconsole.exe`，`list2` 格式与 9 一致 |
+> | 进程名 | `dnplayer.exe`（UI）+ `Ld9BoxSVC.exe`（服务）+ `Ld9BoxHeadless.exe`（虚拟机） |
+> | `adb root` | **不可用**（production build，`adbd cannot run as root`） |
+> | 系统 | Android 14 / SDK 34 / x86_64，abilist 含 arm64-v8a |
+> | tcpdump / curl | 自带；busybox 没有 |
+>
+> 两条由此得出的规则：
+> 1. **端口必须扫** —— 版本不同端口就变，装在非默认目录时更会变。
+> 2. **`emulator-NNNN` 与 `127.0.0.1:NNNN` 是两种形式**：前者是 adb 给雷电的别名
+>    （别名里的数字是 console 端口减一，与真实 adb 端口无关），后者是真实 TCP 端口，
+>    蓝叠用后者。早期版本一律按尾部数字猜厂商，把雷电 14 的 `emulator-5554`
+>    判成了蓝叠 —— 已按形式判定修掉。
+
+---
+
 ## 步骤（Working method）
 
 ### 一、选型：真机优先，模拟器补位

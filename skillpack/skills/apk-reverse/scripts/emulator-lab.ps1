@@ -296,6 +296,28 @@ $script:VendorProfiles = @(
         Fdaemon = @('MEmuHeadless.exe', 'MEmu.exe', 'MEmuPlayer.exe')
     }
     [pscustomobject]@{
+        Id = 'ldplayer14'; Label = '雷电模拟器 14'; Key = 'ld14'
+        # ★ 2026-10-11 实测（用户装在 D:\Tools\android\LDPlayer\LDPlayer14）：
+        #   **adb 端口是 2222**，不是雷电 9 的 5555-5561 —— 版本不同端口就变，
+        #   所以必须扫，不能靠固定表。控制 CLI 仍是 ldconsole.exe，
+        #   `list2` 输出格式（index,title,topWindowHandle,bindWindowHandle,
+        #   androidStarted,pid,vboxPid,width,height,dpi）与 9 一致。
+        # 端口表**故意不列 5555-5561**：那是雷电 9 的。两个版本同机并存时端口会撞，
+        # 两家都登记同一批端口只会让 selftest 的重复检查变成常态噪音。
+        # 5555-5561 归 ldplayer(9)，14 独有的是 2222；版本差异靠实测补，不靠猜。
+        Ports = @(2222)
+        ExecName = 'ldconsole.exe'
+        ExecGlobs = @('*\LDPlayer\LDPlayer*\ldconsole.exe',
+                      '*\LDPlayer*\ldconsole.exe',
+                      '*\ldplayer9box\ldconsole.exe',
+                      '*\LDPlayer\ldconsole.exe')
+        Cli = 'ldconsole'
+        # LDPlayer 14 的进程名与 9 不同：dnplayer.exe（UI）+ Ld9BoxSVC.exe（服务）
+        # + Ld9BoxHeadless.exe（虚拟机）。早先只登记了 9 的 headless 名。
+        Fdaemon = @('dnplayer.exe', 'Ld9BoxHeadless.exe', 'Ld2BoxHeadless.exe',
+                     'Ld9BoxSVC.exe', 'LdVBoxHeadless.exe', 'dnmultiplayer.exe')
+    }
+    [pscustomobject]@{
         Id = 'bluestacks'; Label = '蓝叠'; Key = 'bstk'
         # 蓝叠没有官方的实例启停 CLI，只有 adb 端口 + HD-Player.exe
         # --instance <name>。这里不猜实例名：没有 CLI 就报「需手动起」。
@@ -324,13 +346,14 @@ function Get-VendorProfile {
     # 口语与缩写别名：用户嘴里的「雷电」「夜神」「蓝叠」「bs」都要落到同一份档案上。
     # 2026-10-11 实测漏了 bs -> bluestacks，被 test-emulator-lab.ps1 的用例抓出来。
     $alias = switch -Regex ($key) {
-        '^(bstk|bs|bluestacks|blue|蓝叠)$' { 'bluestacks'; break }
-        '^(mumu|mumu12)$'                     { 'mumu'; break }
-        '^(nox|夜神|bignox)$'                 { 'nox'; break }
-        '^(ldplayer|ld|雷电|ld9)$'            { 'ldplayer'; break }
-        '^(avd|官方模拟器)$'                  { 'avd'; break }
-        '^(memu|memuplayer)$'                 { 'memu'; break }
-        default                               { $key }
+        '^(bstk|bs|bluestacks|blue|蓝叠)$'     { 'bluestacks'; break }
+        '^(mumu|mumu12)$'                        { 'mumu'; break }
+        '^(nox|夜神|bignox)$'                    { 'nox'; break }
+        '^(ldplayer14|ld14|雷电14|雷电模拟器14)$' { 'ldplayer14'; break }
+        '^(ldplayer|ld|雷电|ld9)$'               { 'ldplayer'; break }
+        '^(avd|官方模拟器)$'                     { 'avd'; break }
+        '^(memu|memuplayer)$'                    { 'memu'; break }
+        default                                  { $key }
     }
     return ($script:VendorProfiles | Where-Object {
         $_.Id -eq $alias -or $_.Key -eq $alias -or $_.Label -like "*$alias*" -or
@@ -565,10 +588,22 @@ function Get-EmulatorInventory {
         foreach ($d in (Get-AdbDevices)) {
             if ($d.Serial -notmatch '^emulator-\d+$' -and
                 $d.Serial -notmatch '^\d{1,3}(\.\d{1,3}){3}:\d+$') { continue }
+            # ★ 2026-10-11 实测修正：`emulator-NNNN` 与 `127.0.0.1:NNNN` 是**两种不同的形式**，
+            #   厂商归属也不同：
+            #     · `emulator-5554` 是 adb 给「console 端口 5555」的**别名**，
+            #       雷电（9 与 14）都用这个形式 —— 实测雷电 14 真实 adb 端口是 2222，
+            #       但它照样注册成 emulator-5554。
+            #     · `127.0.0.1:5554` 是**真实 TCP 端口**，蓝叠用这个形式。
+            #   原来一律按「尾部数字命中谁的端口表」来猜，于是雷电 14 的
+            #   emulator-5554 被判成蓝叠（因为 5554 恰好在蓝叠的表里）。
+            #   现在按**形式**判定，别名形式一律归雷电。
             $vendor = 'unknown'
             $label = '未知厂商'
-            if ($d.Serial -match '(?:emulator-)?(\d{4,5})$') {
-                $num = [int]$Matches[1]
+            if ($d.Serial -match '^emulator-(\d+)$') {
+                $vendor = 'ldplayer'
+                $label = '雷电模拟器（adb 别名形式）'
+            } elseif ($d.Serial -match '^\d{1,3}(\.\d{1,3}){3}:(\d+)$') {
+                $num = [int]$Matches[2]
                 foreach ($vp in $script:VendorProfiles) {
                     if ($vp.Ports -contains $num) { $vendor = $vp.Id; $label = $vp.Label; break }
                 }
