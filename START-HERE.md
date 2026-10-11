@@ -69,6 +69,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\selfcheck.ps1
 
 ---
 
+## 0.5 想确认「项目是不是做完了」先看这里
+
+**技术侧已闭环**，剩下的边界（Linux/macOS 未实跑、vendored 内容未逐测、
+GPL 分发待拍板等）全部记在 [`docs/KNOWN-BOUNDARIES.md`](docs/KNOWN-BOUNDARIES.md)。
+
+那份文档专门回答「**哪些事这个项目做不到，以及为什么**」——
+是为了让接手的人（或 agent）不必反复撞同一堵墙，
+也不会把「环境限制」误判成「项目没做完」。
+
+---
+
 ## 1. 怎么开始干活
 
 ```text
