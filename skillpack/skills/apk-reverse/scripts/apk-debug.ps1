@@ -29,7 +29,8 @@
 param(
   [Parameter(Position = 0)]
   [ValidateSet('devices', 'inspect', 'install', 'uninstall', 'run', 'stop',
-               'log', 'clear', 'shot', 'screen', 'frida', 'info', 'doctor')]
+               'log', 'clear', 'shot', 'screen', 'frida', 'info', 'doctor',
+               'selftest-adb')]
   [string] $Action = 'devices',
 
   [Parameter(Position = 1)]
@@ -125,27 +126,31 @@ skillpack\skills\scripts\lib\Bootstrap.ps1）。
 #     1) 先 kill-server，把所有 daemon 停掉
 #     2) 只用本脚本解析到的那一个重新起
 #   之后 5037 上只有一个 daemon，冲突不复存在。
-$__adbSpec = Resolve-ReverseToolSpec -Name 'adb' -ErrorAction SilentlyContinue
-if ($__adbSpec -and $__adbSpec.Available -and $__adbSpec.Command) {
-    # daemon 本来没跑时 kill-server 会往 stderr 打 `cannot connect to daemon`，
-    # 那是**正常情况**不是故障。局部放宽 ErrorAction + 只重定向 stderr 即可，
-    # 不要用 `2>&1`（会把正常 stderr 并进管道，PowerShell 报 NativeCommandError 红字）。
-    $ErrorActionPreference='Continue'
-    $null = & $__adbSpec.Command 'kill-server' 2>$null
-    $ErrorActionPreference='Stop'
-    # kill 之后 daemon 要重启 + 跟设备重新握手，这一步**要时间**。
-    # 实测只 sleep 800ms 就去查设备 -> 查不到 -> 误报「无设备」。
-    # （真机其实是好的，直接 adb devices 一查就有。）
-    Start-Sleep -Seconds 3
-    $ErrorActionPreference='Continue'
-    $null = & $__adbSpec.Command 'start-server' 2>$null
-    $ErrorActionPreference='Stop'
-    Start-Sleep -Seconds 2
-    # 等到设备真正出现为止，最多 15 秒
-    for ($__i = 0; $__i -lt 5; $__i++) {
-        $__probe = & $__adbSpec.Command devices 2>$null
-        if ($__probe -match '^\S+\s+device') { break }
+if (-not $env:APKDEBUG_SELFTEST_ADB) {
+    # 退出码契约自测走假 adb，不需要真的重启 daemon —— 那会白等一轮
+    # kill-server/start-server + 最多 15 秒设备握手（实测 110 秒才返回）。
+    $__adbSpec = Resolve-ReverseToolSpec -Name 'adb' -ErrorAction SilentlyContinue
+    if ($__adbSpec -and $__adbSpec.Available -and $__adbSpec.Command) {
+        # daemon 本来没跑时 kill-server 会往 stderr 打 `cannot connect to daemon`，
+        # 那是**正常情况**不是故障。局部放宽 ErrorAction + 只重定向 stderr 即可，
+        # 不要用 `2>&1`（会把正常 stderr 并进管道，PowerShell 报 NativeCommandError 红字）。
+        $ErrorActionPreference='Continue'
+        $null = & $__adbSpec.Command 'kill-server' 2>$null
+        $ErrorActionPreference='Stop'
+        # kill 之后 daemon 要重启 + 跟设备重新握手，这一步**要时间**。
+        # 实测只 sleep 800ms 就去查设备 -> 查不到 -> 误报「无设备」。
+        # （真机其实是好的，直接 adb devices 一查就有。）
         Start-Sleep -Seconds 3
+        $ErrorActionPreference='Continue'
+        $null = & $__adbSpec.Command 'start-server' 2>$null
+        $ErrorActionPreference='Stop'
+        Start-Sleep -Seconds 2
+        # 等到设备真正出现为止，最多 15 秒
+        for ($__i = 0; $__i -lt 5; $__i++) {
+            $__probe = & $__adbSpec.Command devices 2>$null
+            if ($__probe -match '^\S+\s+device') { break }
+            Start-Sleep -Seconds 3
+        }
     }
 }
 
@@ -203,6 +208,13 @@ function Tool {
 
 function Require-Tool {
     param([string]$Name, [string]$Hint)
+    # 2026-10-11：退出码契约自测的注入点。外部测试把一个退出码可控的
+    # 假 adb 写进这个变量，走 selftest-adb 动作，从而在不依赖真机、
+    # 不改探测层的前提下测到 Adb 的真实分支逻辑。
+    # 正常使用时该变量为空，这段代码不生效。
+    if ($Name -eq 'adb' -and $env:APKDEBUG_SELFTEST_ADB) {
+        return $env:APKDEBUG_SELFTEST_ADB
+    }
     $c = Tool $Name
     if (-not $c) { Die "缺工具 '$Name'。$Hint" }
     return $c
@@ -210,6 +222,10 @@ function Require-Tool {
 
 # ── 设备选择：多设备时必须显式，不猜 ───────────────────────────────────
 function Get-Device {
+    # 退出码契约自测不需要真设备：Adb 只关心子进程退出码，
+    # 设备序列号传什么都一样。这里直接跳过 adb devices 枚举，
+    # 否则没有设备时会 Die、有多设备时也会 Die，自测根本跑不到判据。
+    if ($env:APKDEBUG_SELFTEST_ADB) { return 'SELFTEST-DEVICE' }
     $adb = Require-Tool 'adb' '装法见 skillpack/skills/TOOLS.md（platform-tools）。'
     # ★ 2026-11：`2>&1` 会把 adb 的正常 stderr（`* daemon not running;
     #   starting now`）也当成错误对象，PowerShell 打红字，还可能让
@@ -604,6 +620,20 @@ Frida 挂的是**运行中的进程**，所以顺序必须是：
         @(Adb 'shell' 'dumpsys' 'activity' 'processes') |
             Select-String -SimpleMatch $Target |
             Select-Object -First 5 | ForEach-Object { '  ' + $_.Line.Trim() }
+        break
+    }
+
+    # 2026-10-11：退出码契约自测入口。由 test-adb-exit-contract.ps1 调用。
+    # 为什么要有这个隐藏动作，而不是让外部脚本去 AST 提取本文件的 Adb 函数：
+    #   提取出来的 ScriptBlock 里 $script: 指向它自己的 script 作用域，
+    #   与本文件的 $script:AdbRc 不是同一个变量槽 —— 实测永远读到空。
+    # 而 dot-source 整个文件也不可行：switch 之后紧跟 exit 0。
+    # 所以让脚本自己跑自己的 Adb，作用域语义天然一致，测的就是真路径。
+    # 探测层由外部用 PATH 里的假 adb 顶替（$env:APKDEBUG_SELFTEST 不为空时
+    # Require-Tool 直接返回该路径），不在这里写任何测试专用分支逻辑。
+    'selftest-adb' {
+        $null = Adb 'install' '-r' 'dummy.apk'
+        Write-Output ('ADBCONTRACT=' + $script:AdbRc)
         break
     }
 }

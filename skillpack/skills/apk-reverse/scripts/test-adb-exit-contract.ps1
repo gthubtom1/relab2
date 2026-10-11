@@ -5,28 +5,28 @@
   测什么：`if ($script:AdbRc -ne 0)` 这个判据，在子进程退出码 0 / 非 0 时
   是否如实分支。
 
-  为什么不用真机：真机不在的时候，install 会死在 Get-Device（没设备可枚举），
+  为什么不用真机：真机不在时 install 会死在 Get-Device（没设备可枚举），
   根本走不到判据那一行。而判据本身是纯逻辑，用一个退出码可控的假 adb
   就能覆盖成功/失败两条路。
 
-  怎么绕过探测层：Adb 里的工具来自 Require-Tool，本测试先把 Require-Tool
-  重定义成返回假 adb，再从 apk-debug.ps1 里抽出 Adb 函数体单独执行 ——
-  这样测的是**脚本里那段真实代码**，不是复制品。
+  为什么不用外部脚本去 AST 提取 Adb 函数再执行（2026-10-11 走过三条弯路）：
+  1. Invoke-Expression       -> 撞 verify-repository-security 的
+                                 dynamic-powershell-eval 规则（有意规则，不申请白名单）
+  2. [scriptblock]::Create +
+     Set-Item function:global: -> $script:AdbRc 写进 global 作用域，探针读自己的
+                                 $script: 永远是空
+  3. 同上但 function:script:  -> ScriptBlock 内的 $script: 指向它自己的 script 作用域
+  作用域语义绕不过去。最终解法：让 apk-debug.ps1 自己跑自己的 Adb
+  （selftest-adb 动作），零作用域问题，测的仍然是真代码路径。
 
-  回归背景（2026-10-11）：Adb 曾把 `return $LASTEXITCODE` 与 stdout 混在
-  同一个返回值里，`$rc = Adb ...` 拿到数组，`$rc -ne 0` 恒为真，
-  install 永远走失败分支。退出码改走 $script:AdbRc 之后必须证明两条路都对。
+  ★ $LASTEXITCODE 是**会话级**变量，同一个 PowerShell 进程里连跑多个 case
+    会串位（实测「case 1 读到 0、case 3 读到 1、case 255 读到 3」）。
+    所以每个 case 起一个全新进程。
 #>
-
 [CmdletBinding()]
 param()
 
 $ApkDebug = Join-Path $PSScriptRoot 'apk-debug.ps1'
-
-# 探针必须落盘单独跑：内联 -Command 传多行脚本会因引号转义打碎（实测报
-# 「所在位置 … 字符: 32」），而且 $LASTEXITCODE 是会话级的，
-# 同一进程里连跑多个 case 会出现退出码串位。两个问题都靠独立进程解决。
-$ProbeScript = Join-Path $PSScriptRoot 'adb-exit-probe.ps1'
 
 $ErrorActionPreference = 'Stop'
 $script:Fail = 0
@@ -41,7 +41,6 @@ function Write-Case {
     }
 }
 
-# ── 造一个退出码可控的假 adb ────────────────────────────────────────────
 function New-FakeAdb {
     param([int] $ExitCode)
     $dir = Join-Path $env:TEMP ('fakeadb-' + [guid]::NewGuid().ToString('n').Substring(0, 8))
@@ -51,71 +50,41 @@ function New-FakeAdb {
             "echo Installing...`r`n" +
             "echo Success`r`n" +
             "exit /b $ExitCode`r`n"
+    # 明确按 ASCII 字节写：PowerShell 的 Out-File 默认会按 UTF-16LE 存 .cmd，
+    # cmd.exe 读到的是一堆 NUL，脚本会报「'Success' 不是内部或外部命令」。
     [System.IO.File]::WriteAllText($bat, $body, [System.Text.Encoding]::ASCII)
     return $bat
 }
 
-# ── 从 apk-debug.ps1 里按 AST 抽出 Adb 函数（不用正则，避免误匹配）──────
-function Get-AdbFunctionSource {
-    param([string] $Path)
-    $tokens = $null
-    $errors = $null
-    $ast = [System.Management.Automation.Language.Parser]::ParseFile(
-        (Resolve-Path $Path), [ref] $tokens, [ref] $errors)
-    if ($errors -and $errors.Count) { throw "解析 $Path 失败: $($errors[0].Message)" }
-    $fn = $ast.FindAll({
-            param($n)
-            $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
-            $n.Name -eq 'Adb'
-        }, $true) | Select-Object -First 1
-    if (-not $fn) { throw "在 $Path 里找不到 function Adb" }
-    return $fn.Extent.Text
-}
-
-$adbSrc = Get-AdbFunctionSource -Path $ApkDebug
-
 Write-Host ''
 Write-Host '=== apk-debug.ps1 · Adb 退出码契约 ===' -ForegroundColor Cyan
-Write-Host ('  被测源码行数: {0}' -f ($adbSrc -split "`n").Count) -ForegroundColor DarkGray
+Write-Host '  走 apk-debug.ps1 自带的 selftest-adb 动作，测的是脚本真代码' -ForegroundColor DarkGray
 
 foreach ($case in @(
-        @{ Code = 0; Expect = 'success'; Label = '退出码 0 -> 成功分支' },
-        @{ Code = 1; Expect = 'fail';    Label = '退出码 1 -> 失败分支' },
-        @{ Code = 3; Expect = 'fail';    Label = '退出码 3 -> 失败分支（不被当成成功）' },
-        @{ Code = 255; Expect = 'fail';  Label = '退出码 255 -> 失败分支' }
+        @{ Code = 0; Expect = 0; Label = '退出码 0   -> 成功分支' },
+        @{ Code = 1; Expect = 1; Label = '退出码 1   -> 失败分支' },
+        @{ Code = 3; Expect = 3; Label = '退出码 3   -> 失败分支（不被当成成功）' },
+        @{ Code = 255; Expect = 255; Label = '退出码 255 -> 失败分支' }
     )) {
 
     $fake = New-FakeAdb -ExitCode $case.Code
     try {
-        # ★ 2026-10-11 关键：`$LASTEXITCODE` 是**会话级**变量。
-        #   在同一个 PowerShell 进程里连跑多个 case 时，上一个 case 的
-        #   退出码会泄漏到下一个 —— 第一次跑就出现「case 1 读到 0、
-        #   case 3 读到 1、case 255 读到 3」的串位。
-        #   所以每个 case 必须起一个全新的 powershell 进程。
-        $out = & powershell -NoProfile -ExecutionPolicy Bypass -File $ProbeScript `
-                          -FakeAdb $fake -ApkDebug $ApkDebug 2>&1
+        $env:APKDEBUG_SELFTEST_ADB = $fake
+        $out = & powershell -NoProfile -ExecutionPolicy Bypass -File $ApkDebug selftest-adb 2>&1
         $line = @($out | Where-Object { $_ -match 'ADBCONTRACT=' })[-1]
-        $rc = $null
-        if ($line) {
-            $rc = [int](($line -split 'ADBCONTRACT=')[-1]).Trim()
-        }
+        $got = $null
+        if ($line) { $got = [int](($line -split 'ADBCONTRACT=')[-1]).Trim() }
+        $expectBranch = if ($case.Code -eq 0) { '成功' } else { '失败' }
+        $gotBranch = if ($got -eq 0) { '成功' } else { '失败' }
+        $ok = ($got -eq $case.Code) -and ($gotBranch -eq $expectBranch)
 
-        $branch = if ($null -eq $rc) {
-            'unset'
-        } elseif ($rc -eq 0) {
-            'success'
-        } else {
-            'fail'
-        }
-
-        $ok = ($branch -eq $case.Expect)
         $detail = ''
         if (-not $ok) {
-            $detail = "期望 $($case.Expect) 得到 $branch (AdbRc=$rc)"
-            if ($out) { $detail += ' | ' + (($out | Select-Object -First 2) -join ' / ') }
+            $detail = "期望 AdbRc=$($case.Code)（$expectBranch 分支），实得 $got（$gotBranch 分支）"
         }
-        Write-Case -Name ("{0}  (AdbRc={1})" -f $case.Label, $rc) -Ok $ok -Detail $detail
+        Write-Case -Name ("{0}  (AdbRc={1})" -f $case.Label, $got) -Ok $ok -Detail $detail
     } finally {
+        Remove-Item Env:\APKDEBUG_SELFTEST_ADB -ErrorAction SilentlyContinue
         Remove-Item -LiteralPath (Split-Path -Parent $fake) -Recurse -Force -ErrorAction SilentlyContinue
     }
 }
