@@ -1,4 +1,4 @@
----
+﻿---
 name: game-reverse
 description: 游戏客户端逆向与反作弊研究（DLL/内存结构/封包协议/反作弊机制评估）。用于安全研究与自有客户端审计，产出可复现证据而非可直接分发的对抗工具。
 ---
@@ -13,10 +13,14 @@ description: 游戏客户端逆向与反作弊研究（DLL/内存结构/封包�
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 读 `../field-journal/precedent-reverse.md` — 确认授权与红线
-2. `NOW`: 确认标的 —— 是**自有客户端 / CTF 靶场 / 厂商授权审计**；
+2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+3. `NOW`: 确认标的 —— 是**自有客户端 / CTF 靶场 / 厂商授权审计**；
    无授权的目标不进入本技能
-3. `NEXT`: 客户端是 Unity / Unreal / 自研？决定工具链（`unity`、`il2cpp`、`ue4` 相关工具）
-4. `ACT`: 进入工作流 Phase 1，产出客户端结构图与通信面清单
+4. `NEXT`: 客户端是 Unity / Unreal / 自研？决定工具链（`unity`、`il2cpp`、`ue4` 相关工具）
+5. `ACT`: 进入工作流 Phase 1，产出客户端结构图与通信面清单
 
 ## 适用场景
 

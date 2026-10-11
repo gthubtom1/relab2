@@ -1,4 +1,4 @@
----
+﻿---
 name: code-audit
 description: Source-code security review — 当用户要白盒审代码/审PR差分/跑Semgrep找注入点，或说"帮我审下这段代码有没有注入""PR合之前过一遍安全""看看鉴权是不是漏了"时使用。Use when reviewing source, SAST scans, dangerous APIs and fix verification.
 ---
@@ -8,10 +8,14 @@ description: Source-code security review — 当用户要白盒审代码/审PR�
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 读取 `../field-journal/precedent-pentest.md` 或代码审计授权
-2. `NOW`: 确认有**源码/仓库访问**（无源码二进制 → 转 RE skill）
-3. `NOW`: 明确语言栈与范围（目录/服务/PR diff）
-4. `NEXT`: `../TOOLS.md`；semgrep 等
-5. `ACT`: 威胁建模草图 → 自动扫描 → 人工验证
+2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+3. `NOW`: 确认有**源码/仓库访问**（无源码二进制 → 转 RE skill）
+4. `NOW`: 明确语言栈与范围（目录/服务/PR diff）
+5. `NEXT`: `../TOOLS.md`；semgrep 等
+6. `ACT`: 威胁建模草图 → 自动扫描 → 人工验证
 
 ## 适用场景
 

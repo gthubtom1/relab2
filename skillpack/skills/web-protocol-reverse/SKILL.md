@@ -1,4 +1,4 @@
----
+﻿---
 name: web-protocol-reverse
 description: 把"看起来只能靠浏览器跑"的敌意 Web 客户端，还原成不依赖浏览器的纯 Python 协议采集器。当目标是 web sign/token/cookie 签名链路、响应解码、挑战/challenge、bootstrap 状态、WebSocket/GraphQL/protobuf 包裹、WebAssembly 签名，且最终要交付可复现的协议重放或采集器时使用；已有 HAR / 抓包 / 固定向量只做 artifact-only 离线证明时同样适用。不适用于 APK、原生 App、小程序主任务。
 ---
@@ -26,10 +26,14 @@ description: 把"看起来只能靠浏览器跑"的敌意 Web 客户端，还原
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`：读 `../field-journal/precedent-reverse.md`，确认目标在已授权 scope 内。
-2. `NOW`：读本文件「Auto Judge Card」，判定本次 intake 属于 `artifact-only` / `live-target` / `continuation`，**并把判定结果写进任务记录**。禁止先开浏览器再补理由。
-3. `NEXT`：载入探测层 `C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（不存在则用 `..\..\skills\scripts\lib\Bootstrap.ps1`），用 `Resolve-ReverseToolSpec -Name <id>` 定位工具真实路径后按完整路径调用。`Get-Command` 查空 ≠ 缺工具。
-4. `NEXT`：读 `references/triage/startup-triage-playbook.md`，完成 Startup Gate 四步并在报告里显式写出来。
-5. `ACT`：按「工作流」Phase 0→Phase 5 执行，**先交付一个真实请求**（真实 URL / method / body / headers / initiator），再谈分页、并发、封装采集器。禁止停在确认状态。
+2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+3. `NOW`：读本文件「Auto Judge Card」，判定本次 intake 属于 `artifact-only` / `live-target` / `continuation`，**并把判定结果写进任务记录**。禁止先开浏览器再补理由。
+4. `NEXT`：载入探测层 `C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（不存在则用 `..\..\skills\scripts\lib\Bootstrap.ps1`），用 `Resolve-ReverseToolSpec -Name <id>` 定位工具真实路径后按完整路径调用。`Get-Command` 查空 ≠ 缺工具。
+5. `NEXT`：读 `references/triage/startup-triage-playbook.md`，完成 Startup Gate 四步并在报告里显式写出来。
+6. `ACT`：按「工作流」Phase 0→Phase 5 执行，**先交付一个真实请求**（真实 URL / method / body / headers / initiator），再谈分页、并发、封装采集器。禁止停在确认状态。
 
 ## 适用场景
 

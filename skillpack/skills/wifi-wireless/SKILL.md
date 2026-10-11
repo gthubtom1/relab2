@@ -1,4 +1,4 @@
----
+﻿---
 name: wifi-wireless
 description: Use for authorized wireless security assessment including Wi-Fi capture, WPA handshake analysis, rogue AP detection research, and lab-only deauth testing.
 ---
@@ -8,9 +8,13 @@ description: Use for authorized wireless security assessment including Wi-Fi cap
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 读取 precedent-pentest；**无线攻击法律风险高**，必须书面授权与物理范围
-2. `NOW`: scope 写明目标 SSID/BSSID/场地；禁止扫邻居网络
-3. `NEXT`: 确认适配器监听模式能力
-4. `ACT`: 侦察 → 采集 → 分析（实验室优先）
+2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+3. `NOW`: scope 写明目标 SSID/BSSID/场地；禁止扫邻居网络
+4. `NEXT`: 确认适配器监听模式能力
+5. `ACT`: 侦察 → 采集 → 分析（实验室优先）
 
 ## 适用场景
 

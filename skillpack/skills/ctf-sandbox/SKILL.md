@@ -1,4 +1,4 @@
----
+﻿---
 name: ctf-sandbox
 description: CTF/AWD sandbox entry — 当用户说要打CTF/做靶场题/比赛切题，或说"来道CTF题""靶场这个pwn怎么做""比赛环境跑起来"时使用。Use when handling CTF, AWD or range tasks via the sidecar orchestrator.
 ---
@@ -7,10 +7,14 @@ description: CTF/AWD sandbox entry — 当用户说要打CTF/做靶场题/比赛
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 跑 `../scripts/case-init.ps1`；`auth.status=granted` 前禁止对真实外网 ACT。竞赛/靶场用 `-NetworkProfile lab` 或 `offline`。
-2. `NOW`: 打开包根下的 `../../CTF-Sandbox-Orchestrator/ctf-sandbox-orchestrator/SKILL.md`，按它的 sandbox 假设继续。
-3. `MUST NOT` 把 40+ 个 `competition-*` 子技能写进 `routing.json`。本入口只是一条 PRIMARY 门闩。
-4. `ACT`: 由 orchestrator 选一个 downstream `competition-*`。具体题型已明确时（pwn/ROP、APK、IDA）应已由 `routing.json` 更靠前的规则赢下，不要再抢。
+1. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+2. `NOW`: 跑 `../scripts/case-init.ps1`；`auth.status=granted` 前禁止对真实外网 ACT。竞赛/靶场用 `-NetworkProfile lab` 或 `offline`。
+3. `NOW`: 打开包根下的 `../../CTF-Sandbox-Orchestrator/ctf-sandbox-orchestrator/SKILL.md`，按它的 sandbox 假设继续。
+4. `MUST NOT` 把 40+ 个 `competition-*` 子技能写进 `routing.json`。本入口只是一条 PRIMARY 门闩。
+5. `ACT`: 由 orchestrator 选一个 downstream `competition-*`。具体题型已明确时（pwn/ROP、APK、IDA）应已由 `routing.json` 更靠前的规则赢下，不要再抢。
 
 ## 为什么单独一层
 

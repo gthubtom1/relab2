@@ -7,10 +7,14 @@ description: Write technical docs and reports — 当用户做完逆向或渗透
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`：确认当前任务是否命中本 skill 的适用范围
-2. `NOW`：读取 `../TOOLS.md`，校验工具可用性和实际路径
-3. `NEXT`：缺工具时调用 bootstrap，不要猜路径
-4. `ACT`：进入"工作流"第一步并执行，不要停在确认状态
+1. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+2. `NOW`：确认当前任务是否命中本 skill 的适用范围
+3. `NOW`：读取 `../TOOLS.md`，校验工具可用性和实际路径
+4. `NEXT`：缺工具时调用 bootstrap，不要猜路径
+5. `ACT`：进入"工作流"第一步并执行，不要停在确认状态
 
 For writing style, tone, and voice guidance, follow the in-repo rules in `references/vendor-report-rules.md` and the templates in `references/security-report-templates.md`.
 

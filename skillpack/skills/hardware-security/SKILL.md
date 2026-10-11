@@ -1,4 +1,4 @@
----
+﻿---
 name: hardware-security
 description: Hardware interface research — 当用户能摸到板子想找调试口提镜像，或说“这个UART口在哪”“JTAG能连上吗”“Flash怎么dump出来”时使用。Use when UART JTAG discovery, firmware extraction.
 ---
@@ -7,10 +7,14 @@ description: Hardware interface research — 当用户能摸到板子想找调�
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 确认**物理接触授权**与设备归属
-2. `NOW`: ESD/电源安全；默认只读探测
-3. `NEXT`: 联合 firmware-pentest 做镜像分析
-4. `ACT`: 外壳与调试接口识别 →  consoles → 提取
+1. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+2. `NOW`: 确认**物理接触授权**与设备归属
+3. `NOW`: ESD/电源安全；默认只读探测
+4. `NEXT`: 联合 firmware-pentest 做镜像分析
+5. `ACT`: 外壳与调试接口识别 →  consoles → 提取
 
 ## 适用场景
 

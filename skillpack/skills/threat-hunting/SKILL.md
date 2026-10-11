@@ -1,4 +1,4 @@
----
+﻿---
 name: threat-hunting
 description: Use for blue-team threat hunting, detection engineering with Sigma/YARA, SIEM query design, and incident detection validation.
 ---
@@ -7,10 +7,14 @@ description: Use for blue-team threat hunting, detection engineering with Sigma/
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 确认蓝队/狩猎授权与数据源范围（SIEM、EDR 导出）
-2. `NOW`: 明确假说（hypothesis）再查数，避免无脑刷告警
-3. `NEXT`: 工具与数据接入方式
-4. `ACT`: 假说 → 查询 → 验证 → 规则化
+1. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+2. `NOW`: 确认蓝队/狩猎授权与数据源范围（SIEM、EDR 导出）
+3. `NOW`: 明确假说（hypothesis）再查数，避免无脑刷告警
+4. `NEXT`: 工具与数据接入方式
+5. `ACT`: 假说 → 查询 → 验证 → 规则化
 
 ## 适用场景
 

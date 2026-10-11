@@ -1,4 +1,4 @@
----
+﻿---
 name: ot-ics
 description: Use for authorized OT/ICS security assessment covering Purdue model zoning, PLC/SCADA exposure, industrial protocol discovery, and safe passive-first evaluation.
 ---
@@ -8,10 +8,14 @@ description: Use for authorized OT/ICS security assessment covering Purdue model
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 读取 `../field-journal/precedent-pentest.md` — **工控环境误操作可致物理危害**
-2. `NOW`: 书面授权必须写清：站点、网段、是否允许主动扫描/写寄存器
-3. `NOW`: case-init；默认 **passive-first**；`ready_for_act` 前禁止对 PLC 写操作
-4. `NEXT`: `../TOOLS.md`；多数工控工具需手动与隔离实验网
-5. `ACT`: 资产与分区识别 → 暴露面 → 只读验证
+2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+3. `NOW`: 书面授权必须写清：站点、网段、是否允许主动扫描/写寄存器
+4. `NOW`: case-init；默认 **passive-first**；`ready_for_act` 前禁止对 PLC 写操作
+5. `NEXT`: `../TOOLS.md`；多数工控工具需手动与隔离实验网
+6. `ACT`: 资产与分区识别 → 暴露面 → 只读验证
 
 ## 适用场景
 

@@ -1,4 +1,4 @@
----
+﻿---
 name: thick-client
 description: Use for authorized security testing of desktop thick clients including local storage, update channels, IPC, traffic, and client-side trust boundaries.
 ---
@@ -8,10 +8,14 @@ description: Use for authorized security testing of desktop thick clients includ
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 读取 `../field-journal/precedent-pentest.md`
-2. `NOW`: 确认目标是 **桌面厚客户端**（Win/macOS/Linux GUI 或服务伴生），非纯 Web
-3. `NOW`: case-init；安装包来源与测试账号写入 scope
-4. `NEXT`: 工具（Burp 上游代理、进程监控、逆向工具）
-5. `ACT`: 信任边界图 → 本地面 → 网络面 → 更新/供应链
+2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+3. `NOW`: 确认目标是 **桌面厚客户端**（Win/macOS/Linux GUI 或服务伴生），非纯 Web
+4. `NOW`: case-init；安装包来源与测试账号写入 scope
+5. `NEXT`: 工具（Burp 上游代理、进程监控、逆向工具）
+6. `ACT`: 信任边界图 → 本地面 → 网络面 → 更新/供应链
 
 ## 适用场景
 

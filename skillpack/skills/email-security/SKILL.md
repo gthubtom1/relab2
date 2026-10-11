@@ -1,4 +1,4 @@
----
+﻿---
 name: email-security
 description: Email security review — 当用户收到可疑邮件或要查域名邮箱配置，或说“这封邮件是钓鱼吗”“帮我查下SPF配对没”“BEC诈骗长啥样”时使用。Use when phishing analysis, SPF/DKIM/DMARC check.
 ---
@@ -7,9 +7,13 @@ description: Email security review — 当用户收到可疑邮件或要查域�
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 确认授权（分析样本邮件 / 租户配置评审）
-2. `NOW`: 不向真实用户二次投递恶意样本
-3. `ACT`: 头认证 → 内容/URL → 附件沙箱 → 租户控制面建议
+1. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+2. `NOW`: 确认授权（分析样本邮件 / 租户配置评审）
+3. `NOW`: 不向真实用户二次投递恶意样本
+4. `ACT`: 头认证 → 内容/URL → 附件沙箱 → 租户控制面建议
 
 ## 适用场景
 

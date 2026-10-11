@@ -1,4 +1,4 @@
----
+﻿---
 name: macos-reverse
 description: Use for authorized macOS and Mach-O reverse engineering including codesign, Objective-C/Swift recovery, endpoint security surfaces, and Apple platform malware analysis.
 ---
@@ -8,9 +8,13 @@ description: Use for authorized macOS and Mach-O reverse engineering including c
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 读取 `../field-journal/precedent-reverse.md`
-2. `NOW`: 确认目标为 macOS/Mach-O/App bundle（iOS IPA → `mobile-reverse/`）
-3. `NEXT`: `../TOOLS.md`；jtool2/lldb 等
-4. `ACT`: 签名与装载信息 → 静态 → 动态（lldb/Frida）
+2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+3. `NOW`: 确认目标为 macOS/Mach-O/App bundle（iOS IPA → `mobile-reverse/`）
+4. `NEXT`: `../TOOLS.md`；jtool2/lldb 等
+5. `ACT`: 签名与装载信息 → 静态 → 动态（lldb/Frida）
 
 ## 适用场景
 

@@ -1,4 +1,4 @@
----
+﻿---
 name: go-rust-reverse
 description: Go/Rust逆向 — 当目标是Go或Rust编译的、符号被剥了，或说“这个Go马函数名全没了”“Rust panic字符串怎么定位”“pclntab怎么恢复”时使用。Use when Go Rust stripped binary, runtime recovery.
 ---
@@ -8,9 +8,13 @@ description: Go/Rust逆向 — 当目标是Go或Rust编译的、符号被剥了�
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 读取 `../field-journal/precedent-reverse.md`
-2. `NOW`: 确认样本为 Go/Rust 编译产物（`file`/字符串/运行时特征）
-3. `NEXT`: GoReSym / 相关插件是否可用
-4. `ACT`: 运行时识别 → 符号/元数据恢复 → 业务逻辑
+2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+3. `NOW`: 确认样本为 Go/Rust 编译产物（`file`/字符串/运行时特征）
+4. `NEXT`: GoReSym / 相关插件是否可用
+5. `ACT`: 运行时识别 → 符号/元数据恢复 → 业务逻辑
 
 ## 适用场景
 

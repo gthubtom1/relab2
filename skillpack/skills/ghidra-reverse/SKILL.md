@@ -1,4 +1,4 @@
----
+﻿---
 name: ghidra-reverse
 description: Ghidra逆向 — 当用户没IDA想用免费工具看二进制，或说“用Ghidra帮我反编译这个”“批量headless怎么跑”“字符串交叉引用在哪”时使用。Use when Ghidra decompile, cross-refs, headless analysis.
 ---
@@ -8,12 +8,16 @@ description: Ghidra逆向 — 当用户没IDA想用免费工具看二进制，�
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 读取 `../field-journal/precedent-reverse.md`
-2. `NOW`: 确认需要 **Ghidra**（无 IDA / 偏好开源 / 批量 headless）
-3. `NOW`（MCP 通道必备）: 拉起常驻 HTTP 服务（~8 s 冷启）——**启动方式与前置条件按 `../references/tool-registry.md` 的 `pyghidra-mcp` 端点行取**（`启动方式` = 常驻守护，冷启 7–10 s，幂等；`端点` = `127.0.0.1:9111/mcp`；`依赖` = `JDK 21+` + Ghidra 本体；Ghidra 本体路径用探测层 `Resolve-ReverseToolSpec -Name 'ghidraRun'` 的 `Command` 取（`Get-Command` 只是四级探测的第 2 级，返回空不等于缺工具，见 `../references/env-selfcheck.md`）。本项目无 `toolreg/`，该端点文档即事实源），再按该端点探活确认 READY 且 `Tool Count : 20`；本会话看不到 `ghidra` 工具时先 `/mcp reconnect ghidra`。**不要要求用户改 `mcp.json`，服务由 agent 自己起。**
-4. `NEXT`: 读 `../TOOLS.md` 查 ghidra / ghidra-mcp 路径
-5. `NEXT`: 缺工具 → bootstrap `ghidra-mcp`（若 manifest 支持）或按手动步骤装 Ghidra
-6. `ACT`: 导入样本 → 自动分析 → 导出关键函数反编译
-7. `DONE`: 静态分析收尾按同一来源（`../references/tool-registry.md` 的 `pyghidra-mcp` 端点行）停守护（先经 MCP `save` 落盘，再释放 9111/9112 端口，避免残留 JVM）
+2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+3. `NOW`: 确认需要 **Ghidra**（无 IDA / 偏好开源 / 批量 headless）
+4. `NOW`（MCP 通道必备）: 拉起常驻 HTTP 服务（~8 s 冷启）——**启动方式与前置条件按 `../references/tool-registry.md` 的 `pyghidra-mcp` 端点行取**（`启动方式` = 常驻守护，冷启 7–10 s，幂等；`端点` = `127.0.0.1:9111/mcp`；`依赖` = `JDK 21+` + Ghidra 本体；Ghidra 本体路径用探测层 `Resolve-ReverseToolSpec -Name 'ghidraRun'` 的 `Command` 取（`Get-Command` 只是四级探测的第 2 级，返回空不等于缺工具，见 `../references/env-selfcheck.md`）。本项目无 `toolreg/`，该端点文档即事实源），再按该端点探活确认 READY 且 `Tool Count : 20`；本会话看不到 `ghidra` 工具时先 `/mcp reconnect ghidra`。**不要要求用户改 `mcp.json`，服务由 agent 自己起。**
+5. `NEXT`: 读 `../TOOLS.md` 查 ghidra / ghidra-mcp 路径
+6. `NEXT`: 缺工具 → bootstrap `ghidra-mcp`（若 manifest 支持）或按手动步骤装 Ghidra
+7. `ACT`: 导入样本 → 自动分析 → 导出关键函数反编译
+8. `DONE`: 静态分析收尾按同一来源（`../references/tool-registry.md` 的 `pyghidra-mcp` 端点行）停守护（先经 MCP `save` 落盘，再释放 9111/9112 端口，避免残留 JVM）
 
 ## 适用场景
 

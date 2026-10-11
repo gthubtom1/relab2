@@ -1,4 +1,4 @@
----
+﻿---
 name: threat-intelligence
 description: Use for authorized OSINT and cyber threat intelligence that enriches IOCs, campaigns, impersonation, scams, or threat actors from public sources. Includes bounded X/Twitter search through Xquik, source preservation, corroboration, and evidence handoff.
 ---
@@ -9,9 +9,13 @@ description: Use for authorized OSINT and cyber threat intelligence that enriche
 
 1. `NOW`: 读取 `../ops/scope-contract.md`，确认公开来源、目标实体、时间窗与交付用途。
 2. `NOW`: 仅在需要操作先例时读取 `../field-journal/precedent-pentest.md`。先例不能授予权限。
-3. `NOW`: 写出可证伪的情报问题，以及必须独立核验的候选结论。
-4. `NEXT`: 读取 `../TOOLS.md`。需要公开 X 数据时检查 `xquik-mcp`。
-5. `ACT`: 从最窄的只读查询开始，保留来源元数据，再进入关联与核验。
+3. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+4. `NOW`: 写出可证伪的情报问题，以及必须独立核验的候选结论。
+5. `NEXT`: 读取 `../TOOLS.md`。需要公开 X 数据时检查 `xquik-mcp`。
+6. `ACT`: 从最窄的只读查询开始，保留来源元数据，再进入关联与核验。
 
 ## 适用范围
 

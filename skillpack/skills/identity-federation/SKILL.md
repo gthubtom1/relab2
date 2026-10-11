@@ -1,4 +1,4 @@
----
+﻿---
 name: identity-federation
 description: Use for authorized assessment of federated identity systems including SAML, OIDC, OAuth2 flows, SSO misconfiguration, and token confusion issues.
 ---
@@ -8,9 +8,13 @@ description: Use for authorized assessment of federated identity systems includi
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 读取 precedent-pentest；SSO 测试账号与 IdP/SP 范围入 scope
-2. `NOW`: 禁止锁定真实用户账户的暴力尝试
-3. `NEXT`: 抓包工具与文档（元数据 URL）
-4. `ACT`: 协议流映射 → 常见错配 → 验证
+2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+3. `NOW`: 禁止锁定真实用户账户的暴力尝试
+4. `NEXT`: 抓包工具与文档（元数据 URL）
+5. `ACT`: 协议流映射 → 常见错配 → 验证
 
 ## 适用场景
 

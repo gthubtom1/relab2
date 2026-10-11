@@ -1,4 +1,4 @@
----
+﻿---
 name: database-security
 description: Database security assessment — 当用户要查数据库是否对外暴露、有弱口令或权限过大，或说“数据库好像被脱库了”“Redis能写文件提权吗”“这个账号权限是不是太大了”时使用。Use when database exposure, weak password, authz review.
 ---
@@ -8,9 +8,13 @@ description: Database security assessment — 当用户要查数据库是否对�
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 读取 precedent-pentest；**生产库禁止破坏性语句** unless 明确允许
-2. `NOW`: scope 写清实例、账号权限、是否允许写/删
-3. `NEXT`: 客户端工具路径
-4. `ACT`: 暴露面 → 认证 → 授权 → 配置 → 利用链验证（安全）
+2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+3. `NOW`: scope 写清实例、账号权限、是否允许写/删
+4. `NEXT`: 客户端工具路径
+5. `ACT`: 暴露面 → 认证 → 授权 → 配置 → 利用链验证（安全）
 
 ## 适用场景
 

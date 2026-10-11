@@ -1,4 +1,4 @@
----
+﻿---
 name: case-review
 description: Case package review — 当用户要交报告前审一遍case包/查证据链完整性，或说"帮我审下这个case能不能交""证据到结论链条全不全""交报告前过一遍"时使用。Use when reviewing scope readiness, Evidence-Finding-Path traceability and artifact hashes.
 ---
@@ -23,10 +23,14 @@ It MUST NOT perform reconnaissance, exploitation, dynamic instrumentation, or ta
 ## ACTION REQUIRED
 
 1. `NOW`: read `../field-journal/precedent-reverse.md` and confirm that this is a review of an existing authorized case package.
-2. `NOW`: confirm the case path and choose read-only review mode.
-3. `NEXT`: read `../TOOLS.md`; this skill uses only Python 3 standard library and does not require bootstrap.
-4. `NEXT`: run `python skillpack/skills/case-review/scripts/review_case.py <case-root> --format markdown` (Windows; on Linux/macOS/Kali use `python3`).
-5. `ACT`: resolve every error, then rerun the review before claiming a handoff is complete.
+2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+3. `NOW`: confirm the case path and choose read-only review mode.
+4. `NEXT`: read `../TOOLS.md`; this skill uses only Python 3 standard library and does not require bootstrap.
+5. `NEXT`: run `python skillpack/skills/case-review/scripts/review_case.py <case-root> --format markdown` (Windows; on Linux/macOS/Kali use `python3`).
+6. `ACT`: resolve every error, then rerun the review before claiming a handoff is complete.
 
 ## Tool dependencies
 

@@ -1,4 +1,4 @@
----
+﻿---
 name: digital-forensics
 description: Digital forensics and IR — 当用户要分析内存转储、磁盘时间线或可疑流量，或说“这个mem.dmp帮我看看”“电脑中招了怎么溯源”“PCAP里有啥异常”时使用。Use when memory dump, disk timeline, PCAP triage.
 ---
@@ -8,10 +8,14 @@ description: Digital forensics and IR — 当用户要分析内存转储、磁�
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 读取 `../field-journal/precedent-pentest.md` 或组织 IR 授权说明
-2. `NOW`: 确认是**取证/溯源**而非进攻性扫描
-3. `NOW`: 建立 case；证据只读副本优先（原始介质写保护）
-4. `NEXT`: `../TOOLS.md`；Volatility 等常手动
-5. `ACT`: 保全哈希 → 时间线 → 关键伪影
+2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+3. `NOW`: 确认是**取证/溯源**而非进攻性扫描
+4. `NOW`: 建立 case；证据只读副本优先（原始介质写保护）
+5. `NEXT`: `../TOOLS.md`；Volatility 等常手动
+6. `ACT`: 保全哈希 → 时间线 → 关键伪影
 
 ## 适用场景
 

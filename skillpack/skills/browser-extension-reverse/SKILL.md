@@ -1,4 +1,4 @@
----
+﻿---
 name: browser-extension-reverse
 description: Browser extension reverse engineering — 当用户要分析浏览器插件/查恶意扩展/看manifest权限，或说"这个插件是不是在偷数据""帮我看看它后台干了什么""扩展权限是不是给多了"时使用。Use when analyzing manifests, background workers, content scripts and extension traffic.
 ---
@@ -8,9 +8,13 @@ description: Browser extension reverse engineering — 当用户要分析浏览�
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 读取 `../field-journal/precedent-reverse.md`
-2. `NOW`: 确认目标是**浏览器扩展**（crx/xpi/解压目录），不是普通网页 JS（普通 → `js-reverse/`）
-3. `NEXT`: 解压扩展；读 manifest
-4. `ACT`: 权限面 → 后台脚本 → 网络/存储钩子
+2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+3. `NOW`: 确认目标是**浏览器扩展**（crx/xpi/解压目录），不是普通网页 JS（普通 → `js-reverse/`）
+4. `NEXT`: 解压扩展；读 manifest
+5. `ACT`: 权限面 → 后台脚本 → 网络/存储钩子
 
 ## 适用场景
 

@@ -1,4 +1,4 @@
----
+﻿---
 name: radio-sdr
 description: Use for authorized RF/SDR security research including signal identification, replay feasibility study in shielded labs, and wireless protocol analysis outside classic Wi-Fi.
 ---
@@ -7,9 +7,13 @@ description: Use for authorized RF/SDR security research including signal identi
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: **频谱与发射受法律严格管制**；仅授权频段/屏蔽室/实验目标
-2. `NOW`: scope 写明设备、频段、是否允许发射（默认只收）
-3. `ACT`: 只接收识别 → 解调分析 → 实验室复现评估
+1. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+2. `NOW`: **频谱与发射受法律严格管制**；仅授权频段/屏蔽室/实验目标
+3. `NOW`: scope 写明设备、频段、是否允许发射（默认只收）
+4. `ACT`: 只接收识别 → 解调分析 → 实验室复现评估
 
 ## 适用场景
 

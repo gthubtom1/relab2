@@ -7,12 +7,16 @@ description: Multi-stage attack-path orchestration — 当用户要做完整渗�
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 读取 `../field-journal/precedent-pentest.md` — 确认本 skill 的操作是已授权的常规操作
-2. `NOW`: **创建/更新 case**（`../scripts/case-init.ps1`）并完成 `../pentest-tools/templates/scope.md`（`../ops/scope-contract.md`）；`auth.status!=granted` 禁止 ACT
-3. `NOW`: 以 **lead** 角色规划阶段（`../ops/role-map.md`），写入 specialist_roles
-4. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
-5. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
-6. `ACT`: 按 `references/lifecycle-checklist.md` 过阶段门闩；每阶段更新 `../../examples/ctf-demo/timeline.md` + `../../examples/ctf-demo/workitems.md`（`../ops/timeline-workitem.md`）；发现提升为 Evidence/Finding
-7. 结束：`docs-generator` 报告必须含 Evidence 链
+2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+3. `NOW`: **创建/更新 case**（`../scripts/case-init.ps1`）并完成 `../pentest-tools/templates/scope.md`（`../ops/scope-contract.md`）；`auth.status!=granted` 禁止 ACT
+4. `NOW`: 以 **lead** 角色规划阶段（`../ops/role-map.md`），写入 specialist_roles
+5. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
+6. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
+7. `ACT`: 按 `references/lifecycle-checklist.md` 过阶段门闩；每阶段更新 `../../examples/ctf-demo/timeline.md` + `../../examples/ctf-demo/workitems.md`（`../ops/timeline-workitem.md`）；发现提升为 Evidence/Finding
+8. 结束：`docs-generator` 报告必须含 Evidence 链
 
 > 多阶段攻击路径规划与执行的总指挥。当任务需要"从 A 打到 B"的完整链路时，本 Skill 负责编排各阶段、协调子 Skill、规划攻击路径。
 > 不是"红队专属"——任何需要跨阶段组合的渗透场景都从这里开始。

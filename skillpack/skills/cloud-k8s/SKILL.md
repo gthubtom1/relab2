@@ -1,4 +1,4 @@
----
+﻿---
 name: cloud-k8s
 description: Cloud/container/K8s security assessment — 当用户要查云元数据SSRF/IAM越权/容器逃逸/K8s RBAC，或说"帮我看看这个存储桶是不是公开的""容器能不能逃逸""集群RBAC配得对不对"时使用。Use when assessing metadata SSRF, IAM misconfig, container escape and cluster RBAC.
 ---
@@ -8,10 +8,14 @@ description: Cloud/container/K8s security assessment — 当用户要查云元�
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 读取 `../field-journal/precedent-pentest.md` — **云/K8s 测试必须书面授权**
-2. `NOW`: case-init + scope；明确账号边界、禁止破坏性操作
-3. `NOW`: 确认是云元数据/容器/K8s/IAM，而非普通 Web 扫（后者 `pentest-tools/`）
-4. `NEXT`: `../TOOLS.md`；kubectl/aws/gcloud 等多为手动安装
-5. `ACT`: 从「身份与暴露面」开始，禁止默认全网扫描
+2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+   命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
+   与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
+   历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
+3. `NOW`: case-init + scope；明确账号边界、禁止破坏性操作
+4. `NOW`: 确认是云元数据/容器/K8s/IAM，而非普通 Web 扫（后者 `pentest-tools/`）
+5. `NEXT`: `../TOOLS.md`；kubectl/aws/gcloud 等多为手动安装
+6. `ACT`: 从「身份与暴露面」开始，禁止默认全网扫描
 
 ## 适用场景
 
