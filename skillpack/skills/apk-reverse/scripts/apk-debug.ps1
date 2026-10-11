@@ -267,11 +267,20 @@ function Adb {
     param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Args_)
     $adb = Require-Tool 'adb' ''
     $dev = Get-Device
+    # ★ 2026-10-11 真机实测抓到：这里必须局部放宽 ErrorActionPreference。
+    #   adb 把**正常进度信息**写 stderr ——
+    #     Performing Streamed Install dsh-remote-android-v0.4.17.apk
+    #     adb: failed to read /path ...: version is #30
+    #   脚本全局是 ErrorActionPreference='Stop'，于是 PowerShell 把这些
+    #   stderr 行包成 NativeCommandError 并**中断整个脚本** ——
+    #   实测 install 直接死在第 270 行，退出码 1，跟安装本身无关。
+    #   解法与本文件其他原生工具调用一致：局部 Continue + 仍用 2>&1 收文本，
+    #   退出码照旧从 $LASTEXITCODE 取（不靠 stderr 判断成败）。
+    $ErrorActionPreference = 'Continue'
     & $adb '-s' $dev @Args_ 2>&1
-    # ★ 2026-10-11 退出码走独立变量，不混进返回值。
-    #   原因：函数返回值里既有 stdout 文本又有退出码时，`$rc = Adb ...`
-    #   拿到的是数组，`$rc -ne 0` 恒为真 —— install 会永远走「安装失败」分支。
-    #   这里把退出码放进脚本作用域，调用点显式读 $script:AdbRc。
+    $ErrorActionPreference = 'Stop'
+    # 退出码走独立变量，不混进返回值：否则 `$rc = Adb ...` 拿到的是
+    # stdout 文本数组，`$rc -ne 0` 恒为真，install 会永远走失败分支。
     $script:AdbRc = $LASTEXITCODE
 }
 
