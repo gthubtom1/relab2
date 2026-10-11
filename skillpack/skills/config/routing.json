@@ -52,14 +52,20 @@
             "手机|安装|应用|打开|往外发|服务器|发"
           ],
           "note": "canon-gap N001：APK连外发行为（SKILL description看看它连了哪些服务器）"
-        }
-        ,
+        },
         {
           "must": "模拟器|(?<![a-z0-9_])emulator(?![a-z0-9_])|(?<![a-z0-9_])(nox|noxplayer|ldplayer|memu|bluestacks|avd)(?![a-z0-9_])|夜神|雷电|蓝叠|逍遥|mumu",
           "mustAll": [
             "apk|安卓|android|应用|app|手机|dex|smali|jadx|apktool|adb|install|装机|安装|抓包|抓流量|hook|脱壳|加固|调试|debug|设备|android"
           ],
           "note": "2026-10-11 实测补：模拟器是 APK 动态链路的一环（接模拟器→装包→抓包→动态调试），但裸词「模拟器」会吸走 JS/前端抓包与通用逆向的用例。判据轴是「安卓语境」：adb/frida/抓包/apk/install 任一出现即算；雷电/夜神/蓝叠/MuMu/MEmu/nox 等厂商名本身就够判据。mustAll 刻意不含 工具/安装包/安卓裸词，防吸走 R31-H081 与 R23-s3 的工具查询与 JS 抓包用例。"
+        },
+        {
+          "must": "注入崩溃|hook.{0,6}(崩溃|失败|不生效|没反应)|连不上|看不到设备|设备离线|offline|(装机|安装).{0,6}(失败|报错)|重打包.{0,6}(失败|报错)|签不上名|脱壳.{0,6}失败|(模拟器|安卓|手机|apk).{0,8}(抓不到包|抓不了包)",
+          "mustAll": [
+            "apk|安卓|android|手机|dex|smali|jadx|apktool|adb|frida|模拟器|emulator|hook|脱壳|加固|调试|debug|设备|装机|应用"
+          ],
+          "note": "2026-10-12 三轮收紧后的最终形态。起因：'frida 注入崩溃' / '模拟器抓不到包' / 'adb 设备连不上' 这三类说法**没提 APK**，只描述症状，此前全落到泛化的 reverse-engineering —— 而对应经验卡挂在 apk-reverse 上，等于查不到。\n★ 判据轴 = **移动端专属症状** + 移动端语境词（mustAll）。三轮实测被否掉的写法：\n  · 工具名（frida/adb）放 must → 自我满足，吸走 'frida hook native so'（期望 R0，    .so 可能指 Linux）\n  · 裸词 '抓包' 放 must → 吸走 'app 抓包 https'（期望 R3，web 逆向起手式）和 'MuMu 上跑的手游加速器抓包看分片缺块'（期望 R21，协议逆向）\n  · 裸词 'app' 放 mustAll → 同上，app 既可指 Android 也可指 web 应用\n最终：只认**移动端独有的失败症状**（崩溃/连不上/装不上/offline/签不上名），或「移动端词 + 抓不到包」的限定组合。'抓包' 单独出现一律不算。"
         }
       ]
     },
