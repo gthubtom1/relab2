@@ -1,4 +1,4 @@
-# 症状索引（Symptom Index）——用户描述现象，直接定位技能
+﻿# 症状索引（Symptom Index）——用户描述现象，直接定位技能
 
 > 这是什么：一份"现象 → 技能"的路由表。每一行不是技能名换皮，
 > 而是**用户会怎么描述这个需求**的现象句，配上该去哪个技能。
@@ -14,7 +14,7 @@
 >
 > **进了技能之后还有第二跳**：这张表只回答「进哪个技能」，不回答「读该技能的哪一篇技术文档」。
 > 已经知道在 `reverse-engineering/`（或 `api-security/`、`ctf-sandbox/` …）里了，
-> 接下来按症状找具体文档 → **[`field-journal/KB-INDEX.md`](field-journal/KB-INDEX.md)**（153 篇技术文档的症状索引）。
+> 接下来按症状找具体文档 → **[`field-journal/KB-INDEX.md`](field-journal/KB-INDEX.md)**（技术文档的症状索引，篇数以 KB-INDEX 的合计为准）。
 
 ## 症状 → 技能
 

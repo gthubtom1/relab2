@@ -156,7 +156,7 @@ foreach ($r in $rows) {
 [void]$sb.AppendLine('| 表 | 用途 | 什么时候读 |')
 [void]$sb.AppendLine('|---|---|---|')
 [void]$sb.AppendLine('| [SYMPTOM-INDEX.md](SYMPTOM-INDEX.md) | 用户口述的现象 → 进哪个技能 | `master-route` 报 `confidence: low` / PRIMARY=R0 / "No strong keyword hit" |')
-[void]$sb.AppendLine('| [field-journal/KB-INDEX.md](field-journal/KB-INDEX.md) | 现象 → 读哪篇技术文档（153 篇） | 已进技能，但不确定该读 `references/` 里的哪一篇 |')
+[void]$sb.AppendLine('| [field-journal/KB-INDEX.md](field-journal/KB-INDEX.md) | 现象 → 读哪篇**技术文档**（以 KB-INDEX 自己的合计为准） | 已进技能，但不确定该读 `references/` 里的哪一篇 |')
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('知识库来源、改编规则、以及「源文档被本机实测推翻」的 27 条清单见 [field-journal/KB-SOURCES.md](field-journal/KB-SOURCES.md)。')
 

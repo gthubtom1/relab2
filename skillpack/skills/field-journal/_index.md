@@ -1,4 +1,4 @@
-# 项目经验索引
+﻿# 项目经验索引
 
 > 本文件用于在新任务开始前快速检索历史经验。
 > 带 `[种子]` 标记的条目是预置参考案例，不计入真实完成项目。
@@ -121,7 +121,7 @@
 
 | 文件 | 用途 | 什么时候读 |
 |---|---|---|
-| [KB-INDEX.md](./KB-INDEX.md) | 外部知识库 153 篇技术文档的**症状索引**（现象 → 读哪一篇） | 已经知道在某个技能里了，但不知道该读 `references/` 里的哪一篇 |
+| [KB-INDEX.md](./KB-INDEX.md) | 外部知识库技术文档的**症状索引**（现象 → 读哪一篇） | 已经知道在某个技能里了，但不知道该读 `references/` 里的哪一篇 |
 | [KB-SOURCES.md](./KB-SOURCES.md) | 来源（`LING71671/open-reverselab`，GPL-3.0）、改编规则、以及**源文档被本机实测推翻的 27 条清单** | 照着某篇文档跑之前核对命令；命令和本机表现不一致时先查这里 |
 | [../experience-cards/INDEX.md](../experience-cards/INDEX.md) | **可判定规则**的症状索引（现象 → 一条带 fixture 与正负 oracle 的规则） | 动手前想省掉从零摸索：`python skills/scripts/experience-card.py search "<症状>"` |
 
