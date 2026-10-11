@@ -433,7 +433,13 @@ function Get-MumuInstances {
     }
     if ($end -lt 0) { return @() }
     try {
-        return @($txt.Substring($start, $end - $start + 1) | ConvertFrom-Json)
+        $parsed = $txt.Substring($start, $end - $start + 1) | ConvertFrom-Json
+        # ★ PS 5.1 的 ConvertFrom-Json 对**顶层数组**返回一个「数组对象」，
+        #   直接 @() 包住只会得到 1 个元素 —— 那个数组本身。
+        #   实测后果：2 个 MuMu 实例被算成 1 个，端点列表渲染成
+        #   'System.Object[]:System.Object[]'（PS 7 才改成自动展开）。
+        #   显式 ForEach-Object 让管道枚举它，PS 5.1 / 7 行为一致。
+        return @($parsed | ForEach-Object { $_ })
     } catch {
         return @()
     }
@@ -1205,6 +1211,31 @@ switch ($Action) {
             'frida-layout' {
                 Write-Output ('REMOTE=' + $script:FridaLayout.Remote)
                 Write-Output ('PORT=' + $script:FridaLayout.Port)
+            }
+            'mumu-json' {
+                # MuMuManager 的 `info -v all` 是**唯一**能自报端口的厂商 CLI，
+                # 所以它的 JSON 解析必须能在没有真 MuMu 的机器上被测到：
+                # 用 EMULAB_MUMU_FIXTURE（或仓内 fixture）指向一个复刻官方
+                # 字段表的假 exe。判据是解析出的实例数与端点，不是「脚本没崩」。
+                $fake = $env:EMULAB_MUMU_FIXTURE
+                if (-not $fake) {
+                    $fake = Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) `
+                                      'scripts\experience-cards\fixtures\fake-mumu-manager.cmd'
+                }
+                if (-not (Test-Path -LiteralPath $fake)) {
+                    Write-Output 'MU_FIXTURE=missing'
+                    break
+                }
+                $insts = @(Get-MumuInstances -CliPath $fake)
+                Write-Output 'MU_FIXTURE=found'
+                Write-Output ('MU_INSTANCES=' + $insts.Count)
+                $serials = @($insts | ForEach-Object {
+                    if ($_.adb_host_ip -and $_.adb_port) {
+                        '{0}:{1}' -f $_.adb_host_ip, $_.adb_port
+                    }
+                } | Where-Object { $_ })
+                Write-Output ('MU_SERIALS=' + ($serials -join ','))
+                Write-Output ('MU_BOOTED=' + @($insts | Where-Object { $_.is_android_started }).Count)
             }
             'vendor-lookup' {
                 # 用例表与 test-emulator-lab.ps1 的 $expected 一一对应；

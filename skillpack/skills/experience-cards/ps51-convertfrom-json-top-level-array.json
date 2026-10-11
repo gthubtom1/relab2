@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "id": "ps51-convertfrom-json-top-level-array",
+  "status": "promoted",
+  "title": "PS 5.1 的 ConvertFrom-Json 对顶层数组返回一个数组对象，直接 @() 包住只得到 1 个元素",
+  "invariant": "在 Windows PowerShell 5.1 上，`$x | ConvertFrom-Json` 处理顶层 JSON 数组时返回的是一个「数组对象」而非枚举出的元素；`@($x)` 只会得到 1 个元素（那个数组本身）。后果：元素个数算成 1、渲染时出现 'System.Object[]' 字样。PS 7 改成了自动展开，所以同一段代码在 PS 7 上是对的、在 5.1 上是错的。解法是显式 `@($parsed | ForEach-Object { $_ })`。",
+  "scope": {
+    "family": "powershell-ps51-compat",
+    "boundary": "runtime",
+    "appliesWhen": [
+      "脚本要在 Windows PowerShell 5.1 上跑（本包所有 .ps1 都必须）",
+      "用 ConvertFrom-Json 解析**顶层是数组**的 JSON",
+      "解析结果的数量或列表内容会被用到"
+    ],
+    "stopsWhen": [
+      "顶层是对象而不是数组（对象返回单个 PSCustomObject，没有这个问题）",
+      "脚本只在 PowerShell 7+ 上跑（7 已自动展开）"
+    ]
+  },
+  "reproductions": [
+    {
+      "jobFingerprint": "emulab-mumu-json-fixture-2026-10-11",
+      "observedAt": "2026-10-11",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "MuMuManager fixture 输出 2 个实例，PS 5.1 解析出 Count=1，端点渲染成 'System.Object[]:System.Object[]'。被 test-emulator-lab.ps1 的 3 条用例抓到。"
+    },
+    {
+      "jobFingerprint": "emulab-mumu-json-empty-2026-10-11",
+      "observedAt": "2026-10-11",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "空数组 [] 同样被算成 1 个实例 —— 空与非空两个方向都错，说明不是边界情况而是解析语义问题。"
+    }
+  ],
+  "fixture": {
+    "path": "skillpack/skills/scripts/experience-cards/fixtures/fake-mumu-manager.cmd",
+    "sha256": "84a3ec0c027a9a4865e19dc3d62d5bfb4224f2d726fbc8ad6353176a9a397856",
+    "generator": null,
+    "secretFree": true,
+    "note": "复刻 MuMuManager 官方 `info -v all` 的 JSON 字段表；MUMU_FIXTURE 可切 single/empty/bare 三种形态。"
+  },
+  "oracles": {
+    "positive": "single 形态下 MU_INSTANCES=2 且 MU_SERIALS='127.0.0.1:16384,127.0.0.1:16416'；empty 形态下 MU_INSTANCES=0。",
+    "negative": "bare 形态（只打标题、没有 JSON）下 MU_INSTANCES=0 —— 说明解析失败时不会硬凑出一个实例。"
+  },
+  "firstDivergence": {
+    "stage": "ConvertFrom-Json 之后的计数",
+    "path": "return @($txt | ConvertFrom-Json)",
+    "kind": "state"
+  },
+  "decision": {
+    "preferredRoute": "apk-reverse/scripts/emulator-lab.ps1",
+    "action": "解析顶层数组后显式 `@($parsed | ForEach-Object { $_ })`，让 PS 5.1 与 7 行为一致。",
+    "fallback": "改用 `(ConvertFrom-Json ...).Count` 加索引遍历；或用 jadx/aapt2 等官方工具直接给结构化输出，避开这一层语义差异。"
+  },
+  "validation": {
+    "lastVerifiedAt": "2026-10-11",
+    "command": "python skillpack/skills/scripts/experience-card.py validate"
+  },
+  "links": {
+    "skill": "apk-reverse",
+    "script": "apk-reverse/scripts/test-emulator-lab.ps1",
+    "journal": "field-journal/2026-10-11_android-emulator-lab-and-contract-tests.md",
+    "derivation": "web-protocol-reverse/references/contract/experience-card-schema.md"
+  },
+  "symptoms": [
+    "元素个数算成 1",
+    "输出里出现 System.Object[]",
+    "同一个脚本 PS 7 上对、PS 5.1 上错",
+    "数组解析结果只有一个元素"
+  ]
+}

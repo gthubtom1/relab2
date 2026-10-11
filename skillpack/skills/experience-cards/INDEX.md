@@ -12,17 +12,19 @@
 5. 没命中不是「没有经验」，而是可以沉淀：用 `new` 建一张候选，晋级门见
    `skills/web-protocol-reverse/references/contract/experience-card-schema.md`。
 
-## 卡片（共 4 张）
+## 卡片（共 5 张）
 
 | 症状 / 信号（我看到了什么） | 卡 | 规则 | 技能 |
 |---|---|---|---|
 | INSTALL_FAILED_OLDER_SDK | [android-minsdk-gate-is-not-bypassable](android-minsdk-gate-is-not-bypassable.json) | 当 adb install 报 INSTALL_FAILED_OLDER_SDK（APK minSdk=N，设备 sdk=M<N），这不是操作问题而是系统层拒绝：Android… | `apk-reverse` |
+| 元素个数算成 1 | [ps51-convertfrom-json-top-level-array](ps51-convertfrom-json-top-level-array.json) | 在 Windows PowerShell 5.1 上，`$x | ConvertFrom-Json` 处理顶层 JSON 数组时返回的是一个「数组对象」而非枚举出的元素；`@(… | `apk-reverse` |
 | 函数明明写了变量，调用方看不到 | [powershell-script-scope-does-not-follow-callstack](powershell-script-scope-does-not-follow-callstack.json) | PowerShell 里 $script:X 里的 script 指**定义该函数的那个脚本块**，不随调用栈走；因此把函数体抽成字符串或 ScriptBlock、在外部执行时… | `apk-reverse` |
 | 外部探针永远读到空 | [powershell-script-scope-does-not-follow-callstack](powershell-script-scope-does-not-follow-callstack.json) | PowerShell 里 $script:X 里的 script 指**定义该函数的那个脚本块**，不随调用栈走；因此把函数体抽成字符串或 ScriptBlock、在外部执行时… | `apk-reverse` |
 | 报错里有两个看不懂的数字 | [android-minsdk-gate-is-not-bypassable](android-minsdk-gate-is-not-bypassable.json) | 当 adb install 报 INSTALL_FAILED_OLDER_SDK（APK minSdk=N，设备 sdk=M<N），这不是操作问题而是系统层拒绝：Android… | `apk-reverse` |
 | 日志里有我的标记就以为程序跑到了那里 | [gate-self-must-prove-failure](gate-self-must-prove-failure.json) | 断言成功与否只能依赖三类外部可观测事实：文件真的被创建、字节真的被改、伪代码真的包含目标逻辑。命令回显（.echo / Write-Host 打在日志里的标记）会与程序自身输出… | `reverse-engineering` |
 | 红色 NativeCommandError 文字，内容其实是正常信息 | [ps-native-stderr-breaks-strict-mode](ps-native-stderr-breaks-strict-mode.json) | 在 ErrorActionPreference='Stop' 的脚本里调用原生 exe 时，该 exe 写到 stderr 的任何一行（包括进度信息与正常诊断）都会被 Powe… | `apk-reverse` |
 | 脚本在调用某个 exe 的那一行直接死掉，退出码 1 | [ps-native-stderr-breaks-strict-mode](ps-native-stderr-breaks-strict-mode.json) | 在 ErrorActionPreference='Stop' 的脚本里调用原生 exe 时，该 exe 写到 stderr 的任何一行（包括进度信息与正常诊断）都会被 Powe… | `apk-reverse` |
+| 输出里出现 System.Object[] | [ps51-convertfrom-json-top-level-array](ps51-convertfrom-json-top-level-array.json) | 在 Windows PowerShell 5.1 上，`$x | ConvertFrom-Json` 处理顶层 JSON 数组时返回的是一个「数组对象」而非枚举出的元素；`@(… | `apk-reverse` |
 | 门禁一直绿但功能是坏的 | [gate-self-must-prove-failure](gate-self-must-prove-failure.json) | 断言成功与否只能依赖三类外部可观测事实：文件真的被创建、字节真的被改、伪代码真的包含目标逻辑。命令回显（.echo / Write-Host 打在日志里的标记）会与程序自身输出… | `reverse-engineering` |
 
 ## 分工（别混）

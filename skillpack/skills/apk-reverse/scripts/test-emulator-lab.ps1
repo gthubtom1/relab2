@@ -154,6 +154,7 @@ foreach ($k in @('home', 'back', 'app', 'enter')) {
 Write-Case -Name 'home 映射到 KEYCODE_HOME' -Ok ($keyHomeCode -eq 'KEYCODE_HOME') `
     -Detail ("实得 " + $keyHomeCode)
 
+
 $fl = @(Invoke-Selftest -Sub 'frida-layout')
 $remote = ''
 $port = ''
@@ -164,6 +165,77 @@ foreach ($l in $fl) {
 Write-Case -Name 'frida-server 落在 /data/local/tmp（app 不可读目录）' `
     -Ok ($remote -eq '/data/local/tmp/frida-server') -Detail ("实得 " + $remote)
 Write-Case -Name 'frida 默认端口 27042' -Ok ($port -eq '27042') -Detail ("实得 " + $port)
+# ── 5. MuMuManager JSON 解析（唯一能自报端口的厂商 CLI）─────────────
+# 真 MuMu 不可能在 CI 里装，所以这条发现路径只能靠 fixture 覆盖。
+# fixture 复刻官方 `info -v all` 的 JSON 字段表（见 mumu.163.com 官方文档）。
+Write-Host ''
+Write-Host '=== MuMuManager JSON 解析（厂商 CLI 自报端口路径） ===' -ForegroundColor Cyan
+$mumuFixture = Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) `
+                             'scripts\experience-cards\fixtures\fake-mumu-manager.cmd'
+Write-Case -Name 'MuMu fixture 存在' -Ok (Test-Path -LiteralPath $mumuFixture) `
+    -Detail "找不到 $mumuFixture（厂商 CLI 路径就永远测不到）"
+
+function Invoke-MumuSelftest {
+    param([string] $Mode)
+    $prev = $env:MUMU_FIXTURE
+    try {
+        $env:MUMU_FIXTURE = $Mode
+        $out = & powershell -NoProfile -ExecutionPolicy Bypass -File $Emulab selftest mumu-json 2>&1
+        $kv = @{}
+        foreach ($l in $out) {
+            $t = [string]$l
+            if ($t -match '^([A-Z_]+)=(.*)$') { $kv[$Matches[1]] = $Matches[2] }
+        }
+        return $kv
+    } finally {
+        if ($null -ne $prev) { $env:MUMU_FIXTURE = $prev }
+        else { Remove-Item Env:\MUMU_FIXTURE -ErrorAction SilentlyContinue }
+    }
+}
+
+$m = Invoke-MumuSelftest -Mode 'single'
+Write-Case -Name 'JSON 解析出 2 个实例' -Ok ($m['MU_INSTANCES'] -eq '2') `
+    -Detail ("实得 " + $m['MU_INSTANCES'])
+Write-Case -Name '解析出两个 adb 端点（含未启动实例的）' `
+    -Ok ($m['MU_SERIALS'] -eq '127.0.0.1:16384,127.0.0.1:16416') `
+    -Detail ("实得 '" + $m['MU_SERIALS'] + "'")
+Write-Case -Name '已启动实例数 = 1（is_android_started 被读到）' `
+    -Ok ($m['MU_BOOTED'] -eq '1') -Detail ("实得 " + $m['MU_BOOTED'])
+
+$me = Invoke-MumuSelftest -Mode 'empty'
+Write-Case -Name '空数组 -> 0 实例，不崩' -Ok ($me['MU_INSTANCES'] -eq '0') `
+    -Detail ("实得 " + $me['MU_INSTANCES'])
+
+$mb = Invoke-MumuSelftest -Mode 'bare'
+Write-Case -Name '老版本只打标题（无 JSON）-> 0 实例，不崩' `
+    -Ok ($mb['MU_INSTANCES'] -eq '0') -Detail ("实得 " + $mb['MU_INSTANCES'])
+
+# 反例：把 fixture 换成只输出一半的 JSON，解析必须**拿不到**实例而不是硬凑一个
+$brokenMumu = Join-Path (Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))) `
+                         'scripts\work\fake-mumu-broken.cmd'
+try {
+    [System.IO.File]::WriteAllText($brokenMumu,
+        "@echo off`r`necho [`r`necho   { `"index`": `"0`", `"adb_port`": 16384 }`r`n",
+        [System.Text.Encoding]::ASCII)
+    $prevMu = $env:EMULAB_MUMU_FIXTURE
+    try {
+        $env:EMULAB_MUMU_FIXTURE = $brokenMumu
+        $outMu = & powershell -NoProfile -ExecutionPolicy Bypass -File $Emulab selftest mumu-json 2>&1
+        $mbk = @{}
+        foreach ($l in $outMu) {
+            $t = [string]$l
+            if ($t -match '^([A-Z_]+)=(.*)$') { $mbk[$Matches[1]] = $Matches[2] }
+        }
+        Write-Case -Name '反例：残缺 JSON -> 0 实例（不硬凑、不崩）' `
+            -Ok ($mbk['MU_INSTANCES'] -eq '0') `
+            -Detail ("实得 " + $mbk['MU_INSTANCES'] + "（非 0 说明会把坏数据当好数据）")
+    } finally {
+        if ($null -ne $prevMu) { $env:EMULAB_MUMU_FIXTURE = $prevMu }
+        else { Remove-Item Env:\EMULAB_MUMU_FIXTURE -ErrorAction SilentlyContinue }
+    }
+} finally {
+    Remove-Item -LiteralPath $brokenMumu -Force -ErrorAction SilentlyContinue
+}
 
 # ── 5. 反例控制组：判据自己必须会红 ──────────────────────────────
 # 把脚本副本改成坏的，再跑同一条 selftest，确认输出真的变了。
