@@ -43,6 +43,11 @@ description: APK reverse — 当用户要解包反编译APK/改smali/重打包/�
 - Frida 设备检查、进程列举、spawn/attach 注入：`scripts/frida-run.ps1`
 - 重建、对齐、签名、安装 APK：`scripts/rebuild-sign-install.ps1`
 - 快速抽取 Manifest 关键组件与权限：`scripts/manifest-summary.ps1`
+- **真机一条龙**（doctor / inspect / install / run / log / shot / frida / info）：
+  `scripts/apk-debug.ps1` —— 面向 agent 设计，**所有输出都是文本**，不需要看界面。
+  静态拆包实测 80 MB 包 125 秒产出 8179 个 .java + 18423 个 .smali。
+- **退出码契约自测**：`scripts/test-adb-exit-contract.ps1`（4 个退出码全覆盖，1 秒）
+  —— 改动 `apk-debug.ps1` 的 `Adb` 后必须跑，否则 install 可能恒走失败分支。
 
 以下一行命令保持直接调用，不单独封装：
 
