@@ -43,20 +43,35 @@ $skillRootExplicit = $PSBoundParameters.ContainsKey('SkillRoot')
 $toolRootExplicit  = $PSBoundParameters.ContainsKey('ToolRoot')
 
 if (-not $skillRootExplicit) {
-    if ($env:REVERSE_SKILL_ROOT) {
+    # 环境变量只在它指向**真实存在**的目录时才采信。
+    # 实测踩过的坑：Process 级残留一个陈旧的 E:\nope-not-here，
+    # User 级明明是对的 C:\relab2，但脚本优先读了 Process 级 ——
+    # 于是每次 selfcheck 第 3 项都 FAIL，而真正的原因（路径不存在）
+    # 跟显示出来的症状（找不到 START-HERE.md）对不上号。
+    if ($env:REVERSE_SKILL_ROOT -and (Test-Path -LiteralPath $env:REVERSE_SKILL_ROOT -PathType Container)) {
         $SkillRoot = $env:REVERSE_SKILL_ROOT
     } else {
+        if ($env:REVERSE_SKILL_ROOT) {
+            Write-Warning ("进程级 REVERSE_SKILL_ROOT 指向不存在的路径（{0}），已忽略并用自推导值 {1}。User 级变量未受影响。" -f $env:REVERSE_SKILL_ROOT, $repoRoot)
+        }
         $SkillRoot = $repoRoot
     }
 }
 if (-not $toolRootExplicit) {
-    if ($env:REVERSE_TOOL_ROOT) {
+    if ($env:REVERSE_TOOL_ROOT -and (Test-Path -LiteralPath $env:REVERSE_TOOL_ROOT -PathType Container)) {
         $ToolRoot = $env:REVERSE_TOOL_ROOT
-    } elseif (Test-Path 'D:\Tools') {
+    } elseif (Test-Path -LiteralPath 'D:\Tools' -PathType Container) {
         $ToolRoot = 'D:\Tools'
     } else {
         $ToolRoot = ''
     }
+}
+
+# 进程级残留值已在上方被否决，但子进程仍会继承到这个脏值
+# （PowerShell 的子进程默认继承父进程环境块）。必须把纠正后的值写回去，
+# 否则 selfcheck-newmachine.ps1 读到的还是 E:\nope-not-here。
+if (-not $skillRootExplicit -and $env:REVERSE_SKILL_ROOT -ne $SkillRoot) {
+    $env:REVERSE_SKILL_ROOT = $SkillRoot
 }
 
 # 确保子进程继承：显式参数优先（无条件写），否则只在为空时补
