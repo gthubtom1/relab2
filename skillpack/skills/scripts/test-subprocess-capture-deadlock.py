@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -62,26 +63,61 @@ def case_capture_hangs() -> tuple[bool, str]:
     这不是同义反复：它是**控制组**。如果哪天 pipe 也不挂了，
     说明根因不是管道（比如是 adb 抢端口），那这条门禁的前提就变了，
     必须重写而不是继续 PASS。
+
+    ★ 2026-10-11 两次走错路的记录，别再走：
+      1. subprocess.run(timeout=75)：超时后 kill() 再 communicate()，
+         而 communicate() 读的就是那条被孤儿持有的管道 —— 于是在超时之后
+         还要再卡 200~700 秒。实测同一份代码跑了 93s / 305s / 800s+。
+      2. Popen.wait(timeout=60)：**测错了东西**。wait() 只看进程退出码，
+         而进程本来就退出了，卡住的是管道 —— 于是门禁报「管道模式 60s 内
+         进程就退出了」，结论完全反了。
+      正确做法：communicate() 放进后台线程（它等管道），主流程等一个
+      **独立的硬超时**。线程等不到就判定为「挂」，主流程立刻往下走。
+      daemon 标记保证它不阻止进程退出。
     """
     if not APK_DEBUG.exists():
         return True, f"（{APK_DEBUG.name} 不在，跳过）"
+
+    import threading
+
     started = time.time()
+    proc = subprocess.Popen(PS + [str(APK_DEBUG), "doctor"],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    outcome: dict = {}
+
+    def _drain() -> None:
+        try:
+            proc.communicate(timeout=90)
+            outcome["eof"] = True
+        except Exception:
+            outcome["eof"] = False
+
+    t = threading.Thread(target=_drain, daemon=True)
+    t.start()
+    t.join(timeout=60)
     try:
-        subprocess.run(PS + [str(APK_DEBUG), "doctor"],
-                       capture_output=True, timeout=75)
+        proc.kill()
+    except Exception:
+        pass
+    took = time.time() - started
+
+    if outcome.get("eof"):
         return (False,
-                "管道模式 75s 内就返回了 —— 根因可能不是管道捕获，"
+                f"管道模式 {took:.0f}s 内就拿到 EOF 了 —— 根因可能不是管道捕获，"
                 "这条门禁的前提需要重新确认（别让它继续 PASS）")
-    except subprocess.TimeoutExpired:
-        return True, f"管道模式 75s 未返回（已复现挂死，用时 {time.time() - started:.0f}s）"
+    return True, (f"管道模式 60s 未拿到 EOF（已复现挂死，判定用时 {took:.0f}s）")
 
 
 def case_file_capture_works() -> tuple[bool, str]:
     """落盘捕获在同样条件下必须按时返回 —— 这才是 harness 该用的姿势。"""
     if not APK_DEBUG.exists():
         return True, f"（{APK_DEBUG.name} 不在，跳过）"
-    with tempfile.TemporaryDirectory(prefix="capture-file-") as td:
-        tmp = Path(td)
+    # ★ 2026-10-11 不用 tempfile.TemporaryDirectory：它的 __exit__ 会
+    #   shutil.rmtree，而前一个用例的后台 drain 线程还持有同目录下的文件句柄，
+    #   rmtree 在 os.scandir 上抛 NotADirectoryError(20)，
+    #   报错还指向一个已被删掉的临时文件路径，纯属误导。
+    tmp = Path(tempfile.mkdtemp(prefix="capture-file-"))
+    try:
         out_f, err_f = tmp / "o.txt", tmp / "e.txt"
         started = time.time()
         try:
@@ -95,6 +131,8 @@ def case_file_capture_works() -> tuple[bool, str]:
         ok = rc == 0 and "APK" in text
         return ok, (f"落盘模式 {took:.1f}s 返回 rc={rc}，"
                     f"中文解码正常={text.count('自检') > 0}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 def case_harnesses_use_files() -> tuple[bool, str]:
@@ -154,7 +192,10 @@ def main() -> int:
         try:
             ok, detail = fn()
         except Exception as exc:  # noqa: BLE001 - 门禁自身不能崩
-            ok, detail = False, f"用例自身抛异常: {exc!r}"
+            import traceback
+            ok = False
+            detail = (f"用例自身抛异常: {exc!r}\n"
+                      + "".join(traceback.format_exc().splitlines(True)[-6:]))
         print(f"  [{'PASS' if ok else 'FAIL'}] {name}")
         print(f"         {detail}")
         if not ok:
