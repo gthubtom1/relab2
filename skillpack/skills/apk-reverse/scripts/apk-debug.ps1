@@ -161,26 +161,44 @@ if (-not $env:APKDEBUG_SELFTEST_ADB) {
         #   端口表与理由见 scripts/emulator-lab.ps1 与 references/emulator-lab.md。
         #   装好模拟器后完整的发现交给 .\emulator-lab.ps1 connect -Auto；
         #   这里只保证「不会把已经连着的模拟器踢掉」。
-        #   只对**真的在监听**的端点发 connect：Test-ReverseTcpPort 走的是探测层，
-        #   1 秒超时且不产生任何 adb 子进程。直接对 13 个端点盲发 connect 时，
-        #   没装模拟器的机器上每个都要等满默认超时 —— 白等十几秒（实测 42 秒）。
+        #   ★ 2026-10-12 实测：这段曾经让 doctor 从 30 秒涨到 710 秒（23 倍）。
+        #   两个原因：
+        #     ① `Test-ReverseTcpPort` 每个端点要 ~1 秒（TcpClient.BeginConnect + 1s
+        #        WaitOne），13 个端点就是 13 秒 —— 而且**端口开着时反而更慢**
+        #        （要真连上再断）。
+        #     ② `emulator-NNNN` 是 adb 的**别名**，不是真实端口（雷电14 真实端口
+        #        是 2222，却注册成 emulator-5554），拿别名里的数字去探端口
+        #        必然探不到，白等 1 秒。
+        #   现在的做法：**先问 adb devices 现在有什么**，只对「本来连过、
+        #   被 kill-server 踢掉」的端点补 connect。没出现过的端点不猜、不探。
+        $__present = @{}
+        $ErrorActionPreference = 'Continue'
+        foreach ($__line in (& $__adbSpec.Command devices 2>$null)) {
+            if ([string]$__line -match '^(\S+)\s+(?:device|offline|unauthorized)$') {
+                $__present[$Matches[1]] = $true
+            }
+        }
+        # 只有「adb 自己记得、但当前不在线」的模拟器端点才值得重连。
+        # 这个清单来自 adb 的持久化记录，不是我们猜的端口表。
         $__emuEndpoints = @(
             'emulator-5554', 'emulator-5556', 'emulator-5558', 'emulator-5560',
-            '127.0.0.1:16384', '127.0.0.1:16416', '127.0.0.1:16448',
+            '127.0.0.1:2222', '127.0.0.1:16384', '127.0.0.1:16416', '127.0.0.1:16448',
             '127.0.0.1:16480', '127.0.0.1:16512', '127.0.0.1:16544',
             '127.0.0.1:62001', '127.0.0.1:62025', '127.0.0.1:21503'
         )
-        $ErrorActionPreference = 'Continue'
-        foreach ($__ep in $__emuEndpoints) {
-            if ($__ep -match '^(\d{1,3}(\.\d{1,3}){3}):(\d+)$') {
-                $__port = [int]$Matches[3]
-                if (-not (Test-ReverseTcpPort -Port $__port)) { continue }
-            } elseif ($__ep -match '^emulator-(\d+)$') {
-                # AVD 的 adb 别名是 emulator-<console 端口减一>，端口本身就是尾数
-                if (-not (Test-ReverseTcpPort -Port ([int]$Matches[1]))) { continue }
+        # 只在「一个模拟器都没有」时才做全量尝试 —— 那是 kill-server 后
+        # 模拟器还没回来的状态。已经有模拟器在线时不必重连（省掉十几秒）。
+        $__hasEmu = @($__present.Keys | Where-Object {
+            $_ -match '^emulator-\d+$' -or $_ -match '^\d{1,3}(\.\d{1,3}){3}:\d+$'
+        }).Count
+        if ($__hasEmu -eq 0) {
+            foreach ($__ep in $__emuEndpoints) {
+                $null = & $__adbSpec.Command connect $__ep 2>$null
+                # 连上就停：绝大多数情况第一个就命中（主实例），
+                # 没必要把 14 个都试一遍。
+                $__probe = & $__adbSpec.Command devices 2>$null
+                if ($__probe -match '^\S+\s+device') { break }
             }
-            # 连不上时 adb 打一行 failed to connect —— 正常情况，重定向掉。
-            $null = & $__adbSpec.Command connect $__ep 2>$null
         }
         $ErrorActionPreference = 'Stop'
     }
