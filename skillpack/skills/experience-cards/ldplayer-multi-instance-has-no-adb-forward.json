@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "id": "ldplayer-multi-instance-has-no-adb-forward",
+  "status": "promoted",
+  "title": "雷电模拟器只给主实例分配 adb 端口转发，多开实例拿不到 adb",
+  "invariant": "雷电（LDPlayer 14 实测）的每个实例都会在 VirtualBox 层配 PortForwarding，但只有**主实例**那条规则带 Name=\"adb\"；多开出来的实例只有 gdb 转发（2222）。表现是多开实例的 Android 明明启动完成（ldconsole list2 的 androidStarted=1）、进程健康，但 adb 永远 offline、且找不到任何监听端口。这不是配置错误，是产品设计限制——所以「要 adb 控制」和「要多开隔离」在雷电上不能同时满足，必须二选一。",
+  "scope": {
+    "family": "android-emulator-control",
+    "boundary": "transport",
+    "appliesWhen": [
+      "用雷电（LDPlayer）多开实例做 adb 相关操作",
+      "ldconsole list2 显示实例已启动，但 adb devices 里是 offline 或根本不存在"
+    ],
+    "stopsWhen": [
+      "只操作主实例（index 0）—— 它有 adb 转发，一切正常",
+      "用 MuMu / 夜神（它们的多开实例各自带 adb 端口，实测 MuMu 会自报 adb_port）"
+    ]
+  },
+  "reproductions": [
+    {
+      "jobFingerprint": "ldplayer14-second-instance-2026-10-11",
+      "observedAt": "2026-10-11",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "`ldconsole add --name relab2` 建出 index=1，launch 后 androidStarted=1、进程 --comment leidian1 健康，但只监听 2222（gdb），adb 永远 offline。"
+    },
+    {
+      "jobFingerprint": "ldplayer14-vbox-log-compare-2026-10-11",
+      "observedAt": "2026-10-11",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "对比两个实例的 VBox.log：leidian0 有 PortForwarding 规则 Name=\"adb\" GuestPort=5555；leidian1 只有 Name=\"gdb\" GuestPort=2222。规则确实只对主实例生成。"
+    }
+  ],
+  "fixture": {
+    "path": "skillpack/skills/apk-reverse/references/emulator-lab.md",
+    "sha256": "606e35f0641c5004cc30a0bc560bc476010b396e2ef3e6d9621a626124bfcbdd",
+    "generator": null,
+    "secretFree": true,
+    "note": "底册记了实例隔离的三条替代方案。"
+  },
+  "oracles": {
+    "positive": "主实例（index 0）：ldconsole list2 显示启动 + adb devices 出现对应序列号 + 能跑 shell 命令。",
+    "negative": "多开实例：ldconsole list2 同样显示启动，但 adb devices 里 offline 或缺失，且 Get-NetTCPConnection 看不到它的 adb 端口——同一台机器上两种实例行为不一致，即可确认是转发规则缺失而非实例故障。"
+  },
+  "firstDivergence": {
+    "stage": "实例启动后的端口绑定",
+    "path": "VirtualBox PortForwarding/0/Name",
+    "kind": "missing"
+  },
+  "decision": {
+    "preferredRoute": "apk-reverse/scripts/emulator-lab.ps1",
+    "action": "需要 adb 就别多开——直接用主实例（index 0）。需要隔离多个被测 app 时改走 Android 多用户：adb shell pm create-user <name> + am switch-user <id>，app 数据完全隔离且不占额外实例。",
+    "fallback": "确实必须多开且必须 adb 时，换 MuMu（其 MuMuManager info 会自报每实例的 adb_port）。"
+  },
+  "validation": {
+    "lastVerifiedAt": "2026-10-11",
+    "command": "python skillpack/skills/scripts/experience-card.py validate"
+  },
+  "links": {
+    "skill": "apk-reverse",
+    "script": "apk-reverse/scripts/emulator-lab.ps1",
+    "journal": "field-journal/2026-10-11_android-emulator-lab-and-contract-tests.md",
+    "derivation": "web-protocol-reverse/references/contract/experience-card-schema.md"
+  },
+  "symptoms": [
+    "多开实例 adb offline",
+    "新实例 adb devices 里没有",
+    "模拟器启动了但连不上 adb",
+    "雷电多开连不上",
+    "ldconsole 说启动了但 adb 找不到"
+  ]
+}

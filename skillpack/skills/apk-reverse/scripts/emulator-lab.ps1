@@ -210,7 +210,15 @@ function Invoke-Native {
             $o = [IO.Path]::GetTempFileName()
             $e = [IO.Path]::GetTempFileName()
             try {
-                $p = Start-Process -FilePath $Exe -ArgumentList $NativeArgs `
+                # ★ 2026-10-11 实测修：`Start-Process -ArgumentList` 在 **PS 5.1** 上
+                #   不给含空格/斜杠的参数加引号 —— `'-w', 'C:/a/b.pcapng'` 会被拼成
+                #   `-w C:/a/b.pcapng`，dumpcap 把 `C:/a/b.pcapng` 当成接口名，
+                #   于是 2 秒就退出且不产文件（实测抓到 833 包的同一命令手工跑完全正常）。
+                #   逐个加引号是最小改动，且对引号内的内容不再二次解析。
+                $quoted = @($NativeArgs | ForEach-Object {
+                    if ($_ -match '[\s]') { '"' + $_ + '"' } else { $_ }
+                })
+                $p = Start-Process -FilePath $Exe -ArgumentList $quoted `
                                      -RedirectStandardOutput $o -RedirectStandardError $e `
                                      -WindowStyle Hidden -PassThru -ErrorAction SilentlyContinue
                 $secs = 0
@@ -219,7 +227,17 @@ function Invoke-Native {
                     $secs++
                 }
                 if ($p -and -not $p.HasExited) { try { $p.Kill() } catch { } }
-                $script:NativeOut = @(Get-Content -LiteralPath $o -Encoding UTF8 -ErrorAction SilentlyContinue)
+                # stdout 与 stderr **两个流一起收**：dumpcap / frida / aapt2 的
+                # 有用输出大量在 stderr（实测 dumpcap 的 stdout **完全为空**，
+                # 进度与 captured 计数全在 stderr）。只收 stdout 会把
+                # 「抓到 2776 包」误报成「一行输出都没有」。
+                # 用 `+=` 而不是 `@(a) + @(b)`：PS 5.1 里 `@(a) + @(b)` 在
+                # 某些形态下会被解析成「对数组调用 op_Addition」，直接抛
+                # MethodNotFound（实测踩到）。`$x = @(); $x += @(...)` 两侧都是数组，
+                # 语义明确且 5.1 / 7 一致。
+                $script:NativeOut = @()
+                $script:NativeOut += @(Get-Content -LiteralPath $o -Encoding UTF8 -ErrorAction SilentlyContinue)
+                $script:NativeOut += @(Get-Content -LiteralPath $e -Encoding UTF8 -ErrorAction SilentlyContinue)
                 $script:NativeRc = 0
                 if ($p -and $null -ne $p.ExitCode) { $script:NativeRc = $p.ExitCode }
             } finally {
@@ -1053,14 +1071,30 @@ switch ($Action) {
                 if (-not $Interface) {
                     Warn2 '没给 -Interface。先跑 .\emulator-lab.ps1 iflist 看清接口名。'
                     Say '模拟器流量走虚拟网卡，不指定就抓到物理网卡（看不到模拟器里的包）。'
-                    break
                 }
+                # ★ 2026-10-11 实测根因：dumpcap 对**正斜杠**路径的处理与反斜杠不同 ——
+                #   `-w C:/Users/toti/Desktop/x.pcapng` 会让它把 `C:/Users/toti/Desktop`
+                #   当成**接口名**，于是 1.4 秒内以 rc=0 静默退出、不产文件、stderr 也是空的。
+                #   同一命令换成 `C:\Users\...` 立刻正常（实测抓到 2776 包）。
+                #   所以这里统一把输出路径规范成 Windows 反斜杠。
+                $out = $out.Replace('/', '\')
                 Say "抓 $secs 秒…"
-                $null = Invoke-Native -Exe $dc -WaitSec ($secs + 20) -NativeArgs @(
-                    '-i', $Interface, '-a', 'duration:' + $secs, '-w', $out)
+                # dumpcap 的进度在 stderr，stdout 是空的 —— 见 Invoke-Native 里
+                # 「两个流一起收」的处理。
+                # dumpcap 的进度（Packets: N / captured: N）写在 **stderr**，stdout 是空的。
+                # 所以「有没有抓到东西」不能只看 stdout —— 实测 stdout 空但抓了 1363 包。
+                $tail = @($script:NativeOut |
+                    Where-Object { $_ -match '(captured|Packets:|dropped)' })
+                if ($tail.Count) {
+                    Say ('  ' + (($tail | Select-Object -Last 1) -replace '\s+', ' '))
+                }
                 if (Test-Path -LiteralPath $out) {
-                    Ok ('已保存 {0} ({1} MB)' -f $out,
-                        [math]::Round((Get-Item $out).Length / 1MB, 2))
+                    $kb = [math]::Round((Get-Item -LiteralPath $out).Length / 1KB, 1)
+                    if ($kb -le 0) {
+                        Die ("{0} 生成了但是 0 字节 —— 接口 {1} 上没有流量。" -f $out, $Interface) +
+                            "`n模拟器流量走虚拟网卡，物理网卡上永远是空的；跑 iflist 换编号重试。"
+                    }
+                    Ok ('已保存 {0} ({1} KB)' -f $out, $kb)
                 } else { Die "抓包没产出 $out" }
             }
         }
@@ -1168,27 +1202,58 @@ switch ($Action) {
                 Say '★ 版本铁律：frida-server 与本机 frida 版本**必须完全一致**，差一位就「连不上」。'
                 # Android 端的 frida-server 是裸 ELF：既没有可执行位标记，也不能被 adb
                 # push 成可执行文件。官方做法是 gzip 压缩后推、再在设备上 gunzip。
-                $gz = Join-Path $env:TEMP 'frida-server.gz'
-                Remove-Item -LiteralPath $gz -Force -ErrorAction SilentlyContinue
-                Say ('gzip 压缩中（' + (Split-Path -Leaf $Server) + '）…')
-                & tar -czf $gz -C (Split-Path -Parent $Server) (Split-Path -Leaf $Server)
-                if (-not (Test-Path -LiteralPath $gz)) {
-                    Die 'gzip 失败：tar 不可用（Win10 自带的 bsdtar 正常应可用）'
-                }
-                $null = Adb -Dev $dev -NativeArgs @('push', $gz, $script:FridaLayout.Gz)
-                $null = Adb -Dev $dev -NativeArgs @('shell', 'rm', $script:FridaLayout.Remote)
-                $null = Adb -Dev $dev -NativeArgs @('shell', 'gunzip', '-f', $script:FridaLayout.Gz)
+                # gzip 链路会**静默传坏文件**。实测：本机 SHA256 b34a33bd…、
+                # 设备上拿到 8c39e250…，字节数也差 1696 —— 而 push 与 gunzip 全都报成功，
+                # 直到跑 frida-server --version 报 can't create pW@… 才发现内容错位。
+                # 官方推荐 gzip 是为了慢速 USB；模拟器走 loopback 不需要：
+                # 实测直接 push 111 MB 只要 0.5 秒（206 MB/s）。
+                # 所以改成直接推 + SHA256 校验；校验是**判据**，不是装饰。
+                $want = (Get-FileHash -LiteralPath $Server -Algorithm SHA256).Hash.ToLowerInvariant()
+                Say ('推送中（' + (Split-Path -Leaf $Server) + '）…')
+                $null = Adb -Dev $dev -NativeArgs @('push', $Server, $script:FridaLayout.Remote)
                 $null = Adb -Dev $dev -NativeArgs @('shell', 'chmod', '755', $script:FridaLayout.Remote)
-                Ok '已推送并解压'
+                $got = ((Adb -Dev $dev -NativeArgs @('shell', 'sha256sum', $script:FridaLayout.Remote) |
+                         Select-Object -First 1) -replace '\s.*$', '').Trim()
+                if ($got -ne $want) {
+                    Die "推送后哈希不匹配，文件传坏了。`n  本机  : $want`n  设备上: $got`n改用 gzip 路径：tar -czf <临时.gz> -C <目录> <文件>，push 后在设备上 gunzip，再校验。"
+                }
+                Ok "已推送并校验通过（$want）"
                 Step '启动 frida-server'
-                $null = Adb -Dev $dev -NativeArgs @('shell', 'su', '-c', ('{0} -l 0.0.0.0:{1} >/dev/null 2>&1 &' -f
-                    $script:FridaLayout.Remote, $script:FridaLayout.Port))
-                Start-Sleep -Seconds 2
+                # 实测：`su -c '<cmd> &'` 在 adb shell 里起不来后台进程 ——
+                # su 会等子进程结束，而 `&` 在 su 的引号内不生效，命令直接返回。
+                # 雷电的 adb shell 本来就是 root（adb root 之后 uid=0），
+                # 所以**先试不带 su**，用 nohup + 重定向起；失败再退回 su -c。
+                $null = Adb -Dev $dev -NativeArgs @('shell',
+                    ('nohup {0} -l 0.0.0.0:{1} >/data/local/tmp/frida.log 2>&1 &' -f
+                     $script:FridaLayout.Remote, $script:FridaLayout.Port))
+                Start-Sleep -Seconds 3
                 $ps = (Adb -Dev $dev -NativeArgs @('shell', 'ps', '-A') |
                        Select-String -Pattern 'frida-server' | Select-Object -First 1)
-                if ($ps) { Ok ('已运行: ' + ($ps -replace '\s+', ' ')) }
-                else { Warn2 '没看到 frida-server 进程。无 root 时先试 adb -s <serial> root' }
-                Remove-Item -LiteralPath $gz -Force -ErrorAction SilentlyContinue
+                if (-not $ps) {
+                    $null = Adb -Dev $dev -NativeArgs @('shell', 'su', '-c',
+                        ('nohup {0} -l 0.0.0.0:{1} >/dev/null 2>&1 &' -f
+                         $script:FridaLayout.Remote, $script:FridaLayout.Port))
+                    Start-Sleep -Seconds 3
+                    $ps = (Adb -Dev $dev -NativeArgs @('shell', 'ps', '-A') |
+                           Select-String -Pattern 'frida-server' | Select-Object -First 1)
+                }
+                if ($ps) {
+                    Ok ('已运行: ' + ($ps -replace '\s+', ' '))
+                    # 版本必须是判据：装错架构/版本时进程也会起，但连不上。
+                    $sv = ((Adb -Dev $dev -NativeArgs @('shell',
+                            "$($script:FridaLayout.Remote) --version 2>&1") |
+                            Select-Object -First 1) -replace '\s+', ' ').Trim()
+                    if ($sv -match '^(\d+\.\d+\.\d+)') {
+                        if ($clientVer -match $Matches[1]) { Ok "版本一致: $sv" }
+                        else { Warn2 "版本不一致！设备 $sv / 本机 $clientVer —— 差一位就连不上" }
+                    } else { Warn2 "读不出设备端版本: $sv（可能装错了架构）" }
+                    Say "下一步：adb -s $dev forward tcp:$($script:FridaLayout.Port) tcp:$($script:FridaLayout.Port)"
+                    Say "然后：frida-ps -H 127.0.0.1:$($script:FridaLayout.Port)   ← 注意 -H 不是 -U"
+                }
+                else {
+                    Warn2 '没看到 frida-server 进程。先 adb -s <serial> root 再重试。'
+                    Say '  设备端日志：/data/local/tmp/frida.log'
+                }
             }
             'check' {
                 $dev = Resolve-Target

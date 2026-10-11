@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "id": "android-native-abi-decides-hookability",
+  "status": "promoted",
+  "title": "APK 的 native 架构决定它在 x86 模拟器上能否被动态调试",
+  "invariant": "在 x86/x86_64 模拟器（雷电、MuMu 等）上，只带 arm64-v8a / armeabi-v7a 的 APK 必须靠 libhoudini 做 ARM→x86 翻译；frida 注入会触发翻译层崩溃（SIGSEGV，backtrace 落在 /system/vendor/lib64/libhoudini.so），进程在 2 秒内死掉。带 x86_64 或 x86 原生库的 APK 则稳定可 hook。所以「装之前先看 native-code」是决定要不要用这台模拟器做动态调试的**前置判据**，而不是遇到崩溃后再排查的线索。",
+  "scope": {
+    "family": "android-emulator-abi",
+    "boundary": "runtime",
+    "appliesWhen": [
+      "宿主是 x86/x86_64 模拟器（雷电 / MuMu / 官方 AVD x86 镜像）",
+      "要对 APK 做 frida 注入或 native 层调试",
+      "目标 APK 含 native 库（aapt2 的 native-code 非空）"
+    ],
+    "stopsWhen": [
+      "APK 是纯 Java/ Kotlin（没有 native-code 行），不受影响",
+      "用的是 ARM 架构模拟器（如雷电的 ARM 实例），原生可跑",
+      "只做静态分析（jadx / apktool），不需要设备"
+    ]
+  },
+  "reproductions": [
+    {
+      "jobFingerprint": "dsh-remote-arm64-on-x86-emu-2026-10-11",
+      "observedAt": "2026-10-11",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "dsh-remote-android-v0.4.17.apk：native-code 只有 arm64-v8a/armeabi-v7a。frida spawn 注入后进程 2 秒内 SIGSEGV，backtrace 全在 libhoudini.so。"
+    },
+    {
+      "jobFingerprint": "autotool-x86-on-x86-emu-2026-10-11",
+      "observedAt": "2026-10-11",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "com.autotool.app（release.apk）：native-code 含 x86_64。同一台模拟器、同一套 frida 版本，spawn 注入后进程稳定存活并成功 hook 到 DES/3DES-CBC 加密调用。"
+    }
+  ],
+  "fixture": {
+    "path": "skillpack/skills/apk-reverse/references/emulator-lab.md",
+    "sha256": "606e35f0641c5004cc30a0bc560bc476010b396e2ef3e6d9621a626124bfcbdd",
+    "generator": null,
+    "secretFree": true,
+    "note": "底册里记了完整对照表与判据命令。"
+  },
+  "oracles": {
+    "positive": "aapt2 dump badging 输出含 'native-code: ... x86_64'，且 frida spawn 注入后进程存活、能 hook 到方法调用。",
+    "negative": "native-code 只有 arm64-v8a 时，同一命令注入后 2 秒内进程 SIGSEGV，backtrace 落在 libhoudini.so —— 失败原因是翻译层而非脚本。"
+  },
+  "firstDivergence": {
+    "stage": "frida spawn 注入后的第 2 秒",
+    "path": "/system/vendor/lib64/libhoudini.so",
+    "kind": "state"
+  },
+  "decision": {
+    "preferredRoute": "apk-reverse/scripts/emulator-lab.ps1",
+    "action": "装包前先跑 aapt2 dump badging <apk> | Select-String native-code：含 x86/x86_64 才能在这台模拟器上做动态调试；只有 arm 的话，要么换 ARM 模拟器，要么只做静态分析。",
+    "fallback": "必须调试 ARM-only 的包时：① 用雷电的 ARM 版本实例；② 用真机（ARM 原生，无翻译层）；③ 只做静态（jadx/apktool 不需要设备）。"
+  },
+  "validation": {
+    "lastVerifiedAt": "2026-10-11",
+    "command": "python skillpack/skills/scripts/experience-card.py validate"
+  },
+  "links": {
+    "skill": "apk-reverse",
+    "script": "apk-reverse/scripts/emulator-lab.ps1",
+    "journal": "field-journal/2026-10-11_android-emulator-lab-and-contract-tests.md",
+    "derivation": "web-protocol-reverse/references/contract/experience-card-schema.md"
+  },
+  "symptoms": [
+    "frida 注入后进程立刻崩溃",
+    "SIGSEGV 在 libhoudini",
+    "spawn 后 2 秒进程消失",
+    "arm 包在 x86 模拟器上跑不起来",
+    "native 库架构不匹配"
+  ]
+}
