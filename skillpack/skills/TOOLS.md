@@ -303,6 +303,27 @@ D:\Tools\android-sdk\platform-tools\adb.exe devices -l   # 设备应稳定出现
 
 > `frida` 挂的是**运行中的进程**：先 `run` 再 `frida`，否则脚本会直接告诉你「进程不在」。
 
+### 4.5 工具箱自带的两道回归测试（2026-10-11 加）
+
+`apk-debug.ps1` 改过两处**不影响功能、但会静默改变行为**的地方，
+所以各配了一道必须真的跑才有意义的测试：
+
+```powershell
+# 1. Adb 退出码契约：install 的成败判据
+.\skillpack\skills\apk-reverse\scripts\test-adb-exit-contract.ps1
+
+# 2. 子进程捕获死锁：为什么这些脚本不能拿 capture_output=True 跑
+python .\skillpack\skills\scripts\test-subprocess-capture-deadlock.py
+```
+
+| 测什么 | 不测会怎样 |
+|---|---|
+| 退出码 0/1/3/255 是否如实分支 | `Adb` 曾把退出码和 stdout 混在同一返回值里，`$rc -ne 0` 恒为真 → **install 永远报「安装失败」** |
+| 管道捕获会不会挂 | 拿 `capture_output=True` 跑脚本永远等不到 EOF（adb daemon 持有管道写端），表现为「CPU=0、3 线程、无子进程」的假死 |
+
+第二道门禁的第一用例是**控制组**：它真的去跑一次管道捕获并确认它会挂。
+哪天它不挂了，说明根因不是管道，**这条门禁的前提就变了，必须重写而不是继续 PASS**。
+
 ---
 
 ## 5. 网络 · 协议 · 抓包
@@ -371,6 +392,30 @@ D:\Tools\android-sdk\platform-tools\adb.exe devices -l   # 设备应稳定出现
 > **注册 ≠ 已监听。** HTTP 型 MCP 全是按需启动，服务未起只表现为该 server `failed`。
 > **端口必须实测确认，不得猜。** 尤其 **9095 是 x32 的服务口不是控制口**，别向它发 STOP。
 > **启停由 agent 自己完成**，不要要求用户手改 `mcp.json`。
+
+### 8.1 双模切换：日常轻量 vs 全量专精（2026-10-11 实测）
+
+全量挂载 5 个 MCP 服务时，每次请求都要带 ~28,000~32,000 Tokens 的工具
+Schema。装不装得下工具是小事，**首字延迟和工具幻觉是实打实的成本**。
+用 `switch-mcp.ps1` 在两种配置之间一键切：
+
+```powershell
+.\skillpack\skills\scripts\switch-mcp.ps1 daily   # 日常：只留 pyghidra（20 工具）
+.\skillpack\skills\scripts\switch-mcp.ps1 full    # 攻坚：全 5 个（140+ 工具）
+.\skillpack\skills\scripts\switch-mcp.ps1 show    # 看当前是哪个
+```
+
+| 模式 | 活跃服务 | 工具数 | 每轮注入 | 适用 |
+|---|---|---|---|---|
+| `daily` | pyghidra-mcp | 20 | ~4K | 日常开发、文档、APK 静态拆包 |
+| `full` | 全部 5 个 | 140+ | ~30K | PE 深度逆向、动态调试 |
+
+切换后**要重开 agent 会话**才生效。原始全量配置永久留存在
+`~/.omp/agent/mcp.all.json`，`daily` 随时能退回，不会丢东西。
+
+> **按需启停与双模切换是两件事。** §8 讲的是「MCP 服务进程要不要起」，
+> 本节讲的是「这次会话要不要挂它们的工具 Schema」。
+> 前者是端口，后者是 Token —— 都省，但省的不是同一份开销。
 
 ---
 
