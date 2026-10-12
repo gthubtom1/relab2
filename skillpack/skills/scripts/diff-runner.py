@@ -351,7 +351,15 @@ def main(argv=None) -> int:
         draft_path.parent.mkdir(parents=True, exist_ok=True)
     else:
         if args.out_dir:
-            draft_dir = case_root / args.out_dir
+            # --out-dir 是 case 根下的目录级落点（如 diff-update）；
+            # 拼 `..` 逃出 case 根的写法直接拒绝，与 WorkRoot 语义一致。
+            candidate = (case_root / args.out_dir).resolve()
+            try:
+                candidate.relative_to(case_root)
+            except ValueError:
+                print("ERROR: --out-dir '%s' escapes the case root (%s)" % (args.out_dir, case_root), file=sys.stderr)
+                return 2
+            draft_dir = candidate
         elif update_config is not None:
             draft_dir = case_root / "diff-update"
         else:

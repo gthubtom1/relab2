@@ -636,14 +636,62 @@
 
 ---
 
-## 完成判定（四条,定稿口径）
+## 完成判定（六条，目标清单口径）
 
-1. 七个阶段验收判据全部达成、未达标项 §10 如实记录 —— **阶段 0..6 逐条落 §10,
-   无未达标项**（canonical-base-lock 的 NEEDS_REVIEW 为既有基线状态,已如实记录）
-2. `verify-evolution.py` 10/10 全绿、`verify-routing-coherence.ps1` 全绿 —— **见各阶段记录**
-3. 不传 `-Preset update` 时日常路径零变化（有 diff 证据）—— **阶段 2/4 记录:
-   case-init 双端三组零差异 + diff-runner 经典路径不变（含带 update.md 的 case）**
-4. 阶段 5 真更新 case 产出 freeze/ + update.md 全表 + diff-update/ + 更新后交付物 ——
-   **`work/rebuild-sha256sum`（v1.0→v1.1）实跑,strict PASS**
+1. 七个阶段（0–6）验收判据全部达成，未达标项 §10 如实记录 —— **阶段 0..6 逐条落 §10，
+   无未达标项**（canonical-base-lock 的 NEEDS_REVIEW 为既有基线状态，已如实记录）
+2. `verify-evolution.py` 10/10 全绿；`verify-routing-coherence.ps1` 全绿 —— **多次实测；
+   末次对提交后状态重跑，含 RULES 三条硬门断言 OK**
+3. 不传 `-Preset update` 时，case-init / diff-runner / review_case / 门禁行为与开工前一致
+   （有 diff 证据）—— **阶段 2：case-init 双端三组零差异（prev=HEAD 树 vs 现树，
+   归一化 created 时间戳后 diff -r 为空）；阶段 4：diff-runner 经典路径默认落 `diff/`、
+   经典表头，且在**带 update.md** 的 case 上同样不变；review_case 对不含 update.md 的
+   case（rebuild-sha256sum 三格式 + ctf-demo 两格式）输出与改前逐字一致**
+4. 含 update.md 的 case 能被严格审查通过；不含 update.md 的既有 case 输出逐字不变 ——
+   **`work/rebuild-sha256sum`：`--verify-hashes --strict` PASS 0/0；
+   `skillpack/examples/ctf-demo` markdown/json 与改前逐字一致（新鲜重跑）**
+5. 阶段 5 的真更新试跑产出 `freeze/` + `update.md` 全表 + `diff-update/` + 更新后交付物，
+   且三种变化都被正确判定 —— **`work/rebuild-sha256sum` v1.0→v1.1：freeze/v1.0/（三件）、
+   update.md 六段全表、diff-update/×5、build/newsha.py v1.1；function_delta 实测
+   F-003 行为变→retest、F-006 新增→new、F-005 已移除→redo，keep/retest/redo/new 四值齐全**
+6. 阶段 0 审计器真的在比字节 —— **`test-rebuild-audit-negctl.py` 16/16 全绿
+   （开工基线 5776988 为 13 条，**+3**，满足「比改前多 ≥1」）；其中
+   `bad-diff-bytes-mismatch` 用例 = 表格自称一致、记录里两段 stdout 真差一字节 → 被拦**
+   （F-009 伪造法的同形复现）
 
-四条同时满足 → 本项目**完成**。
+六条同时满足 → 本项目**完成**。
+
+### 阶段 6.5 · 收尾复核修正 · 2026-10-13 02:30
+- 背景: 完成提交后的独立复核（含外部评审与逐条重审）提出两处与定稿口径的偏差，
+  逐条取证后确认修正（**真相优先**，非粉饰）:
+- 修正 1: `web-protocol-reverse/SKILL.md:101` 的改写超出定稿改动表口径 ——
+  定稿原句到「case-init 一条命令补上，然后照常推进」为止；我原加的
+  「（打开浏览器……以补上的 scope 为准）」为原文没有的补充句，回退为定稿口径
+  （保留原句「不要为了满足 live-target 仪式而开浏览器」）。
+- 修正 2: `work/rebuild-sha256sum/GOAL.md` 目标锚未随更新阶段同步 ——
+  final_goal/functions 仍写 F-001..F-005（v1.0 口径）。同步为 v1.1 交付面
+  （F-003 新格式 / F-006 新增 / F-005 移入 out_of_update 说明），stage 与
+  last_commit 同步。否则下一轮更新会按错契约走。
+- 新鲜取证（对当前已提交状态逐条重跑）:
+  - `review_case.py --verify-hashes --strict`（带 update.md 的 case）→ **PASS, 0/0**
+  - `check-fences.py` rc=0 / `verify-doc-links.py` rc=0 / `verify-doc-facts.ps1` **0 failure(s)**
+  - 101 行四词 grep → **0 命中**
+  - **真实** case 旧 `diff/` 5 份 sha256 vs 阶段4 基线 → **零变化**（此条为对
+    「旧 diff 零改动」的独立复核，之前该结论曾仅在副本上验证过）
+  - function_delta 六行实测: F-001 keep、F-002 keep、F-003 retest、F-004 keep、
+    F-005 redo、F-006 new —— **四值齐全**、三变化判定与描述一致
+  - `test-rebuild-audit-negctl.py` → **16/16**（条数对比开工基线 5776988 的 13 条 → **+3**，
+    满足「比改前多 ≥1」）；`test-update-audit-negctl.py` → 13/13；
+    `test_review_case.py` → 28 tests OK
+  - `verify-evolution.py` → 10/10 ALL GREEN（bg_64）；`verify-routing-coherence.ps1` → 全绿
+- 修正 3: `diff-runner.py` 的 `--out-dir` 加**逃逸守卫** —— 目录级落点必须落在 case 根内
+  （`..` 拼出根外的写法 rc=2 拒绝，与 WorkRoot 语义一致）；`--out`（整路径覆盖，
+  F-009 复现法等登记通道）行为不动。实测: `--out-dir ../../evil` → rc=2 + 明确文案；
+  正常 `--out-dir diff-update` 照常落盘。
+- **操作事故与恢复（如实记录）**：复核「经典路径默认落点」时，我在**真实 case** 上跑了
+  `--function F-002`（默认落点）而非副本，覆盖了 `diff/F-002.md`（仅 `generated` 时间戳
+  与耗时秒数差异）。随即核对冻本 `freeze/v1.0/diff/F-002.md`（hash 与 stage-4 基线
+  692e786… 一致）→ 回拷恢复 → 全 5 份 `diff/` hash 与阶段4 基线逐一相同、strict 回 PASS 0/0。
+  教训：**验证默认落点必须用副本 case，真实 case 上只跑显式 `--out`/`--out-dir`**；
+  这次冻本机制恰好证明了它的兜底价值。
+- 该修正后再次全量：`verify-evolution.py`（bg_65，见下）；`check-fences`/`doc-links`/`doc-facts` 复跑绿
