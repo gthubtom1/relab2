@@ -115,3 +115,54 @@ RULES / MASTER-ROUTING / SKILL:
 
 - 纯 Markdown，**无数据库**  
 - 与工具定位正交：scope 管「能不能打」，`../TOOLS.md` + `Get-Command` 管「用什么打」
+
+---
+
+## 附录：复刻交付 case 怎么用（2026-10-12 增补）
+
+> 本附录只说明**复刻交付**路径的使用方式。日常单点分析 case 不涉及本附录，原正文行为不变。
+> 完整契约见 `rebuild-gates.md`（两道闸门）与 `../templates/rebuild.md`（对账表模板）。
+
+### 什么时候走这条路径
+
+任务的终点不是「分析报告」，而是「一个可运行、可对账、功能逐项达标的成品」时：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File skills\scripts\case-init.ps1 `
+  -Hint "<复刻目标一句话>" -CaseName "<case 名>" -Preset rebuild -Sample "<目标程序路径>"
+```
+
+```bash
+bash skills/scripts/case-init.sh \
+  --hint "<复刻目标一句话>" --case-name "<case 名>" \
+  --preset rebuild --sample "<目标程序路径>"
+```
+
+`-Preset rebuild` 建出的 case 除常规四件（scope/timeline/workitems/README）外，额外含：
+
+| 产物 | 用途 |
+|---|---|
+| `rebuild.md` | 对账表骨架（本 case 的交付契约，逐行回填） |
+| `baseline/` | 原程序行为基线：样本、快照、原始输出 |
+| `diff/` | 对照运行产物：同输入驱动原程序与新实现的记录 |
+
+长程 case 另按 `../templates/goal.md` 落一份 `GOAL.md` 目标锚（最终交付目标 / 功能清单 / 当前阶段），
+作为上下文压缩后的第一回读点。
+
+### 授权门不变
+
+`-Preset rebuild` 与 `offline-sample` 同档：本地样本、owner-operated、`network_profile.mode = offline`。
+`auth.status` / `in_scope` / `network_profile` / `ready_for_act` 四道硬门原样适用，`case-guard` 行为不变。
+`deliverables` 段在常规布尔之外多一行 `rebuild: true`，标记本 case 走对账表路径。
+
+### 推进方式
+
+1. scope 就绪后（`ready_for_act = true`），先按 `rebuild.md` 填 `target` 与 `functions` 表。
+2. 功能行的「已分析」有证据回填后，按 `rebuild-gates.md` 闸门 ① 进实现（`impl` 角色）。
+3. 实现落地后，用 `diff-runner.py`（或手工）在 `diff/` 出对照记录，`ver` 角色按闸门 ② 判完成。
+4. 状态阶梯与证据的对应关系、受限态处理方式，全部以 `rebuild-gates.md` 为准。
+
+### 日常路径不受影响
+
+不传 `-Preset rebuild` 时，`case-init` / `case-guard` / `master-route` 的行为与本附录加入前一致。
+
