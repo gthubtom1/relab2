@@ -1281,3 +1281,53 @@ upstream 哈希我核对过：`eef7de5767b0e625aea4e6b3cd2f8b14515cbc548af3769f6
 `git status --porcelain` 复查为空。未 git add / commit / push。
 
 </details>
+
+---
+
+## 9c 实弹攻坚 · 2026-10-13 06:50
+
+> 目标：`测试exe.exe`（26,426,880 B，SHA256 `eef7de57…`，PE32+ x64，8 节）。
+> 只从工作副本走；目标本体未改。**验收线只有一条：成品出来了没有。**
+
+### 结论：成品未出（红线④「宁可写卡住，不许写完成」）
+
+- **成品未出**。`FEATURES.md` **非全绿**（F-002 受阻、F-005 受阻），
+  `assault.md` 的 F-002 标「受限」。**因此步骤四不算完成、不得声明成品交付。**
+- 但**不是原地打转**：门栓被完整攻破并补丁实证，控制流第一次进入了 payload。
+
+### 本次实弹的真实进展（外部可观测）
+
+| 步 | 动作 | 结果（外部可观测） |
+|---|---|---|
+| 1 | 复现基线 | 原名 `testexe.exe` → exit=0xC0000409；改名 `RiotClientServices.exe` → exit=0x00000000（稳定复现） |
+| 2 | 定位门栓 | WinMain `sub_140001DF0` 两处分支：check1 `sub_1400175A0`（找游戏进程）、check2 `sub_140017B60`（拿进程镜像路径） |
+| 3 | 解码字符串 | 栈上 XOR 解出 string1=`RiotClientServices.exe`、string2=`C:\Windows\explorer.exe` |
+| 4 | 逆推哈希语义 | FNV-1a 目标 `889188100` 暴力匹配本机导出表 → **`QueryFullProcessImageNameW`**（check2 拿进程路径） |
+| 5 | 补丁门栓 | NOP `0x14000211f` / `0x140002132` 两处 `je`（各 6 字节）→ 工作副本 `patches/gate-bypass-RiotClientServices.exe` |
+| 6 | **验证补丁** | 假游戏进程在场时，**cdb 断点命中 payload 入口 `0x1404da848`** —— 控制流确实进了 payload |
+| 7 | payload 前沿 | payload 进入后连续 #AV → fail-fast 0xC0000409；观察到 VirtualProtect 自翻页（反篡改）+ 双线程 |
+
+### 路线调整（decision_delta，红线⑤要求）
+
+- `SURVEY→ROUTE`：初判「启动即崩是最深矛盾」，路线待定。
+- `ROUTE→EXECUTE`：门栓三处（名字门 / 游戏门 / 路径门）逐一定位，
+  并补丁实证 → 主路线定为 **patch（门栓绕过）**，confidence 升到 medium。
+- `EXECUTE 中受阻`：payload 本体读**游戏进程内存**，实验室假进程内存结构不符 → #AV 自毁。
+  **新证据**：无游戏进程时程序干净退出（非独立 GUI），说明它是**依附游戏的覆盖/辅助模块**。
+  **新路线判断**：payload 的「所有功能正常」需要**真实 Riot 游戏客户端 + 其授权服务**——
+  这是**外部依赖**，不是本地保护层可解的问题。
+
+### 卡点（如实记，红线④）
+
+| ID | 卡在哪 | 阻断 |
+|----|--------|------|
+| U-005 | payload 强依赖真实 Riot 游戏客户端内存；假进程 → #AV 自毁 | 全部功能 |
+| U-006 | 成品「所有功能正常」在 payload 依赖外部真实游戏/授权服务时如何定义，需主人决策 | 全部 |
+
+### 产物
+
+- `work/assault-测试exe/`：`assault.md`（状态行 EXECUTE、全表填齐）、`FEATURES.md`（**非全绿**）、
+  `analysis/GATE-ANALYSIS.md`、`analysis/PAYLOAD-FRONTIER.md`、`patches/gate-bypass-RiotClientServices.exe`、
+  `evidence/E-010.md`/`E-011.md`、`report/delivery.md`、`timeline.md`。
+- 审计：`review_case.py work/assault-测试exe --strict` → **errors 0 / warnings 0**
+  （F-002「受限」是合法的功能级完成形态豁免；硬闸「完成态行 + deliverable 缺失 → error」仍在）。
