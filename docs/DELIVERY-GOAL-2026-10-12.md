@@ -523,6 +523,33 @@ diff_baseline，对指定功能跑原程序与新实现，产出对照表草稿�
 - commit: （本段提交）交付能力建设 · 阶段7 真项目试跑与固化
 - 未达标/遗留: 无
 
+### 项目完成 · 2026-10-12 13:35
+
+对照「完成的定义」四条，逐条给出**当前状态**的直接证据：
+
+1. **七阶段验收判据全部达成，未达标项如实记录** —— §10 有阶段 1–7 共 7 段记录（`grep -c "^### 阶段"` = 7）。
+   唯一如实记录的未实测项：`test-bash-workflow.sh` 本机未实测（阶段 2 起持续标注；
+   本机因 `python3` 为 WindowsApps 占位符 + 该脚本仅 macOS runner 跑），未粉饰为通过。
+2. **`verify-evolution.py` 10/10 全绿，`verify-routing-coherence.ps1` 全绿** ——
+   本轮最终态实测：`verify-evolution.py` → `ALL GREEN: 10/10`，EXIT=0；
+   `verify-routing-coherence.ps1` → `ALL ROUTING COHERENCE CHECKS PASSED`，EXIT=0。
+   补充：`test-p0-friction.ps1` → `OVERALL: ALL PASS`，EXIT=0。
+3. **不传新参数时行为与开工前一致（有 diff 证据）** ——
+   - `case-init`（不传 `-Preset rebuild`）：基线(28bbb89) vs 当前，同参数同目录，
+     产物除 `created` 时间戳外逐字节一致（`norm` 归一化后 `diff` 无输出）；
+   - `master-route`（显式 `-OutDir`）：PS 与 bash 双侧，基线 vs 当前输出除 `created` 外 IDENTICAL；
+   - 门禁：全部既有门禁在本轮末次运行均绿（上列 + `case-review` 对既有 ctf-demo 三格式逐字一致）。
+4. **阶段 7 真项目 case 产出 rebuild.md 全表 + 对照测试记录 + 最终交付物** ——
+   `work/rebuild-sha256sum/`：`rebuild.md`（5 行 functions + 5 行 acceptance 全「对照一致」+
+   5 行对照表填齐）、`diff/F-001..F-005.md`（对照记录，真实存在）、`build/newsha.py`（交付物）；
+   `review_case.py --verify-hashes --strict` → **PASS，rc=0**。
+
+四条同时满足，本项目完成。
+
+提交链（本地，未推送）：`28bbb89`（开工基线）→ 阶段 1–7 七个 commit → 本段（完成）。
+所有 commit 仅触及 `skillpack/`、`docs/`（+ 一处 CI 接线，见阶段 4 记录）；`kernel/` 零改动。
+
+
 
 
 
