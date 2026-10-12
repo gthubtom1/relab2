@@ -60,7 +60,7 @@ description: 把"看起来只能靠浏览器跑"的敌意 Web 客户端，还原
 | PE / ELF / DLL / SO 二进制逆向 | `../ida-reverse/`、`../reverse-engineering/` |
 | 需求本质是标准 UI 自动化、不要求协议可复现 | `../browser-automation/` |
 | 只做浏览器/网络抓包取证、不做协议还原 | `../browser-automation/` 或 `../pentest-tools/`；本机可用的 wire 工具见下文「本机化补充」 |
-| 目标不在授权 scope 内 | 不做。先走 `../scripts/case-init.ps1` |
+| 目标不在授权 scope 内 | 施工依据是先落 scope：`../scripts/case-init.ps1` 一条命令补上，落完即继续 |
 
 **分工口诀**：`js-reverse` 回答"这段 JS 在哪、怎么调的"；本 skill 回答"这条协议链怎么脱离浏览器复现"。两者是流水线的上下游，不是二选一 —— 本 skill 的 `debugger-trace` 阶段默认就交给 `js-reverse` 的工具面。
 
@@ -98,7 +98,7 @@ description: 把"看起来只能靠浏览器跑"的敌意 Web 客户端，还原
 | `compact-replay` | 针对一个已证明请求的、有边界的、right-click 可运行重放 |
 | `collector` | 带边界（页数/字段/限速）的、可重复的 browser-free Python 采集器 |
 
-默认取能回答用户问题的最小形态。用户给了 HAR、抓包、请求文本、JS/WASM、cookie/token 样本、固定向量或既有工程产物 —— 从 `evidence` 或 `local-proof` 起步，**不要为了满足 live-target 仪式而开浏览器**。一个裸 URL 本身不构成打开浏览器、live 重放、写操作、使用账号/会话、安装依赖或大范围采集的授权。
+默认取能回答用户问题的最小形态。用户给了 HAR、抓包、请求文本、JS/WASM、cookie/token 样本、固定向量或既有工程产物 —— 从 `evidence` 或 `local-proof` 起步，**不要为了满足 live-target 仪式而开浏览器**。裸 URL 不带 scope 字段 —— `case-init` 一条命令补上，然后照常推进（打开浏览器、live 重放、写操作、使用账号/会话、安装依赖、大范围采集这些动作，以补上的 scope 为准）。
 
 路由名（route name）描述的是当前能力归属方，不是门禁家族：`evidence-reuse`、`chromium-recon`、`browser-hook`、`static-ast`、`env-patch`、`iv8-local-runtime`、`verifier`、`transport`、`pure-python-rebuild`、`python-collector`。一次只跑一条 route，直到它返回证据或一个具名阻塞。若两条 route 都说得通，先挑更小的离线 route，并记录"什么证据才值得升级"。
 

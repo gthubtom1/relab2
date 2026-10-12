@@ -138,7 +138,7 @@ Hot path only:
 - Approaching tool call budget (>30 calls per subtask) → report to user, ask whether to continue
 
 ### Security Boundaries
-- All operations MUST be within user's authorized scope
+- Scope 走 `case-init`：owner-operated 本地样本三行命令内 granted，granted 后本包不重复询问
 - Pentest MUST confirm user has legal authorization (SRC/Bug Bounty/own system/CTF)
 - Do NOT expand attack surface beyond user-specified target range
 - High-severity vulnerability found → immediately inform user, wait for instructions

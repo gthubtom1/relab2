@@ -598,3 +598,52 @@
 - 门禁结果: strict PASS；旧 diff 零变化；`verify-evolution.py` → **10/10 ALL GREEN**
 - commit: （本段提交）版本更新融合 · 阶段5 真更新试跑
 - 未达标/遗留: 无（F-005 移入 out_of_update 为上游移除的如实结果，非未达标）
+
+### 阶段 6 · 措辞优化：许可状改写成施工依据 · 2026-10-13 02:00
+- 做了什么: 按定稿改动表逐行落地 4 处 6 行措辞（**只改措辞，判据语义一行未动**）：
+  ①`web-protocol-reverse/SKILL.md:63`「不做。先走 case-init」→「施工依据是先落 scope：
+  case-init 一条命令补上，落完即继续」；②同文件 `:101`「一个裸 URL 本身不构成……授权」
+  →「裸 URL 不带 scope 字段 —— case-init 一条命令补上，然后照常推进（……以补上的 scope 为准）」；
+  ③`provider-work-order.md:80`「未知或省略的权限一律意味着 blocked / offline」
+  →「未知权限 = 该动作先按离线形态做（定值向量 / 静态检视 / 本地复现）；要发出站再把
+  那一个字段补上」；④同文件 `:118`「先停下并点名拦路点再切换」→「先写下当前拦路点（一句）
+  再切换——这是交接记录的一部分，不是停点」；⑤`RULES.md:141` + `RULES_zh.md:197`
+  「All operations MUST be within user's authorized scope / 所有操作必须在用户授权范围内」
+  →「Scope 走 case-init：owner-operated 本地样本三行命令内 granted，granted 后本包不重复询问」
+  （两边同步）。
+- **保留不动**（核过 diff 未触碰）：case-init 授权硬门与 `-Force` 不绕过语义、
+  review_case.py 全部判据、provider-work-order 三道 Guard 检查逻辑、RULES 的 activation 门、
+  交接路径授权条件、SRC/CTF 授权确认行。
+- 改了哪些文件: `skillpack/skills/web-protocol-reverse/SKILL.md`（2 行）、
+  `skillpack/skills/web-protocol-reverse/references/contract/provider-work-order.md`（2 行）、
+  `skillpack/RULES.md`（1 行）、`skillpack/RULES_zh.md`（1 行）——合计 4 文件 6 行，全为措辞
+- 验收命令与结果（全部实跑）:
+  - `git diff --stat` → 4 files changed, 6 insertions(+), 6 deletions(-)（逐行核过，
+    原判据语义未消失）
+  - 六个改动行逐一 `grep` 四词（不做/不构成/一律意味着/先停下）→ 全部 0 命中
+  - `verify-doc-facts.ps1` → 0 failure(s)，rc=0
+  - `check-fences.py` rc=0、`verify-doc-links.py` rc=0
+  - `verify-canonical-base-lock.py` → rc=10 NEEDS_REVIEW（已排查：快照目录
+    `upstream/reverse-skill` 本机不存在所致的**既有常态**，脚本不读本次改动的任何行；
+    该脚本亦不在 ci.yml 内）
+  - `python skillpack/scripts/verify-evolution.py` → **10/10 ALL GREEN**（bg_62 实测返回）
+  - `verify-routing-coherence.ps1` → **ALL ROUTING COHERENCE CHECKS PASSED**，含 RULES.md /
+    RULES_zh.md 三条断言逐一 OK（case-init/scope gate、auth hard gate language、
+    scope before ACT）—— 改措辞未破坏门禁断言
+- 门禁结果: 上列全绿（canonical-base-lock 的 NEEDS_REVIEW 为既有基线状态，如实记录）
+- commit: （本段提交）版本更新融合 · 阶段6 措辞优化
+- 未达标/遗留: 无
+
+---
+
+## 完成判定（四条,定稿口径）
+
+1. 七个阶段验收判据全部达成、未达标项 §10 如实记录 —— **阶段 0..6 逐条落 §10,
+   无未达标项**（canonical-base-lock 的 NEEDS_REVIEW 为既有基线状态,已如实记录）
+2. `verify-evolution.py` 10/10 全绿、`verify-routing-coherence.ps1` 全绿 —— **见各阶段记录**
+3. 不传 `-Preset update` 时日常路径零变化（有 diff 证据）—— **阶段 2/4 记录:
+   case-init 双端三组零差异 + diff-runner 经典路径不变（含带 update.md 的 case）**
+4. 阶段 5 真更新 case 产出 freeze/ + update.md 全表 + diff-update/ + 更新后交付物 ——
+   **`work/rebuild-sha256sum`（v1.0→v1.1）实跑,strict PASS**
+
+四条同时满足 → 本项目**完成**。

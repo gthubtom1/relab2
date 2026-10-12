@@ -77,7 +77,7 @@
 }
 ```
 
-用**精确布尔值**，不要用含糊的词。**未知或省略的权限一律意味着该动作 blocked / offline。**
+用**精确布尔值**，不要用含糊的词。**未知权限 = 该动作先按离线形态做（定值向量 / 静态检视 / 本地复现）；要发出站再把那一个字段补上。**
 
 > 本机路线映射：`chromium-recon` / `browser-hook` 类路线在本机**没有** `chrome-devtools`、`js-reverse`、`camoufox-js-reverse` 专员可调用；`iv8-local-runtime` 路线本机无运行时。改走 `python-collector`（`python 3.12` + `curl_cffi`）、`transport`（`tshark 4.6.8` / `mitmdump 12.2.3`）或 `pure-python-rebuild`（`../deliver/pure-python-rebuild-playbook.md`）。
 
@@ -115,7 +115,7 @@
 - **一条路线一次只拥有一个拦路点。**
 - 路线可以返回证据、代码或拦路点；**它不重新定义最终目标**。
 - 不要因为当前路线令人沮丧就去翻兄弟路线的手册或宽泛 playbook。
-- 若某路线需要另一种能力，**先停下并点名拦路点**再切换；所有权变更时返回 `./specialist-handoff-contract.md` 的 request / result 字段。**只有在当前工单明确授权了那条确切交接路径时**才落盘。
+- 若某路线需要另一种能力，**先写下当前拦路点（一句）再切换**——这是交接记录的一部分，不是停点；所有权变更时返回 `./specialist-handoff-contract.md` 的 request / result 字段。**只有在当前工单明确授权了那条确切交接路径时**才落盘。
 - **提供方完成 ≠ 任务完成。** Spider King 只按记录下来的 `acceptanceTest` 与所声明结果形态对应的门禁来验收。
 
 ### 四、出站门禁（Egress Guard）
