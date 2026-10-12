@@ -385,4 +385,42 @@ vendor 两周即过期、pin 即锁死。**只学三条设计，不融代码**�
 - 未达标/遗留:
 ```
 
-（以下为记录区，暂空）
+（以下为记录区）
+
+### 阶段 1 · 入口卡 + 主流程改道 · 2026-10-13 02:50
+- 做了什么: ①新建 `references/assault-entry.md`（分流器，非步骤表）：Q0 任务归类
+  （A 日常开发→止步 / B 逆向→Q1-Q3 / C 有源码→code-audit）、Q1 目标类型表（8 类形态→首查手段）、
+  Q2 保护层次（L0–L4 分层 + 五层过层判据表 + 混合组合三例 + 「搬运工还是货物」铁律）、
+  Q3 成品三形态、Q4 L4 业务分流（8 条工序卡映射）。②`SKILL.md`：ACTION REQUIRED 在
+  「查经验卡」之后插入第 4 步「读 assault-entry 完成四问」（利用既有编号缺口 3→5，
+  **零重编号**）；`Problem-Solving Workflow` 标题行**原样保留**、其下新插入定位标注
+  （triage 内部动作，不再作为主路径）；Additional Resources 加 assault-entry 首行指针。
+  ③`signal-to-tool-decision.md` §7 修「指空」：`../../patterns*.md` →
+  `vmp-virtualization-analysis.md` + `vmp-devirtualization-toolchain.md`。
+- 改了哪些文件: 新增 `skillpack/skills/reverse-engineering/references/assault-entry.md`（7370B）；
+  改 `SKILL.md`（+9 行，**0 删除**——首版误删标题行，按红线 4 回退重写为零删除方案）；
+  改 `signal-to-tool-decision.md`（1 行替换，指向修复）
+- 验收命令与结果（全部实跑）:
+  - **四例走查**（入口卡内容与实查目标文件核对）:
+    1. VMP（diec 报 VMProtect + dispatch loop）→ Q1 表「自定义 VM」行落
+       `vmp-virtualization-analysis.md`（L1 壳层），全程不经 strings/floss/angr
+    2. Themida（致闪退）→ Q2 混合组合「Themida + 自检」行：先过 L3
+       （`anti-debug-bypass.md` + ScyllaHide 专项段）再 dump
+    3. 云端授权 → Q4 表「云端校验（断网即失败）」→ `license-keygen-06`；
+       Q4 下方「分类先行」引 license-keygen README 断网实验判定树
+    4. 加固 APK（apktool 解不开）→ Q2 组合「加固 APK」→ `apk-reverse/references/packer/` 链
+    （四例的目标文件 `vmp-virtualization-analysis.md` / `anti-debug-bypass.md` /
+    `license-keygen-06` / `apk-reverse/references/packer/` 均已实查存在）
+  - **Q0 分流验证**: Q0 表 A 类判据 = 「代码是我方写的，或任务是：写新功能/修 bug/重构/
+    部署/写文档/写脚本/加参数/做工具」→ 「给 Python 脚本加 --verbose 参数」命中 A → 
+    「本卡一行不必再读」；Q0=A 分支明写「不建 assault.md、不填 layers、不进任何工序」
+  - `git diff SKILL.md` deletions = **0**（grep `^-[^-]` 空）；8 步工作流 grep 计数 = **8**（全在）
+  - `check-fences.py` rc=0；`verify-doc-links.py` rc=0（active=0）
+  - `audit-doc-code.py` → **rc=0**（2570 可审计块、真错 0；仅 1 处「截断片段（不算错）」提示：
+    `api-security/references/payment/payment-race-lost-update.md:214`，与开工基线相同，
+    非本次改动引入）
+  - `test-routing.ps1 -Quick` → **65/65 ALL PASS**；`test-routing.sh` → **205/205 ALL PASS**
+    （python3 shim 指向真实 Python 实跑）
+- 门禁结果: 上列（audit-doc-code 结果见下条补记）
+- commit: （本段提交）攻坚交付闭环 · 阶段1 入口卡与改道
+- 未达标/遗留: 无

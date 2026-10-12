@@ -432,7 +432,9 @@ r2 -qc 'ii~wininet'  <file>     # WinINet
    B. 找 handler（要理解 VM 结构）
       定位 dispatch table → 逐个 handler 反编译 → 还原 opcode 语义
    C. 去虚拟化（要工具链）
-      参考 ../../patterns*.md 的 VMP 章节 / 专门 devirtualizer
+      先读 `vmp-virtualization-analysis.md`（VM entry 定位四步法 + dispatcher 三段式 +
+      四条外部可观测判据），再过 `vmp-devirtualization-toolchain.md`
+      （三级降级：NoVmp / angr DSE / trace 折叠 + 等价性验证脚本）
   ↓
 3. ScyllaHide 配置对齐
    D:\Tools\ScyllaHide\scylla_hide.ini 里按 [VMProtect x64] / [Themida x64] 段选，
