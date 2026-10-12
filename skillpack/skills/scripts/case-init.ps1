@@ -19,6 +19,9 @@ param(
     [string] $EvidenceOfAuth = '',
     [string] $TargetUrl = '',
     [string] $Sample = '',
+    [string] $OldUpstream = '',
+    [string] $NewUpstream = '',
+    [string] $OurOldBuild = '',
     [string] $Preset = '',
     [string[]] $InScopeAssets = @(),
     [string] $NetworkProfile = '',
@@ -81,6 +84,7 @@ if (-not [string]::IsNullOrWhiteSpace($Sample)) {
 
 # Cross-platform case presets. Keep semantics aligned with case-init.sh.
 $rebuildMode = $false
+$updateMode = $false
 $presetNormalized = $Preset.Trim().ToLowerInvariant()
 if ($presetNormalized -in @('offline-sample', 'own-sample', 'local-sample')) {
     $AuthGranted = $true
@@ -113,8 +117,20 @@ if ($presetNormalized -in @('offline-sample', 'own-sample', 'local-sample')) {
     if ([string]::IsNullOrWhiteSpace($EvidenceOfAuth)) {
         $EvidenceOfAuth = 'preset:rebuild (owner-operated local sample; rebuild delivery case)'
     }
+} elseif ($presetNormalized -eq 'update') {
+    # 复刻更新路径：在已存在的 rebuild case 上开更新阶段。授权档与 rebuild 同档
+    # （owner-operated 本地样本 + offline）。必须显式传 -Preset update 才出现。
+    # 无 rebuild.md 的目录明确报错（不许静默生成）；三份指纹 hash 全填才落 update.md。
+    $AuthGranted = $true
+    $AuthStatus = 'granted'
+    $AuthBasis = 'own_system'
+    $updateMode = $true
+    if ([string]::IsNullOrWhiteSpace($NetworkProfile)) { $NetworkProfile = 'offline' }
+    if ([string]::IsNullOrWhiteSpace($EvidenceOfAuth)) {
+        $EvidenceOfAuth = 'preset:update (owner-operated local sample; rebuild update case)'
+    }
 } elseif (-not [string]::IsNullOrWhiteSpace($Preset)) {
-    throw ("Invalid -Preset '{0}'. Allowed: offline-sample|ctf-public|own-system|rebuild" -f $Preset)
+    throw ("Invalid -Preset '{0}'. Allowed: offline-sample|ctf-public|own-system|rebuild|update" -f $Preset)
 }
 
 if (-not $CaseName) {
@@ -140,6 +156,48 @@ if (-not [string]::IsNullOrWhiteSpace($NetworkProfile) -and
 
 $workRoot = Join-Path $projectRoot 'work'
 $caseRoot = Join-Path $workRoot $CaseName
+
+# -Preset update：只在已存在的 rebuild case 上开更新阶段。case 根必须有 rebuild.md
+# （初逆的对账表），否则明确报错 —— 不许静默生成一个空 update case。
+# update 模式不重写 scope/timeline/workitems/README：那是既有 case 的状态，不是新 case。
+if ($updateMode) {
+    $rebuildContract = Join-Path $caseRoot 'rebuild.md'
+    if (-not (Test-Path -LiteralPath $rebuildContract -PathType Leaf)) {
+        throw ("-Preset update requires an existing rebuild case: {0} not found. Run initial rebuild first (case-init -Preset rebuild), then re-run with -CaseName <case> -Preset update." -f $rebuildContract)
+    }
+    # 版本指纹三份都要填，且各带 64-hex SHA256 —— 这是更新阶段的旧锚/新锚/冻锚。
+    foreach ($fingerprint in @(
+        @('OldUpstream', $OldUpstream),
+        @('NewUpstream', $NewUpstream),
+        @('OurOldBuild', $OurOldBuild)
+    )) {
+        $fpName = $fingerprint[0]
+        $fpVal = $fingerprint[1]
+        if ([string]::IsNullOrWhiteSpace($fpVal) -or $fpVal -notmatch '(?i)[0-9a-f]{64}') {
+            throw ("-Preset update requires all three version fingerprints (path | version | sha256:<64hex>): -{0} missing or hash-less (got '{1}')" -f $fpName, $fpVal)
+        }
+    }
+    $updateTemplate = Join-Path (Join-Path $skillsRoot 'templates') 'update.md'
+    if (-not (Test-Path -LiteralPath $updateTemplate -PathType Leaf)) {
+        throw ("update template missing: {0}" -f $updateTemplate)
+    }
+    [void](New-Item -ItemType Directory -Force -Path (Join-Path $caseRoot 'freeze'))
+    [void](New-Item -ItemType Directory -Force -Path (Join-Path $caseRoot 'diff-update'))
+    # 骨架 + 已校验的三份指纹直接落进 target 段；three_lines / function_delta 留给 impl 填。
+    # ReadAllText/WriteAllText + 正则替换：模板换行原样保留（不引入 CRLF 漂移）。
+    $tplText = [System.IO.File]::ReadAllText($updateTemplate, [System.Text.Encoding]::UTF8)
+    $tplText = $tplText -replace '(?m)^- case:.*$', ("- case: " + $CaseName)
+    $tplText = $tplText -replace '(?m)^- old_upstream:.*$', ("- old_upstream: " + $OldUpstream)
+    $tplText = $tplText -replace '(?m)^- new_upstream:.*$', ("- new_upstream: " + $NewUpstream)
+    $tplText = $tplText -replace '(?m)^- our_old_build:.*$', ("- our_old_build: " + $OurOldBuild)
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText((Join-Path $caseRoot 'update.md'), $tplText, $utf8NoBom)
+    Write-Host ("UPDATE -> {0}" -f $caseRoot) -ForegroundColor Green
+    Write-Host 'update.md written; freeze/ + diff-update/ ready; fingerprints validated'
+    Write-Host 'NEXT: freeze first — snapshot rebuild.md + diff/ + deliverable sha256 into freeze/<our_version>/; then fill three_lines + function_delta; gate detail: skills/ops/rebuild-gates.md [更新阶段]'
+    exit 0
+}
+
 $dirs = @('evidence', 'notes', 'report')
 if ($rebuildMode) { $dirs += @('baseline', 'diff') }
 New-Item -ItemType Directory -Force -Path $caseRoot | Out-Null

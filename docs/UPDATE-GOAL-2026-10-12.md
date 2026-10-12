@@ -480,3 +480,34 @@
 - 门禁结果: check-fences / verify-doc-links 绿；措辞纪律扫描 0 命中
 - commit: eed77b3 版本更新融合 · 阶段1 版本指纹与冻本
 - 未达标/遗留: 无
+
+### 阶段 2 · update.md 模板 + `-Preset update` 入口 · 2026-10-13 00:05
+- 做了什么: ①新建 `skills/templates/update.md`（定稿 §4.1 全字段：target 四指纹+goal /
+  three_lines / function_delta / patch_shift / verification / out_of_update）。
+  ②`case-init.ps1` + `case-init.sh` 各加 `update` 预设（白名单 → 五值；新增
+  `-OldUpstream/-NewUpstream/-OurOldBuild`）：case 根必须有 `rebuild.md`，否则明确报错并提示
+  先做初逆（exit 2 bash / throw PS）；三份指纹都须带 64-hex SHA256（缺/无 hash 即报错）；
+  通过后落 `update.md` 骨架（target 段直接写入已校验指纹，其余留给 impl 填）+ 建
+  `freeze/` 与 `diff-update/`；不重写既有 scope/timeline/workitems/README。
+  ③`MASTER-ROUTING.md` 补 rebuild/update 预设示例各一行（PS + bash 两节）。
+- 改了哪些文件: `skills/templates/update.md`（新建 3370B）、`skills/scripts/case-init.ps1`、
+  `skills/scripts/case-init.sh`、`skills/MASTER-ROUTING.md`（预设示例）
+- 验收命令与结果（全部实跑）:
+  - **零差异六组**（同路径同参数，改前脚本副本 vs 改后，归一化 created 时间戳后 `diff -r`）:
+    bash plain/offline-sample/rebuild + PS plain/offline-sample/rebuild 全部 ZERO-DIFF PASS
+  - `-Preset update` 无 rebuild.md → bash rc=2「requires an existing rebuild case」、
+    PS rc=1 同文案，且**无部分 case 落盘**
+  - 有 rebuild.md → 双端 rc=0，update.md + freeze/ + diff-update/ 生成，
+    三指纹落在 target 段，既有 scope.md（preset: rebuild 原文）未被触碰
+  - 指纹无 hash → bash rc=2、PS rc=1，报「hash-less」
+  - 错值预设 → bash rc=2 / PS rc=1，文案列全五值
+  - `test-routing.ps1 -Quick` → 65/65 ALL PASS；`test-routing.sh` → 205/205 ALL PASS
+    （注：本机 python3 仍为 WindowsApps 占位符，经 shim 指向真实 Python 实跑）
+  - `verify-routing-coherence.ps1` → ALL ROUTING COHERENCE CHECKS PASSED
+  - `verify-evolution.py` → 10/10 ALL GREEN；`check-fences` rc=0；`verify-doc-links` rc=0
+  - `test_review_case.py` → 17 tests OK；`test-rebuild-audit-negctl.py` → 16/16 controls honoured
+  - `verify-doc-facts.ps1` → 0 failure(s)
+- 门禁结果: 上列全绿；`test-bash-workflow.sh` 本机未实测（CI 内为 macOS runner）
+- commit: （本段提交）版本更新融合 · 阶段2 更新入口
+- 未达标/遗留: 无。注：零差异对照物 = `HEAD` 的 case-init 两脚本（`git show` 抽取核对哈希），
+  归一化只涉 `- created:` 一行与 timeline 首行时间戳；比对目录为 gitignored 临时目录。

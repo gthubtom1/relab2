@@ -28,6 +28,9 @@ powershell -File skills\scripts\case-init.ps1 -Hint "<用户任务>" -CaseName "
 powershell -File skills\scripts\case-init.ps1 -Hint "<任务>" -CaseName "my-case" -AuthGranted -TargetUrl "https://target/" -NetworkProfile authorized_target_only
 # 本地离线样本：
 powershell -File skills\scripts\case-init.ps1 -Hint "offline apk" -CaseName "my-sample" -Preset offline-sample -Sample ".\app.apk"
+# 复刻交付 / 更新（在既有 rebuild case 上）：-Preset rebuild 建表，-Preset update 跟新版
+powershell -File skills\scripts\case-init.ps1 -Hint "rebuild sample" -CaseName "my-sample" -Preset rebuild -Sample ".\app.exe"
+powershell -File skills\scripts\case-init.ps1 -Hint "update follow" -CaseName "my-sample" -Preset update -OldUpstream "old.exe | 1.0 | sha256:<64hex>" -NewUpstream "new.exe | 1.1 | sha256:<64hex>" -OurOldBuild "build/out.exe | sha256:<64hex>"
 # 冒烟：verify + 脚本解析 + 路由矩阵（含中文 Hint）
 powershell -File skills\scripts\smoke.ps1
 # ACT 前轻量 scope 门禁（未就绪 exit 2；-Force 为兼容参数，不能绕过硬门）
@@ -48,6 +51,9 @@ bash skills/scripts/case-init.sh --hint "<用户任务>" --case-name "my-case"
 bash skills/scripts/case-init.sh --hint "<用户任务>" --case-name "my-case" --project-root "/path/to/analysis-project"
 # 本地离线样本：
 bash skills/scripts/case-init.sh --hint "offline apk" --case-name "my-sample" --preset offline-sample --sample ./app.apk
+# 复刻交付 / 更新（在既有 rebuild case 上）：
+bash skills/scripts/case-init.sh --hint "rebuild sample" --case-name "my-sample" --preset rebuild --sample ./app.exe
+bash skills/scripts/case-init.sh --hint "update follow" --case-name "my-sample" --preset update --old-upstream "old.exe | 1.0 | sha256:<64hex>" --new-upstream "new.exe | 1.1 | sha256:<64hex>" --our-old-build "build/out.exe | sha256:<64hex>"
 # ACT 前轻量 scope 门禁（--force 为兼容参数，不能绕过硬门）：
 bash skills/scripts/case-guard.sh --case-root work/my-sample
 # 路由 parity：

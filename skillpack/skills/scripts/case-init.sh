@@ -18,6 +18,9 @@ EVIDENCE_OF_AUTH=""
 TARGET_URL=""
 NETWORK_PROFILE=""
 SAMPLE=""
+OLD_UPSTREAM=""
+NEW_UPSTREAM=""
+OUR_OLD_BUILD=""
 PRESET=""
 IN_SCOPE_ASSETS=()
 
@@ -34,6 +37,9 @@ while [[ $# -gt 0 ]]; do
     -TargetUrl|--target-url) TARGET_URL="${2:-}"; shift 2 ;;
     -NetworkProfile|--network-profile) NETWORK_PROFILE="${2:-}"; shift 2 ;;
     -Sample|--sample|--offline-sample) SAMPLE="${2:-}"; shift 2 ;;
+    -OldUpstream|--old-upstream) OLD_UPSTREAM="${2:-}"; shift 2 ;;
+    -NewUpstream|--new-upstream) NEW_UPSTREAM="${2:-}"; shift 2 ;;
+    -OurOldBuild|--our-old-build) OUR_OLD_BUILD="${2:-}"; shift 2 ;;
     -Preset|--preset) PRESET="${2:-}"; shift 2 ;;
     -InScopeAssets|--in-scope-asset) IN_SCOPE_ASSETS+=("${2:-}"); shift 2 ;;
     -h|--help) sed -n '2,8p' "$0"; exit 0 ;;
@@ -68,6 +74,7 @@ fi
 
 # Presets: reduce "AI refuses to work" friction for legitimate local/CTF work.
 REBUILD_MODE=0
+UPDATE_MODE=0
 case "$PRESET" in
   "" ) ;;
   offline-sample|own-sample|local-sample)
@@ -103,8 +110,18 @@ case "$PRESET" in
     EVIDENCE_OF_AUTH="${EVIDENCE_OF_AUTH:-preset:rebuild (owner-operated local sample; rebuild delivery case)}"
     if [[ -n "$SAMPLE" ]]; then IN_SCOPE_ASSETS+=("$SAMPLE"); fi
     ;;
+  update)
+    # 复刻更新路径：在已存在的 rebuild case 上开更新阶段。授权档与 rebuild 同档
+    # （owner-operated 本地样本 + offline）。必须显式传 --preset update 才出现。
+    AUTH_GRANTED=1
+    AUTH_STATUS="granted"
+    AUTH_BASIS="own_system"
+    UPDATE_MODE=1
+    NETWORK_PROFILE="${NETWORK_PROFILE:-offline}"
+    EVIDENCE_OF_AUTH="${EVIDENCE_OF_AUTH:-preset:update (owner-operated local sample; rebuild update case)}"
+    ;;
   *)
-    echo "ERROR: invalid --preset '$PRESET' (allowed: offline-sample|ctf-public|own-system|rebuild)" >&2
+    echo "ERROR: invalid --preset '$PRESET' (allowed: offline-sample|ctf-public|own-system|rebuild|update)" >&2
     exit 2
     ;;
 esac
@@ -137,6 +154,45 @@ if [[ -n "$NETWORK_PROFILE" ]]; then
 fi
 
 CASE_ROOT="$PROJECT_ROOT/work/$CASE_NAME"
+
+# -Preset update：只在已存在的 rebuild case 上开更新阶段。case 根必须有 rebuild.md
+# （初逆的对账表），否则明确报错 —— 不许静默生成。update 模式不重写
+# scope/timeline/workitems/README：那是既有 case 的状态，不是新 case。
+if [[ "$UPDATE_MODE" -eq 1 ]]; then
+  rebuild_contract="$CASE_ROOT/rebuild.md"
+  if [[ ! -f "$rebuild_contract" ]]; then
+    echo "ERROR: --preset update requires an existing rebuild case: $rebuild_contract not found. Run initial rebuild first (case-init --preset rebuild), then re-run with --case-name <case> --preset update." >&2
+    exit 2
+  fi
+  for fp_pair in "old-upstream:$OLD_UPSTREAM" "new-upstream:$NEW_UPSTREAM" "our-old-build:$OUR_OLD_BUILD"; do
+    fp_name="${fp_pair%%:*}"
+    fp_val="${fp_pair#*:}"
+    if [[ ! "$fp_val" =~ [0-9a-fA-F]{64} ]]; then
+      echo "ERROR: --preset update requires all three version fingerprints (path | version | sha256:<64hex>): --$fp_name missing or hash-less (got '$fp_val')" >&2
+      exit 2
+    fi
+  done
+  update_template="$SKILLS_ROOT/templates/update.md"
+  if [[ ! -f "$update_template" ]]; then
+    echo "ERROR: update template missing: $update_template" >&2
+    exit 2
+  fi
+  mkdir -p "$CASE_ROOT/freeze" "$CASE_ROOT/diff-update"
+  # 骨架 + 已校验的三份指纹直接落进 target 段。awk 走 ENVIRON（不做转义处理），
+  # 指纹里的 ' | ' 与路径字符原样落地。
+  UP_CASE="$CASE_NAME" UP_OLD="$OLD_UPSTREAM" UP_NEW="$NEW_UPSTREAM" UP_BUILD="$OUR_OLD_BUILD" \
+  awk 'BEGIN { c=ENVIRON["UP_CASE"]; o=ENVIRON["UP_OLD"]; n=ENVIRON["UP_NEW"]; b=ENVIRON["UP_BUILD"] }
+    /^- case:/ { print "- case: " c; next }
+    /^- old_upstream:/ { print "- old_upstream: " o; next }
+    /^- new_upstream:/ { print "- new_upstream: " n; next }
+    /^- our_old_build:/ { print "- our_old_build: " b; next }
+    { print }' "$update_template" > "$CASE_ROOT/update.md"
+  echo "UPDATE -> $CASE_ROOT"
+  echo "update.md written; freeze/ + diff-update/ ready; fingerprints validated"
+  echo "NEXT: freeze first — snapshot rebuild.md + diff/ + deliverable sha256 into freeze/<our_version>/; then fill three_lines + function_delta; gate detail: skills/ops/rebuild-gates.md [更新阶段]"
+  exit 0
+fi
+
 mkdir -p "$CASE_ROOT/evidence" "$CASE_ROOT/notes" "$CASE_ROOT/report"
 if [[ "$REBUILD_MODE" -eq 1 ]]; then mkdir -p "$CASE_ROOT/baseline" "$CASE_ROOT/diff"; fi
 
