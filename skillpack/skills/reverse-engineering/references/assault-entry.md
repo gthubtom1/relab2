@@ -59,9 +59,23 @@
 | **B. 逆向 / 破解 / 分析** | 目标是**不是我方写的**程序：PE/ELF/APK/IPA/.NET/固件/JS/Web 客户端；任务含：分析、破解、脱壳、绕过、提取、复刻、patch | 进 Q1–Q3 |
 | **C. 已拿到源码** | 源码在手，任务是读懂 / 改它 / 复刻它 | 走 `code-audit` / 复刻路径（`docs/DELIVERY-GOAL-2026-10-12.md`） |
 
+**主人是零基础，他不会说术语——「说一句人话」也必须能命中。** 人话对照表：
+
+| 主人可能说的（人话） | 判去哪 | 谁的地盘 |
+|---|---|---|
+| 「帮我做个 XX 软件 / 小工具 / 网站」 | 有窗口 → `desktop-product`；网站/后端 → `web-service`；命令行 → `cli-tool` | kernel（只读引用） |
+| 「这个项目别人写的，我接手继续改」 | `source-takeover` | kernel（只读引用） |
+| 「这个 exe 没源码，我要二开 / 改成自己的卖」 | `exe-rebuild` | kernel（只读引用） |
+| 「帮我采集 / 自动化 / 抓协议 / 研究 App 业务流程」 | `protocol-automation` | kernel（只读引用） |
+| 「这个程序你帮我分析 / 破解 / 脱壳 / 复刻」 | **本卡**：Q1–Q3 → 四状态机 | skillpack（本项目） |
+| 「给脚本加个参数」「修个 bug」（一句话小修） | 既有路由与技能，**零额外工序** | 原样，不建案、不进本卡 |
+
+（前四行是 kernel 六条业务线的主场，入口：`kernel/04-console/cards/hub/04-全能工程中枢.md`
+的选线表 + `kernel/02-hubcore/workflows/<线名>.md` 的具体工作流
+（`desktop-product` / `web-service` / `cli-tool` / `source-takeover` / `exe-rebuild` /
+`protocol-automation`）。**本卡只指路，不重写、不替代它们。**）
+
 **Q0=A 时到此结束。** 不建 assault.md、不填 layers、不进任何工序。
-（kernel `04-全能工程中枢` 已管六条线：`desktop-product` / `web-service` / `cli-tool` /
-`source-takeover` / `exe-rebuild` / `protocol-automation`；本卡不重写、不替代它们。）
 
 **Q0=B 时的第一件事**：把「任务」翻译成「目标 + 期望成品」，然后进 Q1。
 
