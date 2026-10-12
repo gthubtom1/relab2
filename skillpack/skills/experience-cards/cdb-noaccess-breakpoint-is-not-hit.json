@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "id": "cdb-noaccess-breakpoint-is-not-hit",
+  "status": "promoted",
+  "title": "cdb 在自翻页(NOACCESS)页内设断点，移除失败的 0n998 噪声不是命中",
+  "invariant": "目标把某页翻成 PAGE_NOACCESS 后，cdb 尝试移除该页内的软件断点会报 'Win32 error 0n998'；这条报错文本会与真正的命中标记混在日志里。误把它当命中，就会在目标从未执行到该地址时宣称『断点命中』。判据必须是断点命令内原子打印的 @rip（.printf \"rip=%p\", @rip），或让目标跑完后的外部可观测后果（落盘/退出码），绝不能用『日志里出现我设的地址』。",
+  "scope": {
+    "family": "gate-design",
+    "boundary": "runtime",
+    "appliesWhen": [
+      "目标会运行时翻转自身页保护（PAGE_NOACCESS / 自解密壳 / 反篡改），你又想在它的代码页内设软件断点",
+      "cdb / windbg 日志里出现 'Unable to remove breakpoint' / 'Win32 error 0n998'"
+    ],
+    "stopsWhen": [
+      "判据用断点命令内原子打印的 @rip，或程序跑完后的外部可观测后果（退出码 / 落盘 / 网络）"
+    ]
+  },
+  "reproductions": [
+    {
+      "jobFingerprint": "assault-hostdependent-companion-2026-10-13",
+      "observedAt": "2026-10-13",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "在 .ace0 payload 入口(0x1404da848)页内设 bp，日志出现 'Unable to remove breakpoint 0 at ...a848, Win32 error 0n998'，我误报为『命中 payload 入口』。原子断点重验：GATE-FALLTHROUGH(0x2138) 命中，但 PAYLOAD-ENTRY 从未命中——payload 从未进入。"
+    },
+    {
+      "jobFingerprint": "cdb-av-storm-artifact-2026-10-13",
+      "observedAt": "2026-10-13",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "清 .ace0 断点后 (#AV 26 次，无 bp)，程序在 GATE-PASS 后仍在 .text 故障点崩溃——证明崩溃是程序自身行为，不是断点注入的假 AV。两个方向各自复现了『断点噪声 vs 真崩溃』的区分。"
+    }
+  ],
+  "fixture": {
+    "path": "skillpack/skills/experience-cards/gate-self-must-prove-failure.json",
+    "sha256": "bb1edbc25f62de017a9d47467d4c7ccf290880da8a402f4944660004360c85db",
+    "generator": null,
+    "secretFree": true,
+    "note": "同族卡：判据不得依赖自定义日志标记。本卡是其 cdb 特化子例。"
+  },
+  "oracles": {
+    "positive": "在目标自翻页页内下 bp 并声明『命中』——用原子 @rip 复核，会发现 @rip 从未等于该地址。",
+    "negative": "把断点下在系统 DLL（不在翻页范围）如 kernelbase!CreateWindowExW，用同一原子打印做对照，验证打印机制本身有效。"
+  },
+  "firstDivergence": {
+    "stage": "读取断点是否命中的那一步",
+    "path": "日志中的 0n998 / 我自设的 bp 地址文本",
+    "kind": "framing"
+  },
+  "decision": {
+    "preferredRoute": "skills/scripts/... 原子断点命令 + 外部可观测后果",
+    "action": "断点命令写成 bp <addr> \".printf \\\"rip=%p\\\\n\\\", @rip; g\"，用 @rip 原子值判定；再补一条程序跑完的退出码/落盘作为第二判据。",
+    "fallback": "无法原子打印时，改用『在系统 DLL 下同类断点做对照』证明打印机制有效，再相信目标区断点的结果。"
+  },
+  "validation": {
+    "lastVerifiedAt": "2026-10-13",
+    "command": "cdb -cf <cmds> patched.exe（原子 @rip 打印 + GATE/PAYLOAD 双断点对照）"
+  },
+  "links": {
+    "skill": "reverse-engineering/references/anti-debug-and-integrity.md",
+    "script": "",
+    "journal": "skillpack/skills/field-journal/2026-10-13_assault-hostdependent-companion.md",
+    "derivation": "web-protocol-reverse/references/contract/experience-card-schema.md"
+  },
+  "symptoms": [
+    "cdb 日志里出现 'Unable to remove breakpoint ... 0n998' 被我当成 payload 入口命中"
+  ]
+}

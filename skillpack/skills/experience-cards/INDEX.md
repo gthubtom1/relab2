@@ -12,12 +12,13 @@
 5. 没命中不是「没有经验」，而是可以沉淀：用 `new` 建一张候选，晋级门见
    `skills/web-protocol-reverse/references/contract/experience-card-schema.md`。
 
-## 卡片（共 9 张）
+## 卡片（共 10 张）
 
 | 症状 / 信号（我看到了什么） | 卡 | 规则 | 技能 |
 |---|---|---|---|
 | INSTALL_FAILED_OLDER_SDK | [android-minsdk-gate-is-not-bypassable](android-minsdk-gate-is-not-bypassable.json) | 当 adb install 报 INSTALL_FAILED_OLDER_SDK（APK minSdk=N，设备 sdk=M<N），这不是操作问题而是系统层拒绝：Android… | `apk-reverse` |
 | SIGSEGV 在 libhoudini | [android-native-abi-decides-hookability](android-native-abi-decides-hookability.json) | 在 x86/x86_64 模拟器（雷电、MuMu 等）上，只带 arm64-v8a / armeabi-v7a 的 APK 必须靠 libhoudini 做 ARM→x86 翻… | `apk-reverse` |
+| cdb 日志里出现 'Unable to remove breakpoint ... 0n998' 被我当成 payload 入口命中 | [cdb-noaccess-breakpoint-is-not-hit](cdb-noaccess-breakpoint-is-not-hit.json) | 目标把某页翻成 PAGE_NOACCESS 后，cdb 尝试移除该页内的软件断点会报 'Win32 error 0n998'；这条报错文本会与真正的命中标记混在日志里。误把它当… | `reverse-engineering/references/anti-debug-and-integrity.md` |
 | frida 注入后进程立刻崩溃 | [android-native-abi-decides-hookability](android-native-abi-decides-hookability.json) | 在 x86/x86_64 模拟器（雷电、MuMu 等）上，只带 arm64-v8a / armeabi-v7a 的 APK 必须靠 libhoudini 做 ARM→x86 翻… | `apk-reverse` |
 | invalid literal for int() with base 10: 'input=0' | [diff-runner-input-prefix-only-stripped-in-update-mode](diff-runner-input-prefix-only-stripped-in-update-mode.json) | 同一份 diff-runner.py 里，case 行 `- F-001 | input=0` 的 `input=` 前缀剥离曾只做在 update 解析分支（parse_up… | `reverse-engineering` |
 | 元素个数算成 1 | [ps51-convertfrom-json-top-level-array](ps51-convertfrom-json-top-level-array.json) | 在 Windows PowerShell 5.1 上，`$x | ConvertFrom-Json` 处理顶层 JSON 数组时返回的是一个「数组对象」而非枚举出的元素；`@(… | `apk-reverse` |
