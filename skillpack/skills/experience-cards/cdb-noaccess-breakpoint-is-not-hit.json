@@ -3,16 +3,17 @@
   "id": "cdb-noaccess-breakpoint-is-not-hit",
   "status": "promoted",
   "title": "cdb 在自翻页(NOACCESS)页内设断点，移除失败的 0n998 噪声不是命中",
-  "invariant": "目标把某页翻成 PAGE_NOACCESS 后，cdb 尝试移除该页内的软件断点会报 'Win32 error 0n998'；这条报错文本会与真正的命中标记混在日志里。误把它当命中，就会在目标从未执行到该地址时宣称『断点命中』。判据必须是断点命令内原子打印的 @rip（.printf \"rip=%p\", @rip），或让目标跑完后的外部可观测后果（落盘/退出码），绝不能用『日志里出现我设的地址』。",
+  "invariant": "目标把某页翻成 PAGE_NOACCESS 后，cdb 尝试移除该页内的软件断点会报 'Win32 error 0n998'——这是**移除失败**，不是命中；误当命中会在目标从未执行到该地址时宣称『断点命中』。反向的坑同样致命：**单轮**断点结果（尤其未命中）不能当否证——bp 可能恰好被页翻吞掉，据此把『已进入』过度修正成『未进入』。此外手算运行时 VA 必须复核 base+offset，差一位会得到完全相反的结论。正解：判据用断点命令内原子打印的 @rip，跑 ≥3 轮看稳定性，并优先在系统 DLL 或一次性入口断点上取原子值。",
   "scope": {
     "family": "gate-design",
     "boundary": "runtime",
     "appliesWhen": [
       "目标会运行时翻转自身页保护（PAGE_NOACCESS / 自解密壳 / 反篡改），你又想在它的代码页内设软件断点",
-      "cdb / windbg 日志里出现 'Unable to remove breakpoint' / 'Win32 error 0n998'"
+      "cdb / windbg 日志里出现 'Unable to remove breakpoint' / 'Win32 error 0n998'",
+      "用单轮断点结果去下肯定或否定结论"
     ],
     "stopsWhen": [
-      "判据用断点命令内原子打印的 @rip，或程序跑完后的外部可观测后果（退出码 / 落盘 / 网络）"
+      "判据用断点命令内原子打印的 @rip + ≥3 轮稳定性；且运行时 VA 已按 base+offset 复核"
     ]
   },
   "reproductions": [
@@ -29,6 +30,13 @@
       "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
       "independent": true,
       "note": "清 .ace0 断点后 (#AV 26 次，无 bp)，程序在 GATE-PASS 后仍在 .text 故障点崩溃——证明崩溃是程序自身行为，不是断点注入的假 AV。两个方向各自复现了『断点噪声 vs 真崩溃』的区分。"
+    },
+    {
+      "jobFingerprint": "assault-overcorrection-2026-10-13",
+      "observedAt": "2026-10-13",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "同一事实翻转两次：初版误用 0n998 当命中；改单轮对照后又因 bp 被页翻吞掉而过度修正成『payload 未进入』；再用稳健协议（sxd av + 仅入口断点 + 原子 @rip，5 轮）才定稿为『确被进入』。附：手算 VA 少进一位曾得出『全局全程 NULL』。"
     }
   ],
   "fixture": {
@@ -40,7 +48,7 @@
   },
   "oracles": {
     "positive": "在目标自翻页页内下 bp 并声明『命中』——用原子 @rip 复核，会发现 @rip 从未等于该地址。",
-    "negative": "把断点下在系统 DLL（不在翻页范围）如 kernelbase!CreateWindowExW，用同一原子打印做对照，验证打印机制本身有效。"
+    "negative": "把断点下在系统 DLL（不在翻页范围）做对照，验证打印机制有效；并对同一地址跑 ≥3 轮——只有轮轮一致才采信；单轮结果一律不采信。"
   },
   "firstDivergence": {
     "stage": "读取断点是否命中的那一步",
@@ -49,7 +57,7 @@
   },
   "decision": {
     "preferredRoute": "skills/scripts/... 原子断点命令 + 外部可观测后果",
-    "action": "断点命令写成 bp <addr> \".printf \\\"rip=%p\\\\n\\\", @rip; g\"，用 @rip 原子值判定；再补一条程序跑完的退出码/落盘作为第二判据。",
+    "action": "断点命令写成 bp <addr> \".printf \\\"rip=%p\\\\n\\\", @rip; g\"，用 @rip 原子值判定，跑 ≥3 轮看稳定性；运行时 VA = 模块 base + RVA，务必复核；再补程序跑完的退出码/落盘作为第二判据。",
     "fallback": "无法原子打印时，改用『在系统 DLL 下同类断点做对照』证明打印机制有效，再相信目标区断点的结果。"
   },
   "validation": {

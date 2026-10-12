@@ -1293,16 +1293,17 @@ upstream 哈希我核对过：`eef7de5767b0e625aea4e6b3cd2f8b14515cbc548af3769f6
 
 - **成品未出**。`FEATURES.md` **非全绿**（F-002 受阻、F-006 未定论），
   `assault.md` 的 F-002 标「受限」。**因此步骤四不算完成、不得声明成品交付。**
-- **门栓被绕过（GATE-PASS 命中），但 payload 从未进入**——初版「控制流进了 payload」是假结论，
-  已作废重验（见下「重验修正」）。
+- **门栓被绕过 + payload 入口确被进入**，但 payload 执行即连续 #AV → fail-fast。
 
-> ★ **2026-10-13 06:5x 重验修正**：初版写「两处 je NOP 后 cdb 断点命中 payload 入口 0x1404da848」，
-> **已撤销**。原子断点（`.printf @rip`）重验：GATE-FALLTHROUGH(0x2138) 命中，
-> **DISPATCH-CALL(0x2175) 与 PAYLOAD-ENTRY(0x4da848) 均未命中** → payload 从未进入。
-> 初版误把 cdb 的 `Unable to remove breakpoint ... 0n998`（页翻 NOACCESS 导致移除失败的**报错**）
-> 当成了命中——违反判据口径（不许用日志里自己写的标记当判据）。真死点：
-> 门栓通过后 0x2138 读 `qword_14008C538` 得 `????????`（无效），0x2169 `rax=1`（垃圾）→ 崩。
-> 真卡点 = **U-007**（该 vtable 全局的初始化条件）；旧结论「payload 需真实游戏内存」一并作废。
+> ★ **2026-10-13 07:xx 定稿（同一事实翻转两次后的纠正）**：
+> 1) 初版：「两处 je NOP 后 cdb 断点命中 payload 入口 0x1404da848」——证据含 `0n998` 噪声（页翻致断点移除失败）。
+> 2) 一修（06:5x）：「payload 从未进入」——**过度修正**（单轮 bp 恰好被页翻吞掉）。
+> 3) **定稿**：稳健协议（`sxd av` + 仅入口断点 + 原子 `@rip`，5 轮）确证
+>    **GATE(0x2138)/DISPATCH(0x2175)/PAYLOAD-ENTRY(0x4da848) 依次命中**，
+>    payload 入口 `@rip=0x7ff77321a848`（base+RVA 吻合），**5/5 稳定** → **payload 确被进入**。
+> 4) 附带纠正：`qword_14008C538` 运行时 VA = base+**0x8c538**；我一度探成 `…dc8538`（少进一位），
+>    误得「全程 NULL」——正确 VA 下该全局**非零**。U-007 作废。
+> **教训**：动态调试判据 = 原子 `@rip` + 多轮（≥3）稳定性；单轮命中/未命中都不能定论。
 
 ### 本次实弹的真实进展（外部可观测）
 
@@ -1313,29 +1314,29 @@ upstream 哈希我核对过：`eef7de5767b0e625aea4e6b3cd2f8b14515cbc548af3769f6
 | 3 | 解码字符串 | 栈上 XOR 解出 string1=`RiotClientServices.exe`、string2=`C:\Windows\explorer.exe` |
 | 4 | 逆推哈希语义 | FNV-1a 目标 `889188100` 暴力匹配本机导出表 → **`QueryFullProcessImageNameW`**（check2 拿进程路径） |
 | 5 | 补丁门栓 | NOP `0x14000211f` / `0x140002132` 两处 `je`（各 6 字节）→ 工作副本 `patches/gate-bypass-RiotClientServices.exe` |
-| 6 | 验证补丁 | 假游戏进程在场时，原子断点 **GATE-FALLTHROUGH(0x2138) 命中** —— 门栓分支确被绕过（不再走失败退出） |
-| 7 | 边界测量 | **PAYLOAD-ENTRY(0x4da848)、DISPATCH-CALL(0x2175) 均未命中** → **payload 从未进入**；门栓通过后读 `qword_14008C538` 得 `????????` → dispatch 前崩（.text 故障点，与 A-001 同族） |
-| 8 | 重验修正 | 初版「命中 payload 入口」作废——cdb `0n998` 是移除失败噪声，不是命中（记入经验卡 `cdb-noaccess-breakpoint-is-not-hit`） |
+| 6 | 验证补丁 | 假游戏进程在场时，**GATE(0x2138) → DISPATCH(0x2175) → PAYLOAD-ENTRY(0x4da848) 依次原子命中**；入口 `@rip=0x7ff77321a848`，**5/5 稳定** |
+| 7 | payload 前沿 | 进入后连续 #AV → fail-fast 0xC0000409（.text 故障点，与 A-001 同族）；观察 VirtualProtect 自翻页（反篡改） |
+| 8 | 两次纠正 | ① `0n998` 噪声当命中（初版错）；② 单轮否证→过度修正（一修错）——均已修正，见上 |
 
 ### 路线调整（decision_delta，红线⑤要求）
 
 - `SURVEY→ROUTE`：初判「启动即崩是最深矛盾」，路线待定。
-- `ROUTE→EXECUTE`：门栓三处（名字门 / 游戏门 / 路径门）逐一定位，
-  并补丁实证门栓被绕（GATE-PASS 命中）→ 主路线定为 **patch（门栓绕过）**。
-- `EXECUTE 中受阻→重验`：门栓通过后 payload 从未进入；dispatch 依赖的 vtable 全局
-  `qword_14008C538` 此时无效 → 崩。**新证据**：原子断点对照（GATE 命中 / PAYLOAD 未命中）。
+- `ROUTE→EXECUTE`：门栓三处（名字门 / 游戏门 / 路径门）逐一定位，并补丁实证门栓被绕
+  → 主路线定为 **patch（门栓绕过）**，并进一步进入 payload。
+- `EXECUTE 中受阻`：payload 进入后即崩（#AV → fail-fast）。
   **旧路线判断作废**：「payload 需真实游戏内存」不再采信（建立在被污染日志上）。
-  新卡点 = **U-007**（该全局何时/由谁初始化）。
+  真卡点 = **U-003**（payload 崩因 / 语义）。
 
 ### 卡点（如实记，红线④）
 
 | ID | 卡在哪 | 阻断 |
 |----|--------|------|
-| U-007 | `qword_14008C538`（payload dispatch 的 vtable 全局）门栓通过后仍无效 → payload 无法进入 | 全部功能 |
-| U-006 | 成品「所有功能正常」在 payload 依赖外部真实游戏/授权服务时如何定义，需主人决策 | 全部 |
+| U-003 | payload 进入后连续 #AV → fail-fast；其语义（疑 WinHttp* 远程通信）未解 | 全部功能 |
+| U-006 | 成品「所有功能正常」在 payload 可能依赖外部真实游戏/授权服务时如何定义，需主人决策 | 全部 |
 | U-008 | 程序是否 GUI 未定论（ProcMon 有 GUI 初始化串，干净 cdb 无 CreateWindowExW 命中） | F-006 |
 
-> **注**：初版卡点 U-005「payload 需真实游戏内存」**已作废**——它建立在被 `0n998` 污染的日志上。
+> **注**：U-005「payload 需真实游戏内存」与 U-007「全局 NULL」均**已作废**（分别建立在
+> 被污染日志 / VA 算错之上）。
 
 ### 产物
 

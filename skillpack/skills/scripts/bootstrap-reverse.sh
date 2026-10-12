@@ -31,6 +31,29 @@ CODEX_MCP_CONFIG_PATH="${CODEX_CONFIG_PATH:-$HOME/.codex/config.toml}"
 MCP_HOST_TARGET="none"
 MANIFEST_PATH="$SCRIPT_DIR/bootstrap-manifest.json"
 
+# ★ 解释器探测（2026-10-13 修 Windows App Execution Alias bug）：
+#   在 Windows 上 `python3` 会命中 `%LOCALAPPDATA%\Microsoft\WindowsApps\python3.exe`
+#   —— 一个 0 字节 stub，它不执行代码而是唤起微软商店（本机实测 rc=0 但零输出，
+#   别的会话会真的弹出商店下载页）。
+#   所以：候选顺序真 python 优先，且必须真跑一次验证，光 command -v 不够
+#   （stub 也在 PATH 上）。Linux/macOS 上 python3 就是正常的，此逻辑无副作用。
+PYTHON=""
+for candidate in python python3; do
+  if command -v "$candidate" >/dev/null 2>&1; then
+    if "$candidate" -c 'import sys; sys.stdout.write("ok")' 2>/dev/null | grep -q '^ok$'; then
+      PYTHON="$candidate"
+      break
+    fi
+  fi
+done
+if [[ -z "$PYTHON" ]]; then
+  echo "ERROR: no usable Python 3 interpreter found." >&2
+  echo "HINT: on Windows, 'python3' may be the 0-byte Microsoft Store stub at" >&2
+  echo "      %LOCALAPPDATA%\\Microsoft\\WindowsApps\\python3.exe, which opens the Store" >&2
+  echo "      instead of running code. Point PATH at a real interpreter." >&2
+  exit 2
+fi
+
 UNAME_S="$(uname -s 2>/dev/null || echo unknown)"
 case "$UNAME_S" in
   Darwin) PLATFORM="macos" ;;
@@ -71,7 +94,7 @@ has_cmd() { command -v "$1" >/dev/null 2>&1; }
 cmd_path() { command -v "$1" 2>/dev/null || true; }
 
 json_escape() {
-  python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'
+  $PYTHON -c 'import json,sys; print(json.dumps(sys.stdin.read()))'
 }
 
 ensure_dir() { mkdir -p "$1"; }
@@ -79,7 +102,7 @@ ensure_dir() { mkdir -p "$1"; }
 manifest_field() {
   local capability="$1"
   local field="$2"
-  python3 - "$MANIFEST_PATH" "$capability" "$field" <<'PY'
+  $PYTHON - "$MANIFEST_PATH" "$capability" "$field" <<'PY'
 import json, pathlib, sys
 manifest = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
 for capability in manifest.get('capabilities', []):
@@ -99,7 +122,7 @@ PY
 manifest_dependency() {
   local name="$1"
   local field="$2"
-  python3 - "$MANIFEST_PATH" "$name" "$field" <<'PY'
+  $PYTHON - "$MANIFEST_PATH" "$name" "$field" <<'PY'
 import json, pathlib, sys
 manifest = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
 value = manifest.get('bootstrapDependencies', {}).get(sys.argv[2], {}).get(sys.argv[3])
@@ -254,21 +277,27 @@ ensure_python_runtime() {
     current_version=$(pipx --version 2>/dev/null | head -n1 | tr -d '[:space:]')
   fi
   if [[ "$current_version" != "$pipx_version" ]]; then
-    python3 -m pip install --user --upgrade "$pipx_package" || return 1
+    $PYTHON -m pip install --user --upgrade "$pipx_package" || return 1
   fi
-  python3 -m pipx ensurepath >/dev/null 2>&1 || true
+  $PYTHON -m pipx ensurepath >/dev/null 2>&1 || true
   export PATH="$HOME/.local/bin:$PATH"
 }
 
 ensure_python_interpreter() {
-  if ! has_cmd python3; then
+  # 头部已做探测 + 真跑验证，正常路径这里 $PYTHON 非空。
+  # 防御：空串时 has_cmd "" 会退化成检查 PATH 上名为空的项，必须显式报错。
+  if [[ -z "$PYTHON" ]]; then
+    log_err "No usable Python 3 interpreter on PATH."
+    return 1
+  fi
+  if ! has_cmd "$PYTHON"; then
     case "$PLATFORM" in
       macos) install_brew python ;;
       linux) install_apt python3 ;;
       *) log_err "Install Python 3 manually. See $(platform_doc)"; return 1 ;;
     esac
   fi
-  has_cmd python3 || { log_err "Python 3 installation completed without a usable python3 command."; return 1; }
+  has_cmd "$PYTHON" || { log_err "Python 3 installation completed without a usable python3 command."; return 1; }
 }
 
 ensure_node_runtime() {
@@ -309,7 +338,7 @@ latest_github_asset_meta() {
   local repo="$1"
   local regex="$2"
   local tag="${3:-}"
-  python3 - "$repo" "$regex" "$tag" <<'PY'
+  $PYTHON - "$repo" "$regex" "$tag" <<'PY'
 import json, re, sys, urllib.request
 repo, pattern, tag = sys.argv[1:4]
 if tag:
@@ -489,7 +518,7 @@ install_git_commit() {
     cleanup_git_stage "$stage" "$parent"
     return 1
   fi
-  if ! python3 - "$stage" "$install_dir" <<'PY'
+  if ! $PYTHON - "$stage" "$install_dir" <<'PY'
 import os, sys
 os.rename(sys.argv[1], sys.argv[2])
 PY
@@ -503,7 +532,7 @@ write_claude_mcp_server() {
   local name="$1"
   local json_payload="$2"
   ensure_dir "$(dirname "$CLAUDE_MCP_CONFIG_PATH")"
-  python3 - "$CLAUDE_MCP_CONFIG_PATH" "$name" "$json_payload" <<'PY'
+  $PYTHON - "$CLAUDE_MCP_CONFIG_PATH" "$name" "$json_payload" <<'PY'
 import json, pathlib, sys
 path = pathlib.Path(sys.argv[1])
 name = sys.argv[2]
@@ -525,7 +554,7 @@ write_codex_mcp_server() {
   local name="$1"
   local json_payload="$2"
   ensure_dir "$(dirname "$CODEX_MCP_CONFIG_PATH")"
-  python3 - "$CODEX_MCP_CONFIG_PATH" "$name" "$json_payload" <<'PY'
+  $PYTHON - "$CODEX_MCP_CONFIG_PATH" "$name" "$json_payload" <<'PY'
 import json, pathlib, re, sys
 path = pathlib.Path(sys.argv[1])
 name = sys.argv[2]
@@ -599,7 +628,7 @@ write_mcp_server() {
 
 test_tcp_port() {
   local port="$1"
-  python3 - "$port" <<'PY' >/dev/null 2>&1
+  $PYTHON - "$port" <<'PY' >/dev/null 2>&1
 import socket, sys
 port=int(sys.argv[1])
 s=socket.socket()
@@ -611,7 +640,7 @@ PY
 test_mcp_http() {
   local port="$1"
   local timeout_seconds="${2:-3}"
-  python3 - "$port" "$timeout_seconds" <<'PY' >/dev/null 2>&1
+  $PYTHON - "$port" "$timeout_seconds" <<'PY' >/dev/null 2>&1
 import sys, json, urllib.request
 port = int(sys.argv[1])
 timeout = int(sys.argv[2])
@@ -729,7 +758,7 @@ ensure_jshookmcp() {
   ensure_node_runtime || return 1
   local package
   package=$(manifest_field jshookmcp npmPackage) || return 1
-  write_mcp_server "jshook" "$(python3 - "$package" <<'PY'
+  write_mcp_server "jshook" "$($PYTHON - "$package" <<'PY'
 import json, sys
 print(json.dumps({'command':'npx','args':['-y',sys.argv[1]],'env':{'JSHOOK_BASE_PROFILE':'search'}}))
 PY
@@ -740,7 +769,7 @@ ensure_reqable_mcp() {
   ensure_node_runtime || return 1
   local package
   package=$(manifest_field reqable-mcp npmPackage) || return 1
-  write_mcp_server "reqable-mcp" "$(python3 - "$package" <<'PY'
+  write_mcp_server "reqable-mcp" "$($PYTHON - "$package" <<'PY'
 import json, sys
 print(json.dumps({'command':'npx','args':['-y',sys.argv[1]]}))
 PY
@@ -751,7 +780,7 @@ PY
 ensure_xquik_mcp() {
   local url payload
   url=$(manifest_field xquik-mcp mcpUrl) || return 1
-  payload=$(python3 - "$url" <<'PY'
+  payload=$($PYTHON - "$url" <<'PY'
 import json, sys
 print(json.dumps({'url': sys.argv[1]}))
 PY
@@ -923,7 +952,7 @@ ensure_proxycat() {
 
 ensure_burpsuite_mcp() {
   local bridge_json
-  bridge_json=$(python3 - "$REPO_ROOT/burp-mcp-full/mcp-bridge.js" <<'PY'
+  bridge_json=$($PYTHON - "$REPO_ROOT/burp-mcp-full/mcp-bridge.js" <<'PY'
 import json, sys
 print(json.dumps({"command":"node","args":[sys.argv[1]]}))
 PY
@@ -940,7 +969,7 @@ ensure_nmap() {
 register_pentestswarm_mcp() {
   local executable="$1"
   local definition
-  definition=$(python3 - "$executable" <<'PY'
+  definition=$($PYTHON - "$executable" <<'PY'
 import json, sys
 print(json.dumps({"command": sys.argv[1], "args": ["mcp", "serve"]}))
 PY
@@ -976,7 +1005,7 @@ ensure_pentestswarm() {
     log_warn "pentestswarm installed but no executable was found in GOBIN/GOPATH; trying Docker fallback"
   fi
   if has_cmd docker; then
-    write_mcp_server "pentestswarm" "$(python3 - "$docker_image" <<'PY'
+    write_mcp_server "pentestswarm" "$($PYTHON - "$docker_image" <<'PY'
 import json, sys
 print(json.dumps({'command':'docker','args':['run','--rm','-i',sys.argv[1],'mcp','serve']}))
 PY
@@ -1005,10 +1034,10 @@ ensure_yara() {
 
 ensure_pwntools() {
   ensure_python_runtime || return 1
-  if python3 -c "import pwn" 2>/dev/null; then log_ok "pwntools ready"; return 0; fi
+  if $PYTHON -c "import pwn" 2>/dev/null; then log_ok "pwntools ready"; return 0; fi
   local package
   package=$(manifest_field pwntools pipPackage) || return 1
-  pipx install "$package" || python3 -m pip install --user "$package" || return 1
+  pipx install "$package" || $PYTHON -m pip install --user "$package" || return 1
 }
 
 status_json_line() {
@@ -1121,8 +1150,8 @@ elif $MANUAL_REQUIRED; then
   FINAL_EXIT_CODE=2
 fi
 
-if has_cmd python3; then
-  python3 - "$RESULTS_FILE" <<'PY'
+if has_cmd "$PYTHON"; then
+  $PYTHON - "$RESULTS_FILE" <<'PY'
 import json, sys
 items=[]
 with open(sys.argv[1], encoding='utf-8') as f:

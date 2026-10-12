@@ -29,14 +29,25 @@ PACKAGE_ROOT="$(cd "$SKILLS_ROOT/.." && pwd)"
 CONFIG_PATH="$SKILLS_ROOT/config/routing.json"
 
 PYTHON=""
-for candidate in python3 python; do
+# ★ 候选顺序：真 python 优先，python3 兜底。
+#   反过来先 python3 会在 Windows 上命中 App Execution Alias——
+#   `%LOCALAPPDATA%\Microsoft\WindowsApps\python3.exe` 是 0 字节 stub，
+#   它不执行代码，而是去唤起微软商店；本机 2026-10-13 实测
+#   `python3 -c ...` 返回 rc=0 但零输出，在别的会话里会真的弹出商店下载页。
+# ★ 光 `command -v` 不够：stub 也在 PATH 上。必须真的执行一次验证。
+for candidate in python python3; do
   if command -v "$candidate" >/dev/null 2>&1; then
-    PYTHON="$candidate"
-    break
+    if "$candidate" -c 'import sys; sys.stdout.write("ok")' 2>/dev/null | grep -q '^ok$'; then
+      PYTHON="$candidate"
+      break
+    fi
   fi
 done
 if [[ -z "$PYTHON" ]]; then
-  echo 'ERROR: Python 3 is required by the Bash structured router.' >&2
+  echo 'ERROR: no usable Python 3 interpreter found.' >&2
+  echo 'HINT: "python3" on this machine may be the 0-byte Microsoft Store stub' >&2
+  echo '      (%LOCALAPPDATA%\Microsoft\WindowsApps\python3.exe) which opens the' >&2
+  echo '      Store instead of running code. Use the real interpreter (e.g. D:\EXE\python\python.exe).' >&2
   exit 2
 fi
 if [[ ! -f "$CONFIG_PATH" ]]; then
