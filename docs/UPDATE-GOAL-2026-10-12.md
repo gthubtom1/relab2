@@ -462,3 +462,21 @@
 - commit: （本段提交）版本更新融合 · 阶段0 审计器验内容
 - 未达标/遗留: 无。注：`work/tmp-stage0/`（伪造证据 + 旧检查器副本）为 gitignored 临时取证目录，
   保留供复查，不随提交入库。
+
+### 阶段 1 · 版本指纹与冻本约定 · 2026-10-12 23:45
+- 做了什么: `rebuild-gates.md` 文末新增「更新阶段」一节（原文一行未改）：定义①版本指纹
+  （路径+版本号+SHA256，固定三份：旧版原程序/新版原程序/我们的旧复刻产物，hash 走既有口径）
+  ②冻本 `freeze/<我们的版本>/`（rebuild.md 快照 + diff/ 快照 + build.sha256，作下一次更新的
+  旧锚）③三句对照（我们改过哪些/作者新改了什么/哪些还能搬，缺一句=施工依据不全）；
+  另含逐行判定表（keep/retest/redo/new）、完成口径（仍走闸门②）、patch 行平移重算。
+  `templates/rebuild.md` 的 `## target` 段加 `upstream_version` / `our_version` 两个字段。
+- 改了哪些文件: `skillpack/skills/ops/rebuild-gates.md`（+65 行，纯新增）、
+  `skillpack/skills/templates/rebuild.md`（+2 行）
+- 验收命令与结果:
+  - `grep -n "不允许\|不得\|禁止" skills/ops/rebuild-gates.md` → 0 命中
+  - `git diff --stat` → rebuild-gates.md +65、rebuild.md +2，均纯新增（零删除行）
+  - `check-fences.py` rc=0、`verify-doc-links.py` rc=0
+  - 实测 case-init -Preset rebuild 骨架已带两新字段（临时目录冒烟，已清理）
+- 门禁结果: check-fences / verify-doc-links 绿；措辞纪律扫描 0 命中
+- commit: eed77b3 版本更新融合 · 阶段1 版本指纹与冻本
+- 未达标/遗留: 无

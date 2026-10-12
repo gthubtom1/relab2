@@ -12,6 +12,8 @@
 - deliverable: `<最终交付物：可执行文件 / 补丁 / 库 / 脚本 / 数据文件，含落点路径>`
 - form: `<exe | dll | apk | script | library | patch | other>`
 - notes: `<交付边界、运行环境、依赖前提>`
+- upstream_version: `<原程序版本标识：版本号 / 日期 / git hash；更新阶段读它做版本指纹>`
+- our_version: `<我们的复刻版本标识；冻本目录 freeze/<我们的版本>/ 用它命名>`
 
 ## functions
 
