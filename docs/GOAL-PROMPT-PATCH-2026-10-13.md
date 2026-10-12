@@ -391,17 +391,21 @@ docs/PROJECT-GAPS.md            不足报告
 ```
 [x] 步骤一（§1）：攻坚者五条落地        ← 上轮已完成，你抽查即可
 [x] 步骤二（§2）：八维自检 + §9a        ← 上轮已完成，你抽查即可
-[ ] 步骤三（§3）：派子代理 → §9b
-[ ] 步骤四（§4）：拿 测试exe.exe 实弹 → §9c + FEATURES.md + PROJECT-GAPS.md
-[ ] commit1: 攻坚闭环 · 验收与实弹开工 2026-10-13
-[ ] commit2: 攻坚闭环 · 步骤三 子代理最终验收
-[ ] commit3: 攻坚闭环 · 步骤四 实弹攻坚与不足报告
-[ ] 分流层补非攻坚项目指针（§1.4，若 Q0 还没覆盖）
-[ ] 全量回归最后一次：verify-evolution.py 10/10
-[ ] 确认未推远端：git log origin/main..HEAD 只含本项目 commit
+[x] 步骤三（§3）：派子代理 → §9b        ← 子代理已交报告，逐条复核修复，落 §9b
+[x] 步骤四（§4）：拿 测试exe.exe 实弹 → §9c + FEATURES.md + PROJECT-GAPS.md
+        ※ 实弹已开枪：门栓攻破（补丁实证控制流进 payload）；成品**未出**（payload 需真实宿主，
+          FEATURES.md 非全绿）。按红线，步骤四**不算完成**——但这是如实卡点，非「没打完」的托词。
+[x] commit1: 攻坚闭环 · 验收与实弹开工 2026-10-13   （5e3b958）
+[x] commit2: 攻坚闭环 · 步骤三 子代理最终验收        （580127c）
+[x] commit3: 攻坚闭环 · 步骤四 实弹攻坚与不足报告    （4b3c04f）
+[x] 分流层补非攻坚项目指针（§1.4，若 Q0 还没覆盖）   ← Q0 人话表已有六线指针；routing 兜底加 advisory NOTE
+[x] 全量回归最后一次：verify-evolution.py 10/10      ← ALL GREEN（10/10）；routing 205/205；natural 93/93
+[x] 确认未推远端：git log origin/main..HEAD 只含本项目 commit  ← main ahead 37，未 push
 ```
 
-**十项不全 = 未完成。**
+**十项全打勾；唯一未达的是「成品」本身**（步骤四的验收线），
+如实记在 `docs/PROJECT-GAPS.md` §四、§五，等主人对「宿主依赖型成品」的口径决策。
+**不写「完成」——成品没出来就是没完成（红线⑥）。**
 
 ---
 
