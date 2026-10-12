@@ -146,15 +146,19 @@ out_dir.mkdir(parents=True, exist_ok=True)
 
 # --- 默认目录治理：先把上一份 latest 归档，再覆盖写（归档不删除） ---
 # 归档到 <project>/work/route/<sha12>/route-scope.md。
-# ★ 指纹不含 `- created:` 行：该行每跑一变，含它就导致同内容永远去不了重
-#   （实测同 hint 跑 N 次会新增 N-1 个目录，治理目标落空）。
-#   归档内容本身仍是原始字节（含它自己的 created），只有指纹做归一化。
+# ★ 指纹口径（与 master-route.ps1 逐字对齐）：读字节 → 去 BOM → CRLF 归 LF →
+#   剔除 `- created:` 行（该行每跑一变，含它就永远去不了重）→ 用 LF 连接 → SHA-256 前 12 位。
+#   两侧同口径 → PS 写的 BOM+CRLF 文件与 bash 写的 LF 文件，逻辑内容相同即同指纹，
+#   混用不漏去重。归档内容本身仍是原始字节。
 if using_default_out_dir:
     latest_scope = out_dir / "route-scope.md"
     try:
         if latest_scope.is_file():
-            previous = latest_scope.read_bytes()
-            fingerprint = re.sub(rb"(?m)^- created: [^\r\n]*[\r\n]*", b"", previous)
+            raw = latest_scope.read_bytes()
+            text = raw.decode("utf-8-sig", errors="replace")
+            text = text.replace("\r\n", "\n").replace("\r", "\n")
+            kept = [line for line in text.split("\n") if not line.startswith("- created:")]
+            fingerprint = "\n".join(kept).encode("utf-8")
             digest12 = hashlib.sha256(fingerprint).hexdigest()[:12]
             archive_dir = out_dir.parent / digest12
             archive_scope = archive_dir / "route-scope.md"

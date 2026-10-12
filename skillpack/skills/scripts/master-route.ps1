@@ -227,8 +227,16 @@ if ($usingDefaultOutDir) {
         $latestScope = Join-Path $OutDir 'route-scope.md'
         if (Test-Path -LiteralPath $latestScope) {
             $routeRoot = Split-Path -Parent $OutDir
-            $previous = Get-Content -LiteralPath $latestScope -Raw -Encoding UTF8
-            $fingerprint = [regex]::Replace($previous, '(?m)^- created: .*\r?\n', '')
+            # ★ 两侧同口径（与 master-route.sh 逐字对齐）：以**字节**为起点自处理 BOM，
+            #   不用 Get-Content -Raw（实测它会剥 BOM 却在行首留残渣，导致与 bash 侧
+            #   指纹不同 —— 同一份内容两侧归档到两个目录）。顺序：读字节 → 去 BOM →
+            #   CRLF 归 LF → 剔除 `- created:` 行 → LF 连接 → SHA-256 前 12 位。
+            $rawBytes = [System.IO.File]::ReadAllBytes($latestScope)
+            $text = [System.Text.Encoding]::UTF8.GetString($rawBytes)
+            if ($text.Length -gt 0 -and [int]$text[0] -eq 0xFEFF) { $text = $text.Substring(1) }
+            $normalized = $text -replace "`r`n", "`n" -replace "`r", "`n"
+            $kept = @($normalized -split "`n" | Where-Object { -not $_.StartsWith('- created:') })
+            $fingerprint = $kept -join "`n"
             $sha = [System.Security.Cryptography.SHA256]::Create()
             try {
                 $hashBytes = $sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($fingerprint))
