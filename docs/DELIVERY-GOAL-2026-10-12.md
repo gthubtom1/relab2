@@ -334,3 +334,51 @@ diff_baseline，对指定功能跑原程序与新实现，产出对照表草稿�
 ```
 
 （以下为记录区，暂空）
+
+### 阶段 1 · 对账表模板与两道闸门规则 · 2026-10-12 12:25
+
+- 做了什么: 建对账表模板与两道闸门规则，并把复刻 case 用法以附录形式写进 scope-contract。
+- 改了哪些文件:
+  - 新增 `skillpack/skills/templates/rebuild.md`（target/functions/acceptance/diff_baseline/out_of_delivery 五字段；
+    四态阶梯 已分析→已实现→已测试→对照一致；五路线 patch/recover/rewrite/keep/blocked）
+  - 新增 `skillpack/skills/ops/rebuild-gates.md`（闸门①实现入口条件、闸门②完成判定条件、状态阶梯与证据、措辞纪律）
+  - 改 `skillpack/skills/ops/scope-contract.md`（文末追加附录 51 行）
+- 验收命令与结果:
+  - 字段核对：`grep -n "^## " .../rebuild.md` → 五个字段节全在（target/functions/acceptance/diff_baseline/out_of_delivery）
+  - 措辞扫描：`grep -n "不允许\|不得\|禁止\|未经验证\|停工\|才能\|先决条件" rebuild-gates.md` → 0 命中
+  - 必写措辞核对：`施工依据`/`唯一条件`/`受限不是拒绝` 三处均在
+  - diff 检查：`git diff --stat scope-contract.md` → `51 insertions(+)`，删除行数 grep 计数 = 0
+- 门禁结果: `check-fences.py` exit 0（628 个 md、0 未闭合）；`verify-doc-links.py` exit 0；
+  `audit-doc-code.py --root skillpack/skills` exit 0（2570 可审计块、真错 0）；
+  `verify-evolution.py` 10/10 全绿（EXIT=0，official 65/65 + natural 93/86）
+- commit: c13226b 交付能力建设 · 阶段1 对账表模板与两道闸门规则
+- 未达标/遗留: 无
+
+### 阶段 2 · rebuild 预设（两个脚本同步） · 2026-10-12 12:30
+
+- 做了什么: `case-init.ps1` / `case-init.sh` 同步加 `rebuild` 预设 —— 与 offline-sample 同档授权
+  （owner-operated 本地样本 + offline），额外创建 `rebuild.md` 骨架（从 `skills/templates/rebuild.md`
+  拷贝）+ `baseline/` + `diff/` 目录，scope.md 的 deliverables 段加 `- rebuild: true`。
+- 改了哪些文件:
+  - `skillpack/skills/scripts/case-init.ps1`（+32 行：预设分支、白名单文案、条件目录、deliverables 行、骨架拷贝）
+  - `skillpack/skills/scripts/case-init.sh`（+34 行，同上）
+  - `case-guard.ps1` / `.sh`：**未触碰**（grep 证实其无 preset/deliverables 硬编码，无需放行改动）
+- 验收命令与结果:
+  - `-Preset rebuild` 建 case：PS 与 bash 均产 `rebuild.md` + `baseline/` + `diff/`；
+    `scope.md` 的 deliverables 段含 `- rebuild: true`
+  - 零差异对照：同参数、同目录，基线 commit(28bbb89) 脚本 vs 改后脚本各跑三组
+    （plain / offline-sample / ctf-public），文件集 `SETS-IDENTICAL`，内容除 `created` 时间戳外
+    `fail=0`（PS 与 bash 双侧）
+  - 错值 preset：bash `exit 2`、PS `exit 1`（两者都与改动前保持同码），文案均列出四个合法值
+    `offline-sample|ctf-public|own-system|rebuild`
+  - `case-guard` 对 rebuild case：ready 时 exit 0、未 ready 时 exit 2、`-Force` 仍 exit 2（授权硬门未放松）
+  - `test-routing.ps1 -Quick` → `OVERALL: ALL PASS (65)`，EXIT=0
+  - `test-routing.sh` → `OVERALL: ALL PASS (205 routing cases + default-root regression)`，EXIT=0
+    （注：本机 `python3` 是 WindowsApps 占位符 exit 49，用指向真实 Python 的 shim 后实跑；
+    未跑 `test-bash-workflow.sh` —— **本机未实测**，CI 里仅 macOS runner 跑）
+- 门禁结果: `verify-routing-coherence.ps1` → ALL PASSED，exit 0；
+  `verify-evolution.py` 10/10 全绿（EXIT=0）
+- commit: （本段提交）交付能力建设 · 阶段2 rebuild 预设
+- 未达标/遗留: `test-bash-workflow.sh` 本机未实测（环境限制，如实记录）。
+
+

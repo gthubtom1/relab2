@@ -80,6 +80,7 @@ if (-not [string]::IsNullOrWhiteSpace($Sample)) {
 }
 
 # Cross-platform case presets. Keep semantics aligned with case-init.sh.
+$rebuildMode = $false
 $presetNormalized = $Preset.Trim().ToLowerInvariant()
 if ($presetNormalized -in @('offline-sample', 'own-sample', 'local-sample')) {
     $AuthGranted = $true
@@ -101,8 +102,19 @@ if ($presetNormalized -in @('offline-sample', 'own-sample', 'local-sample')) {
     $AuthBasis = 'own_system'
     if ([string]::IsNullOrWhiteSpace($NetworkProfile)) { $NetworkProfile = 'lab_only' }
     if ([string]::IsNullOrWhiteSpace($EvidenceOfAuth)) { $EvidenceOfAuth = 'preset:own-system/lab' }
+} elseif ($presetNormalized -eq 'rebuild') {
+    # 复刻交付路径：与 offline-sample 同档（owner-operated 本地样本），但额外落 rebuild.md
+    # 对账表 + baseline/ + diff/ 三样。授权门与 offline-sample 一致，不放松任何硬门。
+    $AuthGranted = $true
+    $AuthStatus = 'granted'
+    $AuthBasis = 'own_system'
+    $rebuildMode = $true
+    if ([string]::IsNullOrWhiteSpace($NetworkProfile)) { $NetworkProfile = 'offline' }
+    if ([string]::IsNullOrWhiteSpace($EvidenceOfAuth)) {
+        $EvidenceOfAuth = 'preset:rebuild (owner-operated local sample; rebuild delivery case)'
+    }
 } elseif (-not [string]::IsNullOrWhiteSpace($Preset)) {
-    throw ("Invalid -Preset '{0}'. Allowed: offline-sample|ctf-public|own-system" -f $Preset)
+    throw ("Invalid -Preset '{0}'. Allowed: offline-sample|ctf-public|own-system|rebuild" -f $Preset)
 }
 
 if (-not $CaseName) {
@@ -129,6 +141,7 @@ if (-not [string]::IsNullOrWhiteSpace($NetworkProfile) -and
 $workRoot = Join-Path $projectRoot 'work'
 $caseRoot = Join-Path $workRoot $CaseName
 $dirs = @('evidence', 'notes', 'report')
+if ($rebuildMode) { $dirs += @('baseline', 'diff') }
 New-Item -ItemType Directory -Force -Path $caseRoot | Out-Null
 foreach ($d in $dirs) {
     New-Item -ItemType Directory -Force -Path (Join-Path $caseRoot $d) | Out-Null
@@ -322,6 +335,12 @@ $assetsBlock
 - skills/ops/IDENTITY.md
 "@
 
+# -Preset rebuild 时 deliverables 段多一行标记。插在 here-string 之后，行尾沿用
+# 文档自身的换行（CRLF 或 LF 都行），保证不传该预设时 scope.md 与改前逐字节一致。
+if ($rebuildMode) {
+    $scope = $scope -replace '(?m)^(- timeline: true)(\r?\n)', '${1}${2}- rebuild: true${2}'
+}
+
 $timeline = @"
 # Timeline (append-only)
 
@@ -361,6 +380,17 @@ $utf8 = New-Object System.Text.UTF8Encoding $true
 [System.IO.File]::WriteAllText((Join-Path $caseRoot 'scope.md'), $scope, $utf8)
 [System.IO.File]::WriteAllText((Join-Path $caseRoot 'timeline.md'), $timeline, $utf8)
 [System.IO.File]::WriteAllText((Join-Path $caseRoot 'workitems.md'), $workitems, $utf8)
+
+# -Preset rebuild：从 skills/templates/rebuild.md 拷对账表骨架进 case。
+# 只读模板、写 case；不传该预设时本块不执行。
+if ($rebuildMode) {
+    $rebuildTemplate = Join-Path (Join-Path $skillsRoot 'templates') 'rebuild.md'
+    if (Test-Path -LiteralPath $rebuildTemplate) {
+        Copy-Item -LiteralPath $rebuildTemplate -Destination (Join-Path $caseRoot 'rebuild.md') -Force
+    } else {
+        Write-Host ("WARN: rebuild template missing: {0}" -f $rebuildTemplate) -ForegroundColor Yellow
+    }
+}
 
 $readmeNext = if ($ready) {
     @"

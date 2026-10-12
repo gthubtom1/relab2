@@ -67,6 +67,7 @@ if [[ -n "$SAMPLE" ]]; then
 fi
 
 # Presets: reduce "AI refuses to work" friction for legitimate local/CTF work.
+REBUILD_MODE=0
 case "$PRESET" in
   "" ) ;;
   offline-sample|own-sample|local-sample)
@@ -91,8 +92,19 @@ case "$PRESET" in
     NETWORK_PROFILE="${NETWORK_PROFILE:-lab_only}"
     EVIDENCE_OF_AUTH="${EVIDENCE_OF_AUTH:-preset:own-system/lab}"
     ;;
+  rebuild)
+    # 复刻交付路径：与 offline-sample 同档（owner-operated 本地样本），但额外落
+    # rebuild.md 对账表 + baseline/ + diff/ 三样。授权门与 offline-sample 一致。
+    AUTH_GRANTED=1
+    AUTH_STATUS="granted"
+    AUTH_BASIS="own_system"
+    REBUILD_MODE=1
+    NETWORK_PROFILE="${NETWORK_PROFILE:-offline}"
+    EVIDENCE_OF_AUTH="${EVIDENCE_OF_AUTH:-preset:rebuild (owner-operated local sample; rebuild delivery case)}"
+    if [[ -n "$SAMPLE" ]]; then IN_SCOPE_ASSETS+=("$SAMPLE"); fi
+    ;;
   *)
-    echo "ERROR: invalid --preset '$PRESET' (allowed: offline-sample|ctf-public|own-system)" >&2
+    echo "ERROR: invalid --preset '$PRESET' (allowed: offline-sample|ctf-public|own-system|rebuild)" >&2
     exit 2
     ;;
 esac
@@ -126,6 +138,7 @@ fi
 
 CASE_ROOT="$PROJECT_ROOT/work/$CASE_NAME"
 mkdir -p "$CASE_ROOT/evidence" "$CASE_ROOT/notes" "$CASE_ROOT/report"
+if [[ "$REBUILD_MODE" -eq 1 ]]; then mkdir -p "$CASE_ROOT/baseline" "$CASE_ROOT/diff"; fi
 
 auth_status_resolved="pending"
 if [[ $AUTH_GRANTED -eq 1 ]]; then auth_status_resolved="granted"; fi
@@ -294,6 +307,14 @@ $assets_block
 - skills/ops/IDENTITY.md
 EOF
 
+# -Preset rebuild：deliverables 段尾插一行标记。不传该预设时不执行本块 →
+# scope.md 与改前逐字节一致（awk 插行，GNU/BSD 通用）。
+if [[ "$REBUILD_MODE" -eq 1 ]]; then
+  scope_tmp="$CASE_ROOT/scope.md.tmp"
+  awk '1; /^- timeline: true$/ { print "- rebuild: true" }' "$CASE_ROOT/scope.md" > "$scope_tmp"
+  mv "$scope_tmp" "$CASE_ROOT/scope.md"
+fi
+
 cat > "$CASE_ROOT/timeline.md" <<EOF
 # Timeline (append-only)
 
@@ -328,6 +349,17 @@ cat > "$CASE_ROOT/workitems.md" <<'EOF'
 - skills/ops/timeline-workitem.md
 - skills/ops/evidence-finding-path.md
 EOF
+
+# -Preset rebuild：从 skills/templates/rebuild.md 拷对账表骨架进 case。
+# 只读模板、写 case；不传该预设时本块不执行。
+if [[ "$REBUILD_MODE" -eq 1 ]]; then
+  rebuild_template="$SKILLS_ROOT/templates/rebuild.md"
+  if [[ -f "$rebuild_template" ]]; then
+    cp "$rebuild_template" "$CASE_ROOT/rebuild.md"
+  else
+    echo "WARN: rebuild template missing: $rebuild_template" >&2
+  fi
+fi
 
 if [[ "$ready" == true ]]; then
   cat > "$CASE_ROOT/README.md" <<EOF
