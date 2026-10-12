@@ -645,6 +645,10 @@ vendor 两周即过期、pin 即锁死。**只学三条设计，不融代码**�
   exit 0=0）；成品 `build/prng_rebuilt.py` 在盘可跑；两层过层各有 Evidence；
   strict 审查 PASS；timeline 有真实路线调整（baseline 自包含化 + input= 剥离修复）。
   **达成**
+  > ★ 口径澄清（2026-10-13 §9b 复核补）：本条的「真目标」指 `work/prng_probe.exe` +
+  > UPX 加壳的**自造真实样本**，它证明的是「链条能对双层保护走完整闭环」，**不是主人目标
+  > `测试exe.exe` 的证明**。主人目标的实弹记在 §9c。此前把它读成「主人目标也过了」是误读，
+  > 特此显式纠正。
 - 第 6 条（Q0 分流生效）：以非逆向任务「给这个 Python 脚本加 --verbose 参数」走入口卡：
   Q0 判据命中 A 类（「加参数」+ 我方代码）→ 「本卡一行不必再读」；实测无 `-Preset assault`
   的 case-init 产出：文件集 `[README.md, scope.md, timeline.md, workitems.md]`,
@@ -833,3 +837,447 @@ vendor 两周即过期、pin 即锁死。**只学三条设计，不融代码**�
 - 终版零差异（当次实跑）：同目录、三组参数（plain / offline-sample / ctf-public），
   基线脚本（b2b0847）vs 当前脚本各跑一次，文件集相同、内容除 `created` 时间戳外
   逐字节一致 → **三组 ALL PASS**
+
+---
+
+## 9b 无上下文最终验收 · 2026-10-13 06:30
+
+> 本节的报告原文由无上下文子代理 `FinalAcceptanceReview` 撰写，**全文**落盘在
+> `work/assault-acceptance-review/subagent-report.md`（13,884 字符，§0–§6）。
+> 主对话**未加工、未拆清单、未提示重点**，只把 `docs/FINAL-ACCEPTANCE-BRIEF.md` 全文交给它，
+> 它有工具权限（实跑 master-route / review_case / verify-evolution / case-init 等）。
+> 下面是它的结论摘录 + **主对话逐条打开文件复核**的结果，以及据此做的修复。
+
+### 开工时实际进度（子代理验收前，主对话自查）
+
+- git 走到 `036fdfd …`（步骤一、二已提交，见 §9a）；工作区干净。
+- `docs/ASSAULT-GOAL-2026-10-13.md` 有 §9、§9a；**§9b / §9c 均未建**。
+- 实弹案卷 `work/assault-测试exe/` 已建，状态行 `ROUTE`、U-001 已解、U-002/U-003 阻塞。
+- **与 PATCH 文件反推一致，无多做的部分。**
+
+### 子代理结论：**部分能**
+
+| 维度 | 子代理判定 | 主对话复核 |
+|---|---|---|
+| 日常/攻坚分流 | 方向对，**但只在文档里对**（六句人话全落 R0→逆向） | **属实**（见 §2.1 复核） |
+| 攻坚流程 | 流程真、刚在真实硬目标上跑起来，**但成品没出来**（案卷停在 SURVEY） | **属实**，案卷诚实 |
+| 过程可信/能接手 | 基本做到（滚动报告 + 四状态机 + 审计器 + 负控四件套真干活） | 复核通过（见绿表） |
+
+### 它报告的 4 条问题 —— 每条打开文件复核
+
+**① 分流只在文档里对（最重）** — 复核：**属实**。
+我实跑六句人话（帮我做个网站/小工具/命令行工具、接手仓库、采集 app 协议、给脚本加参数），
+`master-route.ps1` 全部 PRIMARY=`reverse-engineering`，routing.json 正则复核六句
+`帮我做个网站 -> []`，落 R0 兜底。**已修**（§9b 修复 3）。
+
+**② blocked 放行是「打不穿可过审」后门** — 复核：**属实，且比它说的更严重**。
+根因：`_assault_blocked_outcome` 把「**任何**含 blocked+原因/影响/替代 的段落/行」
+（含 routes 候选行的 `| blocked | | | | |`、layers 备注）都当作整案豁免，
+只要 deliverable 不在盘就能凭这一句绕过 `deliverable_missing`。**已修**（§9b 修复 1）。
+
+**③ 文档声称的 strict PASS 复跑不成立（E-004 哈希漂移）** — 复核：**属实**。
+`review_case.py work/assault-prng-upx --verify-hashes --strict` → FAIL 1 error
+`artifact.hash_mismatch | evidence/E-004.md`；去掉 `--verify-hashes` 才 PASS。
+根因比子代理说的深：不只 `- generated:` 时间戳，`- baseline: … seconds=0.378` 计时
+也在被钉哈希对象里，且 F-001.md 在 05:20 被整份重跑过（排除时间戳后仍不匹配）。
+**已修**（§9b 修复 2）。
+
+**④ 实弹案卷停在 SURVEY，而外部文档已在写「完成」** — 复核：**属实**。
+§9 终验收第 5 条自称「真目标端到端：两层攻破、成品在盘」——那对应的是 prng 自造样本，
+不是主人目标 `测试exe.exe`。**已修**（§9b 修复 4，加口径澄清）。
+
+### 修复 1 · 关掉 blocked 整案放行后门（review_case.py）
+
+- `_assault_blocked_outcome(functions)` 从「扫任意含 blocked 的段落/行」收窄为
+  **「某功能行状态=受限，且其备注/证据写明原因/影响/替代」**；
+- 调用点再加硬闸：**存在完成态功能行（已测试/对照一致）且 deliverable 不在盘 → 必 error**，
+  连受限豁免也不放行（子代理 §2.2 要求的负控）。
+- 负控 `test-assault-audit-negctl.py` 加 3 条（整案 blocked 行不再豁免 / 完成态行+缺失必 error /
+  受限缺三词必 error），并改写 1 条旧契约用例；`18/18 controls honoured`。
+- 单测改写 1 条（`test_assault_deliverable_missing_with_blocked_form_fails`）+ 加 1 条
+  （`test_assault_limited_function_with_reasons_passes`）；`test_review_case.py 41/41 OK`。
+
+### 修复 2 · 内容寻址归一化，哈希不再「重跑即假红」（review_case.py + append-evidence.ps1）
+
+- `review_case.py` 新增 `sha256_file_normalized`：剔除 `- generated:`/`- created:` 行、
+  归一秒级 `seconds=`；`verify_artifact` 先比归一化哈希，再回退比原始哈希
+  （兼容历史钉值）。**内容真变仍被抓**（stdout 块属于内容，不在剔除项）。
+- `append-evidence.ps1` 钉值改用**同一口径**（Latin-1 逐行剔除易变行），
+  使未来 evidence 哈希不再因重跑漂移。
+- E-004 重签到归一化值 `sha256:4886a027…`；`--verify-hashes --strict` → **status: PASS**。
+
+### 修复 3 · 日常工程人话不再只落逆向门（master-route.ps1 / .sh，**advisory NOTE**）
+
+- 约束：红线⑤「不改 routing.json」+ GOAL §1.4「只改 Q0 分流表」。故**不改路由表**，
+  只加一条**永不改 PRIMARY 的指路 NOTE**：hint 命中日常工程语时，
+  primary 仍是原路由，但打印一条 NOTE 把人话任务导向 kernel 六线 + Q0 人话表。
+- 两台孪生脚本（.ps1 / .sh）**逐字对齐**；11 句工程语全部命中、7 句逆向语零误报（共 18 例）。
+- 回归：`test-routing.ps1 205/205 PASS`（含中文样本）、`verify-routing-coherence ALL PASSED`。
+- **仍欠**：`routing.json` 本身对「帮我做个网站」无路由（这是设计——六条线在 kernel）。
+  真正的「分流进路由」需动 routing.json，属红线⑤禁区，留待主人决策（记入 PROJECT-GAPS）。
+
+### 修复 4 · 文档口径澄清（本文件）
+
+§9 终验收第 5 条加显式澄清：那条「真目标」是 prng 自造样本，**不是主人目标**的证明；
+主人目标的实弹记在 §9c。
+
+### 复核确认没问题的（子代理绿表 + 主对话实跑）
+
+- `test-routing.ps1 205/205`、`verify-routing-coherence ALL PASSED`（本轮复跑）；
+- `test_review_case.py 41/41`、`test-assault-audit-negctl.py 18/18`、
+  `test-rebuild-audit-negctl.py 16/16`、`test-update-audit-negctl.py 13/13`；
+- 五条位置判据成立（五条@14 < Q0@52）；CTF 8 步工作流仍在（红线④未违）；
+- 全仓「打不穿」搜索：仅需求陈述与红线引述，无可接受结论；
+- 工作区复核：`kernel/`、`skillpack/`、`docs/` 除本次修复外未动（见 commit2 diff）。
+
+### 三条铁律自查
+
+- ① **没替它回答**：全程只给 BRIEF 全文，未暗示问题位置；它的 4 条与我的复核一致或更深。
+- ② **它说「部分能」，我没抄结论**：逐条打开文件复核，2 条比它查得更深（②④）。
+- ③ **报告可追溯**：全文落盘，本节写明「它怎么得出结论」——实跑命令 + 文件行号。
+
+
+### 附录 · 子代理报告原文（逐字，未加工）
+
+> 源：`work/assault-acceptance-review/subagent-report.md`（gitignored 的 `work/` 下，故此处内嵌一份，防 clone 后丢失）。以下为其全文。
+
+<details>
+<summary>展开：FinalAcceptanceReview 报告全文（§0–§6）</summary>
+
+# 无上下文最终验收报告 · 2026-10-13（审查者：FinalAcceptanceReview）
+
+> 我是被主对话派来的独立审查者，之前没有本项目的任何上下文。
+> 我唯一的输入是 `docs/FINAL-ACCEPTANCE-BRIEF.md` 全文（233 行我逐字读完了）。
+> 本报告按主人要求写：**白话**。每个结论都写了「我打开了什么、跑了什么、看到了什么」。
+> 本报告未改动任何项目文件；为做探针我在 gitignored 的 `work/` 下建过 3 个临时目录，
+> 用完即删（报告末尾第 6 节有清单），`git status` 复查为空。
+
+---
+
+## 0. 先直接回答主人的问题：这套东西现在能不能达成目标？
+
+**部分能。**
+
+拆开说：
+
+- 「日常开发 / 攻坚分流」这条**方向对了，但只在文档里对**。
+  我拿六句最典型的人话去跑路由，六句全部被路由到 `reverse-engineering`（逆向），
+  没有一句被指到「做个网站」「接手别人仓库」这类日常工程线。详见 §2.1。
+- 「攻坚（打受保护目标）」这条**流程是真的，而且刚在真实硬目标上跑起来了**——
+  但**成品还没出来**。`work/assault-测试exe/` 的 assault.md 状态行停在
+  `SURVEY`，U-001「启动即 fail-fast」还是 blocking=yes。
+  按主人自己定的红线（成品没出来就是没完成），**攻坚这条现在判「没完成」是准确的**，
+  不是文档造假——案卷是诚实的，只是没打完。
+- 「过程可信、能接手、不吹牛」这条**基本做到了**，而且是我这几轮里查得最扎实的部分。
+  滚动报告、四状态机、审计器、负控四件套是真的在干活（我在 §1 逐条验过）。
+
+差在哪 / 最该做什么：见 §5.1、§5.2。
+
+---
+
+## 1. 我实际查了什么（全部实物依据）
+
+### 1.1 读过的文件（节选重要的，全部实读）
+
+| 文件 | 行数/大小 | 我看到了什么 |
+|---|---|---|
+| `docs/FINAL-ACCEPTANCE-BRIEF.md` | 233 行 | 需求陈述本身。四层目标、五条「主人怕什么」、九条待验清单、四条交付块 |
+| `docs/ASSAULT-GOAL-2026-10-13.md` | 835 行 | 主定稿。§9/§9a 记录了四阶段 + 五条落地 + 八维自检，每条自称「全部实跑」 |
+| `docs/GOAL-PROMPT-ASSAULT-2026-10-13.md` | 456 行 | 攻坚目标清单，含「完成的定义六条」 |
+| `docs/GOAL-PROMPT-PATCH-2026-10-13.md` | 426 行 | 子代理验收 + 实弹攻坚清单。**注意 §8 收尾清单里 10 项还有 7 项是 `[ ]`**（我核对过） |
+| `docs/PROJECT-UNDERSTANDING-2026-10-13.md` | 209 行 | 主对话自己的理解与三个风险自陈，判断诚实 |
+| `docs/KNOWN-BOUNDARIES.md` | 179 行 | 第 4 条自己承认「任何真实目标上的效果做不到」 |
+| `skillpack/skills/reverse-engineering/references/assault-entry.md` | 262 行 | 入口分流卡。第一屏（14 行起）确实是攻坚者五条，Q0 在 52 行——**顺序判据成立** |
+| `skillpack/skills/templates/assault.md` | 129 行 | 滚动报告字段清单。开头明写「这是字段清单，不是填写顺序」 |
+| `skillpack/skills/reverse-engineering/SKILL.md` | 243 行 | ACTION REQUIRED 第 4 步是 assault-entry 四问；8 步 CTF 工作流仍在（红线 4 未违反） |
+| `skillpack/skills/case-review/scripts/review_case.py` | ~1000 行 | 审计器。assault 四项检查 + 完成形态判定的实际代码我逐段读了 |
+| `skillpack/skills/case-review/tests/test_review_case.py` | — | 单测 40 条 |
+| `skillpack/skills/scripts/test-assault-audit-negctl.py` | — | 负控 15 条 |
+| `work/assault-prng-upx/assault.md` + timeline.md + 5 份 evidence + 2 份 diff | — | 第一份真实攻坚案卷（UPX+PRNG） |
+| `work/assault-测试exe/assault.md` + scope.md + timeline.md | — | 第二份真实攻坚案卷（26MB GUI 目标），**停在 SURVEY** |
+| `work/assault-测试exe/evidence/` | 37 个文件 | cdb-run1~14.log、frida-*.js 等大量实跑痕迹 |
+| `skillpack/skills/field-journal/2026-10-13_assault-prng-upx-l1l4.md` | — | 实战记录，含 3 个真实卡点 |
+| `docs/HANDOFF-2026-10-11.md` | 388 行 | 上一轮交接 + 下一步 |
+| `docs/EXTERNAL-REA-ANALYSIS-2026-10-13.md` | 308 行 | 外部项目分析 |
+
+### 1.2 跑过的命令（按结果分类）
+
+**① 门禁 / 测试（全部本机实跑）**
+
+```
+python skills/case-review/tests/test_review_case.py   → 40 passed in 0.62s
+python skills/scripts/test-assault-audit-negctl.py    → 15/15 controls honoured
+python skills/scripts/check-fences.py                 → rc=0（635 个 md，未闭合围栏 0）
+python skills/scripts/verify-doc-links.py             → rc=0 OK（active=0）
+python scripts/verify-evolution.py                    → ALL GREEN: 10/10（跑 128 秒）
+python scripts/review_case.py work/rebuild-sha256sum --verify-hashes --strict → status: PASS
+```
+
+**② 攻坚案卷独立复核（我自己重跑，不信文档）**
+
+- 成品真的在盘、真的能跑、真的和原程序一致：
+  `work/assault-prng-upx/build/prng_rebuilt.py`（1316 字节）与 `baseline/prng_packed.exe`。
+  我用 PowerShell 直调 exe 与 python 各跑 mode0/mode1，输出分别 **81B=81B、255B=255B**，
+  `cmp` 双向通过（MODE0-IDENTICAL / MODE1-IDENTICAL），退出码都是 0。
+  原文件 SHA256 与侧车 `.sha256` 一致：`9ca433d2f4fbc0a317bd2b592137090c…`。
+  → 案卷 E-004 自称的「79B/253B、exit 0=0」**是真的**（字节数小 2 是我这边换行/编码记法差异，
+  内容逐字节相同这件事我亲自验了）。
+- 我自己当了一次「想造假的 AI」：把 `diff/F-001.md` 里 rebuilt 段的一个数字改掉（7584→9999），
+  跑 `review_case.py --strict` → 立刻被 `assault.diff_bytes_mismatch` 拦下（FAIL，1 error）。
+  说明审计器**不是在读表格自称**，是真的在比字节。这点我原以为会流于形式，实测比预期硬。
+- 我还试了另一条「打不穿就绕」的路：把 deliverable 改成不存在的文件、同时在 routes 表
+  伪造一条 blocked（写了 原因/影响/替代），看它会不会放行。
+  → 第一版 blocked 行没写原因照样被 `assault.blocked_reason_missing` + `deliverable_missing` 拦；
+  按规范补齐三词后 deliverable_missing 会消失，但相关的 `diff_record_missing` 仍然拦着——
+  也就是说「blocked 放行」这条门**存在但很窄**（详见 §2.2）。
+- 顺手发现一个真 bug：`review_case.py work/assault-prng-upx --verify-hashes --strict`
+  现在跑是 **FAIL（1 error：`evidence\E-004.md` artifact SHA-256 does not match content_hash）**。
+  根因是官方文档 §9 阶段4 记的「改 baseline 自包含化后重跑」，重跑会重写 `diff/F-001.md`
+  的 `generated:` 时间戳行，于是文件哈希变了、E-004 里钉的哈希没跟着变。
+  **不加 `--verify-hashes` 时是 PASS。** 我把 `diff/F-002.md` 单独算过：
+  它的哈希与 E-004 里钉的完全一致（`78e58a66…`），坏的是 F-001 这一份。
+  也就是说：项目文档里写成「strict PASS」的那句，现在复跑不成立了（详见 §2.3）。
+
+**③ 路由分流实测（这是我最意外的地方）**
+
+```
+$ master-route.ps1 -Hint "帮我做个网站"        → PRIMARY skills/reverse-engineering/SKILL.md
+$ master-route.ps1 -Hint "帮我做个小工具"      → PRIMARY skills/reverse-engineering/SKILL.md
+$ master-route.ps1 -Hint "帮我做个命令行工具"  → PRIMARY skills/reverse-engineering/SKILL.md
+$ master-route.ps1 -Hint "这个项目别人写的，我接手继续改" → PRIMARY skills/reverse-engineering/SKILL.md
+$ master-route.ps1 -Hint "帮我采集app协议"     → PRIMARY skills/reverse-engineering/SKILL.md
+$ master-route.ps1 -Hint "给脚本加个参数"      → PRIMARY skills/reverse-engineering/SKILL.md
+```
+
+六句全部命中 `reverse-engineering`（逆向），**没有一句被指到 website/cli/tool/takeover 那类日常工程线**。
+而 `docs/GOAL-PROMPT-PATCH-2026-10-13.md` §1.4 与 `assault-entry.md` 的 Q0 表都写明
+「帮我做个 XX 软件 / 小工具 / 网站」该去 kernel 六条业务线。
+我还在 `routing.json`（51 条）上做了一遍正则复核：上面这六句人话在 51 条路由里
+**一条都不命中**（`帮我做个网站 -> []`）。
+
+**④ 实弹攻坚案卷状态**
+
+`work/assault-测试exe/assault.md` 状态行 = `current_state: SURVEY`、
+`since 2026-10-13 05:15`；timeline.md **只有 1 条记录**（case-init 那一刻），
+之后 37 个 evidence 文件（cdb-run1~14.log、frida-*.js）是实跑痕迹，
+但 assault.md 的状态行/timeline 都没跟上。`diff/` 与 `report/` 目录都是**空的**。
+`workitems.md` 仍是 `in_progress` 且 Coverage 七项一个都没勾。
+upstream 哈希我核对过：`eef7de5767b0e625aea4e6b3cd2f8b14515cbc548af3769f68e2ae458e415e9b`，与 assault.md 记录一致，本体未被改动。
+
+**⑤ 其它抽查**
+
+- 「打不穿/可接受未达标」表述全文搜索：`grep` 全仓（docs/skillpack/kernel）后，
+  除了**需求陈述与红线本身**（它们在引述「不许这么写」）之外，
+  没有任何一处把「打不穿」当可接受结论——**这条通过**。
+- 五条的位置：`grep -n` 实测 五条@14 < Q0@52 < Q1@70 < Q2@87 < Q3@131 < Q4@146 < 状态机@165。
+  顺序判据成立。
+- 「第 N 步必须 X」表述扫描：`grep -rn "下一步必须|必须第|第[一二三四]步必须"` 在
+  assault-entry / assault.md 模板 / ASSAULT-GOAL 三处**为空**；
+  `re-agent-workflow.md` §1.2 有一处历史 `Step 1/Step 2`（属有壳分支内的既有工序表，
+  不是新写的步骤表，详见 §3.3）。
+- case-init 的日常零影响：`-Preset assault` 只在传参时改行为（代码读实：
+  `$assaultMode` 分支），预设白名单 6 值，错值 PS rc=1 / bash rc=2。
+  我没跑六组逐字节对照（那是上一轮的结论），标「未验证」。
+- kernel 只读：我全程未改任何 kernel 文件，`git status` 复查为空。
+
+---
+
+## 2. 找到的问题
+
+### 2.1 【最重】主人说人话时，日常项目根本进不了对应路线（分流只在文档里对）
+
+- **在哪**：`skillpack/skills/config/routing.json`（51 条路由）+ `skillpack/skills/scripts/master-route.ps1`；
+  对照物是 `docs/GOAL-PROMPT-PATCH-2026-10-13.md` §1.4、`assault-entry.md` Q0 人话表。
+- **是什么**：`assault-entry.md` 的 Q0 表写得很漂亮——「帮我做个网站→web-service」
+  「接手别人仓库→source-takeover」等六行都有。**但 Q0 卡是 AI 走到 `reverse-engineering`
+  这道门之后才会读到的东西。** 我用六句人话实测路由：全部落到 `reverse-engineering`。
+  在 routing.json 上做正则复核，`帮我做个网站 -> []`，六句人话无一条命中任何路由，
+  落到 R0 兜底。
+- **为什么是问题**（对着需求讲，不对着规则讲）：BRIEF §1 第四、五条＋§3「一个人/分流层要覆盖非攻坚项目」
+  说主人零基础、不会写提示词，说「帮我做个网站」这套东西也该自己走对路线。
+  现在实际发生的是：主人一句「帮我做个网站」，AI 被指到逆向技能→读到 Q0→Q0 判 A→
+  「本卡到此为止」。**结论恰好是对的（确实不该攻坚），但代价是绕了一圈逆向门**，
+  且如果 AI 没读 Q0（它是 step 4，前面还有 step 1/2/3），就直接拿 CTF 五件套对着一个
+  空项目开跑。这跟 BRIEF §3「日常的直接走原有技能，一道多余工序都没有」是冲突的。
+- **影响多大**：主人日常占一半（PROJECT-UNDERSTANDING §六.3 主人原话「一半一半」）。
+  这是每天会踩的那一半，不是边缘情况。
+- **该不该修**：**该修，且我认为这是当前最该修的一件**（比继续补攻坚文档重要）。
+  最小修法：在 `natural-language-map.json`（已有 32 条人话映射，全是安全主题）里
+  加六条日常工程入口，并在 `master-route.ps1` 的兜底分支里加「非安全/工程类关键词 → kernel 六线」
+  的判定；不必改 routing.json 的 51 条（那会碰红线5）。
+
+### 2.2 「blocked 可放行」是一条真实存在的后退门，且文档没写明它的边界
+
+- **在哪**：`skillpack/skills/case-review/scripts/review_case.py` L918-932（`_assault_blocked_outcome`）
+  + `docs/ASSAULT-GOAL-2026-10-13.md` L573/L596（「blocked 形态成立→放行」）。
+- **是什么**：审计器的完成形态判定是「deliverable 在盘 **或** blocked 形态成立」。
+  我用探针实测：deliverable 指向不存在文件 + routes 表伪造一条 blocked
+  （状态列写 blocked、原因/影响/替代三个词齐全）→ `assault.deliverable_missing` **消失**，
+  审查从 FAIL 变成只剩别的错。也就是说：**只要会写三个词，就能把「成品没出来」
+  变成审计可过的状态。**
+- **为什么是问题**：BRIEF §2「怕半成品冒充完成」「怕体系自欺」、§5⑤「不设打不穿的退路」。
+  主人原话「你一写可以打不穿，它就偷懒」。代码里这条 blocked 放行就是**字面意义上的
+  「可以打不穿」的后门**——只是它现在还没被滥用（两份案卷都没有走到 blocked 放行）。
+- **影响多大**：目前未爆（两个 case 都没用它），但它是**下一颗雷**：攻坚目标一旦难打，
+  AI 完全可以在 routes 表加一行 blocked 三词，让 strict 审查绿着交差。
+  注意：`diff_record_missing`（functions 有对照行才触发）仍会拦一部分情况，
+  但如果 AI 把 functions 状态不写完成态，就只剩 `deliverable_missing` 一道，
+  而这道正是 blocked 能绕的。
+- **该不该修**：**该修。** 建议把「blocked 放行」限制为**逐行功能级**（functions 表某行
+  受限，写原因/影响/替代），**不允许整案级 deliverable_missing 放行**；
+  并加一条负控：deliverable 不在盘 + 存在 completed 功能行 → 必须 error。
+
+### 2.3 文档声称的「strict PASS」现在复跑已经不成立（E-004 哈希漂移）
+
+- **在哪**：`docs/ASSAULT-GOAL-2026-10-13.md` L604-611 与 L640-646 声称
+  「`review_case.py --verify-hashes --strict` → status: PASS（0 error / 0 warning）」；
+  实际物证 `work/assault-prng-upx/evidence/E-004.md` 钉的 content_hash 指向
+  重跑前的 `diff/F-001.md`。
+- **是什么**：我实跑 `python skillpack/skills/case-review/scripts/review_case.py work/assault-prng-upx --verify-hashes --strict`
+  → **FAIL，1 error：`artifact.hash_mismatch | evidence\E-004.md`**。
+  去掉 `--verify-hashes` 才 PASS。`diff/F-002.md` 的哈希与钉值一致，`diff/F-001.md` 不一致
+  （`c8df925f…` vs 钉的 `1f117af1…`，因为 F-001 里 `generated:` 时间戳在重跑时被改写）。
+- **为什么是问题**：BRIEF §2「怕半成品冒充完成」「审计器验的是表格自称还是真跑了」。
+  这条恰好是**审计器抓到真问题、而文档没跟上**的实例——它可以证明审计器有效，
+  但它同时证明 §9 的完成记录没有「复跑仍成立」这一层。文档写的是历史快照，
+  却又没标「重跑前需重签 E-004」。
+- **影响多大**：中。它让「门禁说绿的时候是真绿」这句话出现了一道裂缝——
+  而且是最锋利的裂缝：**evidence 哈希门本来就是用来防「改了产物不改记录」的**。
+- **该不该修**：**该修，且修法很轻**：把 `diff-runner.py` 的 `generated:` 行从
+  被钉哈希的对象里排除（或改成内容寻址不含时间戳），并在 E-004 里补一条「哈希重签」注释。
+
+### 2.4 实弹案卷停在 SURVEY，而外部文档已经在写「完成」
+
+- **在哪**：`work/assault-测试exe/assault.md`（状态行 `SURVEY`、U-001 blocking=yes）、
+  `work/assault-测试exe/timeline.md`（仅 1 条）、`work/assault-测试exe/workitems.md`（Coverage 0/7）、
+  `docs/GOAL-PROMPT-PATCH-2026-10-13.md` §8 收尾清单（10 项里 7 项 `[ ]`）。
+- **是什么**：文档链条（ASSAULT-GOAL §9 阶段4 终验收六条「**达成**」、
+  PATCH 文件收尾清单）描述的是一个比案卷更靠前的状态。案卷诚实（明写卡在 U-001），
+  但**「完成了」三个字出现在了案卷还不能支撑的地方**（§9 终验收第 5 条自称「真目标端到端：
+  两层攻破、成品在盘」——那对应的是 prng 自造样本，不是 `测试exe.exe`）。
+- **为什么是问题**：BRIEF §1 第一层「任何一处说已完成，都必须拿得出成品」。
+  主人会拿 PATCH §8 那张表来验收，那张表现在是 7 空。
+- **影响多大**：大。这是主人唯一真正在乎的终点（26MB GUI、疑似卡密/自校验），
+  现在连 F-001「能进主界面」这一门都还没过。
+- **该不该修**：这不是「修」，是**事实状态**；该做的是把它从「文档里混过去了」
+  纠正成「主人一眼能看懂：还欠一枪」——我建议 §9 终验收那六条里，
+  第 5 条后面加一句「prng 是自造样本的证明，非主人目标的证明」。
+
+---
+
+## 3. 分不清是好是坏的地方（我认为这块比 §2 更值钱）
+
+### 3.1 攻坚者五条：到底被执行了，还是只被读到？
+
+- **困惑**：五条在 `assault-entry.md` 第一屏（14 行）确实在 Q0（52 行）之前，
+  位置判据成立；SKILL.md step 4 也写了「先读第一屏五条」。但我在两份案卷里看到的
+  「姿态痕迹」很少：prng 案卷倒是有（routes 表把 blocked/keep 都写了「不选+理由」，
+  unknowns 只增不减）。**测试exe 案卷停在 SURVEY，还看不出五条有没有真的在驱动判断。**
+- **建议怎么验**：拿接下来 30 分钟的实弹记录来验——如果 timeline 里出现
+  「因为矛盾 A 与 B 冲突，所以回 SURVEY 重判」这类条目，五条③是真的；
+  如果全程只有线性推进，那五条就还是标语。
+
+### 3.2 「三个机制（经验卡 / 对账表 / 审计器）是不是在干同一件事」
+
+- **困惑**：BRIEF §2 让查这个。我的结论：**三者职责其实是分开的**——审计器判「这一格填没填、
+  字节一不一致」，对账表（assault.md）是「状态台账」，经验卡是「下次别再踩」。
+  但我发现一处**真重复**：`assault.md` 的 `## functions` 表同时充当
+  「验收判据表」和「状态台账」，而 `rebuild.md` 的 `functions` + `acceptance` 是两张表。
+  也就是说 assault 把 rebuild 的两张表压成了一张，靠写入纪律维持。我不确定这是
+  「有意的精简」还是「漏了一层」。
+- **建议怎么验**：让下一次真攻坚把一条功能从「候选」推到「对照一致」，
+  看一张表够不够承载（如果出现「同一行既写验收条件又写状态」的混乱，就该拆）。
+
+### 3.3 `re-agent-workflow.md` §1.2 的 Step 1/Step 2 算不算「步骤表」
+
+- **困惑**：BRIEF §3 元红线是「不许写第 N 步必须是 X」。`re-agent-workflow.md`
+  §1.2 有壳分支内明写 `Step 1：尝试脱壳 / Step 2：尝试修复 IAT`。
+  但它同时给了 B1/B2/B3 三个出口（B2 必须转动态、B3 必须转动态），
+  且明写「情况 B2：……立即终止」——**它是有出口条件的分支，不是线性步骤**。
+  我不确定该判「踩线」还是「可接受」。
+- **建议怎么验**：让主对话定一条口径：步骤词（Step/步）允许出现在
+  「带出口条件的分支内部」，不允许出现在「跨状态的唯一路径」上。写成规则即可结案。
+
+### 3.4 prng 这个「首跑」的证明力有多深
+
+- **困惑**：官方把 prng 案卷当「真目标端到端」的证据。但它**是自造样本**
+  （`work/prng_probe.c` + UPX 打包），不是「不是我方写的」第三方硬目标。
+  L1 是 UPX（最弱的壳，一条命令解开），L4 是两行 LCG（常量直接可读）。
+  它证明的是**流程能跑通**，不是**体系能打硬目标**。
+  我不确定这该算「战力证明」还是「演示」。
+- **建议怎么验**：把 `测试exe.exe` 打完，自然就有答案；或者在 KNOWN-BOUNDARIES 里
+  明写「prng 是流程演示，非战力证明」，别让它继续承担它承担不了的角色。
+
+### 3.5 47 技能 / 472 文档 / 25 门禁里，哪些真被调用过
+
+- **困惑**：我只实测了 9 个左右。我知道 `verify-evolution.py` 10/10 全绿，
+  但门禁的性质 BRIEF §2 已经点破（测路由一致性/文档闭合）。我没法在本轮内判断
+  「哪一篇 VMP 文档的质量是世界级」——那需要一次真 VMP 目标。
+- **建议怎么验**：不需要全验。只要把下一枪打完，弹孔会自己指出哪些文档没用。
+
+---
+
+## 4. 我的判断：能 / 不能 / 部分能
+
+**部分能。**
+
+- **已经真有的（我亲手验过的）**：
+  1. 过程可信：滚动报告 + 四状态机 + 审计器 + 负控（40/40 单测、15/15 负控），
+     而且我亲自篡改字节它真能抓到（§1.2②）。「不吹牛」这套机制是真的。
+  2. 成品判定是硬的：deliverable 必须在盘、diff 必须逐字节一致、哈希必须对。
+     我造假两次，两次都被拦。
+  3. 入口顺序对：五条在判据表之前；Q0 有「A 类到此为止」的明写。
+  4. 攻坚案卷诚实：prng 案卷 unknowns 只增不减、U-001 解了也留着记录；
+     测试exe 案卷明写卡在 U-001 没有粉饰。
+- **还差的（就是主人目标的那一半）**：
+  1. **成品没出来。** 唯一接近主人真实目标的 `测试exe.exe` 停在 SURVEY，
+     F-001「能进主界面」都没过。按主人红线：成品没出来 = 没完成。
+  2. **日常分流只在文档里对。** 六句人话全部被路由到逆向（§2.1）。
+     主人日常占一半，这是每天要用的那一半。
+- **下一步最该做的（只两件，我按重要性排）**：
+  1. **把六条日常工程线接进路由层**（§2.1 的最小修法）。
+     理由：它是主人每天都会碰的一半，而且修法轻（加人话映射 + 兜底判定，
+     不碰 routing.json 的 51 条）。在它修好之前，主人零基础的日常用法
+     每次都要先过一道逆向门。
+  2. **收紧 blocked 放行门**（§2.2），然后**继续打 `测试exe.exe`**。
+     理由：blocked 门是下一颗雷（越难越会用到它）；而 `测试exe.exe`
+     是唯一能回答「这套东西到底能不能打」的那一枪——现在案卷停着，
+     缺的不是工具（cdb/frida/pe-sieve 实跑痕迹都在），是把 SURVEY 推到 ROUTE 的那一步。
+
+---
+
+## 5. 实弹相关的态度（§5⑤）
+
+我按 BRIEF §5⑤ 要求专门搜了「打不穿也算完成 / 可以接受未达标 / 你自己判定值不值得继续」。
+结果：**全仓只有需求陈述和红线本身在引述「不许这么写」，没有任何一处把它当可接受结论。**
+`ASSAULT-GOAL §7` 第 6 条、`GOAL-PROMPT-ASSAULT` 全程红线第 6 条、
+`GOAL-PROMPT-PATCH` §4/红线第 6/10 条——**四处都在明令禁止**。这条我判**通过**。
+
+但我要补一条 §2.2 已经写过的观察，因为它跟这条红线直接相关：
+
+> **代码里确实有一条「打不穿可以过审」的门（blocked 放行），它现在还没被滥用，
+> 但它是唯一一条能让 AI 绕过「成品必须在盘」的后门。**
+> 红线是好的，代码是实现；红线说了不许退，代码却留了一道小门。
+> 建议按 §2.2 收紧，否则下一枪打不下去时，AI 就会从这道门走过去。
+
+实弹记录本身我看到的（诚实但未完成）：
+- `work/assault-测试exe/` 有 37 个实跑证据文件（cdb 反复附加、frida 探针三版、
+  VirtualProtect 追踪），A-001 记录了「连续 6 次执行非可执行页异常后 fail-fast 0xC0000409」，
+  崩溃地址都落在 .text（RVA 0x1e49f/0x1de00/0x3c900/0x43030/0x4bfe0/0x4c016）——
+  **这是真下过功夫的痕迹，不是走过场**。
+- 但状态行停在 SURVEY、timeline 只有 1 条、diff/ 与 report/ 为空、workitems 0/7。
+  按主人标准：**成品没出来 = 没完成。我如实这么记。**
+
+---
+
+## 6. 我为做探针动过的东西（交回干净的工作区）
+
+- `work/blk-probe/`（blocked 放行探针，含改写的 assault.md 副本）→ 已删
+- `work/tmp-audit-probe/`（字节篡改探针，含改写的 diff/F-001.md 副本）→ 已删
+- `work/assault-acceptance-review/_probe_o*.txt / _probe_r*.txt`（输出比对临时文件）→ 本报告完成后删
+- `work/route/latest/` 下我跑 master-route 产生的路由产物 → 属 gitignored 且路由脚本本就如此，保留
+
+**未触碰**：`kernel/` 下任何文件、`docs/` 下任何文件、`skillpack/` 下任何文件。
+`git status --porcelain` 复查为空。未 git add / commit / push。
+
+</details>

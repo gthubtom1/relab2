@@ -651,21 +651,22 @@ def _deliverable_on_disk(root, candidate):
         return False
 
 
-def _assault_blocked_outcome(text):
-    """True when the report records a blocked outcome with 原因/影响/替代."""
-    def complete(segment):
-        if not ASSAULT_BLOCKED.search(segment):
-            return False
-        return all(pattern.search(segment) for _label, pattern in ASSAULT_BLOCKED_REASON_ALTERNATES)
+def _assault_blocked_outcome(functions):
+    """True only when a FUNCTION row is 受限 with 原因/影响/替代 — never the whole case.
 
-    if complete(section_text(text, "routes")):
-        return True
-    for title in ("layers", "functions"):
-        for _line_number, cells in _iter_table_rows(section_text(text, title)):
-            if _is_markdown_separator_row(cells):
-                continue
-            if complete(" ".join(cells)):
-                return True
+    The completion form is: the deliverable exists on disk, with no function row
+    claiming a completed state while it is absent. A `blocked` entry elsewhere
+    (a route candidate being evaluated, a layer note) must NOT waive a missing
+    deliverable: that would turn the audit into a 「打不穿可过审」 back door
+    (§4 验收线只有一条: 成品出来了没有). Only a per-function 受限 note — the
+    template's legitimate "this unit cannot be delivered" state — narrows the hole.
+    """
+    for _function_id, record in functions.items():
+        if record.get("state") != "limited":
+            continue
+        segment = record.get("note", "") + " " + record.get("evidence", "")
+        if all(pattern.search(segment) for _label, pattern in ASSAULT_BLOCKED_REASON_ALTERNATES):
+            return True
     return False
 
 
@@ -927,11 +928,20 @@ def parse_assault(root, issues):
     else:
         present = any(_deliverable_on_disk(root, candidate) for candidate in candidates)
         result["deliverable_present"] = present
-        if not present and not _assault_blocked_outcome(text):
-            issue(issues, "error", "assault.deliverable_missing",
-                  "assault.md deliverable does not exist on disk and no blocked form "
-                  "(原因/影响/替代) is recorded: " + candidates[0],
-                  "assault.md")
+        if not present:
+            # 完成态功能行的存在使「整案豁免」不可能：只要有一行声称对照一致/已测试，
+            # 而成品不在盘，就不许用任何 blocked 形态把它变成可过审状态。
+            completed = [fid for fid, rec in result["functions"].items()
+                         if rec["state"] in REBUILD_COMPLETED_STATES]
+            blocked_ok = not completed and _assault_blocked_outcome(result["functions"])
+            if not blocked_ok:
+                detail = ("a function row claims a completed state (" + ", ".join(sorted(completed)) + ") "
+                          "while the deliverable is absent") if completed else \
+                         ("no function row records 受限 with 原因/影响/替代")
+                issue(issues, "error", "assault.deliverable_missing",
+                      "assault.md deliverable does not exist on disk and the completion form "
+                      "does not hold: " + detail + ": " + candidates[0],
+                      "assault.md")
 
     return result
 
@@ -1109,11 +1119,29 @@ def is_within(root, path):
     except ValueError:
         return False
 
+# 易变行：重跑 diff-runner / 重开 case 时必然改写，与被钉“内容”无关。
+# 不把它们从哈希对象里剔除，同内容的下一次运行就永远对不上（实测 E-004 首跑
+# 全绿、重跑即 hash_mismatch），evidence 哈希门反而变成「重跑即假红」。
+_VOLATILE_ARTIFACT_LINE = re.compile(rb"^- (?:generated|created):")
+_VOLATILE_SECONDS = re.compile(rb"seconds=\d+(?:\.\d+)?")
+
 def sha256_file(path):
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
+    return digest.hexdigest()
+
+def sha256_file_normalized(path):
+    """SHA-256 of the artifact with volatile run metadata (generated/created lines,
+    seconds= timings) stripped. Stable across re-runs of the same content; still
+    changes when real content (e.g. a stdout block) changes."""
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for line in handle:
+            if _VOLATILE_ARTIFACT_LINE.match(line):
+                continue
+            digest.update(_VOLATILE_SECONDS.sub(b"seconds=X", line))
     return digest.hexdigest()
 
 def verify_artifact(root, artifact_path, expected_hash, issues, display_path):
@@ -1130,9 +1158,11 @@ def verify_artifact(root, artifact_path, expected_hash, issues, display_path):
     if not candidate.is_file():
         issue(issues, "error", "artifact.missing", "artifact_path does not exist", display_path)
         return
-    digest = sha256_file(candidate)
-    if digest != expected_hash:
-        issue(issues, "error", "artifact.hash_mismatch", "artifact SHA-256 does not match content_hash", display_path)
+    # Normalized digest is canonical (survives re-runs); a raw digest still matches
+    # for pins recorded before this rule existed. Only content changes fail.
+    if sha256_file_normalized(candidate) != expected_hash and sha256_file(candidate) != expected_hash:
+        issue(issues, "error", "artifact.hash_mismatch",
+              "artifact content hash does not match content_hash (volatile run metadata ignored)", display_path)
 
 def parse_evidence(root, workitems, issues, verify_hashes):
     evidence_root = root / "evidence"

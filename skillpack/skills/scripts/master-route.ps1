@@ -122,6 +122,15 @@ if ($null -eq $primary) {
     $confidence = if ($uniq.Count -eq 1) { 'high' } else { 'medium' }
 }
 
+# ★ 零基础主人的日常工程任务（做软件/网站/工具、接手仓库、二开、采集协议、加参数/修 bug）
+# 在 routing.json 里没有对应技能路由（六条业务线在 kernel，不在本包路由表），常落到 R0 兜底 ——
+# 而 R0 指向 reverse-engineering，会让 AI 拿逆向工序去跑一个空项目。这里只加一条**指路 NOTE**
+# （advisory，永不改 PRIMARY、不改 routing.json；改 routing.json 是红线⑤禁止的），
+# 不论当前 PRIMARY 是兜底还是某条真实路由，只要 hint 命中日常工程语就提示去 Q0 人话表 + kernel 六线。
+if ($t -match '(帮我做|我想做|做个|做一个|搞个|弄个|写个|建个|搭个).{0,8}(网站|软件|工具|程序|app|应用|服务|脚本|命令行|接口|后端|前端|系统|平台)|接手|二开|二次开发|采集.{0,6}(数据|接口|协议|app)|抓.{0,4}(协议|接口|包)|自动化.{0,6}(脚本|流程|任务)|加.{0,3}参数|修.{0,3}(个)?(bug|缺陷)|改.{0,3}(个)?(bug|缺陷)|(?<![a-z])部署(?![a-z])|上线|写.{0,4}文档') {
+    [void]$notes.Add('日常工程/开发任务（Q0=A）：走 kernel 六条业务线（desktop-product / web-service / cli-tool / source-takeover / exe-rebuild / protocol-automation），入口 kernel/04-console/cards/hub/04-全能工程中枢.md；人话对照见 reverse-engineering/references/assault-entry.md Q0 人话表。不是逆向任务时勿套逆向工序。')
+}
+
 # 防御：priority 若含 routes 之外的幽灵 id（配置错误），回退到 fallback 而非崩溃
 if ($routeIds -notcontains $primary) {
     Write-Host ("WARN: primary id '{0}' not in routes; falling back to {1}" -f $primary, $fallbackId) -ForegroundColor Yellow

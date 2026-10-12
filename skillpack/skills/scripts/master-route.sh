@@ -131,6 +131,13 @@ if primary is None:
 else:
     confidence = "high" if len(selected_order) == 1 else "medium"
 
+# ★ 与 master-route.ps1 逐字对齐的日常工程兜底指路 NOTE（advisory，永不改 PRIMARY、不改 routing.json）。
+# 零基础主人的日常工程任务（做软件/网站/工具、接手仓库、二开、采集协议、加参数/修 bug）
+# 在 routing.json 里没有技能路由（kernel 六条业务线不在本包路由表），常落到 R0 兜底；
+# 而 R0 指向 reverse-engineering，会让 AI 拿逆向工序跑空项目。这里只加指路 NOTE。
+if re.search(r"(帮我做|我想做|做个|做一个|搞个|弄个|写个|建个|搭个).{0,8}(网站|软件|工具|程序|app|应用|服务|脚本|命令行|接口|后端|前端|系统|平台)|接手|二开|二次开发|采集.{0,6}(数据|接口|协议|app)|抓.{0,4}(协议|接口|包)|自动化.{0,6}(脚本|流程|任务)|加.{0,3}参数|修.{0,3}(个)?(bug|缺陷)|改.{0,3}(个)?(bug|缺陷)|(?<![a-z])部署(?![a-z])|上线|写.{0,4}文档", text):
+    notes.append("日常工程/开发任务（Q0=A）：走 kernel 六条业务线（desktop-product / web-service / cli-tool / source-takeover / exe-rebuild / protocol-automation），入口 kernel/04-console/cards/hub/04-全能工程中枢.md；人话对照见 reverse-engineering/references/assault-entry.md Q0 人话表。不是逆向任务时勿套逆向工序。")
+
 if primary not in routes:
     print(f"ERROR: fallback/primary route is missing: {primary}", file=sys.stderr)
     raise SystemExit(2)

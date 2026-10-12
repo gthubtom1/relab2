@@ -129,7 +129,19 @@ if (-not [string]::IsNullOrWhiteSpace($ArtifactPath)) {
         throw "ArtifactPath must point inside CaseRoot: $ArtifactPath"
     }
     $artifactRef = $artifactFull.Substring($casePrefix.Length) -replace '\\', '/'
-    $contentHash = 'sha256:' + (Get-FileHash -LiteralPath $artifactFull -Algorithm SHA256).Hash.ToLowerInvariant()
+    # 内容寻址归一化：剔除重跑必然改写的易变行（generated/created 时间戳、seconds= 计时），
+    # 与 review_case.py 的 sha256_file_normalized 同一口径。否则 diff 记录这类
+    # 每次重跑都改写 generated 行的产物，钉一次、重跑即假红（实测 E-004 首跑绿、重跑红）。
+    $artifactBytes = [System.IO.File]::ReadAllBytes($artifactFull)
+    $latin1 = [System.Text.Encoding]::GetEncoding(28591)
+    $artifactText = $latin1.GetString($artifactBytes)
+    $keptLines = @($artifactText -split "(?<=\n)" | Where-Object { $_ -cnotmatch '^- (generated|created):' } |
+        ForEach-Object { $_ -creplace 'seconds=\d+(\.\d+)?', 'seconds=X' })
+    $normalizedBytes = $latin1.GetBytes(($keptLines -join ''))
+    $shaAlg = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $contentHash = 'sha256:' + (-join ($shaAlg.ComputeHash($normalizedBytes) | ForEach-Object { $_.ToString('x2') }))
+    } finally { $shaAlg.Dispose() }
 }
 
 $evDir = Join-Path $CaseRoot 'evidence'

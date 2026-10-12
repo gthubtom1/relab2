@@ -776,13 +776,30 @@ class ReviewCaseTests(unittest.TestCase):
             self.assertEqual(result["status"], "FAIL")
             self.assertTrue(any(item["code"] == "assault.deliverable_missing" for item in result["issues"]))
 
-    def test_assault_deliverable_missing_with_blocked_form_passes(self):
-        """完成形态判定：deliverable 不在盘上但 blocked 行有原因/影响/替代 → 该项放行。"""
+    def test_assault_deliverable_missing_with_blocked_form_fails(self):
+        """§2.2 后门已关：整案级 blocked 行不再豁免缺失的 deliverable。
+
+        旧契约里 routes/layers 行写 blocked + 原因/影响/替代 就能让「成品没出来」
+        变成可过审状态 —— 那是字面意义的「打不穿可过审」后门。新契约下同一 fixture
+        必须 FAIL：完成态功能行在场、deliverable 不在盘，任何 blocked 措辞都不放行。
+        """
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             self.write_assault_case(
                 root, deliverable="build/NOPE.exe", make_deliverable=False,
                 extra_layers="| L4 | 业务层 | blocked | E-002 | 原因: 云端样本不可得; 影响: F-001 无法对照; 替代: 本地 mock |")
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "assault.deliverable_missing" for item in result["issues"]))
+
+    def test_assault_limited_function_with_reasons_passes(self):
+        """合法的完成形态：功能行 受限 且写明原因/影响/替代、无完成态行 → 放行。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_assault_case(
+                root, deliverable="build/NOPE.exe", make_deliverable=False,
+                fstate="受限", fevidence="E-002", fnote="原因: 云端不可达; 影响: F-001; 替代: 本地 mock",
+                diff_rows="")
             result = REVIEW_CASE.review_case(root)
             deliverable_errors = [item for item in result["issues"] if item["code"] == "assault.deliverable_missing"]
             self.assertEqual(deliverable_errors, [])

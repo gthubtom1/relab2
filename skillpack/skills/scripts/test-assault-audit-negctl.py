@@ -234,14 +234,35 @@ CASES = [
      good_assault(unext="", ublock=""), True,
      ["assault.unknown_field_missing"], 1, "unknowns 缺「下一步 / 是否阻塞」"),
 
-    # ---------- 坏 fixture 5：完成形态 ----------
+    # ---------- 坏 fixture 5：完成形态（§2.2 后门已收窄） ----------
     ("bad-deliverable-missing-file", "must_fail",
      good_assault(deliverable="build/NOPE.exe"), False,
-     ["assault.deliverable_missing"], 1, "deliverable 指向的文件不存在且无 blocked 形态"),
+     ["assault.deliverable_missing"], 1, "deliverable 指向的文件不存在且无受限功能行"),
 
-    ("good-deliverable-missing-with-blocked", "must_pass",
-     good_assault(deliverable="build/NOPE.exe", extra_layers=BLOCKED_LAYER_OK), False,
-     [], 0, "deliverable 不在盘上但 blocked 行有原因/影响/替代 → 完成形态成立"),
+    # 旧契约：routes/layers 行随便写 blocked+三词就能豁免整案 → 这正是「打不穿可过审」后门。
+    # 新契约：整案级豁免被关闭；只有「功能行 受限 + 无完成态行」才成立。
+    ("bad-blocked-layer-no-longer-waives", "must_fail",
+     good_assault(deliverable="build/NOPE.exe", extra_layers=BLOCKED_LAYER_OK, fstate="已分析"),
+     False, ["assault.deliverable_missing"], 1,
+     "整案级 blocked 行（layer/routes）不再豁免缺失的 deliverable —— 后门已关"),
+
+    ("bad-blocked-with-completed-function", "must_fail",
+     good_assault(deliverable="build/NOPE.exe", fstate="对照一致", fevidence="diff/F-001.md"),
+     False, ["assault.deliverable_missing"], 1,
+     "有完成态功能行 + deliverable 不在盘 → 必须 error（连受限豁免也不放行）"),
+
+    ("good-deliverable-missing-with-limited-functions", "must_pass",
+     good_assault(deliverable="build/NOPE.exe", fstate="受限",
+                  fevidence="E-002", fnote="原因: 云端不可达; 影响: F-001; 替代: 本地 mock",
+                  diff_rows=""),
+     False, [], 0,
+     "功能行 受限 且写明原因/影响/替代、无完成态行 → 完成形态成立（合法受限）"),
+
+    ("bad-limited-missing-reasons", "must_fail",
+     good_assault(deliverable="build/NOPE.exe", fstate="受限",
+                  fevidence="E-002", fnote="受阻", diff_rows=""),
+     False, ["assault.deliverable_missing"], 1,
+     "功能行 受限 但备注没写原因/影响/替代 → 不构成完成形态"),
 
     # ---------- 边界：证据文字提到 blocked 但状态列非 blocked → 不触发（收窄后的误报防护） ----------
     ("good-blocked-word-in-evidence-only", "must_pass",
