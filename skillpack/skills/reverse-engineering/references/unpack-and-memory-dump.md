@@ -253,6 +253,18 @@ for s in pe.sections:
 9. **`cdb` 命令串必须 `-cf <文件>`**（内联带引号被 cmd 转义坏）。断点必须在 `g` 之前下。
 10. **ProcDump v12.01 的 `-ma` 需要管理员权限**扫受保护进程。
 
+
+## 出口（结论回填）
+
+回填位置：滚动报告 `assault.md`（`-Preset assault` 生成）的对应表。
+
+- dump 产物（磁盘文件 + SHA256）→ `## functions` 相关行的证据（L1 过层证据）
+- IAT 重建结果（导入表条数变化）→ `## layers` L1 行证据
+- dump 里的关键字符串 / 常量 → `## findings`（如需）
+- dump 不完整、缺节区等情况 → `## unknowns`（注明影响）
+
+判定：dump 不是终点——**dump 之后的真代码分析才是**。拿到 dump 就回状态机继续。
+
 ## 相关
 
 - `pe-header-parsing.md` — dump 后重新解析节区布局

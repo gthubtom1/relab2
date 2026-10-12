@@ -499,3 +499,13 @@ echo "[+] Done. 在 IDA 中重新分析验证。"
 - [MODeflattener](https://github.com/mrT4ntr4/MODeflattener) — 静态 deflat（ollvm-unflattener 的对照）
 
 > 关联文档：[[anti-analysis.md]] (反调试/反分析总表)、[[tools-advanced.md]] (高级工具集)、[[elf-analysis.md]] (ELF 文件分析)、[[ai-assisted-re.md]] (AI 辅助逆向)
+
+## 出口（结论回填）
+
+回填位置：滚动报告 `assault.md`（`-Preset assault` 生成）的对应表。
+
+- 去混淆后的可读控制流（函数级）→ `## functions` 对应行证据（L2 过层证据）
+- deflat 前后对比（CFG / 布尔表达式）→ `## findings`（类型 `reverse_algo` 如需）
+- 无法处理的函数 / 残留虚假控制流 → `## unknowns`
+
+判定：L2 过层判据 = 反编译出可读控制流（不再星形跳转）。达到了就过层，别恋战。

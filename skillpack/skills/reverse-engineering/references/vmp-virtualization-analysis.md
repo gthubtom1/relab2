@@ -201,6 +201,18 @@ VM entry 定位成功，四条**外部可观测**的证据缺一不可：
 9. **x64dbg headless 会自杀**（command loop 空转即退）。x64dbg 只能 GUI + MCP，agent 不要用 `-d`。
 10. **`movzx eax, byte [rdi]` 的寄存器选择随版本变**（可能是 `ecx`/`r8`），不要写死某个寄存器。
 
+
+## 出口（结论回填）
+
+做完本篇后，结论按性质回填 `assault.md`（`-Preset assault` 生成）：
+- 识别出保护形态 / VM 版本 / handler 结构 → `## findings`（A-xxx，类型 `format`）
+- 定位到 VM entry / dispatcher 地址 → `## functions`（状态「已分析」+ 证据）
+- 还原出的 handler 语义 / 指令映射 → `## findings` + 对应功能行证据
+- 拿不准的（如某 handler 变体含义）→ `## unknowns`（写明影响哪个功能）
+- 层状态变化（L1 过层 / 部分过层）→ `## layers` 更新 + 证据
+
+判定：**停在壳层打转 = 项目没推进**。过 L1 的意义是拿到货物，拿到就往下走。
+
 ## 相关
 
 - `vmp-devirtualization-toolchain.md` — 定位到 VM entry 之后的**还原**流程（本篇的下一步）

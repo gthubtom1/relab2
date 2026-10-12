@@ -253,6 +253,18 @@ q
 11. **等价性测试向量要覆盖边界**：`0`、`-1`、`0x7FFFFFFF`、`0x80000000`、`0xFFFFFFFF` 这些会暴露 shift/符号扩展相关的手册错误。只测随机值会漏。
 12. **NoVmp 的 star 数和适配性随时变**。文档里的维护状态是快照，落地前必须在你的样本上实测验证。
 
+
+## 出口（结论回填）
+
+回填位置：滚动报告 `assault.md`（`-Preset assault` 生成）的对应表。
+
+- devirt 产物（可读函数 / 执行 trace）→ `## functions` 对应行证据（状态可升「已实现」）
+- 三级降级中实际走通的路线（NoVmp / angr DSE / trace 折叠）→ `## routes` 的 patch/rewrite 行证据
+- 等价性验证结果（devirt 后行为 vs 原行为）→ `## diff_baseline` 对应行草稿（`diff-runner.py`）
+- 失败降级的原因（如符号执行爆路径）→ `## unknowns` 或 `## routes` 的 rejected_because
+
+判定：devirt 产物必须过等价性验证才算进，「看起来像」不算。
+
 ## 相关
 
 - `vmp-virtualization-analysis.md` — **前置篇**：VM entry / dispatcher / VM key 的定位（本篇的输入）

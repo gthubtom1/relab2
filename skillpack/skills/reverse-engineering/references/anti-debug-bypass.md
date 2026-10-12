@@ -332,6 +332,18 @@ Interceptor.attach(sit, {
 11. **cdb 退出码不可信**（实测 `-2147024866`），判成功看日志有没有 `Breakpoint 0 hit`。
 12. **`aslr` 下 `ba 1 eip <静态地址>` 会失效**。要用「基址 + RVA」动态算，或先 `.echo` 确认基址再算。
 
+
+## 出口（结论回填）
+
+回填位置：滚动报告 `assault.md`（`-Preset assault` 生成）的对应表。
+
+- 检测点清单（API / 时序 / 完整性）与对应绕过手法 → `## findings` + `## layers` L3 行证据
+- ScyllaHide 实测三项（peb/crdp/dbgport）结果 → L3 过层证据记录
+- 绕不过的检测点 → `## unknowns`（注明影响：哪些动态手段因此不可用）
+- 需要特殊配置的段（VMProtect/Themida 专项）→ 记录到该目标 `## layers` 备注
+
+判定：L3 过层判据 = 三项归零 + 程序正常运行超 10s（外部可观测）。
+
 ## 相关
 
 - `../anti-analysis.md` — 反分析手段**清单**与四级火箭断点顺序（本篇的清单对）

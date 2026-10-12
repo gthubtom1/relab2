@@ -94,6 +94,18 @@ MUST 产出：
 **下游**: 需客户端算法 → `ida-reverse`/`js-reverse`；需利用重放 → `pentest-tools`/`api-security`  
 **同级**: `malware-analysis`（C2 协议）、`digital-forensics`（流量取证）
 
+
+## 出口（结论回填）
+
+回填位置：滚动报告 `assault.md`（`-Preset assault` 生成）的对应表。
+
+- 消息布局 / 状态机还原结论 → `## findings`（类型 `proto`）
+- 可复现解码命令 → `## findings` 证据列（原样写命令，不许写「已解码」）
+- 对应功能行 → `## functions`（如协议还原是某功能的前提）
+- 未还原的消息 / 未知字段 → `## unknowns`
+
+判定：协议还原的成品形态是「输入 → 输出契约可复现」，不是贴一堆 hex。
+
 ## 任务完成自检
 
 - [ ] 是否还原了消息布局或状态机（而非只贴 hex）？

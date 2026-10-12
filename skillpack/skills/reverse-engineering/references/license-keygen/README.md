@@ -107,6 +107,29 @@ $pm   = 'D:\Tools\Sysinternals\Procmon64.exe'
 
 **停在 L1/L2 不算完成。** 详见 `license-keygen-05-keygen-verification-loop.md`。
 
+
+## ROUTE 状态硬判据（分类先行，不是忠告）
+
+进入本目录任何 01–07 工序之前，分类结论必须已经落进滚动报告 `assault.md` 的 `## routes` 表：
+
+- 断网实验结果（仍能激活 / 失败）→ 该行的**证据**列，原样写现象，不许写结论词
+- A / B / C / D 分类结论 → 该行的 **L4 分流**标注
+- 分类不确定时 → `confidence: low`，按 ROUTE 出口条件**先做小范围验证再进 EXECUTE**
+
+**分类未落表就进 02–07 = ROUTE 状态出口条件未满足**——这是判据，不是建议。
+（出处：`assault-entry.md` ROUTE 段引用的同一分类；本目录 01 的判定树是执行手段。）
+
+## 出口（结论回填）
+
+回填位置：滚动报告 `assault.md`（`-Preset assault` 生成）的对应表。
+
+- 分类结论（01–07 哪一类 / 哪几类混合）→ `## routes` 的 L4 分流证据
+- 断网实验现象 → `## findings`（类型 `vuln` 或 `proto`，视结论）
+- 校验链关键函数地址 → `## functions`（状态「已分析」+ 证据）
+- 分类不明确的疑点 → `## unknowns`
+
+判定：**先分类后动手**。把 D 类（云端）当 A 类（本地算法）硬啃是已知最大时间黑洞。
+
 ## 相关
 
 - `../code-patching.md` — 04 的公钥替换 / 逻辑 patch 的字节级细节

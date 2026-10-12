@@ -456,3 +456,32 @@ vendor 两周即过期、pin 即锁死。**只学三条设计，不融代码**�
 - commit: （本段提交）攻坚交付闭环 · 阶段2 assault 预设
 - 未达标/遗留: `test-bash-workflow.sh` 本机未实测（环境限制，如实记录；
   该脚本 CI 里仅 macOS runner 跑）
+
+### 阶段 3 · 状态机规则 + 工序卡出口统一 · 2026-10-13 02:35
+- 做了什么: ①`assault-entry.md` 插入完整四状态机章节（SURVEY/ROUTE/EXECUTE/VERIFY）：
+  mermaid `stateDiagram-v2` 照搬定稿 §5；每状态三要素（有效动作 / 出口条件 / 必须跳走）
+  齐备；EXECUTE 规矩引 `re-agent-workflow.md` §2.2/§2.3.5 既有铁律；VERIFY 判据含
+  diff_baseline 逐行 + NONDETERMINISTIC + `review_case.py --verify-hashes --strict`。
+  ②8 份工序卡各追加「出口（结论回填）」段（vmp-virtualization-analysis /
+  vmp-devirtualization-toolchain / unpack-and-memory-dump / ollvm-deobfuscation /
+  anti-debug-bypass / license-keygen/README / protocol-reverse/SKILL / struct-reconstruction），
+  每段含显式回填目标表（`assault.md` 的哪张表）+ 一句判定。③license-keygen/README.md 加
+  「ROUTE 状态硬判据（分类先行，不是忠告）」段：分类未落 `## routes` 表 = ROUTE 出口条件
+  未满足（判据化的措辞，非许可式）。
+- 改了哪些文件: `assault-entry.md`（+78 行）；8 份工序卡（+10~12 行/份，共 +94 行）；无其他
+- 验收命令与结果（全部实跑）:
+  - 禁语检查：`grep -n "下一步必须|必须第|第[一二三四]步必须"` → 空（无「下一步必须是 X」表述）
+  - 三要素计数：`有效动作`=5 / `出口条件`=5 / `必须跳走`=5（引文 1 + 四状态各 1）
+  - **8/8 出口段完好**（逐份正则抽取 + 四项检查全 PASS：提 assault.md / 指向具体表 /
+    有判定行 / README 含 ROUTE 硬判据）
+  - **零删除**：`git diff --numstat` 12 个文件行全为 `+X -0`（见下表）；
+    其中 7 份卡原文末行无换行符，首版尾部追加会让 git 把原末行标为修改（+X -1）——
+    按「只追加、0 删除」口径重定位为「插在最后章节之前、文末字节原样」，达成严格零删除
+  - 三类混合目标走查：VMP+云端（line 76）/ Themida+自检（line 78）/ 加固 APK（line 80）
+    均在卡上，且 Q4 表可各自走到 L4 分流
+  - `check-fences.py` rc=0；`verify-doc-links.py` rc=0；`audit-doc-code.py` → **rc=0**
+    （真错 0；同一处既有截断片段提示，与基线相同）
+- 门禁结果: `verify-routing-coherence.ps1` → ALL PASSED rc=0；`test-routing.ps1 -Quick` 65/65；
+  `test-routing.sh` 205/205；`verify-evolution.py` → **10/10 ALL GREEN（EXIT=0）**
+- commit: （本段提交）攻坚交付闭环 · 阶段3 状态机与出口统一
+- 未达标/遗留: 无
