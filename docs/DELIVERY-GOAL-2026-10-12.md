@@ -381,4 +381,20 @@ diff_baseline，对指定功能跑原程序与新实现，产出对照表草稿�
 - commit: （本段提交）交付能力建设 · 阶段2 rebuild 预设
 - 未达标/遗留: `test-bash-workflow.sh` 本机未实测（环境限制，如实记录）。
 
+### 阶段 3 · role-map 增 impl / ver · 2026-10-12 12:35
+
+- 做了什么: `ops/role-map.md` 角色表加 `impl`（实现）与 `ver`（验收）两行；新增「impl / ver 进入与退出条件」
+  一节（进入/退出均为可判定事实陈述，引用 ADF-R4* 证据门槛与闸门①/②）；交接表加 `cre→impl` /
+  `impl→ver` / `ver→lead` 三条；lead 强制协议加第 6 条「复刻 case 必须显式指定 impl 或 ver 角色」。
+- 改了哪些文件: `skillpack/skills/ops/role-map.md`（+15 行）
+- 验收命令与结果:
+  - `git diff` 删除行计数 = 0；`--stat` → `15 insertions(+)`；原有 8 角色定义行逐行未动
+  - 进入条件核对：impl = functions 非空 + 「已分析」证据回填 + ADF-R4* ≥2 独立证据；
+    ver = 收到「已实现」行 + `diff/` 对照记录；与 lead 协议第 6 条、MUST NOT 段无矛盾
+- 门禁结果: `verify-routing-coherence.ps1` → ALL PASSED，exit 0（含 `role-map` 字段断言）；
+  `verify-evolution.py` 10/10 全绿，EXIT=0
+- commit: （本段提交）交付能力建设 · 阶段3 role-map 增 impl/ver
+- 未达标/遗留: 无
+
+
 
