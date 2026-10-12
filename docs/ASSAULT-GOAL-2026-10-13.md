@@ -685,3 +685,133 @@ vendor 两周即过期、pin 即锁死。**只学三条设计，不融代码**�
     本次 ci.yml 新增的是 review_case 负控 step（非 manifest 门禁条目），wiring 门禁
     对「已声明门禁必须被 workflow 调用」的判据仍全绿——无需改锁文件。
 - commit: （本段提交）攻坚交付闭环 · 攻坚者五条落地
+
+---
+
+## 9a 全项目自检 · 2026-10-13 03:30
+
+> 依据 PATCH 文件 §2 的八维自检法。每维「已验证 / 有问题 / 待定」+
+> 实物依据（读的文件 / 跑的命令 / 看到的输出）。
+
+### 维度 A：三条主路径互通
+- 状态: **有问题（已修）**
+- 依据:
+  - 三处分层措辞对照（实读）：`assault-entry.md` Q2 层表（L0 容器/L1 壳/L2 混淆/L3 自检/L4 业务）
+    vs `assault.md` 模板 layers 表头（同 5 层 + 指向 Q2 的过层判据指针）
+    vs `review_case.py` layers 检查（`L\d+` fullmatch + 状态+证据 + blocked 三词）——同一套 ✓
+  - 下游消费链实测：`review_case.py --format json` 从真 case 读回 state=VERIFY /
+    5 层 / 2 功能 / 1 unknown / deliverable_present=True；`diff-runner.py parse_assault`
+    读回 baseline_command + cases [F-001|0, F-002|1] ✓
+- 问题: **发现并修复**——`assault-entry.md` 第一屏**缺攻坚者五条**（PATCH §1 唯一必做缺口；
+  上一轮编辑未落入提交，`git log` 证实）；`assault.md` 模板缺五条指针；
+  `SKILL.md` 步骤 4 只写「完成四问」未提先读五条。三项已补（见 P1 记录），
+  `+38/-0`（assault-entry）、模板 +4 行、SKILL.md 1 行改写。
+
+### 维度 B：Q0 分流零影响
+- 状态: **已验证**
+- 依据:
+  - case-init 双脚本自 stage-2 commit（e5b1abd）以来 **零改动**（`git diff --stat` 空）
+  - Q0 非逆向任务实测（本会话早前跑过，产物仍存）：Temp/q0-test 的
+    scope.md `grep -c assault` = **0**、无 assault.md、文件集 = 常规四件
+  - 六组零差异对照（PS/bash × plain/offline/ctf）在阶段 2 已达成并记录 §9
+
+### 维度 C：状态机无步骤化表述
+- 状态: **已验证**
+- 依据: `assault-entry.md` 状态机段（line 165-210）+ SKILL.md + 模板三处
+  grep「第N步必须 / 下一步必须 / 先做..再做」= **空**；
+  四状态各三要素（有效动作/出口条件/必须跳走）计数 = 5（引文1+四状态各1，符合设计）
+
+### 维度 D：工序卡出口统一
+- 状态: **已验证**
+- 依据: 8/8 卡出口段实读，全部指向具体表名：
+  vmp-virt（findings/functions/layers/unknowns）、vmp-devirt（diff_baseline/functions/routes/unknowns）、
+  unpack（findings/functions/layers/unknowns）、ollvm（findings/functions/unknowns）、
+  anti-debug（findings/layers/unknowns）、license-keygen（findings/functions/routes/unknowns）、
+  protocol-reverse（findings/functions/unknowns）、struct（findings/functions/unknowns）——
+  无一泛泛写「记录到报告」
+
+### 维度 E：工具与判据对得上本机现实
+- 状态: **已验证（1 特例有文档兜底）**
+- 依据: 探测层 `Resolve-ReverseToolSpec` 逐项实测 12 个：
+  11 个 `Available=True`（diec/floss/capa/pe-sieve/scyllahide/upx/r2/frida/jadx/binwalk/yara）；
+  `cdbX64=False`——**预期设计**：`toolmap.default.json` 记载「绝不把 WindowsApps 加进 PATH；
+  唯一入口是 app execution alias」；`anti-debug-bypass.md` line 25/71 已写明
+  「cdb 只能走 alias」并给出完整用法（`$env:LOCALAPPDATA\Microsoft\WindowsApps\cdbX64.exe`）。
+  alias 直跑验证：`cdb version 10.0.29661.1004` 回显正常。判据与实际一致，无需改。
+  补充实测（MCP/库通道）：`x64dbg` 目录在 `D:\Tools\x64dbg`（GUI 需真实桌面会话，
+  与既有 KNOWN-BOUNDARIES 一致）；`Ghidra` 在 `D:\Tools\Ghidra`；
+  `pyghidra-mcp` 已注册于 `~/.omp/agent/mcp.json`；`angr+qiling+z3` Python 库导入 OK。
+
+### 维度 F：五条接入判断链（机制兜底）
+- 状态: **有问题（如实记录：三条软、两条硬）**
+- 依据（逐条查机制）:
+  - 规则①（搬运工/货物）: 软——五条文字 + `license-keygen/README` 原有同义条文，
+    无机器检查。**可接受**：这是判断姿态，机器无法判定「你停在哪层」。
+  - 规则②（≥2 独立证据）: 软——ADF-R4* 原文是 **SHOULD**（validated 要求 ≥2 独立），
+    `review_case.py` 只检查「validated + confidence=low」矛盾（finding.confidence error），
+    **不数证据条数**。**可接受**：R4* 明示 SHOULD，机械强制会误伤
+    （同一份动态 trace 可合法支撑多条 finding）。留作建议项，见「建议但不修」。
+  - 规则③（矛盾优先）: 软——纯姿态，无机制。**可接受**：矛盾识别是模型判断力本体。
+  - 规则④（不许虚报完成）: **硬**——`review_case.py` 三条 error 级检查：
+    `assault.state_exceeds_evidence`（完成态无证据）、`assault.diff_verdict_unproven`
+    （verdict 未断言一致）、`assault.deliverable_missing`（成品不在盘且无 blocked 形态）；
+    负控 15/15 证明真会拦。
+  - 规则⑤（decision_delta）: **硬（契约级）**——`timeline-workitem.md` line 46：
+    「每个真实 stage/turn transition **MUST** 写 decision_delta」；assault 模板与
+    entries 均要求。案例本体检证：真 case timeline 含 2 条 decision_delta。
+
+### 维度 G：跨会话接手
+- 状态: **已验证**
+- 依据（只读试跑，未改任何文件）: 打开 `work/assault-prng-upx/assault.md` 的 §0 状态行 =
+  current_state(VERIFY) / since / goal_now / why_this_state(引 Evidence) / next_milestone
+  / open_unknowns —— 六字段齐、全部可判定；§unknowns 单行含三列（影响/下一步/是否阻塞）；
+  结论：**仅凭这两处即可接手**（知道「在 VERIFY、为什么、下一步做什么、还剩什么」）。
+
+### 维度 H：日常路径污染
+- 状态: **已验证**
+- 依据: `git diff --numstat b2b0847..HEAD -- skillpack/` 有删除行的仅 5 个文件，逐一核查：
+  1. `case-init.ps1` / `case-init.sh`：删除行 = **白名单文案旧版**（`...|update` →
+     `...|update|assault`），预期修改（新预设必须同步文案）；
+  2. `diff-runner.py`：删除行 = ①docstring 三行（改为三模式描述）②`input=` 剥离修复
+     （3 行）③main 分支重构（update/assault 三分支 + source_name）；全部有 §9 记录；
+  3. `signal-to-tool-decision.md`：删除行 = 指空修复（1 行替换）；
+  4. `experience-cards/INDEX.md`：删除行 = 「共 8 张」→新计数（stamp 自动生成）。
+  **结论**: 全部为有记录的预期修改；不含 assault 预设的运行路径均不受影响
+  （case-init 六组零差异 + review_case 8 次运行对照均在 §9 有证据）。
+
+### 自检结论
+- **必须修的**（已全部修完）:
+  1. 攻坚者五条未落在 `assault-entry.md`（PATCH §1 唯一必做缺口）→ 已补，
+     位置判据「五条行号全部 < Q0 行号」实测通过（19/24/30/35/40 < 52）；
+  2. `assault.md` 模板无五条指针 → 已补（4 行指针，无全文复制）；
+  3. `SKILL.md` 步骤 4 未提「先读五条」→ 已补；
+  4. `ASSAULT-GOAL §4.1` 第三条标题缺闭合 `**`（markdown 格式 bug）→ 已修；
+  5. review_case blocked 触发面（审计提示）→ 已收窄到状态列 + 负控 +1（15/15）。
+- **建议但本次不修的**:
+  1. **ADF-R4* 的 ≥2 独立证据可考虑机检**（如报告 finding 级统计）——本次不修理由：
+     R4* 原文为 SHOULD，机械数条数会误伤合法单证场景（同一 trace 证据可合法支撑多条
+     finding 的不同侧面）；且证据「独立性」无法由机器判定（需语义级判断）。
+     正确形态是保持操作者纪律（五条②）+ 人工复核，而非硬红。
+  2. **CDB alias 的探测层可见性**（`Available=False` 但实际可用）——本次不修理由：
+     本设计有明确防坑意图（WindowsApps 目录**绝不能**进 PATH，否则 MSIX ACL 让 cdb
+     直跑报「拒绝访问」，那比没有更糟——toolmap note 2026-10-09 实测记载）；
+     探测层「报 False + 卡片写明 alias 通道」正是正确兜底，改探测逻辑反而引入风险。
+  3. **五条③（矛盾优先）无机制兜底**——姿态类规则，机器无法判定「你是否选择了顺眼的
+     方向放下矛盾」；保持文字纪律即可。
+- **确认没问题的**:
+  - 三处分层措辞同一套（维度 A）；下游消费链四表全被读取（维度 A）；
+  - case-init 双脚本自 stage-2 后零改动、Q0 零污染（维度 B）；
+  - 状态机无步骤化（维度 C）；8/8 出口指具体表名（维度 D）；
+  - 11/12 工具本机可用 + cdb 特例有文档兜底（维度 E）；
+  - 规则④有硬机制（三条 error 级检查 + 15/15 负控）（维度 F）；
+  - 跨会话接手只凭 §0+§unknowns 可行（维度 G）；
+  - 全部删除行均为有记录的预期修改（维度 H）。
+
+### §9a 门禁复跑（PATCH §5 第 4 条）
+- `check-fences.py` rc=0；`verify-doc-links.py` rc=0；`audit-doc-code.py` **rc=0**
+  （真错 0；同一处既有截断片段提示，与基线相同）
+- `verify-evolution.py` → **10/10 ALL GREEN（EXIT=0）**
+- `verify-routing-coherence.ps1` → **ALL PASSED**
+- 终版零差异（当次实跑）：同目录、三组参数（plain / offline-sample / ctf-public），
+  基线脚本（b2b0847）vs 当前脚本各跑一次，文件集相同、内容除 `created` 时间戳外
+  逐字节一致 → **三组 ALL PASS**
