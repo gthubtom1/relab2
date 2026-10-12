@@ -511,3 +511,32 @@
 - commit: （本段提交）版本更新融合 · 阶段2 更新入口
 - 未达标/遗留: 无。注：零差异对照物 = `HEAD` 的 case-init 两脚本（`git show` 抽取核对哈希），
   归一化只涉 `- created:` 一行与 timeline 首行时间戳；比对目录为 gitignored 临时目录。
+
+### 阶段 3 · review_case.py 扩展更新审计 · 2026-10-13 00:40
+- 做了什么: `review_case.py` 新增 `parse_update()`（检测到 `update.md` 才启用，无则输出逐字不变）：
+  ①`three_lines` 三句须有真实内容（模板占位符——反引号包尖括号——不算写了）；
+  ②`function_delta` 覆盖 rebuild.md 全部 F-ID（漏一行报错；动作非 new 的未知 F-ID 也报错；
+  动作值限 keep/retest/redo/new）；③`verification` 五列填齐，标「一致」的行必须有
+  `diff-update/<F-ID>.md` 记录——与初逆**同一把尺**：记录里两段原始 stdout 逐字节比对
+  （`update.diff_bytes_mismatch`）+ 可复现性（`update.diff_unreproducible`），
+  老格式记录只记迁移窗口 warning；④三处版本指纹各带 64-hex SHA256。
+  表头行（`F-ID`）与分隔行显式跳过（`FUNCTION_ID.fullmatch` 会把表头误匹配）。
+- 改了哪些文件: `skillpack/skills/case-review/scripts/review_case.py`（+222 行）、
+  `skillpack/skills/case-review/tests/test_review_case.py`（+212 行，17 → 28 用例）、
+  `skillpack/skills/case-review/SKILL.md`（Scope + ACTION REQUIRED 说明新检查）、
+  `skillpack/skills/scripts/test-update-audit-negctl.py`（新建）、
+  `.github/workflows/ci.yml`（+1 step「Update follow-up audit negative controls」）
+- 验收命令与结果（全部实跑）:
+  - `python skillpack/skills/scripts/test-update-audit-negctl.py` → **13/13 controls honoured**
+    （12 坏+警告 fixture 各被对应 code 拦 + 1 好 fixture 0 报错 + 无 update.md 回归；
+    走 CLI 子进程，验的是用户实际会跑的退出码）
+  - `python skillpack/skills/case-review/tests/test_review_case.py` → **Ran 28 tests OK**
+  - `python skillpack/skills/scripts/test-rebuild-audit-negctl.py` → 16/16 controls honoured（未受破坏）
+  - **回归底线**：`work/rebuild-sha256sum` markdown/json/plain + `skillpack/examples/ctf-demo`
+    markdown/json 五份输出，改前 vs 改后（归一化 generated_at 时间戳）**逐字一致**
+  - `python skillpack/scripts/verify-evolution.py` → **10/10 ALL GREEN**
+  - `verify-workflow-refs.py` → 35 个引用全部存在（新 step 脚本真实）
+  - `check-fences.py` rc=0、`verify-doc-links.py` rc=0
+- 门禁结果: 上列全绿
+- commit: （本段提交）版本更新融合 · 阶段3 更新审计
+- 未达标/遗留: 无

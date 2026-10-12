@@ -470,6 +470,13 @@ jobs:
         shell: bash
         run: python3 skillpack/skills/scripts/test-rebuild-audit-negctl.py
 
+      # 负控：review_case.py 的 update 更新审计（更新阶段新增）。
+      # 拦的是「拿旧对账交差」「漏功能」「三句没写就动手」三类虚报；
+      # 同 rebuild 负控的理由：没有它，坏 case 报绿与审计没跑分不出来。
+      - name: Update follow-up audit negative controls
+        shell: bash
+        run: python3 skillpack/skills/scripts/test-update-audit-negctl.py
+
       # ★ 2026-10-10 新增：CI 引用的仓库内文件必须真实存在。
       #   审查时抓到 3 处指向空气的命令 —— ci.yml:227/231 与
       #   macos-bash-compat.yml:42 调的两个 .sh 脚本**从未存在过**

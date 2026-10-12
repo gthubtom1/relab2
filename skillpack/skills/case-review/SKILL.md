@@ -24,6 +24,15 @@ This skill covers:
   completed row's cited diff record really shows identical stdout bytes for both
   programs (the record is verified, not the table's claim).
   A case without `rebuild.md` produces exactly the same report as before.
+- **Update follow-up audit** — when `work/<case>/update.md` exists, the review
+  additionally checks the four update-stage facts: all three `three_lines` fields
+  carry real content (template placeholders do not count), `function_delta`
+  covers every F-ID in `rebuild.md` (only action=new may add a new F-ID), each
+  `verification` row keeps its five columns and a row asserting 一致 has its
+  `diff-update/` record on disk — held to the same byte-level scale as 初逆
+  (raw stdout blocks compared byte for byte, plus reproducibility) — and the
+  three version fingerprints each carry a 64-hex SHA256.
+  A case without `update.md` produces exactly the same report as before.
 
 It MUST NOT perform reconnaissance, exploitation, dynamic instrumentation, or target changes. Those actions belong to the routed analysis skill and require the case scope gate.
 
@@ -51,6 +60,15 @@ It MUST NOT perform reconnaissance, exploitation, dynamic instrumentation, or ta
    Negative controls for this audit: `python skillpack/skills/scripts/test-rebuild-audit-negctl.py`
    (proves the audit catches 状态虚高 / 对照表缺行 / Coverage 缺项 / 记录字节不一致 /
    命令不可复现 / 老格式记录 warning, and still passes a complete table and a case without `rebuild.md`).
+   When the case carries `update.md`, the update checks follow the same gates file
+   (`../ops/rebuild-gates.md` [更新阶段]): a three_lines field that is empty or still
+   the template placeholder, a `function_delta` that misses any F-ID from
+   `rebuild.md` (or invents one without action=new), a `verification` row that
+   leaves a column empty, a row asserting 一致 whose `diff-update/` record is
+   missing or whose record shows differing stdout bytes, and a version fingerprint
+   without a 64-hex SHA256 are all errors — fix the table or produce the record,
+   do not lower the check.
+   Negative controls: `python skillpack/skills/scripts/test-update-audit-negctl.py`.
 
 ## Tool dependencies
 

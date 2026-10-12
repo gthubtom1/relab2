@@ -387,5 +387,217 @@ class ReviewCaseTests(unittest.TestCase):
             self.assertFalse(any(item["code"].startswith("rebuild.") for item in result["issues"]))
             self.assertNotIn("## Rebuild delivery", REVIEW_CASE.render_markdown(result))
 
+    # ------------------------------------------------------------------
+    # Update follow-up audit (update.md present) — four checks.
+    # A case without update.md must not grow any update.* issue, which
+    # test_rebuild_absent_case_has_no_rebuild_key pins down above.
+    # ------------------------------------------------------------------
+
+    UPDATE_RECORD = """<!-- diff-runner draft — 供人工确认后回填 update.md 的 verification 表 -->
+# Diff draft (update): F-001
+
+- case: case
+- generated: 2026-01-01T00:00:00
+- baseline_command: `echo 2`
+- rebuilt_command: `echo 2`
+- judged_by: human
+
+## Raw records
+
+### F-001 · case 1 · input: --mode a
+
+- baseline: exit=0 seconds=0.1
+- rebuilt: exit=0 seconds=0.1
+
+```text
+--- baseline stdout ---
+2
+--- rebuilt stdout ---
+2
+```
+"""
+
+    def write_update_case(self, root, three_lines_we="我们改过 F-001（rewrite）",
+                          delta_rows=None, verification_rows=None,
+                          fingerprints=None, with_record=True,
+                          record_text=None):
+        self.write_rebuild_case(root)
+        (root / "diff-update").mkdir()
+        if with_record:
+            (root / "diff-update" / "F-001.md").write_text(
+                record_text if record_text is not None else self.UPDATE_RECORD,
+                encoding="utf-8")
+        if fingerprints is None:
+            fingerprints = {
+                "old_upstream": "samples/old.exe | 1.0 | sha256:" + "a" * 64,
+                "new_upstream": "samples/new.exe | 1.1 | sha256:" + "b" * 64,
+                "our_old_build": "build/out.py | sha256:" + "c" * 64,
+            }
+        if delta_rows is None:
+            delta_rows = "| F-001 | 未变 | 仍一致 | keep | diff/F-001.md |"
+        if verification_rows is None:
+            verification_rows = "| F-001 | --mode a | 2 | 2 | 一致 | ok |"
+        (root / "update.md").write_text(
+            """# Update
+
+## target
+
+- case: case
+- old_upstream: %s
+- new_upstream: %s
+- our_old_build: %s
+- goal: `新版等价复刻`
+
+## three_lines
+
+- we_changed: %s
+- upstream_new: 上游把 F-001 的行为保持不变
+- portable: F-001 可 keep，无新能力
+
+## function_delta
+
+| F-ID | 上游新版状态 | 我们的复刻是否仍有效 | 动作 | 依据 |
+|------|--------------|----------------------|------|------|
+%s
+
+## patch_shift
+
+| F-ID | 旧特征码 | 新版命中位置 (VA/offset) | 位移重算 | 结果 |
+|------|----------|--------------------------|----------|------|
+
+## verification
+
+| F-ID | 输入 | 新版原程序结果 | 新复刻结果 | 是否一致 | 说明 |
+|------|------|----------------|------------|----------|------|
+%s
+
+## out_of_update
+
+| 项 | 理由 |
+|----|------|
+| | |
+""" % (fingerprints["old_upstream"], fingerprints["new_upstream"],
+       fingerprints["our_old_build"], three_lines_we, delta_rows, verification_rows),
+            encoding="utf-8",
+        )
+
+    def test_update_case_passes_with_full_table(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_update_case(root)
+            result = REVIEW_CASE.review_case(root)
+            update_errors = [item for item in result["issues"]
+                             if item["code"].startswith("update.") and item["level"] == "error"]
+            self.assertEqual(update_errors, [])
+            self.assertIsNotNone(result.get("update"))
+            self.assertIn("## Update follow-up", REVIEW_CASE.render_markdown(result))
+
+    def test_update_missing_three_line_fails(self):
+        """坏 fixture：三句对照缺一句 → 报错（防没写三句就动手）。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_update_case(root, three_lines_we="")
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "update.three_lines_missing" for item in result["issues"]))
+
+    def test_update_placeholder_three_line_still_counts_missing(self):
+        """未填的模板占位（反引号包尖括号）不算「写了」→ 仍报缺。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_update_case(root, three_lines_we="`<我们改过哪些功能 —— 上一版复刻的功能面与路线（patch/recover/rewrite/keep）>`")
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "update.three_lines_missing" for item in result["issues"]))
+
+    def test_update_delta_missing_fid_fails(self):
+        """坏 fixture：function_delta 漏了 rebuild.md 里的 F-ID。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_update_case(root, delta_rows="")
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "update.delta_missing" for item in result["issues"]))
+
+    def test_update_delta_unknown_fid_fails(self):
+        """坏 fixture：function_delta 出现 rebuild.md 之外的 F-ID 且动作非 new。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_update_case(
+                root,
+                delta_rows="| F-001 | 未变 | 仍一致 | keep | diff/F-001.md |\n"
+                           "| F-002 | 新增替代 | 需重测 | keep | x |")
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "update.delta_unknown" for item in result["issues"]))
+
+    def test_update_delta_new_fid_allowed(self):
+        """动作 new 允许引入 rebuild.md 之外的新 F-ID（对应记录也在位即可）。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_update_case(
+                root,
+                delta_rows="| F-001 | 未变 | 仍一致 | keep | diff/F-001.md |\n"
+                           "| F-002 | 新增替代 | （新能力） | new | E-001 |",
+                verification_rows="| F-001 | --mode a | 2 | 2 | 一致 | ok |\n"
+                                  "| F-002 | --mode b | 3 | 3 | 一致 | new |")
+            (root / "diff-update" / "F-002.md").write_text(
+                self.UPDATE_RECORD.replace("F-001", "F-002"), encoding="utf-8")
+            result = REVIEW_CASE.review_case(root)
+            update_errors = [item for item in result["issues"]
+                             if item["code"].startswith("update.") and item["level"] == "error"]
+            self.assertEqual(update_errors, [])
+
+    def test_update_verification_missing_record_fails(self):
+        """坏 fixture：verification 行标一致但 diff-update 记录不存在。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_update_case(root, with_record=False)
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "update.verification_record_missing" for item in result["issues"]))
+
+    def test_update_verification_bytes_mismatch_fails(self):
+        """verification 标一致，但记录里两段 stdout 逐字节不同 → 必须报。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            forged = self.UPDATE_RECORD.replace("--- rebuilt stdout ---\n2", "--- rebuilt stdout ---\n3")
+            self.write_update_case(root, record_text=forged)
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "update.diff_bytes_mismatch" for item in result["issues"]))
+
+    def test_update_fingerprint_hashless_fails(self):
+        """坏 fixture：三处版本指纹有一处没带 64-hex SHA256。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_update_case(root, fingerprints={
+                "old_upstream": "samples/old.exe | 1.0",
+                "new_upstream": "samples/new.exe | 1.1 | sha256:" + "b" * 64,
+                "our_old_build": "build/out.py | sha256:" + "c" * 64,
+            })
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "update.fingerprint_hashless" for item in result["issues"]))
+
+    def test_update_verification_missing_column_fails(self):
+        """坏 fixture：verification 五列缺一列。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_update_case(root, verification_rows="| F-001 | --mode a | 2 |  | 一致 |  |")
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "update.verification_incomplete" for item in result["issues"]))
+
+    def test_update_absent_case_has_no_update_key(self):
+        """无 update.md 时不出现 update 键，输出与改前一致。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_rebuild_case(root)
+            result = REVIEW_CASE.review_case(root)
+            self.assertNotIn("update", result)
+            self.assertFalse(any(item["code"].startswith("update.") for item in result["issues"]))
+            self.assertNotIn("## Update follow-up", REVIEW_CASE.render_markdown(result))
+
 if __name__ == "__main__":
     unittest.main()

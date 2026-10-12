@@ -66,6 +66,16 @@ REBUILD_STDOUT_BLOCK = re.compile(
 # 没跑起来的命令（shell 缺失 / 超时）不能支撑任何完成态判定。
 REBUILD_RUN_LINE = re.compile(rb"(?m)^\s*-\s*(baseline|rebuilt):\s*exit=(\S+)(.*)$")
 
+# --- update follow-up audit (only when work/<case>/update.md exists) ---
+# Contract: skills/ops/rebuild-gates.md [更新阶段] + skills/templates/update.md.
+# A case without update.md skips all of this: the plain review stays identical.
+UPDATE_FINGERPRINT_FIELDS = ("old_upstream", "new_upstream", "our_old_build")
+UPDATE_THREE_LINE_FIELDS = ("we_changed", "upstream_new", "portable")
+UPDATE_DELTA_ACTIONS = {"keep", "retest", "redo", "new"}
+UPDATE_VERIFICATION_COLUMNS = ("输入", "新版原程序结果", "新复刻结果", "是否一致", "说明")
+UPDATE_SHA256 = re.compile(r"(?i)\b[0-9a-f]{64}\b")
+UPDATE_DIFF_UPDATE_REF = re.compile(r"[A-Za-z0-9_./\\-]*diff-update[/\\][A-Za-z0-9_.\\/-]+")
+
 def field_value(text, name):
     lines = text.splitlines()
     for index, line in enumerate(lines):
@@ -410,6 +420,191 @@ def parse_rebuild(root, issues):
     return result
 
 
+def _update_field_filled(value):
+    """True when a field carries real content, not the template placeholder.
+
+    The template ships values wrapped in backticks with angle brackets
+    (`` `<...>` ``): an unfilled skeleton keeps the placeholder, and a
+    placeholder must not count as "written" — otherwise 三句对照 passes
+    before anyone wrote a single sentence.
+    """
+    stripped = (value or "").strip()
+    if not stripped:
+        return False
+    inner = stripped.strip("`").strip()
+    return not (inner.startswith("<") and inner.endswith(">"))
+
+
+def parse_update(root, issues, rebuild):
+    """Parse update.md against skills/templates/update.md, then audit the follow-up.
+
+    Returns None when the file is absent: a non-update case must produce exactly
+    the same report as before this audit existed. When present, four checks run
+    (skills/ops/rebuild-gates.md [更新阶段] + docs/UPDATE-GOAL-2026-10-12.md §4.3):
+      1. three_lines: all three fields carry real content (缺一句 = 更新范围没定义);
+      2. function_delta covers every F-ID in rebuild.md's functions table;
+      3. verification rows keep their five columns; a row whose verdict asserts
+         一致 must have its diff-update record, and the record is held to the
+         same byte-level scale as 初逆 (raw stdout blocks compared byte for byte);
+      4. the three version fingerprints carry a 64-hex SHA256 each.
+    Also: a recorded 动作 must be keep/retest/redo/new; only action=new may
+    introduce an F-ID that rebuild.md does not list.
+    """
+    path = root / "update.md"
+    if not path.is_file():
+        return None
+
+    text = path.read_text(encoding="utf-8-sig")
+    result = {
+        "present": True,
+        "path": "update.md",
+        "fingerprints": {},    # field -> bool (hash present)
+        "three_lines": {},     # field -> bool (real content present)
+        "delta_rows": [],      # {"id":..., "action":..., "line":...}
+        "verification_rows": [],  # {"id":..., "cells":[...], "line":...}
+    }
+
+    # --- check 4: three version fingerprints, each carrying a 64-hex SHA256 ---
+    target_section = section_text(text, "target")
+    for field in UPDATE_FINGERPRINT_FIELDS:
+        value = field_value(target_section, field)
+        has_hash = bool(UPDATE_SHA256.search(value or ""))
+        result["fingerprints"][field] = has_hash
+        if not value:
+            issue(issues, "error", "update.fingerprint_missing",
+                  "update.md target is missing " + field + " (path | version | sha256:<64hex>)",
+                  "update.md")
+        elif not has_hash:
+            issue(issues, "error", "update.fingerprint_hashless",
+                  "update.md target." + field + " has no 64-hex SHA256 (got: " + value + ")",
+                  "update.md")
+
+    # --- check 1: three_lines all carry real content ---
+    three_lines_section = section_text(text, "three_lines")
+    for field in UPDATE_THREE_LINE_FIELDS:
+        value = field_value(three_lines_section, field)
+        filled = _update_field_filled(value)
+        result["three_lines"][field] = filled
+        if not filled:
+            issue(issues, "error", "update.three_lines_missing",
+                  "update.md three_lines." + field + " is empty or still the placeholder "
+                  "(缺一句 = 更新范围没定义)",
+                  "update.md")
+
+    # --- function_delta: per-F-ID rows with a legal action ---
+    delta_section = section_text(text, "function_delta")
+    for line_number, cells in _iter_table_rows(delta_section):
+        if _is_markdown_separator_row(cells):
+            continue
+        if not cells or cells[0] == "F-ID" or not FUNCTION_ID.fullmatch(cells[0]):
+            continue
+        action_raw = cells[3].strip().lower() if len(cells) > 3 else ""
+        result["delta_rows"].append({"id": cells[0], "action": action_raw, "line": line_number})
+        if action_raw and action_raw not in UPDATE_DELTA_ACTIONS:
+            issue(issues, "error", "update.delta_action_invalid",
+                  cells[0] + " has unsupported action: " + action_raw +
+                  " (allowed: keep/retest/redo/new)",
+                  "update.md:" + str(line_number))
+
+    if not result["delta_rows"]:
+        issue(issues, "error", "update.delta_empty",
+              "update.md function_delta has no F-xxx rows (逐行判定 = 更新范围的定义)",
+              "update.md")
+
+    # --- check 2: function_delta covers every F-ID in rebuild.md ---
+    # 漏一行 = 更新范围没定义：rebuild.md 功能表里的每个 F-ID 都要有处置。
+    if rebuild and rebuild.get("functions"):
+        delta_ids = {row["id"] for row in result["delta_rows"]}
+        for function_id in sorted(set(rebuild["functions"]) - delta_ids):
+            issue(issues, "error", "update.delta_missing",
+                  function_id + " is in rebuild.md functions but has no function_delta row "
+                  "(every F-ID needs a keep/retest/redo/new decision)",
+                  "update.md")
+        # 新能力行（动作 new）允许引入 rebuild.md 之外的新 F-ID；其余未知 ID 报错。
+        for row in result["delta_rows"]:
+            if row["id"] not in rebuild["functions"] and row["action"] != "new":
+                issue(issues, "error", "update.delta_unknown",
+                      row["id"] + " has a function_delta row but no rebuild.md functions row "
+                      "(only action=new may introduce a new F-ID)",
+                      "update.md:" + str(row["line"]))
+
+    # --- check 3: verification five columns + 对照一致 held to the same scale ---
+    verification_section = section_text(text, "verification")
+    for line_number, cells in _iter_table_rows(verification_section):
+        if _is_markdown_separator_row(cells):
+            continue
+        if not cells or cells[0] == "F-ID" or not FUNCTION_ID.fullmatch(cells[0]):
+            continue
+        result["verification_rows"].append({"id": cells[0], "cells": cells, "line": line_number})
+        body = cells[1:6]
+        if len(body) < 5:
+            issue(issues, "error", "update.verification_columns",
+                  cells[0] + " verification row needs 5 columns 输入/新版原程序结果/新复刻结果/是否一致/说明",
+                  "update.md:" + str(line_number))
+            continue
+        empty = [name for name, value in zip(UPDATE_VERIFICATION_COLUMNS, body) if not value]
+        if empty:
+            issue(issues, "error", "update.verification_incomplete",
+                  cells[0] + " verification row leaves column(s) empty: " + "/".join(empty),
+                  "update.md:" + str(line_number))
+        verdict = body[3]
+        if not REBUILD_POSITIVE_VERDICT.search(verdict):
+            continue
+        # 「对照一致」的行必须有对应的对照记录：行内显式引用优先，
+        # 缺省约定为 diff-update/<F-ID>.md。显式路径不存在 → 直接报；
+        # 未显式引用 → 缺省记录文件必须在位。
+        explicit = []
+        for value in list(cells) + [verdict]:
+            for candidate in UPDATE_DIFF_UPDATE_REF.findall(value or ""):
+                normalized = candidate.replace("\\", "/").lstrip("/")
+                if normalized not in explicit:
+                    explicit.append(normalized)
+        default_ref = "diff-update/" + cells[0] + ".md"
+        if explicit:
+            candidates = explicit
+        else:
+            candidates = [default_ref]
+        existing = [candidate for candidate in candidates if (root / candidate).is_file()]
+        if not existing:
+            issue(issues, "error", "update.verification_record_missing",
+                  cells[0] + " verification row asserts 一致 but its record does not exist: " +
+                  "/".join(candidates) + " (run diff-runner --out-dir diff-update first)",
+                  "update.md:" + str(line_number))
+            continue
+        # 与初逆同一把尺：记录里的两段原始 stdout 逐字节比对 + 可复现性检查。
+        for relative in existing:
+            try:
+                record_bytes = (root / relative).read_bytes()
+            except OSError:
+                continue
+            pairs = list(_stdout_blocks(record_bytes))
+            if not pairs:
+                issue(issues, "warning", "update.diff_unparsed",
+                      cells[0] + " cites " + relative + " without the two raw stdout blocks; "
+                      "re-run diff-runner to add them (byte comparison applies only to records that carry them)",
+                      relative)
+                continue
+            if any(baseline != rebuilt for baseline, rebuilt in pairs):
+                issue(issues, "error", "update.diff_bytes_mismatch",
+                      cells[0] + " asserts 一致 but its record shows differing stdout for the two programs: " + relative,
+                      relative)
+            gap = _record_reproducibility_gap(record_bytes)
+            if gap:
+                level, reason = gap
+                if level == "error":
+                    issue(issues, "error", "update.diff_unreproducible",
+                          cells[0] + " cites " + relative + ": " + reason +
+                          " (a completion claim needs runs that actually happened)",
+                          relative)
+                else:
+                    issue(issues, "warning", "update.diff_unparsed",
+                          cells[0] + " cites " + relative + " without registered commands/run lines: " + reason +
+                          " (re-run diff-runner to register them; the migration window treats this as a warning)",
+                          relative)
+
+    return result
+
+
 def parse_workitems(root, issues):
     path = root / "workitems.md"
     records = {}
@@ -696,6 +891,10 @@ def review_case(case_root, strict=False, verify_hashes=False):
     # before touching any issue list).
     rebuild = parse_rebuild(root, issues)
 
+    # Update follow-up audit: only for cases that actually carry update.md.
+    # Same discipline: no update.md -> no new key, no new issues.
+    update = parse_update(root, issues, rebuild)
+
     for evidence_id, source in references:
         if evidence_id not in evidence:
             issue(issues, "error", "reference.unknown_evidence", "reference points to missing Evidence: " + evidence_id, source)
@@ -728,6 +927,9 @@ def review_case(case_root, strict=False, verify_hashes=False):
     # Only a rebuild case grows a new key; a plain case serializes exactly as before.
     if rebuild is not None:
         report["rebuild"] = rebuild
+    # Same for the update follow-up: the key appears only when update.md exists.
+    if update is not None:
+        report["update"] = update
     return report
 
 def render_markdown(report):
@@ -783,6 +985,26 @@ def render_markdown(report):
             found, checked = rebuild["coverage"].get(key, (False, False))
             lines.append("| " + label + " | " + ("yes" if found else "no") +
                          " | " + ("yes" if checked else "no") + " |")
+
+    # Update follow-up table appears only for cases that carry update.md.
+    # A case without update.md produces exactly the Markdown it produced before.
+    update = report.get("update")
+    if update:
+        lines.extend(["", "## Update follow-up", "",
+                      "| Fingerprint | Hash present |", "|---|---|"])
+        for field in UPDATE_FINGERPRINT_FIELDS:
+            lines.append("| " + field + " | " +
+                         ("yes" if update["fingerprints"].get(field) else "no") + " |")
+        lines.extend(["", "| Three line | Present |", "|---|---|"])
+        for field in UPDATE_THREE_LINE_FIELDS:
+            lines.append("| " + field + " | " +
+                         ("yes" if update["three_lines"].get(field) else "no") + " |")
+        lines.extend(["", "| Function | Action |", "|---|---|"])
+        if update["delta_rows"]:
+            for row in update["delta_rows"]:
+                lines.append("| " + row["id"] + " | " + (row["action"] or "(empty)") + " |")
+        else:
+            lines.append("| n/a | no function_delta rows |")
     return "\n".join(lines) + "\n"
 
 def main(argv=None):
