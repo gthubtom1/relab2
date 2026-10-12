@@ -400,8 +400,12 @@ diff_baseline，对指定功能跑原程序与新实现，产出对照表草稿�
 
 - 做了什么: `review_case.py` 在检测到 `work/<case>/rebuild.md` 时新增交付审计三类检查
   （①每行完成状态不得高于其证据 ②diff_baseline 五列逐行填齐 ③Coverage 三项），
-  并加了两条交叉检查（functions↔acceptance 一对一；证据列引用的 `diff/` 记录必须真实存在）
-  与一条冲突检查（标「对照一致」但对照行判为不一致）。无 rebuild.md 的 case 输出保持逐字节不变。
+  并加了交叉检查（functions↔acceptance 一对一；证据列引用的 `diff/` 记录必须真实存在）
+  与 verdict 判据：完成态（已测试/对照一致）而对照行 verdict 既不命中"一致"、也不命中
+  "不一致"（空串/待判/尚未一致）→ `rebuild.diff_verdict_unproven`；命中"不一致"→
+  `rebuild.diff_verdict_conflict`。无 rebuild.md 的 case 输出保持逐字节不变。
+  **2026-10-12 补**：verdict 判据是完成审计里最要害的一条（它拦"状态写成完成但对照证据
+  还没说话"），最初版本只拦 conflict、对空 verdict 放行 —— 已收紧并补 4 条负控证明它抓得到。
 - 改了哪些文件:
   - `skillpack/skills/case-review/scripts/review_case.py`（+约 200 行：常量 + parse_rebuild + 交叉检查 + 条件渲染）
   - `skillpack/skills/case-review/tests/test_review_case.py`（+5 个用例，14 个测试全绿）
@@ -409,7 +413,8 @@ diff_baseline，对指定功能跑原程序与新实现，产出对照表草稿�
   - `skillpack/skills/case-review/SKILL.md`（Scope + ACTION REQUIRED 登记新检查与负控）
   - `.github/workflows/ci.yml`（case-contract job 挂负控一步）
 - 验收命令与结果:
-  - `python skillpack/skills/scripts/test-rebuild-audit-negctl.py` → **9/9 controls honoured**
+  - `python skillpack/skills/scripts/test-rebuild-audit-negctl.py` → **13/13 controls honoured**（含
+    verdict 组四条：空串 / 待判 / 尚未一致 / 明确不一致，各自报出对应 code）
     （含三个指定坏 fixture：状态虚高 / 对照表缺行 / Coverage 缺项，各自 exit 1 且报出对应 code；
     好 fixture 0 报错 exit 0；无 rebuild.md 的老 case 不出现 rebuild.* exit 0）
   - `python skillpack/skills/case-review/tests/test_review_case.py` → `Ran 14 tests ... OK`
@@ -482,7 +487,12 @@ diff_baseline，对指定功能跑原程序与新实现，产出对照表草稿�
 - 门禁结果: `check-fences.py` exit 0；`verify-doc-links.py` exit 0；
   `audit-doc-code.py --root skillpack/skills` → 真错 0、exit 0；`verify-evolution.py` 10/10 全绿（EXIT=0）
 - commit: （本段提交）交付能力建设 · 阶段6 抗漂移三件套
-- 未达标/遗留: 无（`test-bash-workflow.sh` 本机未实测 —— 与阶段 2 同因，CI 里仅 macOS runner 跑）
+- **2026-10-12 事后修复（评审发现，已实测复现）**：归档指纹原为 `sha256(上一份全文)[:12]`，
+  而全文含每跑一变的 `- created:` 行 → **同 hint 反复跑，每次仍新建一个归档目录，去重恒不成立**
+  （实测：同 hint 跑 3 次得 2 个归档目录，治理目标落空）。已改为对全文**剔除 created 行后**
+  再取哈希（归档内容仍是原始字节）。修复后实测：PS 与 bash 同 hint 各跑 3 次均只得 **1** 个归档目录。
+- 未达标/遗留: `test-bash-workflow.sh` 本机未实测（与阶段 2 同因，CI 里仅 macOS runner 跑）。
+  归档指纹缺陷已在上述事后修复中修正，非遗留。
 
 ### 阶段 7 · 真项目试跑与固化 · 2026-10-12 13:25
 
@@ -527,9 +537,10 @@ diff_baseline，对指定功能跑原程序与新实现，产出对照表草稿�
 
 对照「完成的定义」四条，逐条给出**当前状态**的直接证据：
 
-1. **七阶段验收判据全部达成，未达标项如实记录** —— §10 有阶段 1–7 共 7 段记录（`grep -c "^### 阶段"` = 7）。
-   唯一如实记录的未实测项：`test-bash-workflow.sh` 本机未实测（阶段 2 起持续标注；
-   本机因 `python3` 为 WindowsApps 占位符 + 该脚本仅 macOS runner 跑），未粉饰为通过。
+1. **七阶段验收判据全部达成，未达标项如实记录** —— §10 有阶段 1–7 共 7 段记录
+   （`grep -c "^### 阶段 [1-7] · .* · 2026-10-12"` = 7；§7 的阶段标题另有 7 个同名段落，故
+   用带日期与序号的精确模式计数）。如实记录的未实测项：`test-bash-workflow.sh` 本机未实测
+   （阶段 2 起持续标注；本机因 `python3` 为 WindowsApps 占位符 + 该脚本仅 macOS runner 跑），未粉饰为通过。
 2. **`verify-evolution.py` 10/10 全绿，`verify-routing-coherence.ps1` 全绿** ——
    本轮最终态实测：`verify-evolution.py` → `ALL GREEN: 10/10`，EXIT=0；
    `verify-routing-coherence.ps1` → `ALL ROUTING COHERENCE CHECKS PASSED`，EXIT=0。

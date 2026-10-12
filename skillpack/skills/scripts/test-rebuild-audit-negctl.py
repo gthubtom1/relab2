@@ -219,6 +219,27 @@ CASES = [
      good_rebuild(extra_acceptance="| F-002 | 已分析 | ev | |"), workitems_with_rebuild(), True,
      ["rebuild.function_unknown"], 1, "acceptance 有 F-002 而 functions 没有 → 清单未对齐"),
 
+    # ---------- 附加：状态「对照一致」但对照行还没说话 ----------
+    ("bad-verdict-unproven", "must_fail",
+     good_rebuild(state="对照一致", diff_rows="| F-001 | --mode a | 2 | 2 | 待判 | 未对照 |"),
+     workitems_with_rebuild(), True,
+     ["rebuild.diff_verdict_unproven"], 1, "状态写成对照一致、对照行 verdict=「待判」→ 宣布成功但证据没说话"),
+
+    ("bad-verdict-empty", "must_fail",
+     good_rebuild(state="已测试", diff_rows="| F-001 | --mode a | 2 | 2 | | 空 verdict |"),
+     workitems_with_rebuild(), True,
+     ["rebuild.diff_verdict_unproven"], 1, "verdict 空串同样不配完成态"),
+
+    ("bad-verdict-conflict", "must_fail",
+     good_rebuild(state="对照一致", diff_rows="| F-001 | --mode a | 2 | 3 | 不一致 | 值不同 |"),
+     workitems_with_rebuild(), True,
+     ["rebuild.diff_verdict_conflict"], 1, "状态对照一致、对照行明说不一致 → 冲突"),
+
+    ("bad-verdict-notyet", "must_fail",
+     good_rebuild(state="对照一致", diff_rows="| F-001 | --mode a | 2 | 2 | 尚未一致 | 未跑完 |"),
+     workitems_with_rebuild(), True,
+     ["rebuild.diff_verdict_conflict"], 1, "「尚未一致」必须被拦（归 conflict，绝不配完成态）"),
+
     # ---------- 必须放行：无 rebuild.md 的老 case（回归底线） ----------
     ("plain-case-no-rebuild", "plain",
      None, BASE_WORKITEMS, True,

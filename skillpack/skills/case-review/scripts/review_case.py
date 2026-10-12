@@ -45,7 +45,10 @@ REBUILD_STATE_LABELS = {
 REBUILD_STATE_ORDER = ("analyzed", "implemented", "tested", "verified", "limited")
 REBUILD_COMPLETED_STATES = {"tested", "verified"}
 REBUILD_DIFF_COLUMNS = ("输入条件", "原程序结果", "新实现结果", "是否一致", "说明")
-REBUILD_NEGATIVE_VERDICT = re.compile(r"不一致|不匹配|mismatch|not[\s_-]*same|false\b|^否$|^no$", re.I)
+REBUILD_NEGATIVE_VERDICT = re.compile(r"[不未](?:能|曾)?一致|不匹配|不(?:相)?同|mismatch|not[\s_-]*same|false\b|^否$|^no$", re.I)
+# 「对照一致」的肯定判据：只有对照行明说一致，状态才配叫完成。
+# 空串 / 待判 / pending / 认不出的写法都不算 —— 那是「证据还没说话」。
+REBUILD_POSITIVE_VERDICT = re.compile(r"一致|相同|匹配|match(?:ed|es)?\b|identical|\bsame\b|^yes\b|^true\b|^是", re.I)
 REBUILD_COVERAGE_ITEMS = (
     ("function_list", "功能清单全覆盖", re.compile(r"功能清单|function\s*list", re.I)),
     ("critical_function_status", "关键功能状态", re.compile(r"关键功能|critical\s*function", re.I)),
@@ -296,11 +299,20 @@ def parse_rebuild(root, issues):
                   "rebuild.md:" + str(record["line"]))
             continue
         verdict = row["cells"][4] if len(row["cells"]) > 4 else ""
-        if not verdict:
-            continue
-        if REBUILD_NEGATIVE_VERDICT.search(verdict) and state == "verified":
+        if REBUILD_NEGATIVE_VERDICT.search(verdict):
+            # 对照行明说「不一致 / mismatch」，状态却已进入完成段（已测试 / 对照一致）。
+            # 判据来源：rebuild-gates.md 闸门② —— 完成形态只有「对照一致」或「受限+原因」。
             issue(issues, "error", "rebuild.diff_verdict_conflict",
-                  function_id + " is marked 对照一致 but its diff row verdict reads: " + verdict,
+                  function_id + " is marked " + REBUILD_STATE_LABELS[state] +
+                  " but its diff row verdict reads: " + verdict,
+                  "rebuild.md:" + str(row["line"]))
+        elif not REBUILD_POSITIVE_VERDICT.search(verdict):
+            # 对照行既非不一致、也非一致（空串 / 待判 / 认不出的写法）—— 这正是
+            # 「做一半就宣布成功」的形状：状态写成完成，对照证据却还没说话。
+            issue(issues, "error", "rebuild.diff_verdict_unproven",
+                  function_id + " is marked " + REBUILD_STATE_LABELS[state] +
+                  " but its diff row verdict does not assert 一致 (reads: " +
+                  (verdict or "(empty)") + ")",
                   "rebuild.md:" + str(row["line"]))
 
     return result

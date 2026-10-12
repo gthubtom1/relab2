@@ -145,14 +145,17 @@ if not skill_path.is_file():
 out_dir.mkdir(parents=True, exist_ok=True)
 
 # --- 默认目录治理：先把上一份 latest 归档，再覆盖写（归档不删除） ---
-# 归档到 <project>/work/route/<sha12>/route-scope.md，sha12 = 上一份内容前 12 位。
-# 幂等：同内容只归档一次。失败只提示，不阻断路由。
+# 归档到 <project>/work/route/<sha12>/route-scope.md。
+# ★ 指纹不含 `- created:` 行：该行每跑一变，含它就导致同内容永远去不了重
+#   （实测同 hint 跑 N 次会新增 N-1 个目录，治理目标落空）。
+#   归档内容本身仍是原始字节（含它自己的 created），只有指纹做归一化。
 if using_default_out_dir:
     latest_scope = out_dir / "route-scope.md"
     try:
         if latest_scope.is_file():
             previous = latest_scope.read_bytes()
-            digest12 = hashlib.sha256(previous).hexdigest()[:12]
+            fingerprint = re.sub(rb"(?m)^- created: [^\r\n]*[\r\n]*", b"", previous)
+            digest12 = hashlib.sha256(fingerprint).hexdigest()[:12]
             archive_dir = out_dir.parent / digest12
             archive_scope = archive_dir / "route-scope.md"
             if not archive_scope.exists():

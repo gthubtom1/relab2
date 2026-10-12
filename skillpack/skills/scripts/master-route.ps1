@@ -218,17 +218,20 @@ if (-not (Test-Path -LiteralPath $skillAbs)) {
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
 # --- 默认目录治理：先把上一份 latest 归档，再覆盖写 ---
-# 归档不删除：<project>/work/route/<sha12>/route-scope.md，sha12 = 上一份内容 SHA-256 前 12 位。
-# 幂等：同内容重复归档到同一目录，不产生副本。失败仅提示，不阻断写最新一份。
+# 归档不删除：<project>/work/route/<sha12>/route-scope.md。
+# ★ 指纹不含 `- created:` 行：该行每跑一变，含它就导致同内容永远去不了重
+#   （实测同 hint 跑 N 次会新增 N-1 个目录，治理目标落空）。
+#   归档内容本身仍是原始字节（含它自己的 created），只有指纹做归一化。
 if ($usingDefaultOutDir) {
     try {
         $latestScope = Join-Path $OutDir 'route-scope.md'
         if (Test-Path -LiteralPath $latestScope) {
             $routeRoot = Split-Path -Parent $OutDir
             $previous = Get-Content -LiteralPath $latestScope -Raw -Encoding UTF8
+            $fingerprint = [regex]::Replace($previous, '(?m)^- created: .*\r?\n', '')
             $sha = [System.Security.Cryptography.SHA256]::Create()
             try {
-                $hashBytes = $sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($previous))
+                $hashBytes = $sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($fingerprint))
             } finally { $sha.Dispose() }
             $hashHex = -join ($hashBytes | ForEach-Object { $_.ToString('x2') })
             $archiveDir = Join-Path $routeRoot $hashHex.Substring(0, 12)

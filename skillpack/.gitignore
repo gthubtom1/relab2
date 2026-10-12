@@ -74,6 +74,9 @@ BOOTSTRAP.md
 reports/
 
 # 运行产物 / 实验垃圾
+# ★ 2026-10-12 目录治理后 master-route 的默认产物是 <project>/work/route/latest/ 与
+#   <project>/work/route/<hash>/，两者都在 work/ 之下，由上方 `work/` 规则覆盖。
+#   下面两条 master-route-*/ 保留仅作历史兜底（老 clone 可能还带着旧结构的目录）。
 master-route-*/
 **/master-route-*/
 mcps/
