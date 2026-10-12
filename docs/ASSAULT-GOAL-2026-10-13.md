@@ -113,9 +113,75 @@ kernel 的 `04-全能工程中枢` 早已建成六条线（`desktop-product` / `
 `cli-tool` / `source-takeover` / `exe-rebuild` / `protocol-automation`），
 **本次新增的是第七条线 `assault`**，它不覆盖前六线，前六线也不覆盖它。
 
+### 3.5 病症五（本次补充，之前四次返工的真缺口）：只造枪，没造用枪的人
+
+前四个病症都在讲「系统缺什么」。**但真正决定能否打下硬目标的，是操作者本人。**
+
+本项目现有一套 47 个技能 + 472 篇文档，**每一处都假设 AI 是不会主动判断的执行体**——
+所以什么都得写成判据表、字段表、状态表。结果是：纪律极其完备，
+但**没有一处告诉 AI「该用什么姿态面对未知目标」**。
+
+对照就能看出这个缺口多致命：REA 只有 237 行 SKILL.md，极少写"你要严谨、要查漏"，
+但它把**工具层做厚**，把**判断留给模型**。我们正好相反：工具层散在各处，
+判断层却是空的——一旦目标超出判据表的覆盖（硬目标必然超出），AI 就没有然后了。
+
+**所以本次必须补第三个维度。本方案从此是三维的，不是两维：**
+
+| 维度 | 是什么 | 落在哪 |
+|---|---|---|
+| ① 系统 | 入口 / 对账表 / 分层判据 / 状态机 / 审计器 | `assault.md` + `assault-entry.md` + `review_case.py` |
+| ② 工具 | 47 个技能 + 472 篇文档 + 133 个脚本 + 探测层 | 既有资产，本次不动 |
+| ③ **操作者** | **面对未知时怎么想、怎么判断、怎么不自己骗自己** | **§4.1 攻坚者五条 + §5.1 各状态的判断纪律** |
+
+**缺①的系统是散沙，缺②的系统是空谈，缺③的系统是"纪律很好但不会判断的部队"。**
+本次三个一起补。
+
 ---
 
 ## 4. 滚动报告 `assault.md`（唯一工作载体）
+
+### 4.1 攻坚者五条（操作者维度，本项目新增的第三维）
+
+**这不是判据表，是姿态。** 前四维决定系统完不完备，这五条决定操作者行不行。
+写在 `assault-entry.md` 的第一屏，AI 动手前先读这五条。
+
+**第一条：分清搬运工和货物**
+> 在壳层（L1）里花的每一分钟，都要问一句「我改的是搬运工还是货物」。
+> 判定点几乎从不在 L1——壳是搬运工，业务逻辑才是货物。
+> 停在壳层打转 = 项目没推进，无论做了多少工作。
+> （源自 `license-keygen/README.md` 与 `re-agent-workflow.md` §2.1）
+
+**第二条：工具输出是线索，不是结论**
+> `diec` 报的壳类型、反编译出的伪码、`strings` 抓到的常量、`capa` 命中的能力——
+> **全部是线索，没有一个是事实**。
+> 反编译器会把 `__ftol()` 当成函数返回值而藏起真实输入（DX-Ball 案例的实证）；
+> VMP 静态看到的立即数是 VM key 加密过的假值。
+> **结论必须由两条以上独立证据交叉支撑**（ADF-R4*：validated 需 ≥2 独立证据）。
+
+**第三条：优先查矛盾，不优先查顺利
+> 顺利的地方往往是最不用看的。**真正值钱的是「不对劲」**：
+> 反编译结果和行为对不上、导入表干净得可疑、两份证据互相冲突、
+> 函数名叫 A 但干的事像 B、跑起来和静态分析结论相反。
+> **矛盾就是入口。** 遇到矛盾不许选一个顺眼的放下，要查清为什么不一致。
+
+**第四条：宁可写卡住，不许写完成**
+> 「我卡在 U-007，原因是 VM context 进出被 XOR 变换，静态拿不到布局」是**有效交付**。
+> 「已完成」但没有对照证据是**无效交付**。
+> 门禁绿、程序能启动、代码写完了、报告很厚——**这四件事单独一件都不等于成品**。
+> （`re-agent-workflow.md` §13.5：不得为通过测试而修改错误的标准）
+
+**第五条：调整路线是正常的，不调整才不正常**
+> 真打硬目标，第一次选的路线大概率不完整。**一边打一边修正是人的工作方式**，
+> 也是 AI 该有的方式。调整不是失败，是进展——但每次调整必须写清
+> 「旧路线为什么不通 / 新证据是什么 / 新路线凭什么更可能通」，
+> 记进 timeline 的 `decision_delta`。**一次都没调整过的攻坚记录，默认是编的。**
+
+**这五条的根基（写在 `assault-entry.md` 最前面）**：
+> 目标是终点唯一（可运行、可验证、功能等价的成品），路径不预设。
+> 每一步动手前问一句「这一步是否让成品更近」，答不上来就是白做。
+> **难度花在 `how` 上，永远不花在 `whether` 上。**
+
+
 
 **位置**：`skillpack/skills/templates/assault.md`，由 `case-init -Preset assault` 生成
 （与 rebuild 预设同档授权；**不传该预设时日常路径逐字节不变**）。
@@ -485,3 +551,64 @@ vendor 两周即过期、pin 即锁死。**只学三条设计，不融代码**�
   `test-routing.sh` 205/205；`verify-evolution.py` → **10/10 ALL GREEN（EXIT=0）**
 - commit: （本段提交）攻坚交付闭环 · 阶段3 状态机与出口统一
 - 未达标/遗留: 无
+
+### 阶段 4 · review_case 扩展审计 + 真目标端到端 · 2026-10-13 03:00
+- 做了什么:
+  **A. 审计扩展**：`review_case.py` 检测到 `assault.md` 时新增四项检查——①`## 0 状态行`
+  非空且 current_state ∈ SURVEY/ROUTE/EXECUTE/VERIFY；②layers 每行有状态+证据
+  （blocked 行必须写 原因/影响/替代）；③functions 每行有路线+状态且状态不高于证据
+  （完成态需 diff_baseline 行且 verdict 断言一致；复用 rebuild 的字节级记录判据：
+  两段原始 stdout 逐字节比较 + 可复现性）；④unknowns 每项有 影响/下一步/是否阻塞；
+  完成形态判定 = deliverable 真实存在于磁盘，或 blocked 形态（原因/影响/替代）成立。
+  无 assault.md 的 case 输出逐字不变（新键仅在文件存在时出现）。
+  **B. 真目标端到端**：选 `work/prng_probe.exe`（自造真实样本）+ UPX 5.21 加壳
+  = **L1 壳 + L4 算法双层目标**。全流程：SURVEY（diec/r2 判壳→upx -d 解包过 L1，
+  行为一致性验证）→ ROUTE（五路线对照选 rewrite，confidence=high）→ EXECUTE
+  （r2 aaa+pdf main 读出两个 LCG 常量→L4 过层；写 `build/prng_rebuilt.py` 复刻）→
+  VERIFY（diff-runner --assault 驱动两功能对照，逐字节判定 + strict 审计 PASS）。
+  diff-runner 同步扩展 `--assault` 模式（驱动配置读 assault.md 的 `## diff_baseline`）。
+- 改了哪些文件:
+  `case-review/scripts/review_case.py`（+assault 审计约 200 行）；
+  `case-review/tests/test_review_case.py`（+12 单测）；`case-review/SKILL.md`（+检查说明）；
+  `skills/scripts/test-assault-audit-negctl.py`（新增，14 条控制）；`.github/workflows/ci.yml`
+  （+1 step）；`skills/scripts/diff-runner.py`（+assault 模式；**修复** `input=` 前缀剥离
+  只做在 update 分支的缺口——rebuild/assault 统一补齐）；
+  `skills/experience-cards/diff-runner-input-prefix-only-stripped-in-update-mode.json`
+  （新卡 promoted）+ fixture + INDEX.md（stamp 重建）；
+  `skills/field-journal/2026-10-13_assault-prng-upx-l1l4.md`（实战记录）
+- 验收命令与结果（全部实跑）:
+  - **A 部分**：坏 fixture 逐项被拦：状态行缺→`assault.state_line_missing`；
+    state 非四态→`state_line_invalid`；layers 缺证据→`layer_evidence_missing`；
+    blocked 无原因→`blocked_reason_missing`；状态虚高→`state_exceeds_evidence`；
+    缺对照行→`diff_row_missing`；verdict 未断言→`diff_verdict_unproven`；
+    verdict 冲突→`diff_verdict_conflict`；unknowns 缺列→`unknown_field_missing`；
+    deliverable 不在盘且无 blocked→`deliverable_missing`；blocked 形态成立→放行。
+    好 fixture 0 assault 报错。单测 `test_review_case.py` **40/40 OK**（含 12 新条）；
+    负控 `test-assault-audit-negctl.py` **14/14 controls honoured**（≥8 条要求达成）；
+    既有负控不受影响（rebuild 16/16、update 13/13）。
+  - **回归底线**：不含 assault.md 的既有 case（`work/rebuild-sha256sum`、
+    `skillpack/examples/ctf-demo`）4 种格式（md/json/±strict = 8 次运行）与改前捕获
+    **逐字一致**（仅 generated_at 时间戳归一化后 0 残差）。
+  - **B 部分**（九条全达成）：
+    ①assault.md 全表填齐（状态行实时/两层状态+证据/两功能路线+状态/unknowns 三列）；
+    ②同输入对照真跑过：`diff/F-001.md` stdout 79B=79B、`diff/F-002.md` 253B=253B，
+    exit 0=0（两段原始 stdout 逐字节相同，字节级验证脚本复核）；
+    ③`python skillpack/skills/case-review/scripts/review_case.py work/assault-prng-upx
+    --verify-hashes --strict` → **status: PASS（0 error / 0 warning / 5 evidence /
+    8 timeline events）**；
+    ④成品真实存在：`build/prng_rebuilt.py` 在盘、双模式干净跑（mode0 12 行、mode1 12 行
+    与原程序逐字节一致）；`deliverable_present: yes`；
+    ⑤两层攻破：L1（UPX 解包 + 行为一致性，E-001）+ L4（反汇编确认两 LCG，E-002/E-003）；
+    ⑥路线调整真实发生：timeline 记 decision_delta——`baseline 落点 case 外 staging →
+    case 内 baseline/`（自包含化，重跑仍全绿）；另记工具修复（`input=` 剥离缺口）；
+    ⑦未达标项：无（两层均过、两功能对照一致）；
+    ⑧field-journal 记 3 个真实卡点（input= 缺口 / 报告字段模板 / 管道截断伪错误）；
+    ⑨经验卡 `experience-card.py validate` → **全部通过（晋级门 7 条 + 无秘密检查）**，
+    `stamp` 重建索引后症状可检索。
+  - 门禁：`check-fences` rc=0；`verify-doc-links` rc=0；`test-routing.ps1` 65/65；
+    `test-routing.sh` 205/205；`verify-routing-coherence.ps1` ALL PASSED
+- 门禁结果: `verify-evolution.py` → **10/10 ALL GREEN（EXIT=0）**
+  （official 65/65 + natural 93/86, floor 76；`verify-routing-coherence.ps1` ALL PASSED）
+- commit: （本段提交）攻坚交付闭环 · 阶段4 审计与真目标
+- 未达标/遗留: 无。附注：本机 `rabin2.exe`（radare2 6.2.0）直接调用会进交互模式，
+  判据需用 `r2 -2q -c '...'` 批处理通道（已记入 field-journal）。

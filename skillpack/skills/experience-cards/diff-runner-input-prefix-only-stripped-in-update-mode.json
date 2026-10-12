@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "id": "diff-runner-input-prefix-only-stripped-in-update-mode",
+  "status": "promoted",
+  "title": "diff-runner 的 input= 前缀剥离缺口：rebuild/assault 解析曾经只剥 update 那一支",
+  "invariant": "同一份 diff-runner.py 里，case 行 `- F-001 | input=0` 的 `input=` 前缀剥离曾只做在 update 解析分支（parse_update），rebuild 与 assault 解析分支直接取原值，导致 {input} 被替换成字面量 'input=0' 后传给程序（新实现收到后要么崩、要么按错误输入跑）。判据：同一行喂给三种模式（rebuild/assault/update）的解析函数，剥离行为必须一致；出现差异时先对照三处解析代码。修法是把剥离做成三支共用的入口（2026-10-13 已统一），绝不允许在单支上打补丁。",
+  "scope": {
+    "family": "rebuild-diff-driver",
+    "boundary": "tooling",
+    "appliesWhen": [
+      "对照草稿里新实现/基线收到 `input=` 开头的字面量参数，或新实现因此崩",
+      "diff-runner 加了新模式（assault/update）后，某支的 case 行解析行为与另一支不一致",
+      "看到 `ValueError: invalid literal ... 'input=0'` 或等价错误出现在 diff/ 草稿的新实现列"
+    ],
+    "stopsWhen": [
+      "驱动用的是 CLI 显式 --input 传参（不经过 case 行解析）",
+      "三种模式的解析函数已走同一剥离入口并经函数级对照验证（本仓 2026-10-13 已满足）"
+    ]
+  },
+  "reproductions": [
+    {
+      "jobFingerprint": "assault-prng-upx-cli-drive-2026-10-13",
+      "observedAt": "2026-10-13",
+      "artifactSha256": "8dda2c1b06416220ea7e4ed8147b770795fa4d40415cb12d9ffeb96d3f6814ec",
+      "independent": true,
+      "note": "真实 case work/assault-prng-upx：首跑 diff-runner --assault --function F-001，草稿 diff/F-001.md 的新实现列记录 ValueError: invalid literal for int() with base 10: 'input=0'；修复后重跑 stdout 79B=79B 字节相同。"
+    },
+    {
+      "jobFingerprint": "three-parser-function-diff-2026-10-13",
+      "observedAt": "2026-10-13",
+      "artifactSha256": "8dda2c1b06416220ea7e4ed8147b770795fa4d40415cb12d9ffeb96d3f6814ec",
+      "independent": true,
+      "note": "函数级对照：HEAD 版 parse_rebuild 对 `- F-001 | input=0` 返回 'input=0'（未剥），工作区版返回 '0'（已剥）；同一探针同时喂三支解析函数。两次观测相互独立（CLI 真实驱动 vs 纯函数对照）。"
+    }
+  ],
+  "fixture": {
+    "path": "skillpack/skills/experience-cards/fixtures/diff-runner-input-prefix-only-stripped-in-update-mode.md",
+    "sha256": "8dda2c1b06416220ea7e4ed8147b770795fa4d40415cb12d9ffeb96d3f6814ec",
+    "generator": null,
+    "secretFree": true,
+    "note": "反例底册：CLI 层草稿原文 + 函数层两次对照输出 + 修法。"
+  },
+  "oracles": {
+    "positive": "对同一 case 行 `- F-001 | input=0` 分别调用 parse_rebuild / parse_assault / parse_update：三支返回的 cases 值必须同为 '0'（已剥离）。或经 CLI 真实驱动：新实现列的原始 stdout 两段逐字节相同、exit 相等——而不是收到 'input=0' 报 ValueError。",
+    "negative": "若三支中任一返回字面量 'input=0'（或 CLI 草稿出现 invalid literal with base 10: 'input=0'），剥离缺口仍在——先对照三处解析代码，不要先去改被测程序去容忍这个字面量。"
+  },
+  "firstDivergence": {
+    "stage": "diff-runner 首跑草稿生成（{input} 替换发生的那一步）",
+    "path": "新实现列（rebuilt stdout）——程序收到的参数里带 input= 字面量",
+    "kind": "tooling"
+  },
+  "decision": {
+    "preferredRoute": "skills/scripts/diff-runner.py",
+    "action": "把 `input=` 前缀剥离做成 case 行解析的共用入口；三种模式（rebuild/assault/update）行为对齐后再重跑对照，并保留重跑前后两份草稿作对照。",
+    "fallback": "来不及统一时，先在登记行里写裸值（不加 `input=` 前缀），并在草稿说明列记下原因；绝不允许让被测程序去容忍字面量前缀。"
+  },
+  "validation": {
+    "lastVerifiedAt": "2026-10-13",
+    "command": "python skillpack/skills/scripts/experience-card.py validate"
+  },
+  "links": {
+    "skill": "reverse-engineering",
+    "script": "skills/scripts/diff-runner.py",
+    "journal": "field-journal/2026-10-13_assault-prng-upx-l1l4.md",
+    "derivation": "web-protocol-reverse/references/contract/experience-card-schema.md"
+  },
+  "symptoms": [
+    "对照草稿里新实现收到 input= 开头的字面量参数",
+    "invalid literal for int() with base 10: 'input=0'",
+    "diff-runner 三支解析行为不一致",
+    "assault 模式的 input= 前缀没有剥离"
+  ]
+}

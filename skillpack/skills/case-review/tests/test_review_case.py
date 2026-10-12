@@ -599,5 +599,203 @@ class ReviewCaseTests(unittest.TestCase):
             self.assertFalse(any(item["code"].startswith("update.") for item in result["issues"]))
             self.assertNotIn("## Update follow-up", REVIEW_CASE.render_markdown(result))
 
+    # --- Assault rolling-report audit (assault.md present) — four checks + bad fixtures ---
+    ASSAULT_TABLE = """# Assault 滚动报告
+
+## 0 状态行
+
+- current_state: `{state}`
+- since: `2026-10-13 10:00`
+- goal_now: `<demo>`
+
+## target
+
+- deliverable: `{deliverable}`
+- form: exe
+
+## layers
+
+| 层 | 类型 | 状态 | 证据 |
+|----|------|------|------|
+| L1 | 壳层 | 已过 | E-001 |
+{extra_layers}
+
+## routes
+
+| 候选路线 | 证据 | 预计成本 | 主要风险 | 为什么选/不选 |
+|----------|------|----------|----------|----------------|
+| patch | E-001 | 低 | 少 | 选 |
+
+- recommended: patch
+- rejected_because: rewrite 成本高
+- confidence: medium
+
+## functions
+
+| ID | 名称 | 所属层 | 路线 | 状态 | 证据 | 备注 |
+|----|------|--------|------|------|------|------|
+| F-001 | 校验 | L4 | patch | {fstate} | {fevidence} | {fnote} |
+
+## unknowns
+
+| ID | 问题 | 影响功能 | 已尝试 | 下一步 | 是否阻塞 |
+|----|------|----------|--------|--------|----------|
+| U-001 | {uquestion} | {uimpact} | 断网 | {unext} | {ublock} |
+
+## diff_baseline
+
+| F-ID | 输入条件 | 原程序结果 | 新实现结果 | 是否一致 | 说明 |
+|------|----------|------------|------------|----------|------|
+{diff_rows}
+
+## out_of_delivery
+
+| 项 | 理由 |
+|----|------|
+| GUI | 不做 |
+"""
+
+    def write_assault_case(self, root, state="EXECUTE", deliverable="build/rebuilt.exe",
+                           fstate="对照一致", fevidence="diff/F-001.md", fnote="",
+                           diff_rows="| F-001 | --mode a | 2 | 2 | 一致 | ok |",
+                           uquestion="云端行为", uimpact="F-001", unext="抓包", ublock="no",
+                           extra_layers="| L4 | 业务层 | 进行中 | E-002 |",
+                           make_deliverable=True):
+        self.write_case(root)
+        build_dir = root / "build"
+        build_dir.mkdir()
+        if make_deliverable:
+            (build_dir / "rebuilt.exe").write_bytes(b"MZ fake rebuilt")
+        diff_dir = root / "diff"
+        diff_dir.mkdir()
+        (diff_dir / "F-001.md").write_text("draft", encoding="utf-8")
+        (root / "assault.md").write_text(
+            self.ASSAULT_TABLE.format(
+                state=state, deliverable=deliverable, extra_layers=extra_layers,
+                fstate=fstate, fevidence=fevidence, fnote=fnote,
+                uquestion=uquestion, uimpact=uimpact, unext=unext, ublock=ublock,
+                diff_rows=diff_rows),
+            encoding="utf-8",
+        )
+
+    def test_assault_case_passes_with_full_table(self):
+        """好 fixture：状态行 / layers / functions / unknowns / deliverable 全齐 → 0 assault 报错。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_assault_case(root)
+            result = REVIEW_CASE.review_case(root)
+            assault_errors = [item for item in result["issues"]
+                              if item["code"].startswith("assault.") and item["level"] == "error"]
+            self.assertEqual(assault_errors, [])
+            self.assertIsNotNone(result.get("assault"))
+            self.assertEqual(result["assault"]["state"], "EXECUTE")
+            self.assertTrue(result["assault"]["deliverable_present"])
+
+    def test_assault_state_line_missing_fails(self):
+        """坏 fixture 1：状态行缺 —— current_state 空。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_assault_case(root)
+            assault = (root / "assault.md").read_text(encoding="utf-8")
+            (root / "assault.md").write_text(
+                assault.replace("- current_state: `EXECUTE`", "- current_state:"), encoding="utf-8")
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "assault.state_line_missing" for item in result["issues"]))
+
+    def test_assault_state_line_invalid_fails(self):
+        """坏 fixture 1b：current_state 不在四状态内。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_assault_case(root, state="DONE")
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "assault.state_line_invalid" for item in result["issues"]))
+
+    def test_assault_layer_without_evidence_fails(self):
+        """坏 fixture 2：layers 行缺证据。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_assault_case(root, extra_layers="| L4 | 业务层 | 进行中 |  |")
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "assault.layer_evidence_missing" for item in result["issues"]))
+
+    def test_assault_blocked_layer_without_reasons_fails(self):
+        """坏 fixture 2b：blocked 行没有 原因/影响/替代。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_assault_case(root, extra_layers="| L4 | 业务层 | blocked | E-002 |")
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "assault.blocked_reason_missing" for item in result["issues"]))
+
+    def test_assault_function_state_exceeds_evidence_fails(self):
+        """坏 fixture 3：标「已测试」却没有证据列。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_assault_case(root, fstate="已测试", fevidence="")
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "assault.state_exceeds_evidence" for item in result["issues"]))
+
+    def test_assault_function_missing_diff_row_fails(self):
+        """坏 fixture 3b：完成态没有 diff_baseline 行。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_assault_case(root, diff_rows="")
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "assault.diff_row_missing" for item in result["issues"]))
+
+    def test_assault_diff_verdict_unproven_fails(self):
+        """坏 fixture 3c：完成态但对照行 verdict 未断言一致。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_assault_case(root, fstate="已测试", fevidence="E-003",
+                                    diff_rows="| F-001 | --mode a | 2 | 2 | 待判 | 未对照 |")
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "assault.diff_verdict_unproven" for item in result["issues"]))
+
+    def test_assault_unknown_missing_columns_fails(self):
+        """坏 fixture 4：unknowns 缺「下一步 / 是否阻塞」。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_assault_case(root, unext="", ublock="")
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "assault.unknown_field_missing" for item in result["issues"]))
+
+    def test_assault_deliverable_missing_without_blocked_fails(self):
+        """坏 fixture 5：deliverable 指向不存在的文件且未记录 blocked 形态。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_assault_case(root, deliverable="build/NOPE.exe", make_deliverable=False)
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "assault.deliverable_missing" for item in result["issues"]))
+
+    def test_assault_deliverable_missing_with_blocked_form_passes(self):
+        """完成形态判定：deliverable 不在盘上但 blocked 行有原因/影响/替代 → 该项放行。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_assault_case(
+                root, deliverable="build/NOPE.exe", make_deliverable=False,
+                extra_layers="| L4 | 业务层 | blocked | E-002 | 原因: 云端样本不可得; 影响: F-001 无法对照; 替代: 本地 mock |")
+            result = REVIEW_CASE.review_case(root)
+            deliverable_errors = [item for item in result["issues"] if item["code"] == "assault.deliverable_missing"]
+            self.assertEqual(deliverable_errors, [])
+
+    def test_assault_absent_case_has_no_assault_key(self):
+        """无 assault.md 时不出现 assault 键，输出与改前一致。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_rebuild_case(root)
+            result = REVIEW_CASE.review_case(root)
+            self.assertNotIn("assault", result)
+            self.assertFalse(any(item["code"].startswith("assault.") for item in result["issues"]))
+            self.assertNotIn("## Assault report", REVIEW_CASE.render_markdown(result))
+
 if __name__ == "__main__":
     unittest.main()

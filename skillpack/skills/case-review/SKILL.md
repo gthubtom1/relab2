@@ -33,6 +33,16 @@ This skill covers:
   (raw stdout blocks compared byte for byte, plus reproducibility) — and the
   three version fingerprints each carry a 64-hex SHA256.
   A case without `update.md` produces exactly the same report as before.
+- **Assault rolling-report audit** — when `work/<case>/assault.md` exists, the review
+  additionally checks the four assault-stage facts (GOAL-PROMPT-ASSAULT 阶段4):
+  the `## 0 状态行` is filled and `current_state` is one of
+  SURVEY/ROUTE/EXECUTE/VERIFY; every `layers` row carries a status + evidence
+  (a blocked row records 原因/影响/替代); every `functions` row carries route + state
+  and no state outruns its evidence (a completed row needs its diff_baseline row
+  whose verdict asserts 一致); every `unknowns` item keeps its 影响/下一步/是否阻塞
+  columns; and the completion form holds — the `deliverable` product exists on disk,
+  or the report records a blocked outcome with cause/impact/fallback.
+  A case without `assault.md` produces exactly the same report as before.
 
 It MUST NOT perform reconnaissance, exploitation, dynamic instrumentation, or target changes. Those actions belong to the routed analysis skill and require the case scope gate.
 
@@ -69,6 +79,16 @@ It MUST NOT perform reconnaissance, exploitation, dynamic instrumentation, or ta
    without a 64-hex SHA256 are all errors — fix the table or produce the record,
    do not lower the check.
    Negative controls: `python skillpack/skills/scripts/test-update-audit-negctl.py`.
+   When the case carries `assault.md` (protected-target assault case, `-Preset assault`),
+   the assault checks follow `../reverse-engineering/references/assault-entry.md`
+   (four-state machine) + `../templates/assault.md`: an unfilled/invalid state line,
+   a layers row without status+evidence, a blocked row without 原因/影响/替代, a
+   function row whose state outruns its evidence (including a 已测试/对照一致 row
+   whose diff_baseline verdict does not assert 一致), an unknowns item missing
+   影响/下一步/是否阻塞, and a deliverable that does not exist on disk without a
+   recorded blocked form are all errors — fix the table or produce the artifact,
+   do not lower the check.
+   Negative controls: `python skillpack/skills/scripts/test-assault-audit-negctl.py`.
 
 ## Tool dependencies
 

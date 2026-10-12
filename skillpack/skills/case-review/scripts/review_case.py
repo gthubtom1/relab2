@@ -76,6 +76,20 @@ UPDATE_VERIFICATION_COLUMNS = ("输入", "新版原程序结果", "新复刻结�
 UPDATE_SHA256 = re.compile(r"(?i)\b[0-9a-f]{64}\b")
 UPDATE_DIFF_UPDATE_REF = re.compile(r"[A-Za-z0-9_./\\-]*diff-update[/\\][A-Za-z0-9_.\\/-]+")
 
+# --- assault rolling-report audit (only when work/<case>/assault.md exists) ---
+# Contract: skills/reverse-engineering/references/assault-entry.md (four-state machine)
+# + skills/templates/assault.md. A case without assault.md skips all of this: the
+# plain review stays identical.
+ASSAULT_STATES = ("SURVEY", "ROUTE", "EXECUTE", "VERIFY")
+ASSAULT_LAYER_ID = re.compile(r"L\d+")
+ASSAULT_UNKNOWN_ID = re.compile(r"U-[A-Za-z0-9][A-Za-z0-9_-]*")
+ASSAULT_BLOCKED = re.compile(r"blocked|受阻|阻塞", re.I)
+ASSAULT_BLOCKED_REASON_ALTERNATES = (
+    ("原因", re.compile(r"原因|reason", re.I)),
+    ("影响", re.compile(r"影响|impact", re.I)),
+    ("替代", re.compile(r"替代|fallback|alternate|alternative", re.I)),
+)
+
 def field_value(text, name):
     lines = text.splitlines()
     for index, line in enumerate(lines):
@@ -605,6 +619,321 @@ def parse_update(root, issues, rebuild):
     return result
 
 
+def _deliverable_candidates(value):
+    """Path-like tokens from the assault deliverable field (backticked spans first).
+
+    The contract (templates/assault.md) wants a file path + form, not prose; a
+    placeholder skeleton (`<...>`) never counts as a written deliverable.
+    """
+    text = value or ""
+    spans = re.findall(r"`([^`]+)`", text)
+    pool = spans if spans else re.split(r"[\s()（）,，;；]+", text)
+    candidates = []
+    for candidate in pool:
+        token = candidate.strip().strip("`").strip().strip("。；;，,.)）]】")
+        if token.startswith("./") or token.startswith(".\\"):
+            token = token[2:]
+        if not token or token.startswith("<") or token.endswith(">"):
+            continue
+        if not (re.search(r"[\\/]", token) or re.search(r"\.\w{1,8}$", token)):
+            continue
+        candidates.append(token)
+    return candidates
+
+
+def _deliverable_on_disk(root, candidate):
+    try:
+        path = Path(candidate)
+        if path.is_absolute():
+            return path.exists()
+        return (root / candidate).exists()
+    except (OSError, ValueError):
+        return False
+
+
+def _assault_blocked_outcome(text):
+    """True when the report records a blocked outcome with 原因/影响/替代."""
+    def complete(segment):
+        if not ASSAULT_BLOCKED.search(segment):
+            return False
+        return all(pattern.search(segment) for _label, pattern in ASSAULT_BLOCKED_REASON_ALTERNATES)
+
+    if complete(section_text(text, "routes")):
+        return True
+    for title in ("layers", "functions"):
+        for _line_number, cells in _iter_table_rows(section_text(text, title)):
+            if _is_markdown_separator_row(cells):
+                continue
+            if complete(" ".join(cells)):
+                return True
+    return False
+
+
+def parse_assault(root, issues):
+    """Parse assault.md against skills/templates/assault.md, then audit the rolling report.
+
+    Returns None when the file is absent: a non-assault case must produce exactly
+    the same report as before this audit existed. When present, four checks run
+    (GOAL-PROMPT-ASSAULT 阶段4 + assault-entry.md four-state machine):
+      1. the state line is filled and current_state is one of SURVEY/ROUTE/EXECUTE/VERIFY;
+      2. every layers row carries a status + evidence; a blocked row records 原因/影响/替代;
+      3. every function row carries route + state, and no state outruns its evidence
+         (a completed row needs its diff row whose verdict asserts 一致);
+      4. every unknowns item carries 影响/下一步/是否阻塞; and the completion form
+         holds: the deliverable product exists on disk, or the report records a
+         blocked outcome with cause/impact/fallback.
+    """
+    path = root / "assault.md"
+    if not path.is_file():
+        return None
+
+    text = path.read_text(encoding="utf-8-sig")
+    result = {
+        "present": True,
+        "path": "assault.md",
+        "state": "",
+        "layers": {},      # L# -> {"status":..., "evidence":..., "line":...}
+        "functions": {},   # F-xxx -> {"state":..., "evidence":..., "note":..., "line":...}
+        "diff_rows": [],   # {"id":..., "cells":[...], "line":...}
+        "unknowns": {},    # U-xxx -> {"cells":[...], "line":...}
+        "deliverable": "",
+        "deliverable_present": False,
+    }
+
+    # --- check 1: state line ---
+    state_section = section_text(text, "0 状态行")
+    current_state = field_value(state_section, "current_state").strip().strip("`").strip()
+    if not state_section or not current_state:
+        issue(issues, "error", "assault.state_line_missing",
+              "assault.md has no filled ## 0 状态行 / current_state (the report must say where it stands)",
+              "assault.md")
+    elif current_state.upper() not in ASSAULT_STATES:
+        issue(issues, "error", "assault.state_line_invalid",
+              "current_state is not one of SURVEY/ROUTE/EXECUTE/VERIFY: " + current_state,
+              "assault.md")
+    else:
+        result["state"] = current_state.upper()
+
+    # --- check 2: layers rows carry status + evidence; blocked rows carry reasons ---
+    layers_section = section_text(text, "layers")
+    for line_number, cells in _iter_table_rows(layers_section):
+        if _is_markdown_separator_row(cells):
+            continue
+        if not cells or not ASSAULT_LAYER_ID.fullmatch(cells[0]):
+            continue
+        status = cells[2] if len(cells) > 2 else ""
+        evidence = cells[3] if len(cells) > 3 else ""
+        result["layers"][cells[0]] = {"status": status, "evidence": evidence, "line": line_number}
+        if not status or not evidence:
+            issue(issues, "error", "assault.layer_evidence_missing",
+                  cells[0] + " layer row needs a status and an evidence cell",
+                  "assault.md:" + str(line_number))
+        row_text = " ".join(cells)
+        if ASSAULT_BLOCKED.search(row_text):
+            missing = [label for label, pattern in ASSAULT_BLOCKED_REASON_ALTERNATES
+                       if not pattern.search(row_text)]
+            if missing:
+                issue(issues, "error", "assault.blocked_reason_missing",
+                      cells[0] + " is blocked without " + "/".join(missing) + " (record 原因/影响/替代)",
+                      "assault.md:" + str(line_number))
+
+    # --- check 3a: functions rows carry route + state ---
+    functions_section = section_text(text, "functions")
+    function_lines = {}
+    for line_number, cells in _iter_table_rows(functions_section):
+        if _is_markdown_separator_row(cells):
+            continue
+        if not cells or not FUNCTION_ID.fullmatch(cells[0]):
+            continue
+        if len(cells) < 6:
+            issue(issues, "error", "assault.function_columns",
+                  cells[0] + " row needs at least 6 columns 名称/所属层/路线/状态/证据",
+                  "assault.md:" + str(line_number))
+            continue
+        function_lines[cells[0]] = line_number
+        missing = [name for name, value in zip(("名称", "所属层", "路线", "状态"), cells[1:5]) if not value]
+        if missing:
+            issue(issues, "error", "assault.function_field_missing",
+                  cells[0] + " is missing " + "/".join(missing), "assault.md:" + str(line_number))
+        state = REBUILD_STATE_ALIASES.get(cells[4].strip())
+        if state is None:
+            issue(issues, "error", "assault.function_state_invalid",
+                  cells[0] + " has unsupported state: " + (cells[4].strip() or "(empty)") +
+                  " (allowed: " + "/".join(REBUILD_STATE_LABELS[key] for key in REBUILD_STATE_ORDER) + ")",
+                  "assault.md:" + str(line_number))
+            continue
+        result["functions"][cells[0]] = {
+            "state": state,
+            "evidence": cells[5].strip() if len(cells) > 5 else "",
+            "note": cells[6].strip() if len(cells) > 6 else "",
+            "line": line_number,
+        }
+
+    if not function_lines:
+        issue(issues, "error", "assault.functions_empty",
+              "assault.md has no F-xxx function rows (the functions table is the EXECUTE ledger)",
+              "assault.md")
+
+    # --- check 3b: a row's state may not be higher than its evidence supports ---
+    for function_id, record in sorted(result["functions"].items()):
+        state = record["state"]
+        if state == "limited":
+            if not record["note"]:
+                issue(issues, "error", "assault.limited_note_missing",
+                      function_id + " is 受限 without a note (record 原因/影响/替代方案)",
+                      "assault.md:" + str(record["line"]))
+            continue
+        if record["evidence"]:
+            continue
+        if state in REBUILD_COMPLETED_STATES:
+            issue(issues, "error", "assault.state_exceeds_evidence",
+                  function_id + " is marked " + REBUILD_STATE_LABELS[state] +
+                  " with an empty evidence column; fill the evidence (E-xxx or a diff/ record) first",
+                  "assault.md:" + str(record["line"]))
+        else:
+            issue(issues, "warning", "assault.evidence_pending",
+                  function_id + " is " + REBUILD_STATE_LABELS[state] +
+                  " without evidence yet; fill the evidence column before moving it up the ladder",
+                  "assault.md:" + str(record["line"]))
+
+    # --- check 3c: diff_baseline rows keep their five columns ---
+    diff_section = section_text(text, "diff_baseline")
+    for line_number, cells in _iter_table_rows(diff_section):
+        if _is_markdown_separator_row(cells):
+            continue
+        if not cells or not FUNCTION_ID.fullmatch(cells[0]):
+            continue
+        result["diff_rows"].append({"id": cells[0], "cells": cells, "line": line_number})
+        body = cells[1:6]
+        if len(body) < 5:
+            issue(issues, "error", "assault.diff_columns",
+                  cells[0] + " diff_baseline row needs 5 columns 输入条件/原程序结果/新实现结果/是否一致/说明",
+                  "assault.md:" + str(line_number))
+            continue
+        empty = [name for name, value in zip(REBUILD_DIFF_COLUMNS, body) if not value]
+        if empty:
+            issue(issues, "error", "assault.diff_incomplete",
+                  cells[0] + " diff_baseline row leaves column(s) empty: " + "/".join(empty),
+                  "assault.md:" + str(line_number))
+
+    # --- check 3d: completed rows need a matching diff row whose verdict asserts 一致 ---
+    diff_by_id = {row["id"]: row for row in result["diff_rows"]}
+    for function_id, record in sorted(result["functions"].items()):
+        if record["state"] not in REBUILD_COMPLETED_STATES:
+            continue
+        row = diff_by_id.get(function_id)
+        if row is None:
+            issue(issues, "error", "assault.diff_row_missing",
+                  function_id + " is marked " + REBUILD_STATE_LABELS[record["state"]] +
+                  " but has no diff_baseline row (same-input comparison is the completion evidence)",
+                  "assault.md:" + str(record["line"]))
+            continue
+        verdict = row["cells"][4] if len(row["cells"]) > 4 else ""
+        if REBUILD_NEGATIVE_VERDICT.search(verdict):
+            issue(issues, "error", "assault.diff_verdict_conflict",
+                  function_id + " is marked " + REBUILD_STATE_LABELS[record["state"]] +
+                  " but its diff row verdict reads: " + verdict,
+                  "assault.md:" + str(row["line"]))
+        elif not REBUILD_POSITIVE_VERDICT.search(verdict):
+            issue(issues, "error", "assault.diff_verdict_unproven",
+                  function_id + " is marked " + REBUILD_STATE_LABELS[record["state"]] +
+                  " but its diff row verdict does not assert 一致 (reads: " +
+                  (verdict or "(empty)") + ")",
+                  "assault.md:" + str(row["line"]))
+
+    # --- check 3e: evidence that names a local diff record must exist ---
+    for function_id, record in sorted(result["functions"].items()):
+        token = (record["evidence"] or "").strip()
+        if not token:
+            continue
+        for relative in _diff_record_refs(token):
+            absolute = root / relative
+            if not absolute.is_file():
+                issue(issues, "error", "assault.diff_record_missing",
+                      function_id + " cites a comparison record that does not exist: " + relative,
+                      "assault.md:" + str(record["line"]))
+
+    # --- check 3f: a completed row's cited record must not contradict its claim ---
+    # 与 rebuild 审计同一把尺子（复用既有判据）：记录里的两段原始 stdout 逐字节比较，
+    # 表格自称「一致」不作数；命令没跑起来的记录（exit=ERROR/TIMEOUT）不支撑完成态。
+    # 老格式记录（缺原始块）只记 warning：迁移窗口，重跑 diff-runner 即补齐。
+    for function_id, record in sorted(result["functions"].items()):
+        if record["state"] not in REBUILD_COMPLETED_STATES:
+            continue
+        for relative in dict.fromkeys(_diff_record_refs(record["evidence"] or "")):
+            absolute = root / relative
+            if not absolute.is_file():
+                continue  # check 3e already reported the missing record
+            try:
+                record_bytes = absolute.read_bytes()
+            except OSError:
+                continue
+            pairs = list(_stdout_blocks(record_bytes))
+            if not pairs:
+                issue(issues, "warning", "assault.diff_unparsed",
+                      function_id + " cites " + relative + " without the two raw stdout blocks; "
+                      "re-run diff-runner to add them (byte comparison applies only to records that carry them)",
+                      relative)
+                continue
+            if any(baseline != rebuilt for baseline, rebuilt in pairs):
+                issue(issues, "error", "assault.diff_bytes_mismatch",
+                      function_id + " is marked " + REBUILD_STATE_LABELS[record["state"]] +
+                      " but its cited record shows differing stdout for the two programs: " + relative,
+                      relative)
+            gap = _record_reproducibility_gap(record_bytes)
+            if gap:
+                level, reason = gap
+                if level == "error":
+                    issue(issues, "error", "assault.diff_unreproducible",
+                          function_id + " cites " + relative + ": " + reason +
+                          " (a completion claim needs runs that actually happened)",
+                          relative)
+                else:
+                    issue(issues, "warning", "assault.diff_unparsed",
+                          function_id + " cites " + relative + " without registered commands/run lines: " + reason +
+                          " (re-run diff-runner to register them; the migration window treats this as a warning)",
+                          relative)
+
+    # --- check 4a: unknowns items carry 影响/下一步/是否阻塞 ---
+    unknowns_section = section_text(text, "unknowns")
+    for line_number, cells in _iter_table_rows(unknowns_section):
+        if _is_markdown_separator_row(cells):
+            continue
+        if not cells or not ASSAULT_UNKNOWN_ID.fullmatch(cells[0]):
+            continue
+        result["unknowns"][cells[0]] = {"cells": cells, "line": line_number}
+        if len(cells) < 6:
+            issue(issues, "error", "assault.unknown_columns",
+                  cells[0] + " row needs 6 columns 问题/影响功能/已尝试/下一步/是否阻塞",
+                  "assault.md:" + str(line_number))
+            continue
+        missing = [name for name, value in
+                   zip(("影响功能", "下一步", "是否阻塞"), (cells[2], cells[4], cells[5])) if not value]
+        if missing:
+            issue(issues, "error", "assault.unknown_field_missing",
+                  cells[0] + " is missing " + "/".join(missing), "assault.md:" + str(line_number))
+
+    # --- check 4b: completion form — deliverable on disk, or blocked with reasons ---
+    target_section = section_text(text, "target")
+    deliverable = field_value(target_section, "deliverable")
+    result["deliverable"] = deliverable
+    candidates = _deliverable_candidates(deliverable)
+    if not candidates:
+        issue(issues, "error", "assault.deliverable_unfilled",
+              "assault.md deliverable does not name a path (write the final artifact path, not prose)",
+              "assault.md")
+    else:
+        present = any(_deliverable_on_disk(root, candidate) for candidate in candidates)
+        result["deliverable_present"] = present
+        if not present and not _assault_blocked_outcome(text):
+            issue(issues, "error", "assault.deliverable_missing",
+                  "assault.md deliverable does not exist on disk and no blocked form "
+                  "(原因/影响/替代) is recorded: " + candidates[0],
+                  "assault.md")
+
+    return result
+
+
 def parse_workitems(root, issues):
     path = root / "workitems.md"
     records = {}
@@ -895,6 +1224,10 @@ def review_case(case_root, strict=False, verify_hashes=False):
     # Same discipline: no update.md -> no new key, no new issues.
     update = parse_update(root, issues, rebuild)
 
+    # Assault rolling-report audit: only for cases that actually carry assault.md.
+    # Same discipline: no assault.md -> no new key, no new issues.
+    assault = parse_assault(root, issues)
+
     for evidence_id, source in references:
         if evidence_id not in evidence:
             issue(issues, "error", "reference.unknown_evidence", "reference points to missing Evidence: " + evidence_id, source)
@@ -930,6 +1263,9 @@ def review_case(case_root, strict=False, verify_hashes=False):
     # Same for the update follow-up: the key appears only when update.md exists.
     if update is not None:
         report["update"] = update
+    # Same for the assault rolling report: key appears only when assault.md exists.
+    if assault is not None:
+        report["assault"] = assault
     return report
 
 def render_markdown(report):
@@ -1005,6 +1341,36 @@ def render_markdown(report):
                 lines.append("| " + row["id"] + " | " + (row["action"] or "(empty)") + " |")
         else:
             lines.append("| n/a | no function_delta rows |")
+
+    # Assault rolling-report table appears only for cases that carry assault.md.
+    # A case without assault.md produces exactly the Markdown it produced before.
+    assault = report.get("assault")
+    if assault:
+        lines.extend(["", "## Assault report", "",
+                      "- current_state: " + (assault["state"] or "(not set)"),
+                      "- deliverable: " + (assault["deliverable"] or "(not set)"),
+                      "- deliverable_present: " + ("yes" if assault["deliverable_present"] else "no"), ""])
+        lines.extend(["| Layer | Status | Evidence |", "|---|---|---|"])
+        if assault["layers"]:
+            for layer_id, record in sorted(assault["layers"].items()):
+                lines.append("| " + layer_id + " | " + record["status"].replace("|", "\\|") +
+                             " | " + record["evidence"].replace("|", "\\|") + " |")
+        else:
+            lines.append("| n/a | | no layer rows |")
+        lines.extend(["", "| Function | State | Evidence |", "|---|---|---|"])
+        if assault["functions"]:
+            for function_id, record in sorted(assault["functions"].items()):
+                lines.append("| " + function_id + " | " + REBUILD_STATE_LABELS[record["state"]] +
+                             " | " + (record["evidence"] or "").replace("|", "\\|") + " |")
+        else:
+            lines.append("| n/a | | no function rows |")
+        lines.extend(["", "| Unknown | Blocking |", "|---|---|"])
+        if assault["unknowns"]:
+            for unknown_id, record in sorted(assault["unknowns"].items()):
+                blocking = record["cells"][5] if len(record["cells"]) > 5 else ""
+                lines.append("| " + unknown_id + " | " + blocking.replace("|", "\\|") + " |")
+        else:
+            lines.append("| n/a | no unknown rows |")
     return "\n".join(lines) + "\n"
 
 def main(argv=None):

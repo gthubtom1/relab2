@@ -3,10 +3,11 @@
 """diff-runner — 复刻交付的差异测试驱动（第一版：能驱动 + 能记录）。
 
 ## 干什么
-读 `work/<case>/rebuild.md` 的 `## diff_baseline` 段拿到原程序（baseline）与
-新实现的驱动命令，对指定功能行（F-xxx）把同一组输入分别喂给两个程序，各自抓
-stdout / stderr / exit code / 生成的文件，落一份对照草稿到 `work/<case>/diff/`，
-供人确认后再回填 rebuild.md 的对照表。
+读 `work/<case>/rebuild.md`（或 assault 案例的 `assault.md`、更新案例的 `update.md`）
+的 `## diff_baseline` 段拿到原程序（baseline）与新实现的驱动命令，对指定功能行（F-xxx）
+把同一组输入分别喂给两个程序，各自抓 stdout / stderr / exit code / 生成的文件，
+落一份对照草稿到 `work/<case>/diff/`（update 模式：`diff-update/`），
+供人确认后再回填对应报告的对账表。
 
 ## 不干什么（第一版的边界，故意不做）
 - 不做自动判定：草稿里"是否一致"列一律写 `PENDING`，由人判定；
@@ -42,6 +43,10 @@ python skills/scripts/diff-runner.py work/<case> --function F-001 \
   --baseline-cmd "./baseline/original --mode a {input}" \
   --rebuilt-cmd  "./diff/build/newimpl --mode a {input}" \
   --input "input=1" --input "input=2"
+
+# assault 案例（-Preset assault 建的 case）：驱动配置在 assault.md 的 ## diff_baseline，
+# 草稿同样落 diff/，供人工确认后回填 assault.md 的对照表。
+python skills/scripts/diff-runner.py work/assault-<target> --assault --function F-001
 ```
 
 ## 退出码
@@ -101,7 +106,10 @@ def parse_rebuild(case_root: Path):
     for line in diff.splitlines():
         match = CASE_LINE.match(line)
         if match:
-            cases.append((match.group(1), match.group(2)))
+            value = match.group(2)
+            if value.startswith("input="):
+                value = value[len("input="):].strip().strip("`").strip()
+            cases.append((match.group(1), value))
     return {
         "baseline_dir": field_value(diff, "baseline_dir"),
         "diff_dir": field_value(diff, "diff_dir"),
@@ -143,6 +151,35 @@ def parse_update(case_root: Path):
         "harness": field_value(verification, "harness"),
         "cases": inputs,   # (F-ID, 输入值) — same shape as rebuild's cases
         "verification": inputs,
+    }
+
+
+def parse_assault(case_root: Path):
+    """Assault-config from assault.md (None when the case has no assault.md).
+
+    Driving lives in the `## diff_baseline` section — same field names as
+    rebuild.md (`baseline_command` / `rebuilt_command`), so the same driving and
+    recording machinery serves the protected-target rolling report. Table rows
+    carry (F-ID, 输入条件), used when --input is not given.
+    """
+    path = case_root / "assault.md"
+    if not path.is_file():
+        return None
+    text = path.read_text(encoding="utf-8-sig")
+    diff = section_text(text, "diff_baseline")
+    cases = []
+    for line in diff.splitlines():
+        match = CASE_LINE.match(line)
+        if match:
+            value = match.group(2)
+            if value.startswith("input="):
+                value = value[len("input="):].strip().strip("`").strip()
+            cases.append((match.group(1), value))
+    return {
+        "baseline_command": field_value(diff, "baseline_command"),
+        "rebuilt_command": field_value(diff, "rebuilt_command"),
+        "harness": field_value(diff, "harness"),
+        "cases": cases,
     }
 
 
@@ -215,12 +252,18 @@ def nondeterministic_note(*outputs: str) -> str:
 # ---------------------------------------------------------------- 草稿
 
 def render_draft(case_id: str, function_id: str, entries, stamp: str,
-                 baseline_cmd: str, rebuilt_cmd: str, update_mode: bool = False) -> str:
+                 baseline_cmd: str, rebuilt_cmd: str, update_mode: bool = False,
+                 assault_mode: bool = False) -> str:
     if update_mode:
         header = "<!-- diff-runner draft — 供人工确认后回填 update.md 的 verification 表 -->"
         title = "# Diff draft (update): %s" % function_id
         table_header = ("| F-ID | 输入条件 | 新版原程序结果 | 新复刻结果 | 是否一致 | 说明 |",
                         "|------|----------|----------------|------------|----------|------|")
+    elif assault_mode:
+        header = "<!-- diff-runner draft — 供人工确认后回填 assault.md 的 diff_baseline 表 -->"
+        title = "# Diff draft (assault): %s" % function_id
+        table_header = ("| F-ID | 输入条件 | 原程序结果 | 新实现结果 | 是否一致 | 说明 |",
+                        "|------|----------|------------|------------|----------|------|")
     else:
         header = "<!-- diff-runner draft — 供人工确认后回填 rebuild.md 的 diff_baseline 表 -->"
         title = "# Diff draft: %s" % function_id
@@ -291,6 +334,7 @@ def main(argv=None) -> int:
     parser.add_argument("--out", default="", help="override the draft path (default: <case>/diff/<F-ID>.md; update mode: <case>/diff-update/<F-ID>.md)")
     parser.add_argument("--out-dir", default="", help="draft directory name under the case root (e.g. diff-update; default: diff, or diff-update in update mode)")
     parser.add_argument("--update", action="store_true", help="update mode: drive against update.md (new upstream vs new rebuild), draft lands in diff-update/")
+    parser.add_argument("--assault", action="store_true", help="assault mode: drive against assault.md (protected-target rolling report), draft lands in diff/")
     args = parser.parse_args(argv)
 
     case_root = Path(args.case_root).expanduser().resolve()
@@ -303,22 +347,34 @@ def main(argv=None) -> int:
         print("ERROR: %s has no update.md — run case-init -Preset update first" % case_root, file=sys.stderr)
         return 2
 
-    config = parse_rebuild(case_root)
-    if config is None and update_config is None:
-        print("ERROR: %s has no rebuild.md — diff-runner only runs on rebuild cases" % case_root, file=sys.stderr)
+    assault_config = parse_assault(case_root) if args.assault else None
+    if args.assault and assault_config is None:
+        print("ERROR: %s has no assault.md — run case-init -Preset assault first" % case_root, file=sys.stderr)
         return 2
 
-    if update_config is not None:
+    config = parse_rebuild(case_root)
+    if config is None and update_config is None and assault_config is None:
+        print("ERROR: %s has no rebuild.md / update.md / assault.md — diff-runner only runs on those cases" % case_root, file=sys.stderr)
+        return 2
+
+    if assault_config is not None:
+        source = assault_config
+        baseline_cmd = args.baseline_cmd or assault_config["baseline_command"]
+        rebuilt_cmd = args.rebuilt_cmd or assault_config["rebuilt_command"]
+        source_name = "assault.md"
+    elif update_config is not None:
         source = update_config
         baseline_cmd = args.baseline_cmd or update_config["baseline_command"]
         rebuilt_cmd = args.rebuilt_cmd or update_config["rebuilt_command"]
+        source_name = "update.md"
     else:
         source = config
         baseline_cmd = args.baseline_cmd or config["baseline_command"]
         rebuilt_cmd = args.rebuilt_cmd or config["rebuilt_command"]
+        source_name = "rebuild.md"
     if not baseline_cmd or not rebuilt_cmd:
         message = ("ERROR: need both --baseline-cmd and --rebuilt-cmd (or baseline_command/rebuilt_command in %s)" %
-                   ("update.md" if update_config is not None else "rebuild.md"))
+                   source_name)
         if update_config is None and (case_root / "update.md").is_file():
             message += " — this case carries update.md; for the update drive add --update (or --out-dir diff-update)"
         print(message, file=sys.stderr)
@@ -328,8 +384,7 @@ def main(argv=None) -> int:
     if not inputs:
         inputs = [value for function_id, value in source["cases"] if function_id == args.function]
     if not inputs:
-        print("ERROR: no input given and %s lists none for %s" %
-              ("update.md" if update_config is not None else "rebuild.md", args.function), file=sys.stderr)
+        print("ERROR: no input given and %s lists none for %s" % (source_name, args.function), file=sys.stderr)
         return 2
 
     entries = []
@@ -368,7 +423,8 @@ def main(argv=None) -> int:
         draft_path = draft_dir / ("%s.md" % args.function)
     draft_path.write_text(
         render_draft(case_root.name, args.function, entries, stamp, baseline_cmd, rebuilt_cmd,
-                     update_mode=update_config is not None),
+                     update_mode=update_config is not None,
+                     assault_mode=assault_config is not None),
         encoding="utf-8",
     )
 
