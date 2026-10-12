@@ -26,6 +26,14 @@
 
 状态改为「已通过约定测试」的唯一条件：事先写定的对照用例已实际跑过，且运行记录写进 `diff/` 或 Evidence 并能被 `review_case.py` 读到。`ver` 角色是唯一有权改这个状态的角色。
 
+**驱动与记录**用 `skills/scripts/diff-runner.py`：读 `rebuild.md` 的 diff_baseline 驱动命令与 case 列表，
+对指定 F-xxx 把同一输入分别喂给原程序与新实现，草稿落 `diff/<F-ID>.md`。第一版只做「能驱动 + 能记录」：
+判定列写 `PENDING` 由人确认后回填 rebuild.md；非确定项标 `NONDETERMINISTIC` 由人定容差。
+
+```bash
+python skillpack/skills/scripts/diff-runner.py work/<case> --function F-001
+```
+
 整个 case 的交付完成形态 = 每一行都处于「对照一致」或「受限 + 具体原因」，且 `## out_of_delivery` 已列出明确不做的部分与理由。没有第三种形态：代码写完但未对照的行，就是还没完成的行。
 
 ## 状态阶梯与证据

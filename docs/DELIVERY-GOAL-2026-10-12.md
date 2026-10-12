@@ -422,6 +422,38 @@ diff_baseline，对指定功能跑原程序与新实现，产出对照表草稿�
 - commit: （本段提交）交付能力建设 · 阶段4 review_case.py 交付审计
 - 未达标/遗留: 无
 
+### 阶段 5 · 差异测试执行器 · 2026-10-12 12:55
+
+- 做了什么: 新建 `skills/scripts/diff-runner.py`（第一版：只做「能驱动 + 能记录」）。读 rebuild.md 的
+  `diff_baseline` 驱动命令与 case 列表，对指定 F-xxx 把同一输入分别喂给原程序与新实现，
+  草稿（五列判定表 + 原始 stdout/exit/耗时记录）落 `diff/<F-ID>.md`；判定列一律 `PENDING` 由人确认；
+  非确定项标 `NONDETERMINISTIC`（时间戳/随机/PID/路径）由人定容差。
+  模板与闸门文档同步补上驱动命令字段（`baseline_command` / `rebuilt_command` / `cases`）。
+- 改了哪些文件:
+  - 新增 `skillpack/skills/scripts/diff-runner.py`
+  - 改 `skillpack/skills/templates/rebuild.md`（diff_baseline 段补驱动命令契约）
+  - 改 `skillpack/skills/ops/rebuild-gates.md`（闸门②补 diff-runner 用法）
+- 验收命令与结果（真实 case：`work/sha256-rebuild-demo`，复刻 Git `sha256sum`）:
+  - 真实对照：原程序 `bash -lc "sha256sum -t baseline/sample-input.txt"` vs 新实现
+    `bash -lc "python diff/build/new_sha256sum.py baseline/sample-input.txt"`（新实现为真实编写的
+    Python 等价物 `diff/build/new_sha256sum.py`）。
+  - `python skillpack/skills/scripts/diff-runner.py work/sha256-rebuild-demo --function F-001`
+    → `DRAFT -> ...\diff\F-001.md`，`inputs=1 function=F-001`，rc=0；两列 stdout 逐字节相同。
+  - **真实发现**（diff-runner 首跑即抓到）：同一条 `sha256sum` 命令在 bash 直跑是文本模式
+    （两空格），经别的管道环境是二进制模式（`*`）。这是可复现的环境性差异，用 `-t` 在驱动命令里
+    固定住后两边一致 —— 恰好实证了「同输入双程序对照」能暴露的东西。
+  - 产出可被审计读：回填 rebuild.md 后 `review_case.py --verify-hashes --strict` → **PASS，rc=0**；
+    rebuild 交付表读到 `F-001 | 已测试 | diff/F-001.md`，三项 Coverage 全 yes。
+    （回填过程中审计先报 `rebuild.coverage_missing` ×3 与 `path.evidence_missing`，逐个补齐后转 PASS
+    —— 门禁确实在拦东西。）
+  - 可复现性：同输入跑两次，归一化 `generated` 与 `seconds=` 两个时间字段后草稿**逐字节一致**。
+  - 错误路径：无 rebuild.md 的 case → 明确报错 rc=2。
+  - `scan-leaks.ps1` 对演示 case：scanned 9 files, 0 findings。
+- 门禁结果: 负控 9/9、单测 14 全绿；`verify-evolution.py` 10/10 全绿（EXIT=0）
+- commit: （本段提交）交付能力建设 · 阶段5 差异测试执行器
+- 未达标/遗留: 演示 case 在 `work/`（gitignored，不入库）；真实复刻项目的完整闭环留待阶段 7。
+
+
 
 
 
