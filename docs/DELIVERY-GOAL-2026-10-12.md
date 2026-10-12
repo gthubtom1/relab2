@@ -396,5 +396,32 @@ diff_baseline，对指定功能跑原程序与新实现，产出对照表草稿�
 - commit: （本段提交）交付能力建设 · 阶段3 role-map 增 impl/ver
 - 未达标/遗留: 无
 
+### 阶段 4 · review_case.py 扩展成交付审计 · 2026-10-12 12:50
+
+- 做了什么: `review_case.py` 在检测到 `work/<case>/rebuild.md` 时新增交付审计三类检查
+  （①每行完成状态不得高于其证据 ②diff_baseline 五列逐行填齐 ③Coverage 三项），
+  并加了两条交叉检查（functions↔acceptance 一对一；证据列引用的 `diff/` 记录必须真实存在）
+  与一条冲突检查（标「对照一致」但对照行判为不一致）。无 rebuild.md 的 case 输出保持逐字节不变。
+- 改了哪些文件:
+  - `skillpack/skills/case-review/scripts/review_case.py`（+约 200 行：常量 + parse_rebuild + 交叉检查 + 条件渲染）
+  - `skillpack/skills/case-review/tests/test_review_case.py`（+5 个用例，14 个测试全绿）
+  - `skillpack/skills/scripts/test-rebuild-audit-negctl.py`（新建，9 个负控走 CLI 子进程）
+  - `skillpack/skills/case-review/SKILL.md`（Scope + ACTION REQUIRED 登记新检查与负控）
+  - `.github/workflows/ci.yml`（case-contract job 挂负控一步）
+- 验收命令与结果:
+  - `python skillpack/skills/scripts/test-rebuild-audit-negctl.py` → **9/9 controls honoured**
+    （含三个指定坏 fixture：状态虚高 / 对照表缺行 / Coverage 缺项，各自 exit 1 且报出对应 code；
+    好 fixture 0 报错 exit 0；无 rebuild.md 的老 case 不出现 rebuild.* exit 0）
+  - `python skillpack/skills/case-review/tests/test_review_case.py` → `Ran 14 tests ... OK`
+  - 回归底线：`review_case.py skillpack/examples/ctf-demo --verify-hashes --strict`（CI 命令）改前/改后
+    输出逐字一致（仅 generated_at 归一化）—— markdown / json / plain 三格式均 IDENTICAL
+  - `verify-workflow-refs.py` exit 0（34 个引用全存在）；`verify-gate-wiring.py` PASS（0 blocked / 0 needs_review）
+- 门禁结果: `check-fences.py` 0 未闭合；`verify-doc-links.py` OK；
+  `audit-doc-code.py --root skillpack/skills` → 真错 0、exit 0；
+  `verify-evolution.py` 10/10 全绿（EXIT=0）
+- commit: （本段提交）交付能力建设 · 阶段4 review_case.py 交付审计
+- 未达标/遗留: 无
+
+
 
 

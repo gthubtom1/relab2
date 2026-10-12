@@ -463,6 +463,13 @@ jobs:
         shell: bash
         run: python3 skillpack/skills/scripts/test-audit-doc-code-negctl.py
 
+      # 负控：review_case.py 的 rebuild 交付审计（阶段 4 新增）。
+      # 没有它，「坏 case 都被拦住了」和「审计早退、根本没跑」在汇总数字上
+      # 完全一样 —— 而这条审计正是「防止做一半就宣布成功」的机制。
+      - name: Rebuild delivery audit negative controls
+        shell: bash
+        run: python3 skillpack/skills/scripts/test-rebuild-audit-negctl.py
+
       # ★ 2026-10-10 新增：CI 引用的仓库内文件必须真实存在。
       #   审查时抓到 3 处指向空气的命令 —— ci.yml:227/231 与
       #   macos-bash-compat.yml:42 调的两个 .sh 脚本**从未存在过**

@@ -23,6 +23,35 @@ WORKITEM_STATUSES = {"pending", "in_progress", "blocked", "done", "completed", "
 PATH_TYPES = {"attack", "callflow", "solve"}
 NETWORK_MODES = {"offline", "lab_only", "authorized_target_only", "unrestricted_lab"}
 
+# --- rebuild delivery audit (only when work/<case>/rebuild.md exists) ---
+# Contract: skills/ops/rebuild-gates.md (two gates) + skills/templates/rebuild.md.
+# A case without rebuild.md skips all of this: the plain review stays identical.
+FUNCTION_ID = re.compile(r"F-[A-Za-z0-9][A-Za-z0-9_-]*")
+REBUILD_STATE_ALIASES = {
+    "已分析": "analyzed",
+    "已实现": "implemented",
+    "已测试": "tested",
+    "已通过约定测试": "tested",
+    "对照一致": "verified",
+    "受限": "limited",
+}
+REBUILD_STATE_LABELS = {
+    "analyzed": "已分析",
+    "implemented": "已实现",
+    "tested": "已测试",
+    "verified": "对照一致",
+    "limited": "受限",
+}
+REBUILD_STATE_ORDER = ("analyzed", "implemented", "tested", "verified", "limited")
+REBUILD_COMPLETED_STATES = {"tested", "verified"}
+REBUILD_DIFF_COLUMNS = ("输入条件", "原程序结果", "新实现结果", "是否一致", "说明")
+REBUILD_NEGATIVE_VERDICT = re.compile(r"不一致|不匹配|mismatch|not[\s_-]*same|false\b|^否$|^no$", re.I)
+REBUILD_COVERAGE_ITEMS = (
+    ("function_list", "功能清单全覆盖", re.compile(r"功能清单|function\s*list", re.I)),
+    ("critical_function_status", "关键功能状态", re.compile(r"关键功能|critical\s*function", re.I)),
+    ("known_diff", "已知差异已记录", re.compile(r"已知差异|known\s*deviation", re.I)),
+)
+
 def field_value(text, name):
     lines = text.splitlines()
     for index, line in enumerate(lines):
@@ -67,6 +96,215 @@ def split_table_row(line):
     if not stripped.startswith("|") or not stripped.endswith("|"):
         return []
     return [cell.strip() for cell in stripped[1:-1].split("|")]
+
+def _is_markdown_separator_row(cells):
+    return bool(cells) and all(re.fullmatch(r":?-{2,}:?", cell or "-") for cell in cells)
+
+def _iter_table_rows(text):
+    """Yield (line_number, cells) for every Markdown table row, headers included."""
+    for line_number, line in enumerate(text.splitlines(), 1):
+        cells = split_table_row(line)
+        if cells:
+            yield line_number, cells
+
+def parse_rebuild(root, issues):
+    """Parse rebuild.md against skills/templates/rebuild.md, then audit the delivery.
+
+    Returns None when the file is absent: a non-rebuild case must produce exactly
+    the same report as before this audit existed. When present, three checks run:
+      1. a row's state may not be higher than its evidence supports;
+      2. every diff_baseline row keeps its five columns;
+      3. Coverage carries the three rebuild items.
+    """
+    path = root / "rebuild.md"
+    if not path.is_file():
+        return None
+
+    text = path.read_text(encoding="utf-8-sig")
+    result = {
+        "present": True,
+        "path": "rebuild.md",
+        "functions": {},       # F-xxx -> {"state": ..., "evidence": ..., "note": ..., "line": int}
+        "diff_rows": [],       # {"id":..., "cells":[...], "line":...}
+        "coverage": {},        # key -> (found: bool, checked: bool)
+        "target_present": False,
+    }
+
+    # --- target: 交付物一行说清 ---
+    target_section = section_text(text, "target")
+    if target_section and field_value(target_section, "deliverable"):
+        result["target_present"] = True
+    else:
+        issue(issues, "error", "rebuild.target_missing",
+              "rebuild.md has no target.deliverable (state what the case delivers)",
+              "rebuild.md")
+
+    # --- functions: F-xxx rows carry 名称/入口/预期输出/验收条件/路线 ---
+    functions_section = section_text(text, "functions")
+    function_lines = {}
+    for line_number, cells in _iter_table_rows(functions_section):
+        if _is_markdown_separator_row(cells):
+            continue
+        if not cells or not FUNCTION_ID.fullmatch(cells[0]):
+            continue
+        if len(cells) < 6:
+            issue(issues, "error", "rebuild.function_columns",
+                  cells[0] + " row needs 6 columns 名称/入口/预期输出/验收条件/路线",
+                  "rebuild.md:" + str(line_number))
+            continue
+        function_lines[cells[0]] = line_number
+        missing = [name for name, value in zip(
+            ("名称", "入口", "预期输出", "验收条件", "路线"), cells[1:6]) if not value]
+        if missing:
+            issue(issues, "error", "rebuild.function_field_missing",
+                  cells[0] + " is missing " + "/".join(missing), "rebuild.md:" + str(line_number))
+
+    if not function_lines:
+        issue( issues, "error", "rebuild.functions_empty",
+              "rebuild.md has no F-xxx function rows (functions table is the delivery contract)",
+              "rebuild.md")
+
+    # --- acceptance: state may not exceed evidence ---
+    acceptance_section = section_text(text, "acceptance")
+    for line_number, cells in _iter_table_rows(acceptance_section):
+        if _is_markdown_separator_row(cells):
+            continue
+        if not cells or not FUNCTION_ID.fullmatch(cells[0]):
+            continue
+        function_id = cells[0]
+        state_raw = cells[1] if len(cells) > 1 else ""
+        evidence = cells[2] if len(cells) > 2 else ""
+        note = cells[3] if len(cells) > 3 else ""
+        state = REBUILD_STATE_ALIASES.get(state_raw.strip())
+        if state is None:
+            issue(issues, "error", "rebuild.state_invalid",
+                  function_id + " has unsupported state: " + (state_raw or "(empty)") +
+                  " (allowed: " + "/".join(REBUILD_STATE_LABELS[key] for key in REBUILD_STATE_ORDER) + ")",
+                  "rebuild.md:" + str(line_number))
+            continue
+        result["functions"][function_id] = {
+            "state": state, "evidence": evidence, "note": note,
+            "line": function_lines.get(function_id, line_number),
+        }
+
+    # --- diff_baseline: five columns must be filled per row ---
+    diff_section = section_text(text, "diff_baseline")
+    for line_number, cells in _iter_table_rows(diff_section):
+        if _is_markdown_separator_row(cells):
+            continue
+        if not cells or not FUNCTION_ID.fullmatch(cells[0]):
+            continue
+        result["diff_rows"].append({"id": cells[0], "cells": cells, "line": line_number})
+        # The five contract columns follow the F-ID column.
+        body = cells[1:6]
+        if len(body) < 5:
+            issue(issues, "error", "rebuild.diff_columns",
+                  cells[0] + " diff_baseline row needs 5 columns 输入条件/原程序结果/新实现结果/是否一致/说明",
+                  "rebuild.md:" + str(line_number))
+            continue
+        empty = [name for name, value in zip(REBUILD_DIFF_COLUMNS, body) if not value]
+        if empty:
+            issue(issues, "error", "rebuild.diff_incomplete",
+                  cells[0] + " diff_baseline row leaves column(s) empty: " + "/".join(empty),
+                  "rebuild.md:" + str(line_number))
+
+    # --- Coverage: three rebuild items live in workitems.md ---
+    # Scan every checkbox line in the file (not only the first "## Coverage"
+    # section): a case may append the rebuild items as their own section, and
+    # the item wording is distinctive enough to identify them on its own.
+    workitems_path = root / "workitems.md"
+    workitems_text = workitems_path.read_text(encoding="utf-8-sig") if workitems_path.is_file() else ""
+    checkbox_lines = [
+        re.match(r"^\s*[-*]\s*\[(?P<mark>[ xX])\]\s*(?P<text>.*)$", line)
+        for line in workitems_text.splitlines()
+    ]
+    for key, label, pattern in REBUILD_COVERAGE_ITEMS:
+        found = False
+        checked = False
+        for item in checkbox_lines:
+            if item and pattern.search(item.group("text")):
+                found = True
+                checked = checked or item.group("mark").lower() == "x"
+        result["coverage"][key] = (found, checked)
+        if not found:
+            issue(issues, "error", "rebuild.coverage_missing",
+                  "workitems.md Coverage is missing the rebuild item: " + label, "workitems.md")
+        elif not checked:
+            issue(issues, "warning", "rebuild.coverage_unchecked",
+                  "rebuild Coverage item not yet checked: " + label, "workitems.md")
+
+    # --- cross-check 1: state vs evidence ---
+    # Rule: a row's state may not be higher than its evidence supports.
+    #   tested / 对照一致 without evidence  -> error (the state-虚高 this gate exists to catch)
+    #   analyzed / implemented without evidence -> warning (施工依据缺哪行补哪行; not a stop)
+    #   受限 needs the note instead of evidence (cause / impact / fallback)
+    for function_id, record in sorted(result["functions"].items()):
+        state = record["state"]
+        if state == "limited":
+            if not record["note"]:
+                issue(issues, "error", "rebuild.limited_note_missing",
+                      function_id + " is 受限 without a note (record 原因/影响/替代方案)",
+                      "rebuild.md:" + str(record["line"]))
+            continue
+        if record["evidence"]:
+            continue
+        if state in REBUILD_COMPLETED_STATES:
+            issue(issues, "error", "rebuild.state_exceeds_evidence",
+                  function_id + " is marked " + REBUILD_STATE_LABELS[state] +
+                  " with an empty evidence column; fill the evidence (E-xxx or a diff/ record) first",
+                  "rebuild.md:" + str(record["line"]))
+        else:
+            issue(issues, "warning", "rebuild.evidence_pending",
+                  function_id + " is " + REBUILD_STATE_LABELS[state] +
+                  " without evidence yet; fill the evidence column before moving it up the ladder",
+                  "rebuild.md:" + str(record["line"]))
+
+    # --- cross-check 1b: 功能清单全覆盖 (functions <-> acceptance) ---
+    for function_id in sorted(set(function_lines) - set(result["functions"])):
+        issue(issues, "error", "rebuild.acceptance_missing",
+              function_id + " is in the functions table but has no acceptance row (功能清单全覆盖)",
+              "rebuild.md")
+    for function_id in sorted(set(result["functions"]) - set(function_lines)):
+        issue(issues, "error", "rebuild.function_unknown",
+              function_id + " has an acceptance row but no functions row",
+              "rebuild.md")
+
+    # --- cross-check 1c: evidence that names a local diff record must exist ---
+    for function_id, record in sorted(result["functions"].items()):
+        token = (record["evidence"] or "").strip()
+        if not token:
+            continue
+        for candidate in re.findall(r"[A-Za-z0-9_./\\-]*diff[/\\][A-Za-z0-9_.\\/-]+", token):
+            relative = candidate.replace("\\", "/").lstrip("/")
+            absolute = root / relative
+            if not absolute.is_file():
+                issue(issues, "error", "rebuild.diff_record_missing",
+                      function_id + " cites a comparison record that does not exist: " + relative,
+                      "rebuild.md:" + str(record["line"]))
+
+    # --- cross-check 2: states >= tested need a matching diff row ---
+    diff_by_id = {row["id"]: row for row in result["diff_rows"]}
+    for function_id, record in sorted(result["functions"].items()):
+        state = record["state"]
+        if state not in REBUILD_COMPLETED_STATES:
+            continue
+        row = diff_by_id.get(function_id)
+        if row is None:
+            issue(issues, "error", "rebuild.diff_row_missing",
+                  function_id + " is marked " + REBUILD_STATE_LABELS[state] +
+                  " but has no diff_baseline row (same-input comparison is the completion evidence)",
+                  "rebuild.md:" + str(record["line"]))
+            continue
+        verdict = row["cells"][4] if len(row["cells"]) > 4 else ""
+        if not verdict:
+            continue
+        if REBUILD_NEGATIVE_VERDICT.search(verdict) and state == "verified":
+            issue(issues, "error", "rebuild.diff_verdict_conflict",
+                  function_id + " is marked 对照一致 but its diff row verdict reads: " + verdict,
+                  "rebuild.md:" + str(row["line"]))
+
+    return result
+
 
 def parse_workitems(root, issues):
     path = root / "workitems.md"
@@ -349,6 +587,11 @@ def review_case(case_root, strict=False, verify_hashes=False):
     findings, paths, report_refs = parse_reports(root, issues)
     references = workitem_refs + timeline_refs + evidence_refs + report_refs
 
+    # Rebuild delivery audit: only for cases that actually carry rebuild.md.
+    # A case without it keeps byte-identical output (the function returns None
+    # before touching any issue list).
+    rebuild = parse_rebuild(root, issues)
+
     for evidence_id, source in references:
         if evidence_id not in evidence:
             issue(issues, "error", "reference.unknown_evidence", "reference points to missing Evidence: " + evidence_id, source)
@@ -361,7 +604,7 @@ def review_case(case_root, strict=False, verify_hashes=False):
     errors = sum(1 for item in issues if item["level"] == "error")
     warnings = sum(1 for item in issues if item["level"] == "warning")
     status = "FAIL" if errors or (strict and warnings) else "WARN" if warnings else "PASS"
-    return {
+    report = {
         "status": status,
         "case_root": str(root),
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -378,6 +621,10 @@ def review_case(case_root, strict=False, verify_hashes=False):
         "issues": issues,
         "traceability": traceability,
     }
+    # Only a rebuild case grows a new key; a plain case serializes exactly as before.
+    if rebuild is not None:
+        report["rebuild"] = rebuild
+    return report
 
 def render_markdown(report):
     summary = report["summary"]
@@ -413,6 +660,25 @@ def render_markdown(report):
             )
     else:
         lines.append("| n/a | 0 | 0 | 0 |")
+
+    # Rebuild delivery table appears only for cases that carry rebuild.md.
+    # A plain case produces exactly the Markdown it produced before this audit.
+    rebuild = report.get("rebuild")
+    if rebuild:
+        lines.extend(["", "## Rebuild delivery", "",
+                      "| Function | State | Evidence | Note |", "|---|---|---|---|"])
+        if rebuild["functions"]:
+            for function_id, record in sorted(rebuild["functions"].items()):
+                lines.append("| " + function_id + " | " + REBUILD_STATE_LABELS[record["state"]] +
+                             " | " + (record["evidence"] or "").replace("|", "\\|") +
+                             " | " + (record["note"] or "").replace("|", "\\|") + " |")
+        else:
+            lines.append("| n/a | | | no function rows |")
+        lines.extend(["", "| Coverage item | Present | Checked |", "|---|---|---|"])
+        for key, label, _pattern in REBUILD_COVERAGE_ITEMS:
+            found, checked = rebuild["coverage"].get(key, (False, False))
+            lines.append("| " + label + " | " + ("yes" if found else "no") +
+                         " | " + ("yes" if checked else "no") + " |")
     return "\n".join(lines) + "\n"
 
 def main(argv=None):

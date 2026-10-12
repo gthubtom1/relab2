@@ -17,6 +17,11 @@ This skill covers:
 - Structured Findings and Paths in report Markdown
 - Optional SHA-256 verification for case-local artifacts
 - A Markdown or JSON review result for a report handoff
+- **Rebuild delivery audit** — when `work/<case>/rebuild.md` exists, the review
+  additionally checks that every function row's state is backed by evidence, that
+  every `diff_baseline` row keeps its five columns, and that Coverage carries the
+  three rebuild items (功能清单全覆盖 / 关键功能状态 / 已知差异已记录).
+  A case without `rebuild.md` produces exactly the same report as before.
 
 It MUST NOT perform reconnaissance, exploitation, dynamic instrumentation, or target changes. Those actions belong to the routed analysis skill and require the case scope gate.
 
@@ -31,6 +36,13 @@ It MUST NOT perform reconnaissance, exploitation, dynamic instrumentation, or ta
 4. `NEXT`: read `../TOOLS.md`; this skill uses only Python 3 standard library and does not require bootstrap.
 5. `NEXT`: run `python skillpack/skills/case-review/scripts/review_case.py <case-root> --format markdown` (Windows; on Linux/macOS/Kali use `python3`).
 6. `ACT`: resolve every error, then rerun the review before claiming a handoff is complete.
+   When the case carries `rebuild.md`, the audit's rebuild checks follow
+   `../ops/rebuild-gates.md`: a row marked 已测试/对照一致 without evidence, a diff row
+   missing its five columns, or a missing Coverage item is an error — fix the table,
+   do not lower the check.
+   Negative controls for this audit: `python skillpack/skills/scripts/test-rebuild-audit-negctl.py`
+   (proves the audit catches 状态虚高 / 对照表缺行 / Coverage 缺项 and still passes a
+   complete table and a case without `rebuild.md`).
 
 ## Tool dependencies
 
