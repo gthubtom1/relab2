@@ -24,7 +24,8 @@ metadata:
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
 3. `NOW`: 确认当前任务是否命中本 skill 的适用范围
-4. `NOW`: **受保护目标攻坚先过入口分流** —— 读 `references/assault-entry.md` 完成四问
+4. `NOW`: **受保护目标攻坚先过入口分流** —— 读 `references/assault-entry.md`：
+   先读第一屏「攻坚者五条」（姿态，动手前先过一遍），再完成四问
    （Q0 任务归类 / Q1 目标类型 / Q2 保护层次 / Q3 目标成品），按分流结果进入对应工序卡。
    日常开发 / 维护 / 修 bug / 部署 / 文档：Q0 判 A，本卡到此为止，零额外工序。
 5. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
