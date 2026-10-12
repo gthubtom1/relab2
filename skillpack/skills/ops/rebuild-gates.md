@@ -124,6 +124,12 @@ freeze/<我们的版本>/
 （`diff-update/<F-ID>.md`），记录里两段 stdout 逐字节一致 —— 与初逆同一口径，审计同一把尺
 （`review_case.py` 对 `update.md` 做同形检查）。「受限」行写清原因/影响/替代方案，其余行照常推进。
 
+**驱动与记录**用 `skills/scripts/diff-runner.py --update`（或 `--out-dir diff-update`）：
+读 `update.md` 的 `## verification` 段登记的两个命令（`baseline_command` = 新版原程序，
+`rebuilt_command` = 新复刻）与逐行 `input=` 值，对指定 F-xxx 把同一输入分别喂给两者，
+草稿落 `diff-update/<F-ID>.md`，人工确认后回填 `## verification` 表。
+初逆用法（`diff/` 落点、`rebuild.md` 驱动）一行未动；`--out-dir` 是显式落点开关。
+
 ### 补丁路线行的平移重算
 
 路线为 `patch` 的行（只对 `patch` 行生效）：把旧特征码在新版原程序里重新检索，

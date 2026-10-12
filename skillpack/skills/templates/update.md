@@ -50,11 +50,18 @@
 > 更新后的对照：同一输入喂给**新版原程序**与**新复刻**，逐行五列填齐。
 > 「是否一致」= 一致 的行必须有对应记录（`diff-update/<F-ID>.md`），
 > 记录里两段 stdout 逐字节一致 —— 与初逆同一口径。
-> 驱动用 `skills/scripts/diff-runner.py --out-dir diff-update`。
+> 驱动用 `skills/scripts/diff-runner.py --update`（或 `--out-dir diff-update`），
+> 草稿落 `diff-update/<F-ID>.md`，人工确认后回填本表。
+> `baseline_command` 驱动**新版原程序**（{input} 占位），`rebuilt_command` 驱动**新复刻**；
+> 每行 `输入条件` 列的 `input=` 值供 diff-runner 直接读取（缺省时可 --input 重复传入）。
 
-| F-ID | 输入 | 新版原程序结果 | 新复刻结果 | 是否一致 | 说明 |
-|------|------|----------------|------------|----------|------|
-| F-001 | | | | 待判 | |
+- baseline_command: `<驱动新版原程序的命令;{input} 占位>`
+- rebuilt_command: `<驱动新复刻的命令;{input} 占位>`
+- harness: `<可选:更复杂驱动脚本的说明>`
+
+| F-ID | 输入条件 | 新版原程序结果 | 新复刻结果 | 是否一致 | 说明 |
+|------|----------|----------------|------------|----------|------|
+| F-001 | input=`<第一组输入>` | | | 待判 | |
 
 ## out_of_update
 

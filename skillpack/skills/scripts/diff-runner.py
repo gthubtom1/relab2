@@ -112,6 +112,40 @@ def parse_rebuild(case_root: Path):
     }
 
 
+def parse_update(case_root: Path):
+    """Update-phase config from update.md (None when the case has no update.md).
+
+    Driving lives in the `## verification` section: `baseline_command` drives the
+    NEW upstream build, `rebuilt_command` drives the new rebuild, and each F-ID
+    row's 输入 column carries that row's input values.
+    """
+    path = case_root / "update.md"
+    if not path.is_file():
+        return None
+    text = path.read_text(encoding="utf-8-sig")
+    verification = section_text(text, "verification")
+    inputs = []
+    for line in verification.splitlines():
+        stripped = line.strip()
+        if not (stripped.startswith("|") and stripped.endswith("|")):
+            continue
+        cells = [cell.strip() for cell in stripped[1:-1].split("|")]
+        if len(cells) < 2 or cells[0] == "F-ID" or not FUNCTION_ID.fullmatch(cells[0]):
+            continue
+        value = cells[1]
+        if value.startswith("input="):
+            value = value[len("input="):].strip().strip("`").strip()
+        if value:
+            inputs.append((cells[0], value))
+    return {
+        "baseline_command": field_value(verification, "baseline_command"),
+        "rebuilt_command": field_value(verification, "rebuilt_command"),
+        "harness": field_value(verification, "harness"),
+        "cases": inputs,   # (F-ID, 输入值) — same shape as rebuild's cases
+        "verification": inputs,
+    }
+
+
 # ---------------------------------------------------------------- 驱动
 
 def shell_for(platform: str):
@@ -181,10 +215,20 @@ def nondeterministic_note(*outputs: str) -> str:
 # ---------------------------------------------------------------- 草稿
 
 def render_draft(case_id: str, function_id: str, entries, stamp: str,
-                 baseline_cmd: str, rebuilt_cmd: str) -> str:
+                 baseline_cmd: str, rebuilt_cmd: str, update_mode: bool = False) -> str:
+    if update_mode:
+        header = "<!-- diff-runner draft — 供人工确认后回填 update.md 的 verification 表 -->"
+        title = "# Diff draft (update): %s" % function_id
+        table_header = ("| F-ID | 输入条件 | 新版原程序结果 | 新复刻结果 | 是否一致 | 说明 |",
+                        "|------|----------|----------------|------------|----------|------|")
+    else:
+        header = "<!-- diff-runner draft — 供人工确认后回填 rebuild.md 的 diff_baseline 表 -->"
+        title = "# Diff draft: %s" % function_id
+        table_header = ("| F-ID | 输入条件 | 原程序结果 | 新实现结果 | 是否一致 | 说明 |",
+                        "|------|----------|------------|------------|----------|------|")
     lines = [
-        "<!-- diff-runner draft — 供人工确认后回填 rebuild.md 的 diff_baseline 表 -->",
-        "# Diff draft: %s" % function_id,
+        header,
+        title,
         "",
         "- case: %s" % case_id,
         "- generated: %s" % stamp,
@@ -192,8 +236,8 @@ def render_draft(case_id: str, function_id: str, entries, stamp: str,
         "- rebuilt_command: `%s`" % rebuilt_cmd,
         "- judged_by: human (PENDING 由人判定；非确定项由人定容差)",
         "",
-        "| F-ID | 输入条件 | 原程序结果 | 新实现结果 | 是否一致 | 说明 |",
-        "|------|----------|------------|------------|----------|------|",
+        table_header[0],
+        table_header[1],
     ]
     for entry in entries:
         baseline = entry["baseline"]
@@ -244,7 +288,9 @@ def main(argv=None) -> int:
     parser.add_argument("--rebuilt-cmd", default="", help="command for the new implementation; {input} is replaced")
     parser.add_argument("--input", action="append", default=[], help="one input value (repeatable)")
     parser.add_argument("--timeout", type=int, default=60, help="per-command timeout in seconds")
-    parser.add_argument("--out", default="", help="override the draft path (default: <case>/diff/<F-ID>.md)")
+    parser.add_argument("--out", default="", help="override the draft path (default: <case>/diff/<F-ID>.md; update mode: <case>/diff-update/<F-ID>.md)")
+    parser.add_argument("--out-dir", default="", help="draft directory name under the case root (e.g. diff-update; default: diff, or diff-update in update mode)")
+    parser.add_argument("--update", action="store_true", help="update mode: drive against update.md (new upstream vs new rebuild), draft lands in diff-update/")
     args = parser.parse_args(argv)
 
     case_root = Path(args.case_root).expanduser().resolve()
@@ -252,23 +298,38 @@ def main(argv=None) -> int:
         print("ERROR: case root not found: %s" % case_root, file=sys.stderr)
         return 2
 
+    update_config = parse_update(case_root) if (args.update or args.out_dir) else None
+    if args.update and update_config is None:
+        print("ERROR: %s has no update.md — run case-init -Preset update first" % case_root, file=sys.stderr)
+        return 2
+
     config = parse_rebuild(case_root)
-    if config is None:
+    if config is None and update_config is None:
         print("ERROR: %s has no rebuild.md — diff-runner only runs on rebuild cases" % case_root, file=sys.stderr)
         return 2
 
-    baseline_cmd = args.baseline_cmd or config["baseline_command"]
-    rebuilt_cmd = args.rebuilt_cmd or config["rebuilt_command"]
+    if update_config is not None:
+        source = update_config
+        baseline_cmd = args.baseline_cmd or update_config["baseline_command"]
+        rebuilt_cmd = args.rebuilt_cmd or update_config["rebuilt_command"]
+    else:
+        source = config
+        baseline_cmd = args.baseline_cmd or config["baseline_command"]
+        rebuilt_cmd = args.rebuilt_cmd or config["rebuilt_command"]
     if not baseline_cmd or not rebuilt_cmd:
-        print("ERROR: need both --baseline-cmd and --rebuilt-cmd (or baseline_command/rebuilt_command in rebuild.md)",
-              file=sys.stderr)
+        message = ("ERROR: need both --baseline-cmd and --rebuilt-cmd (or baseline_command/rebuilt_command in %s)" %
+                   ("update.md" if update_config is not None else "rebuild.md"))
+        if update_config is None and (case_root / "update.md").is_file():
+            message += " — this case carries update.md; for the update drive add --update (or --out-dir diff-update)"
+        print(message, file=sys.stderr)
         return 2
 
     inputs = list(args.input)
     if not inputs:
-        inputs = [value for function_id, value in config["cases"] if function_id == args.function]
+        inputs = [value for function_id, value in source["cases"] if function_id == args.function]
     if not inputs:
-        print("ERROR: no input given and rebuild.md lists none for %s" % args.function, file=sys.stderr)
+        print("ERROR: no input given and %s lists none for %s" %
+              ("update.md" if update_config is not None else "rebuild.md", args.function), file=sys.stderr)
         return 2
 
     entries = []
@@ -285,11 +346,21 @@ def main(argv=None) -> int:
         })
 
     stamp = datetime.datetime.now().isoformat(timespec="seconds")
-    draft_dir = Path(args.out).resolve().parent if args.out else (case_root / "diff")
-    draft_dir.mkdir(parents=True, exist_ok=True)
-    draft_path = Path(args.out).resolve() if args.out else (draft_dir / ("%s.md" % args.function))
+    if args.out:
+        draft_path = Path(args.out).resolve()
+        draft_path.parent.mkdir(parents=True, exist_ok=True)
+    else:
+        if args.out_dir:
+            draft_dir = case_root / args.out_dir
+        elif update_config is not None:
+            draft_dir = case_root / "diff-update"
+        else:
+            draft_dir = case_root / "diff"
+        draft_dir.mkdir(parents=True, exist_ok=True)
+        draft_path = draft_dir / ("%s.md" % args.function)
     draft_path.write_text(
-        render_draft(case_root.name, args.function, entries, stamp, baseline_cmd, rebuilt_cmd),
+        render_draft(case_root.name, args.function, entries, stamp, baseline_cmd, rebuilt_cmd,
+                     update_mode=update_config is not None),
         encoding="utf-8",
     )
 

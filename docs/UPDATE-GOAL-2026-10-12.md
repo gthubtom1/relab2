@@ -540,3 +540,32 @@
 - 门禁结果: 上列全绿
 - commit: （本段提交）版本更新融合 · 阶段3 更新审计
 - 未达标/遗留: 无
+
+### 阶段 4 · diff-runner 更新驱动 · 2026-10-13 00:55
+- 做了什么: `diff-runner.py` 新增更新驱动：`--update` 开关（读 `update.md` 的
+  `## verification` 段登记的两个命令——`baseline_command` = 新版原程序、`rebuilt_command` = 新复刻——
+  与逐行 `input=` 值），草稿落 `diff-update/<F-ID>.md`（头部注明「回填 update.md 的
+  verification 表」，表头镜像 update 列名「新版原程序结果/新复刻结果」）；新增 `--out-dir`
+  显式落点开关；rebuild.md 缺驱动命令而 case 带 update.md 时错误文案补「add --update」提示。
+  初逆用法（rebuild.md 驱动、`diff/` 落点、`--out` 覆盖、经典表头）行为一行未动。
+  `update.md` 模板的 verification 段补三个驱动字段（baseline_command / rebuilt_command / harness）；
+  `rebuild-gates.md` 更新节补驱动说明。
+- 改了哪些文件: `skillpack/skills/scripts/diff-runner.py`、`skillpack/skills/templates/update.md`、
+  `skillpack/skills/ops/rebuild-gates.md`
+- 验收命令与结果（全部实跑）:
+  - `--update` 实跑（真实 fixture：新版原程序=sha256sum -t vs 新复刻=newsha.py，同输入
+    baseline/sample.txt）→ 草稿落 `diff-update/F-001.md`，两段 stdout 逐字节相同、exit=0，
+    表头为 update 列名
+  - **端到端闭环**：diff-runner 草稿 → 回填 verification 行 → `review_case.py` 读到该 case
+    且 0 条 update.* 报错（另两条 warning 为迷你 fixture 缺 evidence/report 所致，与 update 审计无关）
+  - **经典路径在带 update.md 的 case 上也不变**：不传任何新参数（无 --update/--out-dir）→
+    草稿仍落 `diff/`、经典表头、diff-update/ 未被触碰（mtime 不变）——
+    update 模式只在显式传参时激活，不靠「此前没有 update.md」碰巧成立
+  - 初逆回归：默认落 `diff/`；`--out` 覆盖有效；`--out-dir scratch-out` 显式落点被采纳
+  - 旧 `diff/` 零改动：5 个文件 sha256 跑前跑后一致（`diff` 比对空）
+  - `test_review_case.py` 28 tests OK；rebuild 负控 16/16；update 负控 13/13；
+    `check-fences` rc=0、`verify-doc-links` rc=0、`verify-workflow-refs` 全存在
+  - `python skillpack/scripts/verify-evolution.py` → **10/10 ALL GREEN**
+- 门禁结果: 上列全绿
+- commit: （本段提交）版本更新融合 · 阶段4 更新驱动
+- 未达标/遗留: 无
