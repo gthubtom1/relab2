@@ -569,3 +569,32 @@
 - 门禁结果: 上列全绿
 - commit: （本段提交）版本更新融合 · 阶段4 更新驱动
 - 未达标/遗留: 无
+
+### 阶段 5 · 真更新试跑（rebuild-sha256sum v1.0 → v1.1） · 2026-10-13 01:30
+- 做了什么: 对 `work/rebuild-sha256sum` 做真实升级演练。①冻本 `freeze/v1.0/`
+  （rebuild.md 快照 + diff/ 5 份快照 + build.sha256，冻本时 v1.0 交付物 hash =
+  c71b7d26…，与现 build/ v1.1 hash 8e11fa21… 不同，顺序正确）。②构造新版上游受控样本
+  `upstream-v2/sha256sum.py`（行为变：--tag 新格式；新增：-z NUL 输出；已移除：-c 校验，
+  三变化实测各走目标路径）。③`case-init -Preset update` 真实入口生成 update.md 骨架
+  （三指纹落位）。④三句对照 + function_delta 逐行判定，delta 表 6 行 = F-001 keep、
+  F-002 keep、F-003 retest、F-004 keep、F-005 redo、F-006 new（四值全覆盖；
+  F-005 的 redo 依据写「移入 out_of_update」）。⑤`diff-runner --update`
+  驱动五组对照落 `diff-update/`（F-001/002/003/004/006；F-005 因上游移除不驱动）。⑥交付物
+  更新到 v1.1；F-006 另以 `cmp` 做二进制级复核（NUL 尾字节一致）。⑦rebuild.md 补
+  upstream_version/our_version 两字段；E-001 hash 随 rebuild.md 变更刷新；
+  timeline 追加更新条目（carry_forward_refs 含 GOAL.md）。
+- 验收命令与结果（全部实跑）:
+  - `review_case.py work/rebuild-sha256sum --verify-hashes --strict` → **status: PASS, 0 errors, 0 warnings**
+  - 三指纹与实物逐一核对一致（sha256sum 实算）：old_upstream ad199fb8…、new_upstream
+    3dd235ab…、our_old_build c71b7d26…
+  - 三种变化判定正确：F-003 行为变→retest、F-006 新增→new、F-005 已移除→redo(移入
+    out_of_update)；keep/retest/redo/new 四值在 delta 中全部出现
+  - 旧 `diff/` 5 份 hash 跑前跑后零变化
+- **现场负控插曲（如实记录）**：为验证审计在真实 case 上「确实在跑」，做了三次临时破坏-恢复。
+  前两次「破坏后仍 PASS」查实是**我自己的破坏脚本没生效**（只删行首文字、值仍非空，
+  审计按「非空即已填」判 PASS 是正确的）；第三次用整行清空（断言验证破坏已落盘）→
+  审计正确 **FAIL（update.three_lines_missing, rc=1）**；恢复后回到 PASS 0/0。
+  教训与 `gate-self-must-prove-failure` 同款：破坏动作本身也要自证生效，否则负控无意义。
+- 门禁结果: strict PASS；旧 diff 零变化；`verify-evolution.py` → **10/10 ALL GREEN**
+- commit: （本段提交）版本更新融合 · 阶段5 真更新试跑
+- 未达标/遗留: 无（F-005 移入 out_of_update 为上游移除的如实结果，非未达标）
