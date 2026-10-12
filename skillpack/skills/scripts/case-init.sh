@@ -75,6 +75,7 @@ fi
 # Presets: reduce "AI refuses to work" friction for legitimate local/CTF work.
 REBUILD_MODE=0
 UPDATE_MODE=0
+ASSAULT_MODE=0
 case "$PRESET" in
   "" ) ;;
   offline-sample|own-sample|local-sample)
@@ -120,8 +121,19 @@ case "$PRESET" in
     NETWORK_PROFILE="${NETWORK_PROFILE:-offline}"
     EVIDENCE_OF_AUTH="${EVIDENCE_OF_AUTH:-preset:update (owner-operated local sample; rebuild update case)}"
     ;;
+  assault)
+    # 攻坚交付路径：与 offline-sample 同档（owner-operated 本地样本），额外落
+    # assault.md 滚动报告骨架 + diff/ 目录。授权门与 offline-sample 一致。
+    AUTH_GRANTED=1
+    AUTH_STATUS="granted"
+    AUTH_BASIS="own_system"
+    ASSAULT_MODE=1
+    NETWORK_PROFILE="${NETWORK_PROFILE:-offline}"
+    EVIDENCE_OF_AUTH="${EVIDENCE_OF_AUTH:-preset:assault (owner-operated local sample; protected-target assault case)}"
+    if [[ -n "$SAMPLE" ]]; then IN_SCOPE_ASSETS+=("$SAMPLE"); fi
+    ;;
   *)
-    echo "ERROR: invalid --preset '$PRESET' (allowed: offline-sample|ctf-public|own-system|rebuild|update)" >&2
+    echo "ERROR: invalid --preset '$PRESET' (allowed: offline-sample|ctf-public|own-system|rebuild|update|assault)" >&2
     exit 2
     ;;
 esac
@@ -195,6 +207,7 @@ fi
 
 mkdir -p "$CASE_ROOT/evidence" "$CASE_ROOT/notes" "$CASE_ROOT/report"
 if [[ "$REBUILD_MODE" -eq 1 ]]; then mkdir -p "$CASE_ROOT/baseline" "$CASE_ROOT/diff"; fi
+if [[ "$ASSAULT_MODE" -eq 1 ]]; then mkdir -p "$CASE_ROOT/diff"; fi
 
 auth_status_resolved="pending"
 if [[ $AUTH_GRANTED -eq 1 ]]; then auth_status_resolved="granted"; fi
@@ -371,6 +384,13 @@ if [[ "$REBUILD_MODE" -eq 1 ]]; then
   mv "$scope_tmp" "$CASE_ROOT/scope.md"
 fi
 
+# -Preset assault 同理：deliverables 段尾插 assault: true 标记；不传该预设时不执行。
+if [[ "$ASSAULT_MODE" -eq 1 ]]; then
+  scope_tmp="$CASE_ROOT/scope.md.tmp"
+  awk '1; /^- timeline: true$/ { print "- assault: true" }' "$CASE_ROOT/scope.md" > "$scope_tmp"
+  mv "$scope_tmp" "$CASE_ROOT/scope.md"
+fi
+
 cat > "$CASE_ROOT/timeline.md" <<EOF
 # Timeline (append-only)
 
@@ -414,6 +434,17 @@ if [[ "$REBUILD_MODE" -eq 1 ]]; then
     cp "$rebuild_template" "$CASE_ROOT/rebuild.md"
   else
     echo "WARN: rebuild template missing: $rebuild_template" >&2
+  fi
+fi
+
+# -Preset assault：从 skills/templates/assault.md 拷滚动报告骨架进 case。
+# 只读模板、写 case；不传该预设时本块不执行。
+if [[ "$ASSAULT_MODE" -eq 1 ]]; then
+  assault_template="$SKILLS_ROOT/templates/assault.md"
+  if [[ -f "$assault_template" ]]; then
+    cp "$assault_template" "$CASE_ROOT/assault.md"
+  else
+    echo "WARN: assault template missing: $assault_template" >&2
   fi
 fi
 

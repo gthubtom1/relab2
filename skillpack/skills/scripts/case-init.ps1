@@ -85,6 +85,7 @@ if (-not [string]::IsNullOrWhiteSpace($Sample)) {
 # Cross-platform case presets. Keep semantics aligned with case-init.sh.
 $rebuildMode = $false
 $updateMode = $false
+$assaultMode = $false
 $presetNormalized = $Preset.Trim().ToLowerInvariant()
 if ($presetNormalized -in @('offline-sample', 'own-sample', 'local-sample')) {
     $AuthGranted = $true
@@ -129,8 +130,19 @@ if ($presetNormalized -in @('offline-sample', 'own-sample', 'local-sample')) {
     if ([string]::IsNullOrWhiteSpace($EvidenceOfAuth)) {
         $EvidenceOfAuth = 'preset:update (owner-operated local sample; rebuild update case)'
     }
+} elseif ($presetNormalized -eq 'assault') {
+    # 攻坚交付路径：与 offline-sample 同档（owner-operated 本地样本），额外落
+    # assault.md 滚动报告骨架 + diff/ 目录。授权门与 offline-sample 一致，不放松任何硬门。
+    $AuthGranted = $true
+    $AuthStatus = 'granted'
+    $AuthBasis = 'own_system'
+    $assaultMode = $true
+    if ([string]::IsNullOrWhiteSpace($NetworkProfile)) { $NetworkProfile = 'offline' }
+    if ([string]::IsNullOrWhiteSpace($EvidenceOfAuth)) {
+        $EvidenceOfAuth = 'preset:assault (owner-operated local sample; protected-target assault case)'
+    }
 } elseif (-not [string]::IsNullOrWhiteSpace($Preset)) {
-    throw ("Invalid -Preset '{0}'. Allowed: offline-sample|ctf-public|own-system|rebuild|update" -f $Preset)
+    throw ("Invalid -Preset '{0}'. Allowed: offline-sample|ctf-public|own-system|rebuild|update|assault" -f $Preset)
 }
 
 if (-not $CaseName) {
@@ -200,6 +212,7 @@ if ($updateMode) {
 
 $dirs = @('evidence', 'notes', 'report')
 if ($rebuildMode) { $dirs += @('baseline', 'diff') }
+if ($assaultMode) { $dirs += @('diff') }
 New-Item -ItemType Directory -Force -Path $caseRoot | Out-Null
 foreach ($d in $dirs) {
     New-Item -ItemType Directory -Force -Path (Join-Path $caseRoot $d) | Out-Null
@@ -398,6 +411,10 @@ $assetsBlock
 if ($rebuildMode) {
     $scope = $scope -replace '(?m)^(- timeline: true)(\r?\n)', '${1}${2}- rebuild: true${2}'
 }
+# -Preset assault 同理：deliverables 段加 assault: true 标记；不传该预设时不执行。
+if ($assaultMode) {
+    $scope = $scope -replace '(?m)^(- timeline: true)(\r?\n)', '${1}${2}- assault: true${2}'
+}
 
 $timeline = @"
 # Timeline (append-only)
@@ -447,6 +464,17 @@ if ($rebuildMode) {
         Copy-Item -LiteralPath $rebuildTemplate -Destination (Join-Path $caseRoot 'rebuild.md') -Force
     } else {
         Write-Host ("WARN: rebuild template missing: {0}" -f $rebuildTemplate) -ForegroundColor Yellow
+    }
+}
+
+# -Preset assault：从 skills/templates/assault.md 拷滚动报告骨架进 case。
+# 只读模板、写 case；不传该预设时本块不执行。
+if ($assaultMode) {
+    $assaultTemplate = Join-Path (Join-Path $skillsRoot 'templates') 'assault.md'
+    if (Test-Path -LiteralPath $assaultTemplate) {
+        Copy-Item -LiteralPath $assaultTemplate -Destination (Join-Path $caseRoot 'assault.md') -Force
+    } else {
+        Write-Host ("WARN: assault template missing: {0}" -f $assaultTemplate) -ForegroundColor Yellow
     }
 }
 

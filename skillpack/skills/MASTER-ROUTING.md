@@ -31,6 +31,8 @@ powershell -File skills\scripts\case-init.ps1 -Hint "offline apk" -CaseName "my-
 # 复刻交付 / 更新（在既有 rebuild case 上）：-Preset rebuild 建表，-Preset update 跟新版
 powershell -File skills\scripts\case-init.ps1 -Hint "rebuild sample" -CaseName "my-sample" -Preset rebuild -Sample ".\app.exe"
 powershell -File skills\scripts\case-init.ps1 -Hint "update follow" -CaseName "my-sample" -Preset update -OldUpstream "old.exe | 1.0 | sha256:<64hex>" -NewUpstream "new.exe | 1.1 | sha256:<64hex>" -OurOldBuild "build/out.exe | sha256:<64hex>"
+# 受保护目标攻坚（滚动报告 assault.md + diff/；入口见 reverse-engineering/references/assault-entry.md）：
+powershell -File skills\scripts\case-init.ps1 -Hint "vmp protected target" -CaseName "my-assault" -Preset assault -Sample ".\protected.exe"
 # 冒烟：verify + 脚本解析 + 路由矩阵（含中文 Hint）
 powershell -File skills\scripts\smoke.ps1
 # ACT 前轻量 scope 门禁（未就绪 exit 2；-Force 为兼容参数，不能绕过硬门）
@@ -54,6 +56,8 @@ bash skills/scripts/case-init.sh --hint "offline apk" --case-name "my-sample" --
 # 复刻交付 / 更新（在既有 rebuild case 上）：
 bash skills/scripts/case-init.sh --hint "rebuild sample" --case-name "my-sample" --preset rebuild --sample ./app.exe
 bash skills/scripts/case-init.sh --hint "update follow" --case-name "my-sample" --preset update --old-upstream "old.exe | 1.0 | sha256:<64hex>" --new-upstream "new.exe | 1.1 | sha256:<64hex>" --our-old-build "build/out.exe | sha256:<64hex>"
+# 受保护目标攻坚（滚动报告 assault.md + diff/）：
+bash skills/scripts/case-init.sh --hint "vmp protected target" --case-name "my-assault" --preset assault --sample ./protected.exe
 # ACT 前轻量 scope 门禁（--force 为兼容参数，不能绕过硬门）：
 bash skills/scripts/case-guard.sh --case-root work/my-sample
 # 路由 parity：

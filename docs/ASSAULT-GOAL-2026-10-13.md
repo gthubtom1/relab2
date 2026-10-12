@@ -424,3 +424,35 @@ vendor 两周即过期、pin 即锁死。**只学三条设计，不融代码**�
 - 门禁结果: 上列（audit-doc-code 结果见下条补记）
 - commit: （本段提交）攻坚交付闭环 · 阶段1 入口卡与改道
 - 未达标/遗留: 无
+
+### 阶段 2 · 滚动报告 assault.md + -Preset assault · 2026-10-13 02:20
+- 做了什么: ①新建 `skillpack/skills/templates/assault.md`（字段照定稿 §4 全量：0 状态行/
+  target/survey/layers/routes/functions/findings/unknowns/diff_baseline/out_of_delivery；
+  开头首段即「这是字段清单，不是填写顺序」+ 三条铁律 + 每步问「是否让成品更近」）。
+  ②`case-init.ps1` / `case-init.sh` 同步加 `assault` 预设：与 rebuild 同档授权
+  （own_system + offline），生成 assault.md 骨架（模板拷贝）+ 建 `diff/` 目录 +
+  scope.md deliverables 加 `- assault: true`；白名单文案双端列全 6 个合法值。
+  ③`MASTER-ROUTING.md` 双端各加一行 assault 示例（该文件列预设清单，按阶段 2 条款同步）。
+- 改了哪些文件: 新增 `skillpack/skills/templates/assault.md`（5638B）；
+  `case-init.ps1`（+30 行）；`case-init.sh`（+33 行）；`MASTER-ROUTING.md`（+4 行，2+2）；
+  `case-guard.ps1/.sh` **未触碰**（grep 证实无 preset/deliverables 硬编码）
+- 验收命令与结果（全部实跑）:
+  - **零差异对照（同参数、同目录、严格版）**：`git archive b2b0847` 取基线脚本树（A）
+    vs 当前树（B），同一沙箱目录内各跑三组（plain / offline-sample / ctf-public），
+    PS 与 bash 双侧共六组：文件集逐项相同、目录集（含空目录）相同、内容除 `created`
+    时间戳外逐字节一致 → **六组 ALL PASS（仅时间戳归一化）**；
+    首轮分目录跑时残留的差异只有沙箱路径（runA/runB、/tmp 映射），归一化后残余 diff = 0。
+  - **正向**：`-Preset assault`（PS rc=0 / bash rc=0）产出 assault.md + diff/ + README/
+    scope/timeline/workitems；`assault.md` 与模板逐字节一致（`== template: True` 双端）；
+    `scope.md` deliverables 段含 `- assault: true`（实读到整段 5 行）
+  - **错值**：`-Preset nonsense` → PS rc=1（与基线同码），bash rc=2（与基线同码）；
+    文案双端都列出全部合法值（PS: `...|rebuild|update|assault`；bash: 同）
+  - **case-guard 对 assault case**：rc=0 `CASE-GUARD OK`（授权硬门未放松）
+  - `check-fences.py` rc=0；`verify-doc-links.py` rc=0
+  - `test-routing.ps1 -Quick` → 65/65；`test-routing.sh` → 205/205；
+    `verify-routing-coherence.ps1` → `ALL ROUTING COHERENCE CHECKS PASSED` rc=0
+- 门禁结果: `verify-evolution.py` → **10/10 ALL GREEN（EXIT=0）**
+  （official 65/65 + natural 93/86，floor 76；benchmark grew 提示为允许的增长）
+- commit: （本段提交）攻坚交付闭环 · 阶段2 assault 预设
+- 未达标/遗留: `test-bash-workflow.sh` 本机未实测（环境限制，如实记录；
+  该脚本 CI 里仅 macOS runner 跑）
