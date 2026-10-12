@@ -694,4 +694,8 @@
   692e786… 一致）→ 回拷恢复 → 全 5 份 `diff/` hash 与阶段4 基线逐一相同、strict 回 PASS 0/0。
   教训：**验证默认落点必须用副本 case，真实 case 上只跑显式 `--out`/`--out-dir`**；
   这次冻本机制恰好证明了它的兜底价值。
-- 该修正后再次全量：`verify-evolution.py`（bg_65，见下）；`check-fences`/`doc-links`/`doc-facts` 复跑绿
+- 该修正后再次全量：`verify-evolution.py`（bg_65）→ **10/10 ALL GREEN**（对逃逸守卫后的
+  最终状态实测）；`check-fences` rc=0 / `verify-doc-links` rc=0（active=0）/ `verify-doc-facts` 0 failure(s)
+- 修正 3 后逐项复核（新鲜取证）: strict 审计 PASS 0/0（当前 HEAD）；
+  `--out-dir ../../evil` → rc=2 明确拒绝；`--out-dir diff-update` 正常；
+  `--update` 模式正常（draft → diff-update/）
