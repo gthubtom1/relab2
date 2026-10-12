@@ -180,13 +180,16 @@ def nondeterministic_note(*outputs: str) -> str:
 
 # ---------------------------------------------------------------- 草稿
 
-def render_draft(case_id: str, function_id: str, entries, stamp: str) -> str:
+def render_draft(case_id: str, function_id: str, entries, stamp: str,
+                 baseline_cmd: str, rebuilt_cmd: str) -> str:
     lines = [
         "<!-- diff-runner draft — 供人工确认后回填 rebuild.md 的 diff_baseline 表 -->",
         "# Diff draft: %s" % function_id,
         "",
         "- case: %s" % case_id,
         "- generated: %s" % stamp,
+        "- baseline_command: `%s`" % baseline_cmd,
+        "- rebuilt_command: `%s`" % rebuilt_cmd,
         "- judged_by: human (PENDING 由人判定；非确定项由人定容差)",
         "",
         "| F-ID | 输入条件 | 原程序结果 | 新实现结果 | 是否一致 | 说明 |",
@@ -285,7 +288,10 @@ def main(argv=None) -> int:
     draft_dir = Path(args.out).resolve().parent if args.out else (case_root / "diff")
     draft_dir.mkdir(parents=True, exist_ok=True)
     draft_path = Path(args.out).resolve() if args.out else (draft_dir / ("%s.md" % args.function))
-    draft_path.write_text(render_draft(case_root.name, args.function, entries, stamp), encoding="utf-8")
+    draft_path.write_text(
+        render_draft(case_root.name, args.function, entries, stamp, baseline_cmd, rebuilt_cmd),
+        encoding="utf-8",
+    )
 
     print("DRAFT -> %s" % draft_path)
     print("inputs=%d function=%s" % (len(entries), args.function))

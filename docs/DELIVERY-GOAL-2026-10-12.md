@@ -484,6 +484,46 @@ diff_baseline，对指定功能跑原程序与新实现，产出对照表草稿�
 - commit: （本段提交）交付能力建设 · 阶段6 抗漂移三件套
 - 未达标/遗留: 无（`test-bash-workflow.sh` 本机未实测 —— 与阶段 2 同因，CI 里仅 macOS runner 跑）
 
+### 阶段 7 · 真项目试跑与固化 · 2026-10-12 13:25
+
+- 做什么（选定的真项目）：把 GNU/Git 的 `sha256sum` 的**五个行为面**复刻成 Python 实现，
+  从 `case-init -Preset rebuild` 走完整闭环：调查 → rebuild.md 填表 → impl → ver → 完成度审计。
+  选它是因为原程序在本机真实存在（`C:\Program Files\Git\usr\bin\sha256sum.exe`），
+  五类行为（摘要 / 缺失报错 / BSD tag / 目录 / 校验模式）契约清晰、可逐字节对照，
+  且**非平凡**：首跑即抓到真实的环境性差异（见下）。
+- 产出（case 在 `work/rebuild-sha256sum/`，gitignored 属运行时产物）:
+  - `rebuild.md` 全表：target 1 行、functions 5 行（F-001..F-005）、acceptance 5 行全为「对照一致」、
+    diff_baseline 5 行五列填齐、out_of_delivery 3 项（二进制模式/扩展开关/递归摘要）
+  - 对照测试记录：`diff/F-001..F-005.md`（diff-runner 生成草稿，含两命令原文、原始 stdout/exit/耗时）
+  - 最终交付物：`build/newsha.py`（3926 B，真实可运行）
+  - 辅助锚：`GOAL.md`（交付目标/功能清单/阶段/未决/last commit）
+  - Evidence E-001（对账表，哈希实测）+ E-002（对照草稿原件，哈希实测）；report 含 F-001 + P-001
+  - timeline 四条 transition（含 cre→impl→ver 交接），`carry_forward_refs` 全部含 `GOAL.md`
+- 验收命令与结果（外部可观测判据）:
+  - `python skillpack/skills/case-review/scripts/review_case.py work/rebuild-sha256sum --verify-hashes --strict`
+    → **status: PASS，rc=0**；Rebuild delivery 表读出 F-001..F-005 全部「对照一致」，
+    三项 Coverage 全 yes；两条 Evidence 哈希实测校验通过
+  - 五功能对照实际跑过：`diff-runner.py ... --function F-001..F-005` 各 exit 0，
+    草稿落 `diff/` 五个文件真实存在（`ls` 实证）
+  - ver 判定依据（可复核）：F-001/003/005 stdout 逐字节一致且 exit 0=0；F-002/004
+    stdout 皆空且 exit 1=1（契约项 = stdout+exit）；F-002/004 的 stderr 程序名前缀不同
+    （`sha256sum:` vs `newsha:`）**如实记录**在对照表说明列，未粉饰
+  - 环境差异如实记录：同一条 `sha256sum` 在 bash 直连（文本模式，两空格）与
+    PowerShell 管道（二进制模式，`*` 标记）下输出不同 —— 用 `-t` 在驱动命令里固定后两边一致。
+    该发现两次独立复现，已沉淀为经验卡 `diff-runner-mode-drift`（stamp 后 validate 全过）
+- 跑完决定三件事（阶段要求）:
+  1. **闸门要不要脚本化**：不要。两道闸门（实现入口 / 完成判定）已在 `review_case.py` 里
+     由机器检查（状态虚高 / 对照缺行 / Coverage 缺项 + 负控 9 例），再脚本化一层只会重复。
+  2. **diff 要不要抽公共**：暂不抽。第一版 diff-runner 在一个真实 case 上已够用；
+     待第二个真项目出现再决定是否抽公共（避免为不存在的需求做抽象）。
+  3. **经验沉淀**：沉淀 1 张卡 `diff-runner-mode-drift`（模式随环境漂移 → 驱动命令必须固定模式），
+     已过晋级门 7 条 + 无秘密检查，全文可检索。
+- 门禁结果: `test-experience-card.py` exit 0；`verify-evolution.py` 10/10 全绿（EXIT=0）；
+  `experience-card.py validate` → 8 张卡全部通过；`experience-card.py stamp` 已重建 INDEX.md
+- commit: （本段提交）交付能力建设 · 阶段7 真项目试跑与固化
+- 未达标/遗留: 无
+
+
 
 
 

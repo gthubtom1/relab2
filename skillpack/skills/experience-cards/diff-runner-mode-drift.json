@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "id": "diff-runner-mode-drift",
+  "status": "promoted",
+  "title": "同一 sha256sum 的输出分隔符随调用环境漂移（空格 vs *）—— 对照驱动必须在命令里固定模式",
+  "invariant": "GNU coreutils 的 sha256sum 在 stdout 被管道/重定向接管时切二进制模式（输出 <hex> *<path>），直连终端时是文本模式（<hex>  <path>）。同一台机器、同一二进制、同一文件，两次调用输出不同。复刻对照里这会让基线侧带 *、新实现侧不带 —— 必须在驱动命令里显式 -t 固定文本模式，绝不允许改新实现去贴合某次基线输出。",
+  "scope": {
+    "family": "rebuild-diff-driver",
+    "boundary": "environment",
+    "appliesWhen": [
+      "diff-runner 草稿里基线侧输出带 * 或与新实现有说不出原因的差异",
+      "同一条命令两次跑（或两种调用方式）输出不一致",
+      "在做同输入双程序对照、判定「是否一致」之前"
+    ],
+    "stopsWhen": [
+      "驱动命令里已用 -t（或等价开关）显式固定了模式/编码/locale/行尾",
+      "该差异已被判定为 NONDETERMINISTIC 并由人定过容差"
+    ]
+  },
+  "reproductions": [
+    {
+      "jobFingerprint": "phase7-rebuild-sha256sum-bash-direct-2026-10-12",
+      "observedAt": "2026-10-12",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "git-bash 直连终端跑 `sha256sum -t sample.txt` 与 `sha256sum sample.txt`（无管道）：均输出两个空格分隔。phase 7 case 的原始记录见 work/rebuild-sha256sum/baseline/。"
+    },
+    {
+      "jobFingerprint": "phase7-rebuild-sha256sum-powershell-pipe-2026-10-12",
+      "observedAt": "2026-10-12",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "同机经 `powershell -NoProfile -Command 'sha256sum ...'` 调用（stdout 被管道接管）：输出 <hex> *<path>，与上一条相反。diff-runner 首跑草稿 diff/F-001.md 记录了这一对差异。"
+    }
+  ],
+  "fixture": {
+    "path": "skillpack/skills/scripts/experience-cards/fixtures/diff-runner-mode-drift.md",
+    "sha256": "bf425fb628f1bf17984a9cfb558d6ab253feb93d6b7b5fb2bbc5d2b2f89fbfe5",
+    "generator": null,
+    "secretFree": true,
+    "note": "反例底册：两次复现的命令与输出对照 + 修法（-t 固定模式）。"
+  },
+  "oracles": {
+    "positive": "同一条 sha256sum 命令分别在 git-bash 直连与 powershell 管道两种环境下跑同一文件：若两处输出分隔符不同（空格 vs *），漂移存在；用 -t 固定后再跑，两处逐字节相同。",
+    "negative": "若两种环境下输出本来就相同（例如已带 -t，或改用不受影响的工具），说明前提已变（环境或工具行为变了），本卡应重写而不是继续消费。"
+  },
+  "firstDivergence": {
+    "stage": "diff-runner 首跑草稿生成的那一步",
+    "path": "原程序结果列（基线侧带 * 标记）",
+    "kind": "environment"
+  },
+  "decision": {
+    "preferredRoute": "skills/scripts/diff-runner.py",
+    "action": "在 rebuild.md 的 baseline_command/rebuilt_command 里把模式显式固定（sha256sum -t；编码/行尾/locale 同理），两边命令在同一 shell 语义下执行；固定不了的标 NONDETERMINISTIC 由人定容差。",
+    "fallback": "无法在命令里固定时，改为在对照表说明列记下该差异来自环境而非实现，并给出两次独立观测；绝不允许改新实现去贴合某次基线输出。"
+  },
+  "validation": {
+    "lastVerifiedAt": "2026-10-12",
+    "command": "python skillpack/skills/scripts/experience-card.py validate"
+  },
+  "links": {
+    "skill": "reverse-engineering",
+    "script": "skills/scripts/diff-runner.py",
+    "journal": null,
+    "derivation": "web-protocol-reverse/references/contract/experience-card-schema.md"
+  },
+  "symptoms": [
+    "对照两列输出看着差不多但判定拿不准",
+    "同一条命令两次跑输出不一样",
+    "基线输出带星号 新实现不带"
+  ]
+}
