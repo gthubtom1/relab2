@@ -243,6 +243,11 @@ CASES = [
      good_assault(deliverable="build/NOPE.exe", extra_layers=BLOCKED_LAYER_OK), False,
      [], 0, "deliverable 不在盘上但 blocked 行有原因/影响/替代 → 完成形态成立"),
 
+    # ---------- 边界：证据文字提到 blocked 但状态列非 blocked → 不触发（收窄后的误报防护） ----------
+    ("good-blocked-word-in-evidence-only", "must_pass",
+     good_assault(extra_layers="| L4 | 业务层 | 进行中 | E-002 (upstream mentions blocked, layer itself active) |"),
+     True, [], 0, "状态列非 blocked 时，证据文字出现 blocked 不触发 blocked_reason_missing"),
+
     # ---------- 迁移窗口/边界：完成态行的 diff 行 verdict 为英文一致 ----------
     ("good-english-verdict", "must_pass",
      good_assault(diff_rows="| F-001 | --mode a | 2 | 2 | match | ok |"), True,

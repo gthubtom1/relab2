@@ -546,7 +546,10 @@ vendor 两周即过期、pin 即锁死。**只学三条设计，不融代码**�
   - 三要素计数：`有效动作`=5 / `出口条件`=5 / `必须跳走`=5（引文 1 + 四状态各 1）
   - **8/8 出口段完好**（逐份正则抽取 + 四项检查全 PASS：提 assault.md / 指向具体表 /
     有判定行 / README 含 ROUTE 硬判据）
-  - **零删除**：`git diff --numstat` 12 个文件行全为 `+X -0`（见下表）；
+  - **零删除**：`git diff --numstat`（scope: `reverse-engineering/references/` +
+    `protocol-reverse/`）9 个 skill 文件行全为 `+X -0`（assault-entry +78、README +23、
+    anti-debug +12、unpack +12、vmp-devirt +12、vmp-virt +12、protocol-reverse/SKILL +12、
+    struct +11、ollvm +10 = 共 182 行）；
     其中 7 份卡原文末行无换行符，首版尾部追加会让 git 把原末行标为修改（+X -1）——
     按「只追加、0 删除」口径重定位为「插在最后章节之前、文末字节原样」，达成严格零删除
   - 三类混合目标走查：VMP+云端（line 76）/ Themida+自检（line 78）/ 加固 APK（line 80）
@@ -651,3 +654,34 @@ vendor 两周即过期、pin 即锁死。**只学三条设计，不融代码**�
 **六条同时满足 → 本项目完成。** 完成 commit：`攻坚交付闭环 · 完成`（见下）。
 - 遗留说明（不构成未达标）：`test-bash-workflow.sh` 本机未实测（CI 里 macOS runner 专属，
   阶段 2 已如实记录）；rabin2 批处理通道用法已记入 field-journal。
+
+### 补记 · 攻坚者五条落地（第三维：操作者） · 2026-10-13 03:15
+- 背景: 定稿 `GOAL-PROMPT-ASSAULT-2026-10-13.md` 于 03:09 经修订新增第三维「操作者」：
+  新增「攻坚者五条」（分清搬运工与货物 / 工具输出是线索不是结论 / 优先查矛盾 /
+  宁可写卡住不许写完成 / 调整路线正常），并规定**单独一项验收**：
+  「入口卡第一屏是攻坚者五条（五条齐备且在最前），判据表在其后——顺序错即不通过」。
+- 落地: `assault-entry.md` 在第一屏（Q0 之前、line 14）插入「★ 攻坚者五条」章节：
+  五条齐备、含根基段（终点唯一/路径不预设/难度花在 how 上）；全部判据表
+  （Q0–Q4 与状态机，line 52 起）在其后。`git diff --numstat` = **+38 行、0 删除**。
+- 验收命令与结果:
+  - 位置判据（外部可观测）：`grep -n` 章节序 = 五条@14 → Q0@52 → Q1@70 → Q2@87 →
+    Q3@131 → Q4@146 → 状态机@165。**五条在最前，判据表全部后置** ✓
+  - 五条完整性：①搬运工与货物 ②工具输出是线索不是结论 ③优先查矛盾 ④宁可写卡住
+    不许写完成 ⑤调整路线是正常的——逐条与定稿一致 ✓
+  - 零删除：`git diff --numstat` 38/0 ✓
+- 追加强化（随本轮一并落地）:
+  - `review_case.py` blocked 触发面收窄：由「整行提到 blocked」改为「状态列（cells[2]）
+    匹配 blocked 才触发」——防止证据/类型文字提及 blocked 造成误报；
+    原因三词仍允许出现在整行任意列（证据列/备注列皆可）。
+  - 负控 `test-assault-audit-negctl.py` +1 条（现在 **15/15**）：
+    「状态列非 blocked 时，证据文字出现 blocked 不触发 blocked_reason_missing」。
+  - 复跑矩阵（全部当次实跑）：strict 审查 PASS（rc=0）；单测 40/40 OK；
+    负控 15/15 + 16/16 + 13/13；回归 8 次运行（2 case × 4 格式）与改前捕获逐字一致；
+    check-fences rc=0；verify-doc-links rc=0；verify-gate-wiring **PASS**
+    （blocked=0 needs_review=0，ci.yml 的 assault 负控 step 已被声明门禁识别）；
+    `verify-evolution.py` → **10/10 ALL GREEN（EXIT=0）**；
+    `verify-routing-coherence.ps1` → ALL PASSED。
+  - 注：`ci-gates.lock.json` 锁定对象是 `ci-gates.json` manifest（25 条声明门禁），
+    本次 ci.yml 新增的是 review_case 负控 step（非 manifest 门禁条目），wiring 门禁
+    对「已声明门禁必须被 workflow 调用」的判据仍全绿——无需改锁文件。
+- commit: （本段提交）攻坚交付闭环 · 攻坚者五条落地

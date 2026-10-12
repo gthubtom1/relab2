@@ -728,10 +728,12 @@ def parse_assault(root, issues):
             issue(issues, "error", "assault.layer_evidence_missing",
                   cells[0] + " layer row needs a status and an evidence cell",
                   "assault.md:" + str(line_number))
-        row_text = " ".join(cells)
-        if ASSAULT_BLOCKED.search(row_text):
+        # blocked 触发面收窄到「状态列」：行内其他列（类型/证据文字）提到 blocked
+        # 不代表该层处于 blocked 状态，避免误报。原因三词在整行里找即可
+        # （原因/影响/替代 可能写进证据列或备注列）。
+        if ASSAULT_BLOCKED.search(status):
             missing = [label for label, pattern in ASSAULT_BLOCKED_REASON_ALTERNATES
-                       if not pattern.search(row_text)]
+                       if not pattern.search(" ".join(cells))]
             if missing:
                 issue(issues, "error", "assault.blocked_reason_missing",
                       cells[0] + " is blocked without " + "/".join(missing) + " (record 原因/影响/替代)",
