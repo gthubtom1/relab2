@@ -47,21 +47,30 @@ fi
 # Match the PowerShell entrypoint: by default, route artifacts belong to the
 # caller's current project rather than the installed reverse-skill package.
 if [[ -z "$PROJECT_ROOT" ]]; then PROJECT_ROOT="$(pwd -P)"; fi
+# --- 默认产物目录（2026-10-12 目录治理）---
+# 默认写 <project>/work/route/latest/route-scope.md；写之前把上一份 latest 归档到
+# <project>/work/route/<sha12>/route-scope.md（归档不删除，由 Python 侧执行）。
+# --out-dir 显式给出时完全跳过本机制：显式路径的语义不变。
+USING_DEFAULT_OUT_DIR=0
 if [[ -z "$OUT_DIR" ]]; then
-  OUT_DIR="$PROJECT_ROOT/work/master-route-$(date +%Y%m%d-%H%M%S)"
+  OUT_DIR="$PROJECT_ROOT/work/route/latest"
+  USING_DEFAULT_OUT_DIR=1
 fi
 
-"$PYTHON" - "$CONFIG_PATH" "$SKILLS_ROOT" "$PROJECT_ROOT" "$OUT_DIR" "$HINT" <<'PY'
+"$PYTHON" - "$CONFIG_PATH" "$SKILLS_ROOT" "$PROJECT_ROOT" "$OUT_DIR" "$HINT" "$USING_DEFAULT_OUT_DIR" <<'PY'
 import datetime
+import hashlib
 import json
 import pathlib
 import re
+import shutil
 import sys
 
-config_path, skills_root_raw, project_root_raw, out_dir_raw, hint = sys.argv[1:]
+config_path, skills_root_raw, project_root_raw, out_dir_raw, hint, default_out_raw = sys.argv[1:]
 skills_root = pathlib.Path(skills_root_raw)
 project_root = pathlib.Path(project_root_raw).resolve()
 out_dir = pathlib.Path(out_dir_raw)
+using_default_out_dir = default_out_raw.strip() == "1"
 
 try:
     config = json.loads(pathlib.Path(config_path).read_text(encoding="utf-8-sig"))
@@ -134,6 +143,25 @@ if not skill_path.is_file():
     raise SystemExit(2)
 
 out_dir.mkdir(parents=True, exist_ok=True)
+
+# --- 默认目录治理：先把上一份 latest 归档，再覆盖写（归档不删除） ---
+# 归档到 <project>/work/route/<sha12>/route-scope.md，sha12 = 上一份内容前 12 位。
+# 幂等：同内容只归档一次。失败只提示，不阻断路由。
+if using_default_out_dir:
+    latest_scope = out_dir / "route-scope.md"
+    try:
+        if latest_scope.is_file():
+            previous = latest_scope.read_bytes()
+            digest12 = hashlib.sha256(previous).hexdigest()[:12]
+            archive_dir = out_dir.parent / digest12
+            archive_scope = archive_dir / "route-scope.md"
+            if not archive_scope.exists():
+                archive_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(latest_scope, archive_scope)
+                print(f"ARCHIVED -> {archive_scope}")
+    except OSError as exc:
+        print(f"WARN: route archive skipped: {exc}", file=sys.stderr)
+
 secondary = [f"skills/{routes[item]['skill']}" for item in selected_order if item != primary]
 lines = [
     "# reverse-skill Master route (PRIMARY)",

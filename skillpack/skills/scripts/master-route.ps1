@@ -136,10 +136,16 @@ $packageRoot = Split-Path -Parent $skillsRoot
 . (Join-Path (Join-Path $scriptDir 'lib') 'WorkRoot.ps1')
 $projectRoot = Resolve-ReverseProjectRoot -RequestedRoot $ProjectRoot
 
+# --- 默认产物目录（2026-10-12 目录治理）---
+# 默认写 <project>/work/route/latest/route-scope.md；写之前把上一份 latest 归档到
+# <project>/work/route/<sha12>/route-scope.md（归档不删除）。-OutDir 显式给出时完全跳过
+# 本机制：显式路径的语义与行为与治理前逐字节一致。
+$usingDefaultOutDir = $false
 if ([string]::IsNullOrWhiteSpace($OutDir)) {
-    $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
     $workRoot = Join-Path $projectRoot 'work'
-    $OutDir = Join-Path $workRoot ("master-route-{0}" -f $stamp)
+    $routeRoot = Join-Path $workRoot 'route'
+    $OutDir = Join-Path $routeRoot 'latest'
+    $usingDefaultOutDir = $true
 }
 
 # --- R0 融合晋升 (fuse-promote): votes>=3 才把 PRIMARY 改成融合建议,写 scope 之前生效 ---
@@ -208,17 +214,35 @@ if (-not (Test-Path -LiteralPath $skillAbs)) {
     exit 2
 }
 
-# --- 输出目录（默认调用方项目 work\master-route-<ts>） ---
-if ([string]::IsNullOrWhiteSpace($OutDir)) {
-    $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-    if ($packageRoot -and (Test-Path -LiteralPath $packageRoot)) {
-        $OutDir = Join-Path (Join-Path $packageRoot 'work') ("master-route-{0}" -f $stamp)
-    } else {
-        $tmpBase = if ($env:TEMP) { $env:TEMP } else { [System.IO.Path]::GetTempPath() }
-        $OutDir = Join-Path (Join-Path $tmpBase 'reverse-skill-route') ("master-route-{0}" -f $stamp)
+# --- 输出目录（默认已在上面定为 <调用方项目>\work\route\latest；显式 -OutDir 原样使用）---
+New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+
+# --- 默认目录治理：先把上一份 latest 归档，再覆盖写 ---
+# 归档不删除：<project>/work/route/<sha12>/route-scope.md，sha12 = 上一份内容 SHA-256 前 12 位。
+# 幂等：同内容重复归档到同一目录，不产生副本。失败仅提示，不阻断写最新一份。
+if ($usingDefaultOutDir) {
+    try {
+        $latestScope = Join-Path $OutDir 'route-scope.md'
+        if (Test-Path -LiteralPath $latestScope) {
+            $routeRoot = Split-Path -Parent $OutDir
+            $previous = Get-Content -LiteralPath $latestScope -Raw -Encoding UTF8
+            $sha = [System.Security.Cryptography.SHA256]::Create()
+            try {
+                $hashBytes = $sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($previous))
+            } finally { $sha.Dispose() }
+            $hashHex = -join ($hashBytes | ForEach-Object { $_.ToString('x2') })
+            $archiveDir = Join-Path $routeRoot $hashHex.Substring(0, 12)
+            $archiveScope = Join-Path $archiveDir 'route-scope.md'
+            if (-not (Test-Path -LiteralPath $archiveScope)) {
+                New-Item -ItemType Directory -Force -Path $archiveDir | Out-Null
+                Copy-Item -LiteralPath $latestScope -Destination $archiveScope -Force
+                Write-Host ("ARCHIVED -> {0}" -f $archiveScope)
+            }
+        }
+    } catch {
+        Write-Host ("WARN: route archive skipped: {0}" -f $_.Exception.Message) -ForegroundColor Yellow
     }
 }
-New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
 # --- 写 route-scope.md（格式与旧版一致，下游脚本解析 primary_skill / primary） ---
 $sb = New-Object System.Text.StringBuilder

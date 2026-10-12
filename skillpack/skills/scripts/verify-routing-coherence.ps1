@@ -336,10 +336,10 @@ foreach ($c in $cases) {
     if (-not (Test-Path $abs)) { Bad "missing $($c.Sub)" } else { Ok "exists $($c.Sub)" }
 }
 
-# default outdir under work
+# default outdir under work/route/latest（2026-10-12 目录治理后的默认落点）
 $def = & $HostExe -NoProfile -ExecutionPolicy Bypass -File $masterRoute -Hint 'radare2 analyze' 2>&1 | Out-String
 $def | Set-Content (Join-Path $ScratchDir 'default-out.txt') -Encoding UTF8
-if ($def -match 'work[\\/]master-route-') { Ok 'default OutDir under work/' } else { Bad 'default OutDir not under work/' }
+if ($def -match 'work[\\/]route[\\/]latest[\\/]route-scope\.md') { Ok 'default OutDir under work/route/latest' } else { Bad 'default OutDir not under work/route/latest' }
 
 # project-root output must stay with the analysis project when the skill is invoked elsewhere
 $projectRoot = Join-Path $ScratchDir 'analysis-project'
@@ -347,8 +347,8 @@ New-Item -ItemType Directory -Force -Path $projectRoot | Out-Null
 $projectRoute = & $HostExe -NoProfile -ExecutionPolicy Bypass -File $masterRoute `
     -Hint 'radare2 analyze' -ProjectRoot $projectRoot 2>&1 | Out-String
 $projectWork = Join-Path $projectRoot 'work'
-$projectRouteDirs = @(Get-ChildItem -LiteralPath $projectWork -Directory -Filter 'master-route-*' -ErrorAction SilentlyContinue)
-if ($projectRouteDirs.Count -eq 1 -and (Test-Path (Join-Path $projectRouteDirs[0].FullName 'route-scope.md'))) {
+$projectRouteLatest = Join-Path (Join-Path (Join-Path $projectRoot 'work') 'route') 'latest\route-scope.md'
+if (Test-Path -LiteralPath $projectRouteLatest) {
     Ok 'explicit ProjectRoot keeps route artifacts in analysis project'
 } else {
     Bad 'explicit ProjectRoot did not receive route artifacts'
@@ -365,8 +365,8 @@ try {
     Set-Location -LiteralPath $previousLocation
 }
 $defaultProjectWork = Join-Path $defaultProjectRoot 'work'
-$defaultProjectRoutes = @(Get-ChildItem -LiteralPath $defaultProjectWork -Directory -Filter 'master-route-*' -ErrorAction SilentlyContinue)
-if ($defaultProjectRoutes.Count -eq 1 -and (Test-Path (Join-Path $defaultProjectRoutes[0].FullName 'route-scope.md'))) {
+$defaultProjectLatest = Join-Path (Join-Path $defaultProjectWork 'route') 'latest\route-scope.md'
+if (Test-Path -LiteralPath $defaultProjectLatest) {
     Ok 'default route artifacts follow the caller project'
 } else {
     Bad 'default route artifacts did not follow the caller project'

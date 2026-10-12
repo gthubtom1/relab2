@@ -453,6 +453,38 @@ diff_baseline，对指定功能跑原程序与新实现，产出对照表草稿�
 - commit: （本段提交）交付能力建设 · 阶段5 差异测试执行器
 - 未达标/遗留: 演示 case 在 `work/`（gitignored，不入库）；真实复刻项目的完整闭环留待阶段 7。
 
+### 阶段 6 · 抗漂移三件套 · 2026-10-12 13:10
+
+- 做了什么:
+  ① 新建 `skills/templates/goal.md`（39 行，≤50）：字段 = 最终交付目标 / 功能清单 / 当前阶段 /
+     未决重大事项 / 最近一次 commit hash；
+  ② `skills/ops/timeline-workitem.md` 的 decision delta boundary 加硬门槛：复刻 case
+     （deliverables 含 `rebuild: true`）的 `carry_forward_refs` 必须含 `GOAL.md`；
+  ③ `master-route.ps1` / `.sh` 默认产物目录治理：默认写 `<project>/work/route/latest/route-scope.md`，
+     写前把上一份 latest 归档到 `work/route/<sha12>/`（内容 SHA-256 前 12 位），**归档不删除、幂等**；
+     显式 `-OutDir` / `--out-dir` 完全跳过该机制（行为不变）。
+- 改了哪些文件:
+  - 新增 `skillpack/skills/templates/goal.md`
+  - 改 `skillpack/skills/ops/timeline-workitem.md`（+1 行硬门槛）
+  - 改 `skillpack/skills/scripts/master-route.ps1`（默认路径 + 归档块）
+  - 改 `skillpack/skills/scripts/master-route.sh`（同；归档在 Python 写入器内）
+  - 同步改断言：`verify-routing-coherence.ps1` 两处（默认路径断言 + 两个 ProjectRoot 断言）、
+    `test-routing.sh` 默认根回归
+  - 文档同步：`MASTER-ROUTING.md`、`AI-INSTALL.md` 两处描述新默认路径
+- 验收命令与结果（逐条对判据）:
+  - `powershell -File verify-routing-coherence.ps1` → `ALL ROUTING COHERENCE CHECKS PASSED`，EXIT=0
+  - `test-routing.ps1 -Quick` → `OVERALL: ALL PASS (65)`，EXIT=0
+  - `test-routing.sh` → `OVERALL: ALL PASS (205 routing cases + default-root regression)`，EXIT=0
+  - 历史 route-scope 一个没丢：改前 451 个 vs 改后 451 个，`comm -23` 缺失数 = **0**
+  - 三次跑（全新目录）：PS 与 bash 各恰好多 **2** 个归档目录，`latest` 内容为最后一次（hint=run-3），
+    归档内容分别是 run-1 / run-2（PS 侧与 bash 侧均实测）
+  - 默认落点实测：`Wrote ...\work\route\latest\route-scope.md`（PS）与 bash 同
+- 门禁结果: `check-fences.py` exit 0；`verify-doc-links.py` exit 0；
+  `audit-doc-code.py --root skillpack/skills` → 真错 0、exit 0；`verify-evolution.py` 10/10 全绿（EXIT=0）
+- commit: （本段提交）交付能力建设 · 阶段6 抗漂移三件套
+- 未达标/遗留: 无（`test-bash-workflow.sh` 本机未实测 —— 与阶段 2 同因，CI 里仅 macOS runner 跑）
+
+
 
 
 

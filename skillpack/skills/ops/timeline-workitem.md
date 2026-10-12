@@ -47,6 +47,7 @@ powershell -File skills\scripts\case-init.ps1 -Hint "full pentest" -CaseName "ac
 - 未改变的 route、auth、scope、network profile、tool capability、既有 hypothesis/Evidence **MUST NOT** 为了交接再次展开；放在 `carry_forward_refs` 中引用 authoritative 文件或条目。
 - consumer **MUST** 先解析 `carry_forward_refs`，再把 `decision_delta` 覆盖到工作上下文；不得把 delta 当成完整状态。
 - 只有存在两个或以上 materially different、evidence-supported 分支，且用户选择会改变下一动作时才是 genuine decision boundary；确定性 transition 直接继续，不为制造菜单而重述上下文。
+- **复刻 case（`scope.md` 的 deliverables 含 `rebuild: true`）：`carry_forward_refs` 必须含 `GOAL.md`。** 理由：复刻 case 的验收条件在 `rebuild.md`、交付目标在 `GOAL.md`，二者是压缩后重建工作集的全部依据；只带 `scope.md` 会丢失"正在交付什么"这一层。`GOAL.md` 模板与字段见 `../templates/goal.md`。
 
 代表性 transition：`Triage -> Static` 若 auth/scope/route 未变，只记录 `decision_delta: [phase=triage->static]`，并以 `carry_forward_refs: [scope.md, evidence/E-triage.md]` 继承其余状态。
 

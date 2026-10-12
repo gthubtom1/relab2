@@ -79,7 +79,8 @@ bash skills/scripts/master-route.sh --hint "把这段 smali 里的日志调用�
 预期输出里有 `PRIMARY -> skills/apk-reverse/SKILL.md`、`confidence: high` 一类字样。
 **如果报找不到脚本或找不到 Python**，先停下把原始报错给用户，不要自己乱装依赖。
 
-> ⚠️ **这个自检会在你当前所在目录生成一个 `work/master-route-<时间戳>/` 子目录**（路由脚本的既定行为）。
+> ⚠️ **这个自检会在你当前所在目录生成一个 `work/route/latest/route-scope.md`**（路由脚本的既定行为；
+> 历史每次运行自动归档到 `work/route/<hash>/`，不删除）。
 > 所以**一定要在 `<安装目录>` 里跑**，别在用户的项目里跑；跑完可以按需保留或删除。
 > 想更彻底一点（可选，约 1 分钟）：
 > - Windows：`powershell -NoProfile -ExecutionPolicy Bypass -File skills/scripts/test-routing.ps1` → 预期 `TOTAL=199 PASS=199`
@@ -184,7 +185,7 @@ rm -rf .skills/.git          # 关键：删掉嵌套的 .git，否则它会被�
 3. **不要乱动 `<安装目录>/work/` 与 `community-raw/`**：
    - `community-raw/` 是上游原文存档（**只读**，不属于客户端可见技能，别当技能用）；
    - `<安装目录>/work/` 里如果有内容，那是**别人或以前**留下的案例/实验数据，**不要改也不要删**；
-   - **例外**：你自己在第 3 步自检时生成的那个 `work/master-route-<时间戳>/` 是**你的临时产物**，跑完可以直接删掉。
+   - **例外**：你自己在第 3 步自检时生成的 `work/route/latest/route-scope.md` 与它旁边的归档目录是**你的临时产物**，跑完可以直接删掉。
 4. **不要把 `community-raw/` 里的内容当技能用**：对客户端可见的技能只有 `skills/` 下那一层（43 个核心技能 +
    4 个社区 wrapper）；`community-raw/` 是它们的原始素材，不属于发现面。
 5. **不要为了"装成功"而放宽任何门**：这份包自带 20+ 个自检门，它们红了是信息，不是障碍。

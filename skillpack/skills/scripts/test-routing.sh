@@ -99,19 +99,19 @@ with tempfile.TemporaryDirectory(prefix="rs-routing-bash-") as scratch:
         encoding="utf-8",
         errors="replace",
     )
-    default_scopes = list((caller_root / "work").glob("master-route-*/route-scope.md"))
+    default_scope_path = caller_root / "work" / "route" / "latest" / "route-scope.md"
     if default_result.returncode != 0:
         failures.append(
             "default-root router failed: "
             f"exit={default_result.returncode} stderr={default_result.stderr.strip()!r}"
         )
-    elif len(default_scopes) != 1:
+    elif not default_scope_path.is_file():
         failures.append(
-            "default-root router did not write exactly one route-scope under caller project: "
-            f"found={len(default_scopes)}"
+            "default-root router did not write route-scope under work/route/latest: "
+            f"found={list((caller_root / 'work').rglob('route-scope.md'))}"
         )
     else:
-        default_scope = default_scopes[0].read_text(encoding="utf-8")
+        default_scope = default_scope_path.read_text(encoding="utf-8")
         project_match = re.search(
             r"(?m)^- project_root:[ \t]*(.+?)[ \t]*$",
             default_scope,

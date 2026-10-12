@@ -19,7 +19,7 @@
 
 ```powershell
 powershell -File skills\scripts\master-route.ps1 -Hint "<用户任务>"
-# 默认写出当前项目的 work/master-route-<ts>/route-scope.md；从其他目录调用时显式指定项目根
+# 默认写出当前项目的 work/route/latest/route-scope.md（历史自动归档到 work/route/<hash>/，不删除）；从其他目录调用时显式指定项目根
 powershell -File skills\scripts\master-route.ps1 -Hint "<用户任务>" -ProjectRoot "C:\path\to\analysis-project"
 powershell -File skills\scripts\case-init.ps1 -Hint "<用户任务>" -CaseName "my-case"
 # case 默认写入当前项目的 work/<case>/；-PackageRoot 保持兼容，-ProjectRoot 优先级更高
