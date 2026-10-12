@@ -431,4 +431,34 @@
 - 未达标/遗留: <如实写，没有就写「无」>
 ```
 
-（以下为记录区，暂空）
+（以下为记录区，勿改历史）
+
+### 阶段 0 · 前置修复：交付审计器验内容，不验自称 · 2026-10-12 23:35
+- 做了什么: `review_case.py` 完成度审计新增「读记录内容」判据——完成态行引用的 diff 记录
+  必须带两段原始 stdout，且两段**逐字节**一致（`rebuild.diff_bytes_mismatch`，bytes 级、
+  不做换行归一化）；记录显示命令没跑起来（exit=ERROR/TIMEOUT/error）→
+  `rebuild.diff_unreproducible`；老格式记录（缺原始块/缺命令登记）只记迁移窗口 warning
+  （`rebuild.diff_unparsed`）。同时修 `work/rebuild-sha256sum` 两个真缺陷：newsha.py 关闭
+  Windows stdout 换行翻译（F-003 `\r\n` 消除，od -c 实测对齐）、rebuild.md 的 rebuilt_command
+  去掉 `cd baseline`（F-005 可复现，rc=0 两行 OK），五行对照全部重跑、判定表与 hash 同步真实结果。
+- 改了哪些文件: `skillpack/skills/case-review/scripts/review_case.py`（+100 行）、
+  `skillpack/skills/scripts/test-rebuild-audit-negctl.py`（+90 行，13→16 条）、
+  `skillpack/skills/case-review/tests/test_review_case.py`（+69 行，14→17 用例）、
+  `skillpack/skills/case-review/SKILL.md`（scope 段 + ACTION REQUIRED 说明）；
+  运行时产物（gitignored）：`work/rebuild-sha256sum/{build/newsha.py,rebuild.md,diff/*,evidence/*,timeline.md}`、
+  `work/sha256-rebuild-demo/{diff/F-001.md,evidence/E-001.md}`。
+- 验收命令与结果:
+  - F-009 伪造法重做（`python work/tmp-stage0/forge.py`，可重跑）→ 旧检查器（HEAD 版）
+    rc=0 PASS、新检查器 rc=1 FAIL `rebuild.diff_bytes_mismatch`——漏洞复现 + 修复生效双铁证
+    （存 `work/tmp-stage0/f009-forgery-proof.txt`）
+  - `python skillpack/skills/scripts/test-rebuild-audit-negctl.py` → 16/16 controls honoured
+    （新增：bad-diff-bytes-mismatch / bad-diff-unreproducible / old-format-record-warns）
+  - `python skillpack/skills/case-review/tests/test_review_case.py` → Ran 17 tests, OK
+  - `python .../review_case.py work/rebuild-sha256sum --verify-hashes --strict` → PASS（rc=0）
+  - 同命令 `work/sha256-rebuild-demo` → PASS（rc=0，记录已重跑带命令登记）
+  - 回归底线：ctf-demo markdown/json/strict 三格式输出（剥时间戳）与改前逐字 IDENTICAL ×4
+- 门禁结果: `check-fences.py` rc=0、`verify-doc-links.py` rc=0、`audit-doc-code.py` rc=0、
+  `verify-evolution.py` 10/10 ALL GREEN（含双 benchmark 65/65 + 93/86）
+- commit: （本段提交）版本更新融合 · 阶段0 审计器验内容
+- 未达标/遗留: 无。注：`work/tmp-stage0/`（伪造证据 + 旧检查器副本）为 gitignored 临时取证目录，
+  保留供复查，不随提交入库。

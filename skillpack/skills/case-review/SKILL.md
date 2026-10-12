@@ -19,8 +19,10 @@ This skill covers:
 - A Markdown or JSON review result for a report handoff
 - **Rebuild delivery audit** — when `work/<case>/rebuild.md` exists, the review
   additionally checks that every function row's state is backed by evidence, that
-  every `diff_baseline` row keeps its five columns, and that Coverage carries the
-  three rebuild items (功能清单全覆盖 / 关键功能状态 / 已知差异已记录).
+  every `diff_baseline` row keeps its five columns, that Coverage carries the
+  three rebuild items (功能清单全覆盖 / 关键功能状态 / 已知差异已记录), and that a
+  completed row's cited diff record really shows identical stdout bytes for both
+  programs (the record is verified, not the table's claim).
   A case without `rebuild.md` produces exactly the same report as before.
 
 It MUST NOT perform reconnaissance, exploitation, dynamic instrumentation, or target changes. Those actions belong to the routed analysis skill and require the case scope gate.
@@ -40,9 +42,15 @@ It MUST NOT perform reconnaissance, exploitation, dynamic instrumentation, or ta
    `../ops/rebuild-gates.md`: a row marked 已测试/对照一致 without evidence, a diff row
    missing its five columns, or a missing Coverage item is an error — fix the table,
    do not lower the check.
+   The audit also reads the cited diff record's content: a completed row whose record
+   shows differing stdout bytes for the two programs (`rebuild.diff_bytes_mismatch`)
+   or whose registered commands did not execute (`rebuild.diff_unreproducible`) is an
+   error — the table's claim never substitutes for the record. Records predating the
+   raw stdout blocks only warn (`rebuild.diff_unparsed`, migration window): re-run
+   `diff-runner.py` to add them.
    Negative controls for this audit: `python skillpack/skills/scripts/test-rebuild-audit-negctl.py`
-   (proves the audit catches 状态虚高 / 对照表缺行 / Coverage 缺项 and still passes a
-   complete table and a case without `rebuild.md`).
+   (proves the audit catches 状态虚高 / 对照表缺行 / Coverage 缺项 / 记录字节不一致 /
+   命令不可复现 / 老格式记录 warning, and still passes a complete table and a case without `rebuild.md`).
 
 ## Tool dependencies
 

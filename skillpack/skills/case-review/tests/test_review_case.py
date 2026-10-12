@@ -203,11 +203,39 @@ class ReviewCaseTests(unittest.TestCase):
 - [x] 已知差异已记录 (known deviations recorded)
 """
 
+    # 与 diff-runner 草稿同形的记录：完成态行引用的记录必须带这两段原始 stdout，
+    # 1d 判据（字节比对 / 可复现性）读的就是它们。缺这两段只记迁移窗口 warning。
+    REBUILD_DIFF_RECORD = """<!-- diff-runner draft — 供人工确认后回填 rebuild.md 的 diff_baseline 表 -->
+# Diff draft: F-001
+
+- case: case
+- generated: 2026-01-01T00:00:00
+- baseline_command: `echo 2`
+- rebuilt_command: `echo 2`
+- judged_by: human
+
+## Raw records
+
+### F-001 · case 1 · input: --mode a
+
+- baseline: exit=0 seconds=0.1
+- rebuilt: exit=0 seconds=0.1
+
+```text
+--- baseline stdout ---
+2
+--- rebuilt stdout ---
+2
+```
+"""
+
     def write_rebuild_case(self, root, acceptance_state="对照一致", diff_row=True,
-                           coverage=None, evidence_cell="diff/F-001.md"):
+                           coverage=None, evidence_cell="diff/F-001.md", diff_record=None):
         self.write_case(root)
         (root / "diff").mkdir()
-        (root / "diff" / "F-001.md").write_text("input=1 | original=2 | rebuilt=2 | same | note\n", encoding="utf-8")
+        (root / "diff" / "F-001.md").write_text(
+            diff_record if diff_record is not None else self.REBUILD_DIFF_RECORD,
+            encoding="utf-8")
         if coverage is None:
             coverage = self.REBUILD_COVERAGE
         workitems = root / "workitems.md"
@@ -311,6 +339,43 @@ class ReviewCaseTests(unittest.TestCase):
             result = REVIEW_CASE.review_case(root)
             self.assertEqual(result["status"], "FAIL")
             self.assertTrue(any(item["code"] == "rebuild.limited_note_missing" for item in result["issues"]))
+
+    def test_rebuild_diff_bytes_mismatch_fails(self):
+        """表格自称一致，但被引用记录里两段 stdout 真差一字节 → 必须报。
+
+        这是「验自称不验内容」的假绿形状：verdict=一致、文件在、hash 全对。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            forged = self.REBUILD_DIFF_RECORD.replace(
+                "--- rebuilt stdout ---\n2", "--- rebuilt stdout ---\n3")
+            self.write_rebuild_case(root, diff_record=forged)
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "rebuild.diff_bytes_mismatch" for item in result["issues"]))
+
+    def test_rebuild_diff_unreproducible_fails(self):
+        """记录显示命令没跑起来（exit=ERROR）→ 不可复现的记录不支撑完成态。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            broken = self.REBUILD_DIFF_RECORD.replace(
+                "- rebuilt: exit=0 seconds=0.1",
+                "- rebuilt: exit=ERROR seconds=0 error=shell not found")
+            self.write_rebuild_case(root, diff_record=broken)
+            result = REVIEW_CASE.review_case(root)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertTrue(any(item["code"] == "rebuild.diff_unreproducible" for item in result["issues"]))
+
+    def test_rebuild_old_format_record_warns_only(self):
+        """老格式记录（缺两段原始 stdout）→ 迁移窗口 warning，不硬红。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_rebuild_case(root, diff_record="input=1 | original=2 | rebuilt=2 | same | note\n")
+            result = REVIEW_CASE.review_case(root)
+            rebuild_errors = [item for item in result["issues"]
+                              if item["code"].startswith("rebuild.") and item["level"] == "error"]
+            self.assertEqual(rebuild_errors, [])
+            self.assertTrue(any(item["code"] == "rebuild.diff_unparsed" for item in result["issues"]))
 
     def test_rebuild_absent_case_has_no_rebuild_key(self):
         """无 rebuild.md 时不出现 rebuild 键，输出与改前一致。"""

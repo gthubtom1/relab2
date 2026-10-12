@@ -54,6 +54,17 @@ REBUILD_COVERAGE_ITEMS = (
     ("critical_function_status", "关键功能状态", re.compile(r"关键功能|critical\s*function", re.I)),
     ("known_diff", "已知差异已记录", re.compile(r"已知差异|known\s*deviation", re.I)),
 )
+REBUILD_DIFF_REF = re.compile(r"[A-Za-z0-9_./\\-]*diff[/\\][A-Za-z0-9_.\\/-]+")
+# diff-runner 草稿里的两段原始 stdout；一条记录可含多组（--input 可重复）。
+# 完成态行引用的记录必须带这两段，且两段**逐字节**一致——这是「验内容不验自称」的
+# 判据本体：按 bytes 匹配、不做编码/换行归一化，`\n` vs `\r\n` 这类差异无处藏身。
+REBUILD_STDOUT_BLOCK = re.compile(
+    rb"--- baseline stdout ---\r?\n(?P<baseline>.*?)\r?\n?--- rebuilt stdout ---\r?\n(?P<rebuilt>.*?)(?=\r?\n?```)",
+    re.S,
+)
+# 记录登记的可复现性：命令字段 + 每次运行的 run 行（exit/error）。
+# 没跑起来的命令（shell 缺失 / 超时）不能支撑任何完成态判定。
+REBUILD_RUN_LINE = re.compile(rb"(?m)^\s*-\s*(baseline|rebuilt):\s*exit=(\S+)(.*)$")
 
 def field_value(text, name):
     lines = text.splitlines()
@@ -110,14 +121,52 @@ def _iter_table_rows(text):
         if cells:
             yield line_number, cells
 
+def _diff_record_refs(value):
+    """Cited diff-record paths in an evidence cell (case-root relative, POSIX style)."""
+    return [candidate.replace("\\", "/").lstrip("/")
+            for candidate in REBUILD_DIFF_REF.findall(value or "")]
+
+def _stdout_blocks(data):
+    """Yield the (baseline, rebuilt) raw stdout byte pairs a record carries.
+
+    A record without any pair predates the raw blocks (old format): the caller
+    reports the migration-window warning instead of guessing a verdict.
+    """
+    for match in REBUILD_STDOUT_BLOCK.finditer(data):
+        yield match.group("baseline"), match.group("rebuilt")
+
+def _record_reproducibility_gap(data):
+    """Classify why a diff record cannot back a completion claim.
+
+    Returns (level, reason): "error" when a registered command demonstrably did
+    not execute (exit=ERROR / exit=TIMEOUT / a recorded error message); "warning"
+    when the record predates the command/run fields (migration window: re-run
+    diff-runner to register them); None when the record carries executed runs.
+    """
+    if not (b"baseline_command:" in data and b"rebuilt_command:" in data):
+        return ("warning", "no baseline_command/rebuilt_command registered")
+    runs = REBUILD_RUN_LINE.findall(data)
+    if not runs:
+        return ("warning", "no run lines (- baseline: exit=...) recorded")
+    for side, exit_code, tail in runs:
+        if exit_code in (b"ERROR", b"TIMEOUT"):
+            return ("error", "%s command did not execute (exit=%s)" % (side.decode(), exit_code.decode()))
+        if b"error=" in tail:
+            detail = tail.split(b"error=", 1)[1].strip()
+            if detail:
+                return ("error", "%s command did not execute (%s)" % (side.decode(), detail.decode("utf-8", "replace")))
+    return None
+
 def parse_rebuild(root, issues):
     """Parse rebuild.md against skills/templates/rebuild.md, then audit the delivery.
 
     Returns None when the file is absent: a non-rebuild case must produce exactly
-    the same report as before this audit existed. When present, three checks run:
+    the same report as before this audit existed. When present, four checks run:
       1. a row's state may not be higher than its evidence supports;
       2. every diff_baseline row keeps its five columns;
-      3. Coverage carries the three rebuild items.
+      3. Coverage carries the three rebuild items;
+      4. a completed row's cited diff record must show identical stdout for both
+         programs (the record is the evidence; the table's claim is not).
     """
     path = root / "rebuild.md"
     if not path.is_file():
@@ -277,13 +326,56 @@ def parse_rebuild(root, issues):
         token = (record["evidence"] or "").strip()
         if not token:
             continue
-        for candidate in re.findall(r"[A-Za-z0-9_./\\-]*diff[/\\][A-Za-z0-9_.\\/-]+", token):
-            relative = candidate.replace("\\", "/").lstrip("/")
+        for relative in _diff_record_refs(token):
             absolute = root / relative
             if not absolute.is_file():
                 issue(issues, "error", "rebuild.diff_record_missing",
                       function_id + " cites a comparison record that does not exist: " + relative,
                       "rebuild.md:" + str(record["line"]))
+
+    # --- cross-check 1d: a completed row's record must not contradict its claim ---
+    # 完成判定的实质证据 = diff 记录里的两段原始 stdout。判据只对含这两段的记录生效：
+    #   · 两段逐字节不同 -> diff_bytes_mismatch（表格自称「一致」不作数，验内容不验自称）；
+    #   · 记录显示命令没跑起来（exit=ERROR/TIMEOUT/error）-> diff_unreproducible。
+    # 老格式记录（缺原始块 / 缺命令或运行行登记）只记 warning：迁移窗口，重跑
+    # diff-runner 即可补齐，不硬红。（generated 时间戳在记录头部、不在这两段内：
+    # 段内字节比较天然不受重跑时间影响。）
+    for function_id, record in sorted(result["functions"].items()):
+        if record["state"] not in REBUILD_COMPLETED_STATES:
+            continue
+        for relative in dict.fromkeys(_diff_record_refs(record["evidence"])):
+            absolute = root / relative
+            if not absolute.is_file():
+                continue  # cross-check 1c already reported the missing record
+            try:
+                record_bytes = absolute.read_bytes()
+            except OSError:
+                continue
+            pairs = list(_stdout_blocks(record_bytes))
+            if not pairs:
+                issue(issues, "warning", "rebuild.diff_unparsed",
+                      function_id + " cites " + relative + " without the two raw stdout blocks; "
+                      "re-run diff-runner to add them (byte comparison applies only to records that carry them)",
+                      relative)
+                continue
+            if any(baseline != rebuilt for baseline, rebuilt in pairs):
+                issue(issues, "error", "rebuild.diff_bytes_mismatch",
+                      function_id + " is marked " + REBUILD_STATE_LABELS[record["state"]] +
+                      " but its cited record shows differing stdout for the two programs: " + relative,
+                      relative)
+            gap = _record_reproducibility_gap(record_bytes)
+            if gap:
+                level, reason = gap
+                if level == "error":
+                    issue(issues, "error", "rebuild.diff_unreproducible",
+                          function_id + " cites " + relative + ": " + reason +
+                          " (a completion claim needs runs that actually happened)",
+                          relative)
+                else:
+                    issue(issues, "warning", "rebuild.diff_unparsed",
+                          function_id + " cites " + relative + " without registered commands/run lines: " + reason +
+                          " (re-run diff-runner to register them; the migration window treats this as a warning)",
+                          relative)
 
     # --- cross-check 2: states >= tested need a matching diff row ---
     diff_by_id = {row["id"]: row for row in result["diff_rows"]}

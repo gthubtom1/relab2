@@ -113,6 +113,46 @@ REBUILD_TEMPLATE = """# Rebuild
 
 GOOD_DIFF_ROW = "| F-001 | --mode a | 2 | 2 | 一致 | ok |"
 
+# 与 diff-runner 草稿同形的记录（含两段原始 stdout）。1d 判据只对完成态行生效，
+# 好 fixture 必须带上这两段——否则「引用记录却无原始块」会按迁移窗口记 warning。
+GOOD_DIFF_RECORD = """<!-- diff-runner draft — 供人工确认后回填 rebuild.md 的 diff_baseline 表 -->
+# Diff draft: F-001
+
+- case: case
+- generated: 2026-01-01T00:00:00
+- baseline_command: `echo 2`
+- rebuilt_command: `echo 2`
+- judged_by: human
+
+| F-ID | 输入条件 | 原程序结果 | 新实现结果 | 是否一致 | 说明 |
+|------|----------|------------|------------|----------|------|
+| F-001 | --mode a | 2 | 2 | 一致 | ok |
+
+## Raw records
+
+### F-001 · case 1 · input: --mode a
+
+- baseline: exit=0 seconds=0.1
+- rebuilt: exit=0 seconds=0.1
+
+```text
+--- baseline stdout ---
+2
+--- rebuilt stdout ---
+2
+```
+"""
+
+# 一字节之差：表格仍自称「一致」，记录里 rebuilt stdout 是 3
+BAD_BYTES_DIFF_RECORD = GOOD_DIFF_RECORD.replace("--- rebuilt stdout ---\n2", "--- rebuilt stdout ---\n3")
+
+# 记录缺两段原始 stdout（老格式）→ 迁移窗口 warning，不升级为 error
+OLD_STYLE_DIFF_RECORD = "input=--mode a\noriginal=2\nrebuilt=2\nsame=yes\n"
+
+# 命令没跑起来（exit=ERROR）→ 不可复现的记录不支撑完成态
+UNREPRODUCIBLE_DIFF_RECORD = GOOD_DIFF_RECORD.replace(
+    "- rebuilt: exit=0 seconds=0.1", "- rebuilt: exit=ERROR seconds=0 error=shell not found")
+
 COVERAGE_WITH_REBUILD = """## Coverage (rebuild)
 - [x] 功能清单全覆盖 (every functions row has an acceptance row)
 - [x] 关键功能状态 (critical functions carry a state + evidence)
@@ -120,7 +160,7 @@ COVERAGE_WITH_REBUILD = """## Coverage (rebuild)
 """
 
 
-def write_case(root, rebuild_text=None, workitems_text=None, with_diff_record=True):
+def write_case(root, rebuild_text=None, workitems_text=None, with_diff_record=True, diff_record_text=None):
     evidence = os.path.join(root, "evidence")
     report = os.path.join(root, "report")
     diff = os.path.join(root, "diff")
@@ -135,7 +175,7 @@ def write_case(root, rebuild_text=None, workitems_text=None, with_diff_record=Tr
         fh.write(BASE_TIMELINE)
     if with_diff_record:
         with io.open(os.path.join(diff, "F-001.md"), "w", encoding="utf-8") as fh:
-            fh.write("input=--mode a\noriginal=2\nrebuilt=2\nsame=yes\n")
+            fh.write(diff_record_text if diff_record_text is not None else GOOD_DIFF_RECORD)
     if rebuild_text is not None:
         with io.open(os.path.join(root, "rebuild.md"), "w", encoding="utf-8") as fh:
             fh.write(rebuild_text)
@@ -162,9 +202,11 @@ def codes(payload):
     return [item["code"] for item in payload.get("issues", [])]
 
 
-# (用例名, kind, rebuild_text, workitems_text, with_diff_record, 期望 codes 必须出现, 期望 exit, 说明)
-#   kind: must_pass（0 rebuild.* 报错，exit 0）/ must_fail（必须出现期望 code）/ plain（无 rebuild.md）
+# (用例名, kind, rebuild_text, workitems_text, with_diff_record, 期望 codes 必须出现, 期望 exit, 说明[, diff_record_text])
+#   kind: must_pass（0 rebuild.* 报错，exit 0）/ must_fail（必须出现期望 code）/
+#         must_warn（必须出现期望 warning code 且 0 error，exit 0）/ plain（无 rebuild.md）
 #   workitems_text: None = 默认（含三项复刻 Coverage）；字符串 = 覆盖
+#   diff_record_text: 第 9 元素（可选）；缺省 = GOOD_DIFF_RECORD（含两段原始 stdout）
 def good_rebuild(state="对照一致", evidence="diff/F-001.md", note="", diff_rows=GOOD_DIFF_ROW,
                  extra_functions="", extra_acceptance=""):
     return REBUILD_TEMPLATE.format(
@@ -240,6 +282,29 @@ CASES = [
      workitems_with_rebuild(), True,
      ["rebuild.diff_verdict_conflict"], 1, "「尚未一致」必须被拦（归 conflict，绝不配完成态）"),
 
+    # ---------- 坏 fixture 4：表格自称一致、diff 记录两段 stdout 真差一字节 ----------
+    # 「验自称不验内容」的假绿形状（F-009 伪造法）：表格 verdict=一致、记录文件在、
+    # hash 全对 —— 旧审计全放行；新审计必须从记录内容里抓出这个字节差。
+    ("bad-diff-bytes-mismatch", "must_fail",
+     good_rebuild(), workitems_with_rebuild(), True,
+     ["rebuild.diff_bytes_mismatch"], 1,
+     "diff 记录里 rebuilt stdout 与 baseline 差一字节 → 必须报（验内容不验自称）",
+     BAD_BYTES_DIFF_RECORD),
+
+    # ---------- 坏 fixture 5：记录里命令根本没跑起来 ----------
+    ("bad-diff-unreproducible", "must_fail",
+     good_rebuild(), workitems_with_rebuild(), True,
+     ["rebuild.diff_unreproducible"], 1,
+     "记录显示 rebuilt 命令未执行（exit=ERROR）→ 不可复现的记录不支撑完成态",
+     UNREPRODUCIBLE_DIFF_RECORD),
+
+    # ---------- 迁移窗口：老格式记录（缺原始块）只记 warning，不硬红 ----------
+    ("old-format-record-warns", "must_warn",
+     good_rebuild(), workitems_with_rebuild(), True,
+     ["rebuild.diff_unparsed"], 0,
+     "老格式记录缺原始 stdout 两段 → warning（迁移窗口）；重跑 diff-runner 即补齐",
+     OLD_STYLE_DIFF_RECORD),
+
     # ---------- 必须放行：无 rebuild.md 的老 case（回归底线） ----------
     ("plain-case-no-rebuild", "plain",
      None, BASE_WORKITEMS, True,
@@ -247,15 +312,16 @@ CASES = [
 ]
 
 
-def run_case(name, kind, rebuild_text, workitems_text, with_diff_record, expect_codes, expect_exit, note):
+def run_case(name, kind, rebuild_text, workitems_text, with_diff_record, expect_codes, expect_exit, note,
+             diff_record_text=None):
     with tempfile.TemporaryDirectory(prefix="rebuild-negctl-") as scratch:
         root = os.path.join(scratch, "case")
         if kind == "plain":
             write_case(root, rebuild_text=None, workitems_text=workitems_text,
-                       with_diff_record=with_diff_record)
+                       with_diff_record=with_diff_record, diff_record_text=diff_record_text)
         else:
             write_case(root, rebuild_text=rebuild_text, workitems_text=workitems_text,
-                       with_diff_record=with_diff_record)
+                       with_diff_record=with_diff_record, diff_record_text=diff_record_text)
         exit_code, payload = run_review(root)
 
         problems = []
@@ -270,6 +336,10 @@ def run_case(name, kind, rebuild_text, workitems_text, with_diff_record, expect_
             for expected in expect_codes:
                 if expected not in seen:
                     problems.append("expected code missing: %s (seen: %s)" % (expected, ",".join(seen) or "(none)"))
+            if kind == "must_warn":
+                errors = [item["code"] for item in payload.get("issues", []) if item["level"] == "error"]
+                if errors:
+                    problems.append("warning fixture reported errors: %s" % ",".join(errors))
             if kind != "plain" and not expect_codes:
                 unexpected = [code for code in seen if code.startswith("rebuild.")]
                 if unexpected:
@@ -282,10 +352,12 @@ def run_case(name, kind, rebuild_text, workitems_text, with_diff_record, expect_
 def main():
     failures = 0
     total = 0
-    for name, kind, rebuild_text, workitems_text, with_diff_record, expect_codes, expect_exit, note in CASES:
+    for entry in CASES:
+        name, kind, rebuild_text, workitems_text, with_diff_record, expect_codes, expect_exit, note = entry[:8]
+        diff_record_text = entry[8] if len(entry) > 8 else None
         total += 1
         problems = run_case(name, kind, rebuild_text, workitems_text, with_diff_record,
-                            expect_codes, expect_exit, note)
+                            expect_codes, expect_exit, note, diff_record_text)
         if problems:
             failures += 1
             print("FAIL %s: %s" % (name, note))
