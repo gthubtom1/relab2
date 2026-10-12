@@ -176,6 +176,12 @@ kernel 的 `04-全能工程中枢` 早已建成六条线（`desktop-product` / `
 > 「旧路线为什么不通 / 新证据是什么 / 新路线凭什么更可能通」，
 > 记进 timeline 的 `decision_delta`。**一次都没调整过的攻坚记录，默认是编的。**
 
+**补充：顺利的地方最不用看，矛盾的地方才是入口。**
+> 反编译结果和行为对不上、导入表干净得可疑、两份证据互相冲突、
+> 函数名叫 A 但干的事像 B、跑起来和静态分析结论相反——
+> **遇到矛盾不许选一个顺眼的放下，要查清为什么不一致。**
+> （这条与第二条同源：工具输出是线索，矛盾说明线索里有假的那条。）
+
 **这五条的根基（写在 `assault-entry.md` 最前面）**：
 > 目标是终点唯一（可运行、可验证、功能等价的成品），路径不预设。
 > 每一步动手前问一句「这一步是否让成品更近」，答不上来就是白做。
@@ -612,3 +618,36 @@ vendor 两周即过期、pin 即锁死。**只学三条设计，不融代码**�
 - commit: （本段提交）攻坚交付闭环 · 阶段4 审计与真目标
 - 未达标/遗留: 无。附注：本机 `rabin2.exe`（radare2 6.2.0）直接调用会进交互模式，
   判据需用 `r2 -2q -c '...'` 批处理通道（已记入 field-journal）。
+
+### 终验收 · 完成定义六条 · 2026-10-13 03:05
+- 第 1 条（四阶段判据全达成）：阶段 1–4 各自验收全部实跑达标，§9 逐条有真实输出；
+  未达标项：无。**达成**
+- 第 2 条（总回归）：`verify-evolution.py` **10/10 ALL GREEN**（EXIT=0，
+  official 65/65 + natural 93/86）；`verify-routing-coherence.ps1` **ALL PASSED**
+  （两处均在本项目期间复跑多次）。**达成**
+- 第 3 条（日常路径零变化）：不传 `-Preset assault` 时：
+  - case-init 六组对照（PS/bash × plain/offline-sample/ctf-public，同目录同参数）
+    与开工基线 **逐字节一致**（仅时间戳归一化，残余 diff = 0）；
+  - review_case 两个既有 case × 4 格式（8 次运行）与改前捕获 **逐字一致**
+    （仅 generated_at 时间戳归一化）；
+  - 错值预设 rc 与文案在两侧同步（PS rc=1 / bash rc=2）。
+  以上均有当次运行产物为证。**达成**
+- 第 4 条（审查行为）：含 assault.md 的 case（work/assault-prng-upx）strict 审查 **PASS**；
+  不含 assault.md 的既有 case 输出逐字不变（同第 3 条 8 次运行证据）；
+  负控 14/14 证明审计真的抓得到坏状态。**达成**
+- 第 5 条（真目标端到端）：work/assault-prng-upx —— UPX 5.21 壳（L1）+ PRNG 算法（L4）
+  双层目标；状态行实时（VERIFY）；全表填齐；同输入对照两功能（79B=79B、253B=253B，
+  exit 0=0）；成品 `build/prng_rebuilt.py` 在盘可跑；两层过层各有 Evidence；
+  strict 审查 PASS；timeline 有真实路线调整（baseline 自包含化 + input= 剥离修复）。
+  **达成**
+- 第 6 条（Q0 分流生效）：以非逆向任务「给这个 Python 脚本加 --verbose 参数」走入口卡：
+  Q0 判据命中 A 类（「加参数」+ 我方代码）→ 「本卡一行不必再读」；实测无 `-Preset assault`
+  的 case-init 产出：文件集 `[README.md, scope.md, timeline.md, workitems.md]`,
+  **无 assault.md、无 `- assault: true`、无 layers 表、无任何工序**——
+  路径行为与日常开发一致。**达成**
+- 附：Q0 测试用的是 case-init 真实跑（`C:\Users\toti\AppData\Local\Temp\q0-test`），
+  判据为外部可观测事实（文件真不存在 + deliverables 段真无标记），非日志标记。
+
+**六条同时满足 → 本项目完成。** 完成 commit：`攻坚交付闭环 · 完成`（见下）。
+- 遗留说明（不构成未达标）：`test-bash-workflow.sh` 本机未实测（CI 里 macOS runner 专属，
+  阶段 2 已如实记录）；rabin2 批处理通道用法已记入 field-journal。
