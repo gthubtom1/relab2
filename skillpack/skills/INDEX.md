@@ -59,6 +59,7 @@
 | [web-protocol-reverse](web-protocol-reverse/SKILL.md) | 敌意 Web 客户端还原成不依赖浏览器的采集器：sign/token/cookie、challenge、WebSocket/GraphQL/protobuf、WebAssembly。用于：403/412/429、HAR 离线复现、可重放采集器。不要用于：APK→apk-reverse；小程序→mobile-rev... |
 | [wifi-wireless](wifi-wireless/SKILL.md) | 授权 Wi-Fi 安全评估：监听模式、WPA/WPA2 握手/PMKID、aircrack/hashcat 口令评估、流氓 AP 检测。用于：airmon-ng/airodump-ng 抓包、802.11 管理帧。不要用于：非 Wi-Fi RF→radio-sdr；网卡固件→hardware-security；域... |
 | [windows-ad](windows-ad/SKILL.md) | 授权 AD/Windows 身份攻击：Kerberos(Kerberoast/AS-REP)、ADCS ESC1-ESC8、BloodHound、NTLM relay、域内提权。用于：域渗透身份枚举、impacket/certipy/nxc、pass-the-hash。不要用于：全链→attack-chain；客... |
+| [x64dbg-reverse](x64dbg-reverse/SKILL.md) | x64dbg 动态调试与 MCP 自动化：断点、单步、内存读写、反汇编、穿越反调试。用于：挂调试器即退出、抓运行期明文、下断校验点、改内存。不要用于：静态反编译→ida-reverse；写 exploit→pwn-chain；未判壳→reverse-engineering。 |
 
 ## 目录树
 
@@ -115,6 +116,7 @@ skills/threat-intelligence/SKILL.md/
 skills/web-protocol-reverse/SKILL.md/
 skills/wifi-wireless/SKILL.md/
 skills/windows-ad/SKILL.md/
+skills/x64dbg-reverse/SKILL.md/
 ```
 
 ## 路由

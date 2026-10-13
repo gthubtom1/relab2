@@ -36,7 +36,7 @@
   ],
   "fixture": {
     "path": "skillpack/skills/apk-reverse/references/emulator-lab.md",
-    "sha256": "606e35f0641c5004cc30a0bc560bc476010b396e2ef3e6d9621a626124bfcbdd",
+    "sha256": "5d65c45929607535fbe99246e0ec91f2bef132f30360f71d4c3167c5974f56cf",
     "generator": null,
     "secretFree": true,
     "note": "底册里记了完整对照表与判据命令。"
