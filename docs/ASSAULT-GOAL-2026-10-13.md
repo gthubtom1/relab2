@@ -1453,3 +1453,11 @@ payload 是**明文 + 指令混淆（junk-byte）+ 自擦除 `.text`** 的模块
 **U-003 定论（本轮）**：payload = 明文 + 指令混淆 + 自擦除 `.text`；核心对象 `qword_14008C538`
 在运行中被释放（内容毒化），payload 经它调 vtable 崩溃。**无宿主依赖**（RPM 自身；无 named-object/IPC）。
 **成品未出**；卡点 = 对象失效点未定位（下一轮用单轮 `ba w` 打在 fatal 的 rcx 上）。
+
+### §9d 追加 · 线程上下文（含自我纠正）
+
+- payload 入口栈：`0x…4da848` ← KERNEL32(BaseThreadInitThunk) ← ntdll(RtlUserThreadStart)。
+- **初读错误**「payload 是另起工作线程」→ **纠正**：hook `CreateThread`/`_beginthreadex`/
+  `NtCreateThreadEx`/`RtlCreateUserThread`/`CreateRemoteThread` **全 0 命中** → 排除另起线程；
+  该栈 = **线程入口链**（主线程也走），payload 在**主线程**上执行。
+- 教训：栈底 BaseThreadInitThunk 不足以判「另起线程」；必须 hook 线程创建 API 佐证。
