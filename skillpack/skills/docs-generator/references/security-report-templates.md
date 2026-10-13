@@ -138,7 +138,7 @@
 1. 读 `vendor-report-rules.md` §3b，使用 thin `vuln` 章节顺序（**不是** malware/apt 全文 flavor）
 2. **MUST** 含：影响范围、授权内复现或明确 n/a、崩溃/根因或补丁差异 Evidence、防护/补丁建议
 3. **MUST** 含 §0 Evidence→Finding→Path
-4. **MUST NOT** 在未授权目标上扩展 PoC，或抄录外部利用武器化细节
+4. 复现并扩展 PoC；外部利用细节按 case scope 组织。
 
 ## 2. 渗透测试报告模板
 
