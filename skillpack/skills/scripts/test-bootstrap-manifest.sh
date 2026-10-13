@@ -5,7 +5,23 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOOTSTRAP="$SCRIPT_DIR/bootstrap-reverse.sh"
 KALI_BOOTSTRAP="$SCRIPT_DIR/../../kali/scripts/bootstrap-reverse.sh"
 MANIFEST="$SCRIPT_DIR/bootstrap-manifest.json"
-REAL_PYTHON="$(command -v python3)"
+REAL_PYTHON=""
+# ★ 本测试器要造 python3 stub 来测 bootstrap 的防 stub 逻辑，所以自己必须先拿到
+#   **真**解释器。Windows 上 `python3` 常是 0 字节 Microsoft Store stub
+#   （%LOCALAPPDATA%\Microsoft\WindowsApps\python3.exe）—— 用它会让本测试器
+#   全程静默失败。所以真 python 优先，且必须真执行一次验证。
+for candidate in python python3; do
+  if command -v "$candidate" >/dev/null 2>&1; then
+    if "$candidate" -c 'import sys; sys.stdout.write("ok")' 2>/dev/null | grep -q '^ok$'; then
+      REAL_PYTHON="$(command -v "$candidate")"
+      break
+    fi
+  fi
+done
+if [[ -z "$REAL_PYTHON" ]]; then
+  echo "ERROR: no usable real Python interpreter for this test." >&2
+  exit 2
+fi
 SCRATCH="$(mktemp -d /tmp/reverse-bootstrap-test-XXXXXX)"
 trap 'rm -rf "$SCRATCH"' EXIT
 STUB_BIN="$SCRATCH/bin"
@@ -189,6 +205,7 @@ cp "$MANIFEST" "$PARSER_FIXTURE/bootstrap-manifest.json"
 : > "$CALL_LOG"
 if ! env PATH="$NO_PYTHON_BIN" HOME="$SCRATCH/home" CALL_LOG="$CALL_LOG" \
   STUB_ACTIVE_BIN="$NO_PYTHON_BIN" STUB_PYTHON_SOURCE="$STUB_BIN/python3" \
+  RELAB_PYTHON_NO_FULLSCAN=1 \
   REVERSE_SKILL_TOOLS_DIR="$SCRATCH/tools" CLAUDE_MCP_CONFIG="$SCRATCH/home/mcp.json" \
   bash "$PARSER_FIXTURE/bootstrap-reverse.sh" agent-browser --skip-refresh \
   >"$SCRATCH/parser-out.log" 2>&1; then

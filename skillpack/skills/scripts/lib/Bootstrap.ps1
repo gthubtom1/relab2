@@ -341,6 +341,121 @@ function New-ReverseUnavailableSpec {
 }
 
 <#
+  .SYNOPSIS
+  解析一个**真的能执行**的 Python 解释器。本包调用 Python 的唯一入口。
+
+  .DESCRIPTION
+  Why this exists: on Windows, `python3` on PATH is frequently the 0-byte
+  App Execution Alias at %LOCALAPPDATA%\Microsoft\WindowsApps\python3.exe.
+  It does not run code — it launches the Microsoft Store. Verified 2026-10-13:
+  `python3 -c ...` returned rc=0 with zero output in one session, and in other
+  sessions it actually pops the Store download page. So `Get-Command python3`
+  succeeding proves nothing.
+
+  Probe order (same four-level spirit as the tool probe):
+    1. $env:REVERSE_PYTHON            explicit override, still execution-checked
+    2. `python` on PATH               preferred: real installs name it `python`
+    3. `python3` on PATH              fallback (correct on Linux/macOS)
+    4. REVERSE_TOOL_ROOT + full-disk scan for python.exe / python3.exe,
+       skipping the WindowsApps stub directory
+
+  Every candidate must pass an execution check (`-c "import sys"` printing a
+  marker) before it is accepted. Available=$false means none worked.
+#>
+function Resolve-ReversePython {
+    param()
+
+    $marker = 'relab-py-ok'
+    $candidates = New-Object System.Collections.Generic.List[string]
+
+    if (-not [string]::IsNullOrWhiteSpace($env:REVERSE_PYTHON)) {
+        [void]$candidates.Add($env:REVERSE_PYTHON)
+    }
+    foreach ($name in @('python', 'python3')) {
+        $cmd = Get-Command $name -ErrorAction SilentlyContinue
+        if ($cmd -and $cmd.Source) { [void]$candidates.Add($cmd.Source) }
+    }
+
+    # 第 4 级：工具根 + 全盘扫（跳过 WindowsApps stub 目录）
+    $skipRe = [regex]'(?i)\\Microsoft\\WindowsApps\\'
+    foreach ($hit in (Get-ReversePythonCandidates)) {
+        if (-not $skipRe.IsMatch($hit)) { [void]$candidates.Add($hit) }
+    }
+
+    foreach ($cand in $candidates) {
+        if (-not (Test-Path -LiteralPath $cand -PathType Leaf)) { continue }
+        try {
+            $out = & $cand -c "import sys; sys.stdout.write('$marker')" 2>$null
+            if ($LASTEXITCODE -eq 0 -and "$out".Trim() -eq $marker) {
+                return [pscustomobject]@{
+                    Available = $true
+                    Command   = $cand
+                    Via       = 'exec-verified'
+                    IsStub    = $false
+                }
+            }
+        } catch {
+            # 候选不可执行：继续下一个
+        }
+    }
+
+    return [pscustomobject]@{
+        Available = $false
+        Command   = $null
+        Via       = $null
+        IsStub    = $true
+    }
+}
+
+<#
+  候选收集：REVERSE_TOOL_ROOT 下 + 常见安装位置。
+  只做存在性枚举，不做执行校验（那一步在 Resolve-ReversePython 里）。
+  独立成函数是为了让 `Get-Command python` 全空时仍有兜底。
+#>
+function Get-ReversePythonCandidates {
+    $roots = New-Object System.Collections.Generic.List[string]
+    if ($env:REVERSE_TOOL_ROOT -and (Test-Path -LiteralPath $env:REVERSE_TOOL_ROOT)) {
+        [void]$roots.Add($env:REVERSE_TOOL_ROOT)
+    }
+    $toolRoot = $null
+    try { $toolRoot = (Get-ReverseToolRoot).TrimEnd('\') } catch { }
+    if ($toolRoot -and (Test-Path -LiteralPath $toolRoot)) { [void]$roots.Add($toolRoot) }
+    # ★ 从 PATH 上任何 python* 的目录反推常见安装根。
+    #   主人本机的真解释器在 D:\EXE\python\python.exe —— 既不在 REVERSE_TOOL_ROOT
+    #   也不在 Program Files 下，只有 PATH 知道它在哪。stub 目录要跳过。
+    foreach ($name in @('python','python3')) {
+        $c = Get-Command $name -ErrorAction SilentlyContinue
+        if ($c -and $c.Source -and (Test-Path -LiteralPath $c.Source)) {
+            $dir = Split-Path -Parent $c.Source
+            if ($dir -and -not ($dir -match '(?i)\\WindowsApps\\') -and (Test-Path -LiteralPath $dir)) {
+                [void]$roots.Add($dir)
+            }
+        }
+    }
+    foreach ($fixed in @("$env:LOCALAPPDATA\Programs\Python", "$env:ProgramFiles", ${env:ProgramFiles(x86)}) ) {
+        if ($fixed -and (Test-Path -LiteralPath $fixed)) { [void]$roots.Add($fixed) }
+    }
+
+    $found = New-Object System.Collections.Generic.List[string]
+    $budget = 60   # 候选上限：第4级是兜底，不该变成全盘慢扫
+    foreach ($root in $roots) {
+        if ($found.Count -ge $budget) { break }
+        try {
+            # ★ 不能用 -Include：它对 -LiteralPath 的行为是不可靠的
+            #   （实测 2026-10-13：目录命中时 -Include 被忽略，根下所有文件都返回）。
+            #   Get-ChildItem 的 -Filter 只吃单文件名，所以分两次取。
+            foreach ($exeName in @('python.exe','python3.exe')) {
+                if ($found.Count -ge $budget) { break }
+                $hits = Get-ChildItem -LiteralPath $root -Recurse -File -Filter $exeName -ErrorAction SilentlyContinue |
+                    Select-Object -First 12 -ExpandProperty FullName
+                foreach ($h in $hits) { [void]$found.Add($h) }
+            }
+        } catch { }
+    }
+    return ,$found.ToArray()
+}
+
+<#
   多命中时选哪一个。
 
   不能按路径字母序选 ——「IDA 8.3」与「IDA 9.4」深度相同，字母序会选中 8.3（旧的）。

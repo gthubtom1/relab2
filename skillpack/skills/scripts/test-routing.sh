@@ -7,14 +7,22 @@ BENCHMARK="$SCRIPT_DIR/../tests/routing-benchmark.json"
 ROUTER="$SCRIPT_DIR/master-route.sh"
 
 PYTHON=""
-for candidate in python3 python; do
+# ★ 同 master-route.sh：Windows 上 python3 可能是 0 字节 Microsoft Store stub
+#   （%LOCALAPPDATA%\Microsoft\WindowsApps\python3.exe），它不跑代码而是开商店。
+#   所以真 python 优先，且必须真执行一次验证——光 command -v 不够（stub 也在 PATH 上）。
+#   本处 2026-10-13 实测：旧写法（python3 优先、不验证）会让本脚本零输出 + rc=0 假绿。
+for candidate in python python3; do
   if command -v "$candidate" >/dev/null 2>&1; then
-    PYTHON="$candidate"
-    break
+    if "$candidate" -c 'import sys; sys.stdout.write("ok")' 2>/dev/null | grep -q '^ok$'; then
+      PYTHON="$candidate"
+      break
+    fi
   fi
 done
 if [[ -z "$PYTHON" ]]; then
-  echo 'ERROR: Python 3 is required by the Bash routing benchmark runner.' >&2
+  echo 'ERROR: no usable Python 3 interpreter found.' >&2
+  echo "HINT: on Windows, 'python3' may be the 0-byte Microsoft Store stub that opens the" >&2
+  echo '      Store instead of running code. Point PATH at a real interpreter.' >&2
   exit 2
 fi
 

@@ -37,6 +37,12 @@ MANIFEST_PATH="$SCRIPT_DIR/bootstrap-manifest.json"
 #   别的会话会真的弹出商店下载页）。
 #   所以：候选顺序真 python 优先，且必须真跑一次验证，光 command -v 不够
 #   （stub 也在 PATH 上）。Linux/macOS 上 python3 就是正常的，此逻辑无副作用。
+#
+#   ★ RELAB_PYTHON_NO_FULLSCAN=1 时**只信 PATH**，不扫工具根/全盘。
+#     为什么需要这个开关：test-bootstrap-manifest.sh 的 no-python 场景故意造一个
+#     没有解释器的 PATH，期望 bootstrap 走「安装 python」分支。若此处执意扫盘，
+#     该场景永远测不到安装逻辑（实测 2026-10-13：扫到了 IDA 自带 python311，
+#     导致 #install 分支不被覆盖）。开关默认关，生产路径行为不变。
 PYTHON=""
 for candidate in python python3; do
   if command -v "$candidate" >/dev/null 2>&1; then
@@ -46,6 +52,25 @@ for candidate in python python3; do
     fi
   fi
 done
+if [[ -z "$PYTHON" && "${RELAB_PYTHON_NO_FULLSCAN:-}" != "1" ]]; then
+  # 第 4 级：在少数几个已知根里扫 python.exe（含 WindowsApps stub 目录，由下面验掉）。
+  # 刻意不做全盘搜：那会把几秒的启动变成几分钟，且 1-3 级已覆盖绝大多数机器。
+  _py_roots=()
+  [[ -n "${REVERSE_TOOL_ROOT:-}" && -d "${REVERSE_TOOL_ROOT}" ]] && _py_roots+=("$REVERSE_TOOL_ROOT")
+  [[ -n "${REVERSE_SKILL_TOOLS_DIR:-}" && -d "${REVERSE_SKILL_TOOLS_DIR}" ]] && _py_roots+=("$REVERSE_SKILL_TOOLS_DIR")
+  [[ -d "${LOCALAPPDATA:-/nonexistent}/Programs/Python" ]] && _py_roots+=("$LOCALAPPDATA/Programs/Python")
+  [[ -d "${PROGRAMFILES:-/nonexistent}" ]] && _py_roots+=("$PROGRAMFILES")
+  for _root in ${_py_roots[@]+"${_py_roots[@]}"}; do
+    [[ -n "$PYTHON" ]] && break
+    while IFS= read -r _cand; do
+      [[ -n "$_cand" ]] || continue
+      if "$_cand" -c 'import sys; sys.stdout.write("ok")' 2>/dev/null | grep -q '^ok$'; then
+        PYTHON="$_cand"
+        break
+      fi
+    done < <(find -L "$_root" -maxdepth 6 -type f \( -name 'python.exe' -o -name 'python3.exe' \) 2>/dev/null | head -20)
+  done
+fi
 if [[ -z "$PYTHON" ]]; then
   echo "ERROR: no usable Python 3 interpreter found." >&2
   echo "HINT: on Windows, 'python3' may be the 0-byte Microsoft Store stub at" >&2
