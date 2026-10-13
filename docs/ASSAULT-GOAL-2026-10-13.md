@@ -1406,3 +1406,21 @@ upstream 哈希我核对过：`eef7de5767b0e625aea4e6b3cd2f8b14515cbc548af3769f6
 
 - 需拿**搬迁后的代码副本**（JIT/堆区）或**清零前的 `.text` 快照**（load 时即有）。
 - 下一步：① 模块加载断点 dump 整个 `.text`（明文可得）；② hook 写 `.text` 的 `VirtualProtect`/`memset` 找擦除代码；③ dump JIT 区反汇编。
+
+### §9d 追加 · 致命点精确定位（native cdb，2026-10-13 09:xx）
+
+- **致命点 = `base + 0x4daabe`（.ace0 内）**：`mov rcx,[qword_14008C538]; mov rax,[rcx]; call [rax+0x138]`
+  → `rax = feeefeeefeeefeee`（堆毒）→ **对已释放对象调 vtable = use-after-free**。
+- 对象生命周期：门栓 check1（RVA 0x2118）处全局**内容有效**；到 fatal 时 `*obj` = 毒 →
+  **对象在「门栓通过」与「payload 调用」之间被释放**。
+- **非我方补丁所致**：原程序（未补丁，仅改名）+ 补丁版，有 stub 时**同崩 0xC0000409**。
+- payload 代码形态：`.ace0` 入口是**指令混淆**（真 prologue 与垃圾字节交错 = junk-byte 反反汇编）。
+- 未定：**故意自毁** vs **init 不完整**（新 U-009）；但「原程序也同崩」偏向自毁/需完整初始化序列。
+
+### 卡点（最终）
+
+| ID | 卡在哪 | 阻断 |
+|----|--------|------|
+| U-003 | payload 对自身已释放对象调 vtable → use-after-free | 全部功能 |
+| U-009 | 该对象的释放点在哪、是否故意自毁 | F-002 |
+| U-008 | 是否 GUI 未定论（不阻塞） | F-006 |
