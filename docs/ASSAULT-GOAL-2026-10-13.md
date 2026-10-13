@@ -1345,3 +1345,48 @@ upstream 哈希我核对过：`eef7de5767b0e625aea4e6b3cd2f8b14515cbc548af3769f6
   `evidence/E-010.md`/`E-011.md`、`report/delivery.md`、`timeline.md`。
 - 审计：`review_case.py work/assault-测试exe --strict` → **errors 0 / warnings 0**
   （F-002「受限」是合法的功能级完成形态豁免；硬闸「完成态行 + deliverable 缺失 → error」仍在）。
+
+---
+
+## 9d 反篡改专项续打 · 2026-10-13 08:xx
+
+> 本轮按三处新补机制执行：assault-entry「宿主/环境依赖」三档 + 「主人可见性」四句话 +
+> anti-debug-bypass §8「运行时自翻页」+ code-patching 坑 13（原子 @rip + ≥3 轮）。
+> 目标未变：`测试exe.exe` 的所有功能正常、可直接使用的成品。
+
+### 结论：成品未出，但推翻了「需真实游戏」的错误假设
+
+- **成品未出**：payload 是**自包含的自解密**，解密未完成即崩。卡点收敛到 **U-003**。
+- **重大纠正**：旧假设「payload 需真实游戏内存」**彻底作废**——反篡改专项查明
+  payload 的 `ReadProcessMemory` **全是 `handle=-1`（自身进程）**，target 全在自身模块/堆区，
+  **不读任何宿主/游戏内存** → 按三档判定 = **无依赖 / 可模拟档**（`assault.md` 已落 `host_dependency: 无依赖`）。
+
+### 本轮实测（外部可观测，已排除命令回显）
+
+| 观测 | 结果 |
+|---|---|
+| payload 真实 API 足迹 | `LoadLibraryExW`×17（全是 API-set DLL）、`GetProcAddress`×80（CRT/API-set 动态解析）、`CreateFileW`×1（ntdll）、`ReadProcessMemory`×114（**handle=-1 自身**） |
+| 未真实命中的（此前误报为回显） | `WinHttpOpen` / `WSAStartup` / `CreateWindowExW` / `CreateThread` = **0** |
+| 运行时自翻页 | **174 页 / 69 次 NOACCESS VirtualProtect**，RVA `0x1000..0xe7000`；caller 在 JIT/堆区 |
+| 强制 RW 实验 | 把 NOACCESS 全改 RW（`r r8=40`）后 AV 从 ~32 降到 2——**证明 AV 是自解密触发器**（fault-driven） |
+| 干净运行 | patched+stub → exit=0xC0000409（真崩，非调试器假象）；patched 无 stub → 干净退出 |
+
+### 判据纪律（本轮贯彻）
+
+- 所有断点结论用**原子 `@rip`**；**单轮不算数**，关键结论跑 ≥3 轮。
+- **一切命令回显与真实命中分开统计**（本轮纠正了「WinHttpOpen/CreateWindowExW 命中」的误报——那是我的 bp 命令回显）。
+- 运行时地址一律 `base+RVA` 复核。
+
+### 卡点（如实记，红线④）
+
+| ID | 卡在哪 | 阻断 |
+|----|--------|------|
+| U-003 | payload 自解密未完成即 fail-fast；cdb bp 在翻页区被吞（0n998），难以持续跟踪 | 全部功能 |
+| U-008 | 是否 GUI 未定论（不阻塞功能） | F-006 |
+
+### 下一步（若要继续）
+
+- §8 手法①「翻转前 dump」：在 NOACCESS 翻页的调用点 dump 该页（此时还可读）→ 拿明文载荷。
+  （本轮尝试 cdb `.writemem` 受翻页/条件语法限制未成，需换 Frida/hook 记录或先 patch 翻页逻辑。）
+- §8 手法②「patch 掉翻页逻辑」：NOP 掉那次 VirtualProtect → 让页保持可读 → 持续跟踪
+  （须先用「翻转前 dump」确认翻页=纯反篡改而非解密触发，否则 patch 会破坏解密）。
