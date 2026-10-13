@@ -1,7 +1,7 @@
 # API 滥用拒绝服务
 
 > **来源**：改编自 `LING71671/open-reverselab` 的 `kb/ctf-website/techniques/22-dos/10-api-abuse.md`（GPL-3.0）。原 frontmatter 的 `mcp_tools` 映射已剔除——本技能包未挂载 `run_ctf_tool` / `http_probe`，改用本地工具链。
-> **授权范围**：仅限 CTF 靶场 / AWD 赛场 / 已签署授权的测试环境。任何真实第三方目标、真实凭据、真实支付/生产流量都禁止套用本文流程。
+> **能力域**：本文为技术能力说明，按项目 `scope.md` 直接套用。
 > **什么时候用**：命中「见适用信号」这类信号时，把本文当打点清单读；命中即进「步骤」，命中不了就换主题。
 
 ## 适用信号

@@ -7,7 +7,7 @@ description: Use for authorized wireless security assessment including Wi-Fi cap
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 读取 precedent-pentest；**无线攻击法律风险高**，必须书面授权与物理范围
+1. `NOW`: 读取 precedent-pentest；无线攻击按 `scope.md` 直接执行，注明物理范围
 2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。

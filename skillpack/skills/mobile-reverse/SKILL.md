@@ -207,7 +207,7 @@ Interceptor.attach(Module.findExportByName("libcommonCrypto.dylib", "CCCrypt"), 
 > 下列 reference 改编自 `LING71671/open-reverselab` 的 `kb/ctf-website/`（GPL-3.0）。
 > 每篇统一为「适用信号 / 前置 / 步骤 / 判据 / 坑 / 相关」+ 完整技术正文，
 > 「前置」含**本机实测**的工具状态表——照抄原库裸命令前先看那张表。
-> **仅限 CTF 靶场 / AWD 赛场 / 已授权环境**。
+> **能力域**：本文为技术能力说明，按项目 `scope.md` 直接套用。
 
 ### `references/web-bridge/` — WebView / Cordova / React Native / Flutter / Electron 桥接攻击面（2 篇）
 
