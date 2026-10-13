@@ -75,6 +75,19 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 5. **.NET ilspycmd 运行环境陷阱**：
    `ilspycmd.exe` 为 .NET tool，若未设置 `DOTNET_ROOT` 会因找不到 runtime 退出。
    **铁律**：调用前必须确保环境变量 `DOTNET_ROOT` 指向本机 .NET runtime 根，路径靠探测、不写死：先 `(Get-Command dotnet -ErrorAction SilentlyContinue).Source` 拿到 `dotnet.exe` 真实路径，取其所在目录作为 `DOTNET_ROOT`，再设 `$env:DOTNET_ROOT = <该目录>`。**禁止在文档或命令里写死任何绝对盘符路径（`X:\...` 形式），一律改为探测式表述或占位符。**
+6. **工具「无输出 / 超时」≠「该事件没发生」（MUST NOT 当否证）**：
+   Frida/调试器**静默、超时、hook 被目标自擦除抹掉**时，只能得出「**未知**」，**不能**读成「该路径未发生」。
+   **铁律**：静默/超时的结论只能是 `未观测到（unobserved）`，要下"没发生"必须换一个**不依赖该工具**的独立判据复测；
+   并把"哪次超时、超时多久"记进证据。同理：**命令回显 ≠ 命中**（cdb 会把命令回显写进日志）。
+   （2026-10-13 实弹：Frida 4 次超时被读成"该路径未发生"、命令回显被统计成"API 命中"，两次都翻转结论。）
+7. **地址/偏移类测量必须复核（MUST）**：
+   运行时地址 `VA = 模块 base + RVA`，**动手前复核**（差一位 → 完全相反的结论）；二进制字段/节表偏移
+   解析后**用第二种方式交叉验证**（r2 `iS` vs pefile vs 手工），单一解析器的输出不算定论。
+   （2026-10-13 实弹：手算 VA 少进一位得"全局全程 NULL"、PE 节表字段偏移标错、VA→文件偏移减错。）
+8. **非 ANSI 路径陷阱（工具 + 中文/空格路径）**：
+   部分 CLI（`r2`/`rabin2` 等）对**含中文的路径参数**解析失败。**铁律**：case 目录名、样本别名
+   尽量用 **ASCII**；必须用中文目标时，建一个 ASCII 别名/软链（junction）再喂给工具，别把中文路径直接传给 CLI。
+   （2026-10-13 实弹：中文 case 目录 `assault-测试exe` 让 rabin2 解析失败，被迫另建 ASCII junction 才能开工。）
 
 ### 卡死识别（可判定信号）
 

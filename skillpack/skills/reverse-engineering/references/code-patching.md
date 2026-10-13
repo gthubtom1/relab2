@@ -327,6 +327,14 @@ patch 成功的**外部可观测**判据，四条全过才算数：
 
 补充：记录 patch 前后的 SHA256（实测两行都打印了），以便写进 `REVERSE-MAP.md`（本包未落地）。
 
+### ★★ 硬约束（判据 3 "行为改变" 的验证方式）
+
+**验证 patch 是否让控制流到达某处时，判据必须是原子 `@rip` + ≥3 轮稳定性**：
+- cdb 用 `bp <addr> ".printf \"rip=%p\\n\", @rip; g"` 取**原子值**；不许把"日志里出现我自设的标记"当命中（回显也算命中）。
+- 目标自翻页（`PAGE_NOACCESS`）时，断点可能被吞或报 `0n998`（**移除失败，不是命中**）。见
+  `anti-debug-bypass.md` §8 与经验卡 `experience-cards/cdb-noaccess-breakpoint-is-not-hit.json`。
+- **单轮命中/未命中都不定论**；运行时地址 `base+RVA` 必复核。
+
 ## 坑
 
 1. ★★ **立即数偏移要数 opcode 宽度**。`B8 <imm32>` 的 imm32 在 **+1**（`B8` 只 1 字节）。我第一次按 +2 写，patch 出来的 exe **直接崩溃**（把 `5d c3` 即 `pop rbp; ret` 吃掉了半个 `imm32`），`ptgt2_patched.exe` 无输出、exit code 1。**判据 ⑥（跑一下）是唯一能抓住这类错误的方法。**
