@@ -1,26 +1,40 @@
 ﻿#Requires -Version 5.1
 <#
-register-skills.ps1 —— 把本技能包"注册"进宿主，让技能对模型**常驻可见**。
+register-skills.ps1 —— 把一个技能包"注册"给**本机上所有智能体**，让技能对模型常驻可见。
 
-为什么需要它：
-  宿主（如 omp）会在启动时把每个技能的 `name` + `description` 预载进系统提示，
-  正文按需读 `skill://<name>`。**只有注册过的技能才会出现在那张列表里。**
-  不注册 = 模型不知道有这个技能 = 永远不会在节点上想到用它。
+思路（这是全项目唯一正确的注册方式）：
+  宿主启动时会把每个技能的 `name` + `description` 预载进系统提示，正文按需读
+  `skill://<name>`（Claude Code / Codex / Cursor / omp… 都是这套"Agent Skills"规范）。
+  **只有被发现目录扫到的技能，才会进那张列表。**
 
-  本脚本只做一件事：把这个包根目录写进宿主的 `skills.customDirectories`。
-  幂等：重复跑不会重复添加；已有其它 customDirectories 不会被覆盖。
+  所以不去挨个改每个宿主的配置 —— 而是**一份实体，N 个目录联接（junction）**：
+  把技能包目录挂进各家约定的"通用技能目录"，谁扫到就是谁的。
+  换机 / 换智能体都不需要改技能包一个字。
+
+目录事实（2026-10 实测自 vercel-labs/skills 的 Supported Agents 表 + 本机 omp 实测）：
+  · 项目级通用： <项目>/.agents/skills/          ← OpenCode / Codex / Cursor / Cline / Amp /
+                                                   Kimi CLI / Gemini CLI / GitHub Copilot 原生读
+  · 用户级通用： %USERPROFILE%\.agents\skills\   ← Cline 形态；omp(python -m) 实测命中
+                 %USERPROFILE%\.config\agents\skills\  ← Amp / Kimi / Replit / "Universal" 形态
+  · 各家私有：   ~\.claude\skills\ · ~\.codex\skills\ · ~\.cursor\skills\ · ~\.gemini\skills\
+                 ~\.copilot\skills\ · ~\.pi\agent\skills\ · ~\.roo\skills\ · ~\.openhands\skills\ …
+                 （仅在"该家的家目录确实存在"时才挂）
 
 用法：
   powershell -NoProfile -ExecutionPolicy Bypass -File register-skills.ps1
-  ... -WhatIf        只看会改什么，不落地
-  ... -Revert        从配置里摘掉本包
-  ... -Json          机器可读输出
+      # 干这个：用户级通用目录 + 已装智能体的私有目录，全部挂上
+  ... -ProjectRoot "D:\MyProj"      # 额外给这个项目挂 .agents\skills（自包含、跟着项目走）
+  ... -WhatIf                       # 只看会挂哪些，不动盘
+  ... -Json
+  ... -Revert                       # 摘掉所有"指向本技能包"的联接（别家的原样不动）
+  ... -SkillsRoot <路径>            # 指定技能根（默认按包根/环境变量/本脚本位置上溯自动找）
 
-退出码：0 成功（含"本来就已经注册"）／2 找不到技能或宿主
+退出码：0 成功／2 找不到技能根
 #>
 param(
     [string] $RepoRoot = '',
     [string] $SkillsRoot = '',
+    [string] $ProjectRoot = '',
     [switch] $WhatIf,
     [switch] $Revert,
     [switch] $Json
@@ -29,25 +43,22 @@ param(
 $ErrorActionPreference = 'Stop'
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
 
-# --- 1. 定位包根（与 master-route.ps1 同口径：不写死绝对路径）---
+# ---------------- 1. 定位技能包根（不写死绝对路径）----------------
 function Resolve-PackSkillsRoot {
     param([string] $Root, [string] $Given)
     $cands = New-Object System.Collections.Generic.List[string]
     if ($Given) { [void]$cands.Add($Given) }
     if ($Root) { [void]$cands.Add((Join-Path $Root 'skillpack\skills')) }
     if ($env:REVERSE_SKILL_ROOT) { [void]$cands.Add((Join-Path $env:REVERSE_SKILL_ROOT 'skillpack\skills')) }
-    # 从本脚本位置逐级上溯，找含 <父>\skills\<name>\SKILL.md 的那一层
     $d = $PSScriptRoot
     while ($d) {
-        [void]$cands.Add($d)                       # scripts/ 的上一级就是 skills/
+        [void]$cands.Add($d)
         $parent = Split-Path -Parent $d
         if (-not $parent -or $parent -eq $d) { break }
         $d = $parent
     }
-    [void]$cands.Add('C:\relab2\skillpack\skills')
     foreach ($c in $cands) {
-        if (-not $c) { continue }
-        if (-not (Test-Path -LiteralPath $c)) { continue }
+        if (-not $c -or -not (Test-Path -LiteralPath $c)) { continue }
         $probe = @(Get-ChildItem -LiteralPath $c -Directory -ErrorAction SilentlyContinue |
                    Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'SKILL.md') })
         if ($probe.Count -gt 0) { return (Resolve-Path -LiteralPath $c).Path }
@@ -63,13 +74,8 @@ if (-not $skills) {
 
 $skillDirs = @(Get-ChildItem -LiteralPath $skills -Directory |
                Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'SKILL.md') })
-$count = $skillDirs.Count
-if ($count -eq 0) {
-    Write-Host ("ERROR: {0} 下一个技能都没有。" -f $skills) -ForegroundColor Red
-    exit 2
-}
+if ($skillDirs.Count -eq 0) { Write-Host ("ERROR: {0} 下一个技能都没有。" -f $skills) -ForegroundColor Red; exit 2 }
 
-# 描述体量：宿主会把 description 预载进系统提示，这里报个总量当预算参考
 $descBytes = 0
 foreach ($d in $skillDirs) {
     $t = Get-Content -LiteralPath (Join-Path $d.FullName 'SKILL.md') -Raw -Encoding UTF8
@@ -80,95 +86,120 @@ foreach ($d in $skillDirs) {
     }
 }
 
-# --- 2. 认宿主 ---
-$omp = Get-Command omp -ErrorAction SilentlyContinue
-$hostKind = if ($omp) { 'omp' } else { 'unknown' }
+# ---------------- 2. 目标目录表 ----------------
+# detect: 该智能体的"家目录"存在才算装了它
+$H = $env:USERPROFILE
+$agentTable = @(
+    # 用户级通用（不需要任何配置就能被读到的两组约定）
+    @{ agent = 'universal(Cline形态)'; path = (Join-Path $H '.agents\skills');      detect = $null },
+    @{ agent = 'universal(vendor形态)'; path = (Join-Path $H '.config\agents\skills'); detect = $null },
+    # 各家私有（仅当已装）
+    @{ agent = 'Claude Code'; path = (Join-Path $H '.claude\skills');    detect = (Join-Path $H '.claude') },
+    @{ agent = 'Codex';       path = (Join-Path $H '.codex\skills');     detect = (Join-Path $H '.codex') },
+    @{ agent = 'Cursor';      path = (Join-Path $H '.cursor\skills');    detect = (Join-Path $H '.cursor') },
+    @{ agent = 'Gemini CLI';  path = (Join-Path $H '.gemini\skills');    detect = (Join-Path $H '.gemini') },
+    @{ agent = 'GitHub Copilot'; path = (Join-Path $H '.copilot\skills'); detect = (Join-Path $H '.copilot') },
+    @{ agent = 'Pi';          path = (Join-Path $H '.pi\agent\skills');  detect = (Join-Path $H '.pi\agent') },
+    @{ agent = 'Roo Code';    path = (Join-Path $H '.roo\skills');       detect = (Join-Path $H '.roo') },
+    @{ agent = 'OpenHands';   path = (Join-Path $H '.openhands\skills'); detect = (Join-Path $H '.openhands') },
+    @{ agent = 'Windsurf';    path = (Join-Path $H '.codeium\windsurf\skills'); detect = (Join-Path $H '.codeium\windsurf') },
+    @{ agent = 'Goose';       path = (Join-Path $H '.config\goose\skills'); detect = (Join-Path $H '.config\goose') },
+    @{ agent = 'Continue';    path = (Join-Path $H '.continue\skills');  detect = (Join-Path $H '.continue') },
+    @{ agent = 'Crush';       path = (Join-Path $H '.config\crush\skills'); detect = (Join-Path $H '.config\crush') },
+    @{ agent = 'Droid';       path = (Join-Path $H '.factory\skills');   detect = (Join-Path $H '.factory') },
+    @{ agent = 'Qwen Code';   path = (Join-Path $H '.qwen\skills');      detect = (Join-Path $H '.qwen') },
+    @{ agent = 'Trae';        path = (Join-Path $H '.trae\skills');      detect = (Join-Path $H '.trae') },
+    @{ agent = 'Kiro CLI';    path = (Join-Path $H '.kiro\skills');      detect = (Join-Path $H '.kiro') },
+    @{ agent = 'Zencoder';    path = (Join-Path $H '.zencoder\skills');  detect = (Join-Path $H '.zencoder') }
+)
 
-function Get-OmpCustomDirs {
-    if (-not $omp) { return @() }
-    $raw = (& $omp.Source config get skills.customDirectories 2>$null) | Out-String
-    $raw = $raw.Trim()
-    if (-not $raw) { return @() }
-    try { return @($raw | ConvertFrom-Json) } catch { return @() }
+$targets = New-Object System.Collections.Generic.List[object]
+foreach ($a in $agentTable) {
+    $installed = $true
+    if ($a.detect) { $installed = Test-Path -LiteralPath $a.detect }
+    $targets.Add([pscustomobject]@{ agent = $a.agent; path = $a.path; installed = $installed; scope = 'user' })
+}
+if ($ProjectRoot) {
+    $pr = (Resolve-Path -LiteralPath $ProjectRoot).Path
+    $targets.Add([pscustomobject]@{ agent = '项目级通用'; path = (Join-Path $pr '.agents\skills'); installed = $true; scope = 'project' })
 }
 
-$target = $skills
-$existing = @()
-if ($hostKind -eq 'omp') {
-    $existing = @(Get-OmpCustomDirs | Where-Object { $_ -and $_.Trim() })
+function Get-LinkTarget {
+    param([string] $p)
+    $i = Get-Item -LiteralPath $p -Force -ErrorAction SilentlyContinue
+    if (-not $i) { return '' }
+    if ($i.LinkType) { return ($i.Target | Select-Object -First 1) }
+    return ''
 }
 
 $norm = { param($p) ($p -replace '/', '\').TrimEnd('\').ToLowerInvariant() }
-$want = New-Object System.Collections.Generic.List[string]
-foreach ($e in $existing) { [void]$want.Add($e.ToString()) }
-$alreadyThere = $false
-foreach ($e in $want) { if ((& $norm $e) -eq (& $norm $target)) { $alreadyThere = $true } }
+$mine = & $norm $skills
+
+# ---------------- 3. 执行 ----------------
+$report = New-Object System.Collections.Generic.List[object]
 
 if ($Revert) {
-    $kept = @($want | Where-Object { (& $norm $_) -ne (& $norm $target) })
-    $action = if ($kept.Count -eq $want.Count) { 'noop' } else { 'revert' }
-    $final = $kept
-} elseif ($alreadyThere) {
-    $action = 'already'
-    $final = @($want)
-} else {
-    $action = 'add'
-    [void]$want.Add($target)
-    $final = @($want)
-}
-
-$result = [ordered]@{
-    host            = $hostKind
-    skills_root     = $target
-    skill_count     = $count
-    description_bytes = $descBytes
-    action          = $action
-    customDirectories = $final
-    whatif          = [bool]$WhatIf
-}
-
-if ($Json) { $result | ConvertTo-Json -Depth 5 }
-
-if ($hostKind -ne 'omp') {
-    Write-Host '未检测到 omp CLI —— 下面是各宿主的手工注册片段：' -ForegroundColor Yellow
-    Write-Host ''
-    Write-Host '# omp:  ~/.omp/agent/config.yml'
-    Write-Host 'skills:'
-    Write-Host '  customDirectories:'
-    Write-Host ("    - {0}" -f $target)
-    Write-Host ''
-    Write-Host '# Claude Code: 建一个软链到它的 skills 根（<skills-root>/<name>/SKILL.md 布局一致）'
-    Write-Host ("#   mklink /J `"%USERPROFILE%\.claude\skills`" `"{0}`"" -f $target)
-    Write-Host ''
-    Write-Host '# 其它宿主：把上面那两行写进它的 skills.customDirectories 等价项即可'
-    exit 0
-}
-
-if ($WhatIf) {
-    Write-Host ("[whatif] {0}：{1} 个技能 → skills.customDirectories 将变为：" -f $action, $count)
-    foreach ($f in $final) { Write-Host ("    - {0}" -f $f) }
-    exit 0
-}
-
-if ($action -eq 'already') {
-    Write-Host ("[ok] 已注册（{0} 个技能）：{1}" -f $count, $target) -ForegroundColor Green
-} else {
-    $jsonArr = ConvertTo-Json -InputObject @($final) -Compress
-    $out = (& $omp.Source config set skills.customDirectories $jsonArr 2>&1) | Out-String
-    Write-Host $out.Trim()
-    $back = (Get-OmpCustomDirs)
-    $hit = $false
-    foreach ($e in $back) { if ((& $norm $e) -eq (& $norm $target)) { $hit = $true } }
-    if (-not $hit) {
-        Write-Host 'ERROR: 写入后回读不到本路径，请检查 config.yml。' -ForegroundColor Red
-        exit 2
+    foreach ($t in $targets) {
+        if (-not (Test-Path -LiteralPath $t.path)) { continue }
+        $tgt = Get-LinkTarget -p $t.path
+        if ($tgt -and (& $norm $tgt) -eq $mine) {
+            if (-not $WhatIf) { (Get-Item -LiteralPath $t.path -Force).Delete() }
+            $report.Add([pscustomobject]@{ agent = $t.agent; path = $t.path; action = 'removed'; ok = $true })
+        }
     }
-    Write-Host ("[{0}] {1} 个技能已注册：{2}" -f $action, $count, $target) -ForegroundColor Green
+    if ($Json) { $report | ConvertTo-Json -Depth 5 } else { $report | Format-Table -AutoSize | Out-String | Write-Host }
+    exit 0
 }
+
+foreach ($t in $targets) {
+    if (-not $t.installed) {
+        $report.Add([pscustomobject]@{ agent = $t.agent; path = $t.path; action = 'skip(未装)'; ok = $true }); continue
+    }
+    if (Test-Path -LiteralPath $t.path) {
+        $tgt = Get-LinkTarget -p $t.path
+        if ($tgt -and (& $norm $tgt) -eq $mine) {
+            $report.Add([pscustomobject]@{ agent = $t.agent; path = $t.path; action = 'already'; ok = $true }); continue
+        }
+        if ($tgt) {
+            $report.Add([pscustomobject]@{ agent = $t.agent; path = $t.path; action = ("skip(已指向别处: {0})" -f $tgt); ok = $true }); continue
+        }
+        # 真实同名目录：不覆盖，只报
+        $cnt = @(Get-ChildItem -LiteralPath $t.path -Directory -ErrorAction SilentlyContinue).Count
+        if ($cnt -gt 0) {
+            $report.Add([pscustomobject]@{ agent = $t.agent; path = $t.path; action = ("skip(已有实体目录 {0} 项)" -f $cnt); ok = $true }); continue
+        }
+        if (-not $WhatIf) { Remove-Item -LiteralPath $t.path -Force -Recurse }
+    }
+    $parent = Split-Path -Parent $t.path
+    if (-not $WhatIf) {
+        if (-not (Test-Path -LiteralPath $parent)) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
+        New-Item -ItemType Junction -Path $t.path -Target $skills | Out-Null
+    }
+    $report.Add([pscustomobject]@{ agent = $t.agent; path = $t.path; action = 'linked'; ok = $true })
+}
+
+$result = New-Object System.Collections.Specialized.OrderedDictionary
+$result.Add('skills_root', $skills)
+$result.Add('skill_count', $skillDirs.Count)
+$result.Add('description_bytes', $descBytes)
+$result.Add('whatif', [bool]$WhatIf)
+$result.Add('targets', @($report | ForEach-Object { $_ }))
+if ($Json) { $result | ConvertTo-Json -Depth 6; exit 0 }
 
 Write-Host ''
-Write-Host '验证（新开会话，或跑一条）：'
+Write-Host '=== 技能注册（一份实体，N 个目录联接）===' -ForegroundColor Cyan
+Write-Host ("技能根：{0}    技能数：{1}    description 预载：{2} 字节 ≈ {3} tokens" -f $skills, $skillDirs.Count, $descBytes, [int]($descBytes / 3))
+Write-Host ''
+Write-Host ('{0,-20} {1,-60} {2}' -f 'AGENT', 'PATH', 'ACTION')
+Write-Host ('-' * 110)
+foreach ($r in $report) {
+    $c = switch -Wildcard ($r.action) { 'linked*' { 'Green' } 'already*' { 'DarkGray' } 'removed*' { 'Yellow' } default { 'Gray' } }
+    Write-Host (('{0,-20} {1,-60} {2}' -f $r.agent, $r.path, $r.action)) -ForegroundColor $c
+}
+Write-Host ''
+Write-Host '验证（任一宿主新开会话）：'
 Write-Host '  omp -p --no-session "不要调用任何工具。只回答：你的系统提示里列出的 Skill 名称有哪些？"'
-Write-Host ("description 预载预算：{0} 字节 ≈ {1} tokens（全部技能合计）" -f $descBytes, [int]($descBytes / 3))
-Write-Host '看不到技能列表 → 检查宿主是否支持 skills.customDirectories；本包的布局是 <root>/<name>/SKILL.md（单层，非递归）。'
+Write-Host '  其它宿主：看它有没有把本包的技能名列进自己的技能表/斜杠命令。'
+Write-Host ''
+Write-Host '不落配置、不常驻、不装服务 —— 只加目录联接；-Revert 一键摘掉（别家的原样不动）。'
 exit 0
