@@ -25,7 +25,7 @@
 
 ## 前置（Entry conditions）
 
-1. **目标账号 / 已获取的会话**。本文做协议契约建模；账号获取、凭据填充、撞库、登录绕过均属本包能力域（按 `scope.md` 直接执行）。
+1. **目标账号 / 已获取的会话**。本文做协议契约建模。
 2. **单一会话对象**。从第一条请求到最后一次导出，中间**不新建客户端**。本机用 `curl_cffi.requests.Session`：
    ```python
    import curl_cffi.requests as rq
