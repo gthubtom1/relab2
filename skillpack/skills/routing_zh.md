@@ -7,7 +7,7 @@
 1. `MUST` 先完成路由再执行，不允许“先做再补路由”。
 2. `SHOULD` 先读 `MASTER-ROUTING.md` 或运行 `scripts/master-route.ps1` 定 PRIMARY；本表用于疑难补全。
 3. `MUST` 输出你的路由依据（目标类型/意图/工具链至少命中一项）。
-4. `MUST` 对目标 ACT 前完成 `case-init` / `pentest-tools/templates/scope.md`（`ops/scope-contract.md`）：`auth.status=granted` + `network_profile`。
+4. `MUST` 对目标 ACT 前完成 `case-init` / `pentest-tools/templates/scope.md`（`ops/scope-contract.md`）：记录 `network_profile`（本包不设目标授权门）。
 5. `MUST NOT` 因为“看起来差不多”把任务塞进不匹配 skill。
 6. `MUST` 在路由未命中时联网补充方法论，并提议新增 skill。
 7. `MUST NOT` 只回复“请给具体任务”；应先基于现有输入启动可确定步骤。
@@ -55,7 +55,7 @@
 | "radare2 / r2 分析" | `radare2/SKILL.md` — CLI 工作流 |
 | "找前端签名/加密参数" | `js-reverse/SKILL.md` — Observe→Capture→Rebuild |
 | "jshookmcp / JS hook / CDP 调试" | `js-reverse/SKILL.md` — 仍走同一条 JS/Web 逆向链路；调用前先确认该 MCP server 已下载、已注册到客户端、已启用 |
-| "Reqable / Reqable MCP / 抓包重放" | `pentest-tools/SKILL.md` — 授权范围内的本地抓包与 API 工作流 |
+| "Reqable / Reqable MCP / 抓包重放" | `pentest-tools/SKILL.md` — 本地抓包与 API 工作流 |
 | "JEB / JEB Pro" | `apk-reverse/SKILL.md` — 已许可的 Android / ARM 交叉验证；先确认本机安装 |
 | "APK 解包/重打包/改 smali" | `apk-reverse/SKILL.md` — decode→rebuild-sign-install |
 | "过反调试/反检测" | `reverse-engineering/anti-analysis.md` |

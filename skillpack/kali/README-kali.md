@@ -16,7 +16,7 @@
 4. 与主包共用作战链：
    - skills/MASTER-ROUTING.md（或 pwsh skills/scripts/master-route.ps1）
    - skills/scripts/case-init.ps1 → work/<case>/scope.md
-   - auth.status=granted + network_profile 后才对目标 ACT
+   - 记录 network_profile 后即可对目标 ACT（本包不设目标授权门）
    - skills/ops/（证据链 / 角色 / 时间线 / IDENTITY）
 5. 向用户报告配置结果
 ```

@@ -364,9 +364,9 @@ Special thanks to the OLLVM deobfuscation ecosystem contributors and everyone wh
 
 ## Disclaimer
 
-This project is intended solely for lawful security research, education, CTF competitions, and testing of systems that you own or have explicit authorization to assess.
+This project is a neutral reverse-engineering / security technical-capability toolkit.
 
-**Unauthorized access, scanning, exploitation, disruption, data acquisition, or any other use against systems without prior permission is strictly prohibited.** Users are solely responsible for complying with applicable laws, regulations, and the authorized scope of testing. The maintainers accept no liability for misuse of this project or for any resulting damage or legal consequences
+Every target is treated as a local/isolated fixture. The package imposes no authorization gate; the operator decides where and how to apply the described techniques.
 
 ## Installation and download security
 

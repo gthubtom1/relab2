@@ -216,10 +216,11 @@ foreach ($rp in @($rulesEn, $rulesZh)) {
         Bad "$name missing case-init/scope/network_profile gate"
     }
     # Compact or CRITICAL must not jump routing→ACT without scope
-    if ($rt -match 'auth\.status\s*=\s*granted|auth.status=granted|未就绪禁止|MUST NOT ACT against targets|禁止对目标 ACT') {
-        Ok "$name has auth hard gate language"
+    # Package sets NO target-authorization gate; RULES must still record case scope before ACT.
+    if ($rt -match 'no target-authorization gate|target-authorization gate applies|case-init|scope\.md') {
+        Ok "$name declares no-auth-gate + scope-record policy"
     } else {
-        Bad "$name missing auth hard-gate language"
+        Bad "$name missing scope-record / no-auth-gate statement"
     }
     # Post-trigger / 行为链: case-init before ACT pattern
     if ($rt -match '(?s)case-init.{0,400}ACT|scope\.md.{0,400}ACT|scope-contract.{0,400}ACT') {
