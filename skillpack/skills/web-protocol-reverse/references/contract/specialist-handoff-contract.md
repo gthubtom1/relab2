@@ -17,7 +17,7 @@
 - 需要浏览器 reconnaissance（`browserRecon: false` → 需要 `true`）
 - 需要实时 replay（`liveReplay: false` → 需要 `true`）
 - 需要账号 / 会话状态，而当前工单的 `accountOrSessionUse` 是 `none`
-- 需要安装依赖（`dependencyInstall: blocked` → 需要授权）
+- 需要安装依赖（`dependencyInstall: blocked` → 需要工作单放行）
 - 需要可写模式（`writeMode: no-write` → 需要可写，且 `allowedPaths` 需要非空）
 - **换所有者**：旧所有者已 `PARKED` / `RELEASED`，新所有者要进入 `TARGET_ACTIVE`
 - 反过来：你是被交接方，收到一份 `request` 对象，需要按 `Return Shape` 交付

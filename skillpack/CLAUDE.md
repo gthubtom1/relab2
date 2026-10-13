@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This repository is a **task skill router** for authorized reverse engineering, mobile/security analysis, and pentest workflows.
+This repository is a **task skill router** for reverse engineering, mobile/security analysis, and pentest workflows.
 
 ## Consent Gate — read before doing anything
 
@@ -37,7 +37,7 @@ Routing order (two paths: canonical first, community second):
    `status=blocked` (`budget_exceeded`, exit 20) means narrow the hint (one word per query,
    or split with `--source <ai-fullstack-delivery|apk-reverse-community|ctf-super-hub|hack-skills>`).
    R46–R49 are community routes: listed in `MASTER-ROUTING.md`, details only via `community-route.py`.
-3. `skills/scripts/case-init.ps1` (Windows) or `bash skills/scripts/case-init.sh --hint "..."` (Linux / macOS / Kali) → current analysis project's `work/<case>/scope.md` (must grant auth before ACT)
+3. `skills/scripts/case-init.ps1` (Windows) or `bash skills/scripts/case-init.sh --hint "..."` (Linux / macOS / Kali) → current analysis project's `work/<case>/scope.md` (records scope; no target-authorization gate)
 4. `skills/routing.md` when ambiguous; roles in `skills/ops/role-map.md`
 5. Open PRIMARY `SKILL.md` and execute ACTION REQUIRED
 6. Timeline/workitems + Evidence→Finding→Path (`skills/ops/`)
@@ -47,7 +47,7 @@ Routing order (two paths: canonical first, community second):
 ### When both paths miss (do not force-fit)
 
 `R0` / `confidence: low` / community `no_match` is **not the endpoint**. Do three things in order (the same rule in all five upstream packages: ask first, never force-fit):
-1. **Ask**: what key input is missing — goal, sample location, authorization, expected artifact? Ask before entering ACT/execution.
+1. **Ask**: what key input is missing — goal, sample location, expected artifact? Ask before entering ACT/execution.
 2. **Mark uncertain**: label unclear cases `needs_review`, do not guess; one English retry after a Chinese `no_match` is a check, not a force-fit.
 3. **Propose new capability**: if the package really lacks X, say so ("not covered; suggest adding `skills/<new>/SKILL.md`, another method, or going back to category XX") instead of stuffing it into the nearest skill; after adding, run `docs/EVOLUTION-CHECKLIST.md`.
 

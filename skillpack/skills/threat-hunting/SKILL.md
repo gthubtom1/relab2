@@ -78,7 +78,7 @@ description: Use for blue-team threat hunting, detection engineering with Sigma/
 
 **上游**: MASTER R27  
 **下游**: 确认入侵 → forensics；恶意样本 → malware-analysis  
-**MUST NOT**: 在无授权生产环境跑攻击模拟
+**MUST NOT**: 对本机 / lab 以外的生产环境跑攻击模拟（本卡研究默认在隔离 lab）
 
 ## 任务完成自检
 

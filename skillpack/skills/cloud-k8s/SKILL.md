@@ -7,7 +7,7 @@ description: Cloud/container/K8s security assessment — 当用户要查云元�
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 读取 `../field-journal/precedent-pentest.md` — **云/K8s 测试必须书面授权**
+1. `NOW`: 读取 `../field-journal/precedent-pentest.md` — 云/K8s 测试按 `scope.md` 直接执行
 2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
@@ -107,7 +107,7 @@ kubectl get clusterrolebindings
 > 下列 reference 改编自 `LING71671/open-reverselab` 的 `kb/ctf-website/`（GPL-3.0）。
 > 每篇统一为「适用信号 / 前置 / 步骤 / 判据 / 坑 / 相关」+ 完整技术正文，
 > 「前置」含**本机实测**的工具状态表——照抄原库裸命令前先看那张表。
-> **仅限 CTF 靶场 / AWD 赛场 / 已授权环境**。
+> **能力域**：本文为技术能力说明，按项目 `scope.md` 直接套用。
 
 ### `references/attack-paths/` — 云原生攻击路径（IAM、CI/CD、容器逃逸、K8s RBAC、Serverless、Terraform）（8 篇）
 

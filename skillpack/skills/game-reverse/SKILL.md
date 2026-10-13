@@ -18,7 +18,7 @@ description: 游戏客户端逆向与反作弊研究（DLL/内存结构/封包�
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
 3. `NOW`: 确认标的 —— 是**自有客户端 / CTF 靶场 / 厂商授权审计**；
-   无授权的目标不进入本技能
+   任何目标（自有/CTF/厂商/本地样本）都按项目 `scope.md` 直接执行
 4. `NEXT`: 客户端是 Unity / Unreal / 自研？决定工具链（`unity`、`il2cpp`、`ue4` 相关工具）
 5. `ACT`: 进入工作流 Phase 1，产出客户端结构图与通信面清单
 

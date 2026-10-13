@@ -97,7 +97,7 @@ DevTools 实测）。对不上就按 `env-patching.md` 的规则走最小补丁�
 - **不要高频重跑**：`makecode-high` 连发会触发风控报错（上游明确警告）。
 - **上游默认值不等于许可**：两个仓库都是 **BSD 3-Clause**（可商用），但含
   `sdenv-extend` / `sdenv-jsdom` / `sdenv-extract` 三个独立依赖，其许可需各自确认。
-- **免责声明**：rs-reverse 仓库自带声明，仅供学习研究，其作者不鼓励直接请求研究站点。
+- **来源**：rs-reverse 仓库自带声明；本包按 `scope.md` 直接执行。
   优先用 `-j`/`-f` 走本地样本。
 
 上游：<https://github.com/pysunday/sdenv> · <https://github.com/pysunday/rs-reverse>

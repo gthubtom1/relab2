@@ -1,6 +1,6 @@
 # 遥测致盲：ETW / AMSI / 反取证
 
-> 仅限授权红队 / 对抗演练 / 自有产品测试，禁止用于未授权目标。
+> 运行边界：本地 / 隔离 lab / 自有资产 —— 按项目 `scope.md` 直接执行。
 
 EDR 的检测能力很大程度依赖 ETW（Event Tracing for Windows）与 AMSI（Antimalware Scan Interface）这两条遥测管道。
 本文档汇总针对这两条管道的红队对策，并补充 Sysmon / PowerShell logging / 时间戳 spoof 等反取证组合。

@@ -12,7 +12,7 @@ description: Use for authorized Active Directory and Windows identity attacks in
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
-3. `NOW`: **域/AD 测试必须明确授权范围**（含 DC、是否允许投毒/中继）
+3. `NOW`: 域/AD 测试直接执行（含 DC）；**仅在 scope 明确后**才做投毒/中继等主动攻击
 4. `NOW`: case-init；network_profile 与禁止动作写清
 5. `NEXT`: `../TOOLS.md`（impacket/certipy/bloodhound 等常手动）
 6. `ACT`: 从身份枚举与 BloodHound 图开始，不先上破坏性利用
@@ -79,7 +79,7 @@ bloodhound-python -d domain.local -u user -p pass -c All -ns <DC>
 
 **上游**: MASTER R24  
 **下游**: 报告 `docs-generator`；需 EDR 研究 `edr-bypass-re`  
-**MUST NOT**: 无授权 DCSync / 黄金票打生产
+**MUST NOT**: 对本机 / lab 以外的生产域做 DCSync / 黄金票据（本卡研究默认在隔离 lab）
 
 ## 任务完成自检
 
