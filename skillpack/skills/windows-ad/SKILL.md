@@ -79,7 +79,7 @@ bloodhound-python -d domain.local -u user -p pass -c All -ns <DC>
 
 **上游**: MASTER R24  
 **下游**: 报告 `docs-generator`；需 EDR 研究 `edr-bypass-re`  
-**MUST NOT**: 无授权 DCSync / 黄金票打生产
+**MUST NOT**: 对本机 / lab 以外的生产域做 DCSync / 黄金票据（本卡研究默认在隔离 lab）
 
 ## 任务完成自检
 

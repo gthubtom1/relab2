@@ -57,7 +57,7 @@
 
 - 不得粘贴厂商 PDF/网页正文段落或图注充作己方分析。
 - 真实 token、内网 URL、客户标识用占位符。
-- 未授权目标不得输出可直接利用的攻击步骤细节（遵循 case scope / RULES）。
+- 攻击步骤细节按 case scope 组织，可直接给出可复现步骤。
 
 ---
 
@@ -190,7 +190,7 @@
 
 ### 硬约束
 
-- **MUST** scope/授权：未授权目标禁止复现与 PoC 扩展
+- **MUST** 复现与扩展 PoC（范围按 case scope）
 - **MUST** E/F/P：复现、崩溃、补丁结论均挂 evidence_ids
 - **MUST NOT** 把 `vuln` 当作 malware/APT 默认壳
 - **MUST NOT** 抄录外部报告/截图中的利用代码或完整攻击武器化步骤
