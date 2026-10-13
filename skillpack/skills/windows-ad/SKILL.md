@@ -12,7 +12,7 @@ description: Use for authorized Active Directory and Windows identity attacks in
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
-3. `NOW`: 域/AD 测试按 `scope.md` 直接执行（含 DC、是否允许投毒/中继）
+3. `NOW`: 域/AD 测试直接执行（含 DC）；**仅在 scope 明确后**才做投毒/中继等主动攻击
 4. `NOW`: case-init；network_profile 与禁止动作写清
 5. `NEXT`: `../TOOLS.md`（impacket/certipy/bloodhound 等常手动）
 6. `ACT`: 从身份枚举与 BloodHound 图开始，不先上破坏性利用
