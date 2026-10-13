@@ -1390,3 +1390,19 @@ upstream 哈希我核对过：`eef7de5767b0e625aea4e6b3cd2f8b14515cbc548af3769f6
   （本轮尝试 cdb `.writemem` 受翻页/条件语法限制未成，需换 Frida/hook 记录或先 patch 翻页逻辑。）
 - §8 手法②「patch 掉翻页逻辑」：NOP 掉那次 VirtualProtect → 让页保持可读 → 持续跟踪
   （须先用「翻转前 dump」确认翻页=纯反篡改而非解密触发，否则 patch 会破坏解密）。
+
+### §9d 追加 · 决定性结构发现（native cdb）
+
+- **目标在运行中把自身 `.text` 映射清零并翻 NOACCESS**：首次 NOACCESS 处 `!address` 显示
+  `Usage=MappedFile`、`Allocation Base=模块基址`、`Protect=PAGE_EXECUTE_READ`、`Size=0x59000`（=`.text`）；
+  `db` 读出**全零**。对照：模块**加载时** `+0x1000` = `48 83 ec 28…`（= 磁盘 `.text` 真代码，逐字节相符）。
+  → **抗 dump 的自我擦除**：用完外层 `.text` 即抹掉 + 保护。
+- **`.ace0`（payload）是明文**：运行时字节 == 磁盘字节（entropy 6.93），非加密。
+- **Frida 仪器化会改变路径**：Frida spawn 下目标 **0 次 NOACCESS**（自翻页不发生）→ 仪器化敏感，
+  纯动态手段难在「不改行为」下取明文。
+- **`.text` 明文在模块加载瞬间就可得**（无需解密）；难点是 payload 搬迁后的逻辑。
+
+### 卡点（收窄到 U-003）
+
+- 需拿**搬迁后的代码副本**（JIT/堆区）或**清零前的 `.text` 快照**（load 时即有）。
+- 下一步：① 模块加载断点 dump 整个 `.text`（明文可得）；② hook 写 `.text` 的 `VirtualProtect`/`memset` 找擦除代码；③ dump JIT 区反汇编。

@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "id": "self-text-erase-discard",
+  "status": "promoted",
+  "title": "目标运行中把自身 .text 清零并翻 NOACCESS（抗 dump 自擦除）",
+  "invariant": "有些保护会在用完外层代码后，把自身 .text 映射清零 + 翻 PAGE_NOACCESS（!address 显示 MappedFile / Allocation Base=模块基址 / Size=节大小，但 db 读出全零）——这是抗 dump 的自我擦除，不是自解密。判据：模块加载瞬间 +0x1000 是真代码（等于磁盘 .text），运行中同一地址读全零。对策：在加载瞬间/首次执行前 dump .text（此时明文可得）；找写 .text 的 VirtualProtect/memset；dump 搬迁后的 JIT/堆副本。注意仪器化（Frida spawn）会改变路径——自翻页可能不发生。",
+  "scope": {
+    "family": "anti-tamper",
+    "boundary": "runtime",
+    "appliesWhen": [
+      "运行时在 .text/.ace0 等节地址设断点，cdb 报 'Unable to remove breakpoint ... 0n998'",
+      "db 读该节地址得到全零，但 !address 显示它仍 PAGE_EXECUTE_READ/已提交"
+    ],
+    "stopsWhen": [
+      "已在模块加载瞬间 dump 到明文 .text，或已定位并绕过擦除代码"
+    ]
+  },
+  "reproductions": [
+    {
+      "jobFingerprint": "assault-selftext-erase-2026-10-13",
+      "observedAt": "2026-10-13",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "首次 NOACCESS VirtualProtect 处 !address= MappedFile/AllocationBase=模块基址/Size=0x59000(.text)/Protect=PAGE_EXECUTE_READ，db=全零；而模块加载瞬间 +0x1000=48 83 ec 28(=磁盘 .text)。证明 .text 被运行时清零+保护。"
+    },
+    {
+      "jobFingerprint": "assault-frida-vs-cdb-flip-2026-10-13",
+      "observedAt": "2026-10-13",
+      "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "independent": true,
+      "note": "同一目标：native cdb 附加下 69 次 NOACCESS 翻页；Frida spawn 下 0 次——仪器化敏感，自翻页不发生。"
+    }
+  ],
+  "fixture": {
+    "path": "skillpack/skills/experience-cards/gate-self-must-prove-failure.json",
+    "sha256": "bb1edbc25f62de017a9d47467d4c7ccf290880da8a402f4944660004360c85db",
+    "generator": null,
+    "secretFree": true,
+    "note": "同族：动态判据不得靠日志标记。"
+  },
+  "oracles": {
+    "positive": "模块加载断点读 .text = 磁盘代码；运行中同一地址读 = 全零——两点对照即判据。",
+    "negative": "若运行时读 .text 仍等于磁盘代码，则未被擦除（换目标或该节不擦）。"
+  },
+  "firstDivergence": {
+    "stage": "读 .text 内容那一步",
+    "path": "运行中 .text 读出全零 vs 加载时等于磁盘",
+    "kind": "framing"
+  },
+  "decision": {
+    "preferredRoute": "anti-debug-bypass.md §8（翻转前 dump）",
+    "action": "在模块加载瞬间或首次执行前 dump 整个 .text（明文可得，无需解密）；hook 写 .text 的 VirtualProtect/memset 定位擦除代码；dump 搬迁后的 JIT/堆副本。",
+    "fallback": "仅静态分析；或换非仪器化手段（native cdb），因 Frida 会改变路径。"
+  },
+  "validation": {
+    "lastVerifiedAt": "2026-10-13",
+    "command": "cdb: bp first-NOACCESS !address+db；bp module+1000 db（对照）"
+  },
+  "links": {
+    "skill": "reverse-engineering/references/anti-debug-bypass.md",
+    "script": "",
+    "journal": "skillpack/skills/field-journal/2026-10-13_assault-hostdependent-companion.md",
+    "derivation": "web-protocol-reverse/references/contract/experience-card-schema.md"
+  },
+  "symptoms": [
+    "运行时在 .text 地址设断点报 0n998；db 读 .text 全零；!address 显示 PAGE_EXECUTE_READ 但内容已抹"
+  ]
+}

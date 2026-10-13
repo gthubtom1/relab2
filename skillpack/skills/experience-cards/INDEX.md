@@ -12,7 +12,7 @@
 5. 没命中不是「没有经验」，而是可以沉淀：用 `new` 建一张候选，晋级门见
    `skills/web-protocol-reverse/references/contract/experience-card-schema.md`。
 
-## 卡片（共 10 张）
+## 卡片（共 11 张）
 
 | 症状 / 信号（我看到了什么） | 卡 | 规则 | 技能 |
 |---|---|---|---|
@@ -34,6 +34,7 @@
 | 红色 NativeCommandError 文字，内容其实是正常信息 | [ps-native-stderr-breaks-strict-mode](ps-native-stderr-breaks-strict-mode.json) | 在 ErrorActionPreference='Stop' 的脚本里调用原生 exe 时，该 exe 写到 stderr 的任何一行（包括进度信息与正常诊断）都会被 Powe… | `apk-reverse` |
 | 脚本在调用某个 exe 的那一行直接死掉，退出码 1 | [ps-native-stderr-breaks-strict-mode](ps-native-stderr-breaks-strict-mode.json) | 在 ErrorActionPreference='Stop' 的脚本里调用原生 exe 时，该 exe 写到 stderr 的任何一行（包括进度信息与正常诊断）都会被 Powe… | `apk-reverse` |
 | 输出里出现 System.Object[] | [ps51-convertfrom-json-top-level-array](ps51-convertfrom-json-top-level-array.json) | 在 Windows PowerShell 5.1 上，`$x | ConvertFrom-Json` 处理顶层 JSON 数组时返回的是一个「数组对象」而非枚举出的元素；`@(… | `apk-reverse` |
+| 运行时在 .text 地址设断点报 0n998；db 读 .text 全零；!address 显示 PAGE_EXECUTE_READ 但内容已抹 | [self-text-erase-discard](self-text-erase-discard.json) | 有些保护会在用完外层代码后，把自身 .text 映射清零 + 翻 PAGE_NOACCESS（!address 显示 MappedFile / Allocation Base=… | `reverse-engineering/references/anti-debug-bypass.md` |
 | 门禁一直绿但功能是坏的 | [gate-self-must-prove-failure](gate-self-must-prove-failure.json) | 断言成功与否只能依赖三类外部可观测事实：文件真的被创建、字节真的被改、伪代码真的包含目标逻辑。命令回显（.echo / Write-Host 打在日志里的标记）会与程序自身输出… | `reverse-engineering` |
 
 ## 分工（别混）
