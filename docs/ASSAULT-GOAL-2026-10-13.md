@@ -1442,3 +1442,14 @@ upstream 哈希我核对过：`eef7de5767b0e625aea4e6b3cd2f8b14515cbc548af3769f6
 payload 是**明文 + 指令混淆（junk-byte）+ 自擦除 `.text`** 的模块；
 致命 = 经**内容已失效的对象**调 `vtbl+0x138`（use-after-free / 未重初始化），
 调用发生在**搬迁的栈**上。**无宿主依赖**（RPM 自身；无 named-object/IPC/mapping）。**成品未出。**
+
+### §9d 追加 · 单轮追踪 + 诊断补丁
+
+- 同一 run 内：`qword_14008C538` 内容在 payload 入口（0x4da848）与 0x4da8b2 处**同值**（未重赋值）；
+  0x4da900/0x4daaa3/0x4daabe **未顺序命中**（混淆/搬迁 → 跳跃执行）。→ 全局指针未被改写，是**对象被别处释放**。
+- 诊断补丁：把 fatal 的 `call [rax+0x138]` patch 成 `xor eax,eax`+nop（file off 0x4d5ebe）→ **仍 0xC0000409**。
+  → 该对象**被广泛使用**，跳过一处不解问题；**对象损坏是根本性的**。
+
+**U-003 定论（本轮）**：payload = 明文 + 指令混淆 + 自擦除 `.text`；核心对象 `qword_14008C538`
+在运行中被释放（内容毒化），payload 经它调 vtable 崩溃。**无宿主依赖**（RPM 自身；无 named-object/IPC）。
+**成品未出**；卡点 = 对象失效点未定位（下一轮用单轮 `ba w` 打在 fatal 的 rcx 上）。
