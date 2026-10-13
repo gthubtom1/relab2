@@ -1424,3 +1424,21 @@ upstream 哈希我核对过：`eef7de5767b0e625aea4e6b3cd2f8b14515cbc548af3769f6
 | U-003 | payload 对自身已释放对象调 vtable → use-after-free | 全部功能 |
 | U-009 | 该对象的释放点在哪、是否故意自毁 | F-002 |
 | U-008 | 是否 GUI 未定论（不阻塞） | F-006 |
+
+### §9d 追加 · 事实核定（多轮取样，纠正先前表述）
+
+- **fatal rip = base+0x4daabe，8/8 稳定**；`rax`（vtable 指针）**始终无效但值不定**
+  （`0xFEEEFEEE`×5 / `0x0`×2 / `0x8000…`×1）。→ 先前「rax 恒=0xFEEEFEEE」**取样不足，纠正**为「始终无效」。
+- **`.ace0` 是明文（决定性）**：模块加载断点 dump `.ace0` 首 0x50000 字节，与磁盘**逐字节 0 差异**；
+  致命页（RVA 0x4da000）运行时==磁盘，致命指令 `ff 90 38 01 00 00`（`call [rax+0x138]`）就在那。
+  → **payload 不解密**；先前「fault-driven 自解密」表述**不准确**，纠正：AV 风暴来自 `.text` **自我擦除**后页被访问 + 搬迁代码执行。
+- **强改保护位（`r r8=40`）不是解药**：仍在同一 RIP 二次 AV（换死法），破坏擦除/搬迁时序。
+- **致命帧**：`rcx`=有效对象指针、`*(rcx)`=毒；`kb` 的 RetAddr=0（栈空）→ 搬迁栈/trampoline。
+- **未定位**：谁把对象首 qword 写成毒（RtlFreeHeap 采样噪声太大；`@$obj` 寄存器在 cdb bp 命令里不可用）。
+  下一轮：对 fatal 时的 `rcx` 地址下 `ba w`（需在同一 run 内动态取址）。
+
+### 纠正后的 U-003 定论
+
+payload 是**明文 + 指令混淆（junk-byte）+ 自擦除 `.text`** 的模块；
+致命 = 经**内容已失效的对象**调 `vtbl+0x138`（use-after-free / 未重初始化），
+调用发生在**搬迁的栈**上。**无宿主依赖**（RPM 自身；无 named-object/IPC/mapping）。**成品未出。**
