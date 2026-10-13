@@ -70,7 +70,7 @@ F08 是**文件级模拟**（bundle 内 VERSION bump → 验证 → 字节恢复
 
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
-D:\EXE\python\python.exe tests\e2e\customer-skin-e2e.py
+& (Resolve-ReverseToolSpec -Name 'pyre').Command ests\e2e\customer-skin-e2e.py
 ```
 
 全绿 exit 0；任一 fixture 失败则 exit 1，逐条块保留现场。

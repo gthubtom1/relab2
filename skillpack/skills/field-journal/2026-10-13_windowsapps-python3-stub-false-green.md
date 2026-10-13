@@ -11,9 +11,9 @@
 
 ```
 $ which python3
-C:\Users\toti\AppData\Local\Microsoft\WindowsApps\python3.exe   ← 0 字节
+$env:LOCALAPPDATA\Microsoft\WindowsApps\python3.exe   ← 0 字节
 $ which python
-D:\EXE\python\python.exe                                        ← 真的
+& (Resolve-ReverseToolSpec -Name 'pyre').Command  真的
 ```
 
 `WindowsApps\python3.exe` 是 Windows 的 **App Execution Alias**（应用执行别名）。
@@ -94,9 +94,9 @@ done
 
 | 场景 | 命令 | 结果 |
 |---|---|---|
-| PS 正常 PATH | `Resolve-ReversePython` | `D:\EXE\python\python.exe`，`Available=True`，`IsStub=False` |
+| PS 正常 PATH | `Resolve-ReversePython` | `(Resolve-ReverseToolSpec -Name 'pyre').Command`，`Available=True`，`IsStub=False` |
 | PS 只剩 stub | `$env:PATH='...WindowsApps'` 后调用 | `D:\Tools\disasm\IDA Pro 9.3\python311\python.exe`（第 4 级兜住） |
-| bash 新逻辑 | 同候选循环 | `SELECTED=python` → `/d/EXE/python/python` |
+| bash 新逻辑 | 同候选循环 | `SELECTED=python` → `(Resolve-ReverseToolSpec -Name 'pyre').Command/python` |
 | master-route.sh 端到端 | `bash … --hint "radare2 analyze"` | `PRIMARY -> skills/radare2/SKILL.md`，rc=0，产物落盘 |
 
 ## 意外收获：抓到一个**假绿**

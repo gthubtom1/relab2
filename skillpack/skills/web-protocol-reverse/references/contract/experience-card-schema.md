@@ -4,7 +4,6 @@
 >
 > **什么时候用**：要把**一条反复出现的决策规则或确定性操作**保存下来时。经验卡（experience card）**不是** case 报告，**不是**某个目标的专用配方，**也不是**「历史产出在当前目标上可信」的许可证。
 >
-> **平台与本机状态**：本文是 schema 与规程，不依赖具体本机工具。需要本机注意的只有两条：**(1)** 晋级目标目录在 2026-10-11 定为**仓级共享目录** `skills/experience-cards/`（跨技能、可被 `skills/scripts/experience-card.py search` 检索），源文档原本指向 `web-protocol-reverse/references/experience-cards/` 的单技能路径已改为仓级；**(2)** 经验卡里常被引用的 `iv8-local-runtime` 边界，本机无 iv8（社区运行时，PyPI 无发行版），相关卡片在本机**无法复验**，消费前须按 `./skill-maintenance.md` 的验证命令实跑。本包**没有** `scripts/` 目录，源文档引用的 `../triage/forward-testing-playbook.md` 等扁平路径已改为实际路径。
 
 ---
 

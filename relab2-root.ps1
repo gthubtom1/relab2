@@ -36,8 +36,8 @@ param(
     # 解析成功后是否写入用户级环境变量（默认写；-NoCache 可关闭）
     [switch] $NoCache
 )
-# ★ PSModulePath 自愈（2026-10-10 注入，路径由 inject-psmp.py 统一计算）：剔除 WindowsApps 版 PowerShell 7 的模块目录，否则 PS 5.1 会因 TypeData 重复定义失败而使 Get-FileHash / Get-ExecutionPolicy 不可用（已造成两次假绿 + 一次失败被吞）。重算/迁移后请重跑 work/envinit/inject-psmp.py
-# ★ 2026-10-10 去掉硬编码 `C:\relab2\...` 绝对路径。
+# ★ PSModulePath 自愈（2026-10-10 注入）：剔除 WindowsApps 版 PowerShell 7 的模块目录，否则 PS 5.1 会因 TypeData 重复定义失败而使 Get-FileHash / Get-ExecutionPolicy 不可用（已造成两次假绿 + 一次失败被吞）。模块本体见 skillpack\skills\scripts\lib\PsModulePathInit.ps1
+# ★ 2026-10-10 去掉硬编码 `<仓根>\...` 绝对路径。
 #   原来无条件 dot-source 固定路径：仓库 clone 到别处时它静默失效 ——
 #   错误写到 stderr，但 $ErrorActionPreference 在后面才设，主流程照跑，
 #   于是「PSModulePath 自愈」悄悄没了，只留一屏红字。
@@ -115,7 +115,7 @@ if (-not $hit) {
     # 用户目录下常见的（桌面/文档/下载里的项目）
     $prof = [Environment]::GetFolderPath('UserProfile')
     if (-not [string]::IsNullOrWhiteSpace($prof)) {
-        foreach ($sub in @('Desktop\哇', 'Desktop', 'Documents', 'Downloads')) {
+        foreach ($sub in @('Desktop', 'Documents', 'Downloads')) {
             $candidates.Add((Join-Path $prof $sub))
         }
     }

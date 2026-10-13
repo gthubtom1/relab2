@@ -204,7 +204,7 @@ description: <一句话描述适用场景和触发条件>
 现在没有工具候选路径表了。探测层 `scripts/lib/Bootstrap.ps1` 只做测量（`Resolve-ReverseToolSpec` / `Measure-ReverseCapability` / `Test-ReverseTcpPort`），**不产出绿/红结论、不缓存本机状态、不维护路径表**。所以新增工具不需要在任何地方"注册路径"，只要在 `TOOLS.md` 对应分节补一行说明书：
 
 ```markdown
-| **analyzeHeadless** | Ghidra 无头反编译入口 | ghidra-headless | GitHub Ghidra releases → `D:\Tools\ghidra\`，需 JDK 21 | 🟢 |
+| **analyzeHeadless** | Ghidra 无头反编译入口 | ghidra-headless | GitHub Ghidra releases → `<工具根>\<分类>\<工具名>idra\`，需 JDK 21 | 🟢 |
 ```
 
 五个字段：工具名 / 干什么 / 哪个 skill 要它 / 装法 / 许可标记。列顺序以该分节现有表头为准（如 `| 工具 | 干什么 | 谁要它 | 装法 | 许可 |`）。
@@ -366,7 +366,7 @@ skills/ghidra-headless/
 ### TOOLS.md 新增一行
 
 ```markdown
-| **Ghidra** (`analyzeHeadless`) | 开源反编译主力，无头分析 | ghidra-headless | GitHub Ghidra releases → `D:\Tools\ghidra\`，需 JDK 21 | 🟢 |
+| **Ghidra** (`analyzeHeadless`) | 开源反编译主力，无头分析 | ghidra-headless | GitHub Ghidra releases → `<工具根>\<分类>\<工具名>idra\`，需 JDK 21 | 🟢 |
 ```
 
 不再有候选路径表可改。探测层 `lib/Bootstrap.ps1` 在运行时问 `Get-Command`，问不到就是没装。

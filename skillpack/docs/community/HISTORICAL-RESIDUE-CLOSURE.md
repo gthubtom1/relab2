@@ -2,7 +2,7 @@
 
 三件均为"别人查出来但没人认领"的遗留，本卡逐件给结论：改了什么 / 有意不改什么 /
 拿不出证据因而停手的是哪个。实测命令均以仓库根为 cwd，
-`$env:PYTHONIOENCODING='utf-8'`，Python 为 `D:\EXE\python\python.exe`。
+`$env:PYTHONIOENCODING='utf-8'`，Python 为 `(Resolve-ReverseToolSpec -Name 'pyre').Command`。
 
 ## 1. T19 超作用域残留（wave 6 卡 P 登记 60 处，本卡有权限的子集）
 
@@ -66,7 +66,7 @@
 ## 2. U2 — `capabilities.py` 的 `REPO_ROOT` / `tools/_work` 路径基准
 
 结论：**基准本身是对的，备注过时；无可改之处，停手。** 这是有效结论，不是"无法证实"——
-实测证据由只读探针给出（`D:\Project\skills-hub\work\u2-probe-readonly.py`，
+实测证据由只读探针给出（`work\u2-probe-readonly.py`，
 仓库外 lab，只读文件文本、重放三行路径推导、做存在性检查；**未导入、未执行目标脚本**，
 遵守"不能执行脚本验证"，目标脚本的 `device()` 路径会调 adb，不可跑）。
 
@@ -78,13 +78,13 @@
 
 - `HERE=.../community-raw/apk-reverse-source/scripts`，
   `SKILL_DIR=.../community-raw/apk-reverse-source`，
-  `REPO_ROOT=D:\Project\skills-hub\integrated-skill-hub`，与真实仓库根**相等**。
+  `REPO_ROOT=C:\relab2`，与真实仓库根**相等**。
 - 该文件 328-331 行注释声称"在融合仓库里 REPO_ROOT 解析到 `<repo>/skills`"——
   **该断言为假**（探针：`comment-claim '<repo>/skills' true: False`）。
   它描述的是 T01 物理隔离之前的旧布局，备注过时。
 - `tools/_work` 相关：`REPO_ROOT/tools/_work/rust/target/release/rasc.exe` **不存在**，
   故 rasc 特例永不命中，回退到 PATH / `RASC` 环境变量（均未设置，行为是保守的"找不到"，
-  不是乐观误报）；`dirname(REPO_ROOT)/tools`（`D:\Project\skills-hub\tools`）不存在，
+  不是乐观误报）；`dirname(REPO_ROOT)/tools`（`<开发根>\tools`）不存在，
   该候选分支静默无害；`SKILL_DIR/tools` 不存在，无害。
 - `GATE_FILES`：`check_repo.py` 等立于 REPO_ROOT 之下**不存在**；
   `community/apk-reverse-source/scripts/scan_leaks.py`（注释口径）不存在，

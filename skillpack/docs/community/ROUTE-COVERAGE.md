@@ -101,6 +101,6 @@ removal … surgical dex patching … anti-tamper`）：
 ```text
 $env:PYTHONIOENCODING='utf-8'
 powershell -NoProfile -ExecutionPolicy Bypass -File skills/scripts/master-route.ps1 -Hint "公司要上 CI/CD 交付流程" -OutDir work/cardZ-lab/after-cicd
-D:\EXE\python\python.exe skills\scripts\test-golden-route.py
-D:\EXE\python\python.exe skills\tests\run-ci-gates.py --runner python
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills\scripts\test-golden-route.py
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills\tests\run-ci-gates.py --runner python
 ```

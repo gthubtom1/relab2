@@ -21,9 +21,9 @@
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2    = (Resolve-ReverseToolSpec -Name 'r2').Command
 $cdb   = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
-$frida = 'D:\EXE\python\Scripts\frida.exe'
-$py    = 'D:\EXE\python\python.exe'
-$pm    = 'D:\Tools\Sysinternals\Procmon64.exe'
+$frida = (Resolve-ReverseToolSpec -Name 'frida').Command
+$py    = (Resolve-ReverseToolSpec -Name 'pyre').Command
+$pm    = '<工具根>\<分类>\<工具名>\Procmon64.exe'
 $tshark = (Resolve-ReverseToolSpec -Name 'tshark').Command
 ```
 

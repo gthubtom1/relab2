@@ -166,7 +166,7 @@ smali/com/target/GameApp.smali: System.loadLibrary("NativeProtect")
 
 - **`aapt2 dump badging` 不显示 `android:exported`**，要 `dump xmltree` 才看得到。
 - **`exported=true` 编码成 `0xffffffff`**，正则匹配 `true` 是无效的。
-- **`aapt2 link` 需要 `android.jar`**：本机 `D:\Tools\android-sdk\build-tools\34.0.0\lib\android.jar` **不存在**，自建 APK 要用 apktool 的 `b` 命令（apktool 自带 aapt2）。
+- **`aapt2 link` 需要 `android.jar`**：本机 `<工具根>\<分类>\<工具名>\build-tools\34.0.0\lib\android.jar` **不存在**，自建 APK 要用 apktool 的 `b` 命令（apktool 自带 aapt2）。
 - **apktool 3.x 的 `apktool.yml` 里数字不能加引号**：写 `versionCode: '1'` 会抛 `NumberFormatException`，必须写 `versionCode: 1`。
 - **jadx 可能部分反编译失败但仍有产物**，不要因为报错就丢弃输出目录。
 - **多 dex 要看 `smali/`、`smali_classes2/`……** 全套，`Select-String -Path '**\*.smali'` 才能覆盖。

@@ -4,7 +4,6 @@
 >
 > **什么时候用**：目标把逻辑包在**自定义 VM 或字节码解释器**里面。
 >
-> **平台与本机状态**：Windows 10 x64。`node v24.20.0`（`D:\Tools\Node\node.exe`）、`python 3.12`（`D:\EXE\python\python.exe`）、`playwright（模块在 `D:\EXE\python\Lib\site-packages\playwright`）` **本机可用**。`iv8` **本机无**；`rs-reverse` / `sdenv`（`js-reverse` 侧工具）**本机亦未安装**，装法见 `../../../js-reverse/references/rs-vmp-env-stub.md`。本文不依赖任何一种专有运行时。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -30,7 +29,7 @@
 3. **一个能执行 JS 的宿主**。本机两条路：
    - `node`（本机可用）：轻量，`vm` 模块 + 自建 stub 足以跑大部分自研 VM
      ```powershell
-     D:\Tools\Node\node.exe -v
+     & (Resolve-ReverseToolSpec -Name 'node').Command -v
      ```
    - `playwright`（本机可用）：需要真实 DOM / 定时器 / canvas 语义时才升级，代价高
 4. **如果是自研 VMP 风控（尤其是瑞数 Riverbed 系）**：先查 `../../../js-reverse/references/rs-vmp-env-stub.md`。

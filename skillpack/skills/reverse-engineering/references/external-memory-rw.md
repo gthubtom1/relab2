@@ -15,8 +15,8 @@
 
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
-$py  = 'D:\EXE\python\python.exe'        # 只用标准库 ctypes，不需要 pefile
-$sys = 'D:\Tools\Sysinternals'           # Listdlls64.exe（找模块基址）
+$py  = (Resolve-ReverseToolSpec -Name 'pyre').Command        # 只用标准库 ctypes，不需要 pefile
+$sys = '<工具根>\<分类>\<工具名>'           # Listdlls64.exe（找模块基址）
 ```
 
 ★ 全篇用 **Python `ctypes` 直接调 WinAPI**，不需要编译 C 工具 —— 这是本机最短的
@@ -49,7 +49,7 @@ Get-Process -Name target -EA SilentlyContinue | Select-Object Id,ProcessName
 **方式 A：Sysinternals Listdlls（最快）**
 
 ```powershell
-& 'D:\Tools\Sysinternals\Listdlls64.exe' /accepteula /t target.exe
+& '<工具根>\<分类>\<工具名>\Listdlls64.exe' /accepteula /t target.exe
 ```
 
 输出里直接给 `<Base>` 列。GUI 侧也可直接看，但 CLI 更适合脚本。

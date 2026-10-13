@@ -20,7 +20,7 @@ $diec = (Resolve-ReverseToolSpec -Name 'diec').Command
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
 $cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
 $inj  = (Resolve-ReverseToolSpec -Name 'scyllahide').Command
-$py   = 'D:\EXE\python\python.exe'
+$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command
 ```
 
 ## VMP 虚拟化执行模型
@@ -145,7 +145,7 @@ VMP SDK 自检**独立于虚拟化**，运行时检测调试器：
 | `NtQueryInformationProcess(DebugPort=7)` | ScyllaHide `NtQueryInformationProcessHook=1` |
 | 虚拟化工具检测（3.x 新增） | 真实物理机；或关检测项 |
 
-本机 ScyllaHide 默认档（`D:\Tools\ScyllaHide\Generic\scylla_hide.ini`）已开 `NtQueryInformationProcessHook` / `NtSetInformationThreadHook` / `PebBeingDebugged` / `PebNtGlobalFlag`，但 **`KiUserExceptionDispatcherHook` / `GetTickCount64Hook` 默认是 0** —— 处理 VMP 3.x 自检时要手动开。
+本机 ScyllaHide 默认档（`<scyllahide 目录>\Generic\scylla_hide.ini`）已开 `NtQueryInformationProcessHook` / `NtSetInformationThreadHook` / `PebBeingDebugged` / `PebNtGlobalFlag`，但 **`KiUserExceptionDispatcherHook` / `GetTickCount64Hook` 默认是 0** —— 处理 VMP 3.x 自检时要手动开。
 
 完整绕过手法见 `anti-debug-bypass.md`。
 

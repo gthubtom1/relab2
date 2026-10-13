@@ -4,7 +4,6 @@
 >
 > **什么时候用**：签名、加密、或某个 helper（辅助函数）的输出看起来「可疑」——名字像标准算法，行为却对不上。
 >
-> **平台与本机状态**：Windows 10 x64。`python 3.12`（`D:\EXE\python\python.exe`）、`node v24.20.0`（`D:\Tools\Node\node.exe`）、`tshark 4.6.8`（`D:\Tools\Wireshark\tshark.exe`）、`mitmdump`（`D:\EXE\python\Scripts\mitmdump.EXE`）、`curl_cffi`、`playwright（模块在 `D:\EXE\python\Lib\site-packages\playwright`）` **本机可用**。`iv8` **本机无**（社区运行时，PyPI 上不存在该发行版），本文不依赖它。本文所列命令均按本机路径给出。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -66,16 +65,16 @@
 3. **本机执行宿主**。移植 JS → Python 时的对照基准，二选一：
    - `node`（本机可用）：跑原始 JS 分支，直接拿它的输出当基准
      ```powershell
-     D:\Tools\Node\node.exe -e "console.log(require('crypto').createHash('md5').update('abc').digest('hex'))"
+     & (Resolve-ReverseToolSpec -Name 'node').Command -e "console.log(require('crypto').createHash('md5').update('abc').digest('hex'))"
      ```
    - `python`（本机可用）：跑移植后的实现
      ```powershell
-     D:\EXE\python\python.exe -c "import hashlib;print(hashlib.md5(b'abc').hexdigest())"
+     & (Resolve-ReverseToolSpec -Name 'pyre').Command -c "import hashlib;print(hashlib.md5(b'abc').hexdigest())"
      ```
 4. **一个已知答案向量（KAT）**，用于区分「我实现错了」和「目标本来就魔改了」。
    本机 `node` 的 OpenSSL 后端带 SM3，可直接当权威基准：
    ```powershell
-   D:\Tools\Node\node.exe -e "console.log(require('crypto').createHash('sm3').update('abc').digest('hex'))"
+   & (Resolve-ReverseToolSpec -Name 'node').Command -e "console.log(require('crypto').createHash('sm3').update('abc').digest('hex'))"
    # 输出（本机实测）：66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0
    ```
    这条「标准 SM3 输出」是**本机实测值**，可作为你魔改实现的差分基准。
@@ -123,9 +122,9 @@
 
 ```powershell
 # Node 侧（原始 JS 分支）
-D:\Tools\Node\node.exe -e "console.log(require('crypto').createHash('sha256').update('abc').digest('hex'))"
+& (Resolve-ReverseToolSpec -Name 'node').Command -e "console.log(require('crypto').createHash('sha256').update('abc').digest('hex'))"
 # Python 侧（你的移植）
-D:\EXE\python\python.exe -c "import hashlib;print(hashlib.sha256(b'abc').hexdigest())"
+& (Resolve-ReverseToolSpec -Name 'pyre').Command -c "import hashlib;print(hashlib.sha256(b'abc').hexdigest())"
 ```
 
 两者都应输出 `ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad`。

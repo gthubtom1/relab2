@@ -60,10 +60,10 @@
 
 ```powershell
 # 发证明（批准者在授权时执行一次）
-D:\EXE\python\python.exe skills/scripts/verify-auth-profile.py --case-root work/<case> --issue-attestation --risk medium
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/scripts/verify-auth-profile.py --case-root work/<case> --issue-attestation --risk medium
 
 # 每次 ACT 前重验
-D:\EXE\python\python.exe skills/scripts/verify-auth-profile.py --case-root work/<case> --action recon
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/scripts/verify-auth-profile.py --case-root work/<case> --action recon
 ```
 
 ## 负向 fixture

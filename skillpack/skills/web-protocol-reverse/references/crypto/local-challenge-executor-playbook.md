@@ -11,13 +11,12 @@
 >
 > **什么时候用**：挑战 HTML 或挑战 JS **必须在本地运行**才能吐出一个**可回放的产物**，而**最终采集器必须保持无浏览器（browser-free）**。
 >
-> **平台与本机状态**：Windows 10 x64。
 >
 > | 能力 | 本机状态 |
 > |---|---|
-> | `node v24.20.0`（`D:\Tools\Node\node.exe`）+ `vm` + 自建 stub | ✅ **实测可用**，本文主路径 |
-> | `playwright（模块在 `D:\EXE\python\Lib\site-packages\playwright`）` + chromium-1243 | ✅ 实测可用（需显式 `executable_path`） |
-> | `python 3.12`（`D:\EXE\python\python.exe`） | ✅ 可用，**拥有全部真实 HTTP** |
+> | `node v24.20.0`（`(Resolve-ReverseToolSpec -Name 'node').Command`）+ `vm` + 自建 stub | ✅ **实测可用**，本文主路径 |
+> | `playwright` + <playwright 浏览器> | ✅ 实测可用（需显式 `executable_path`） |
+> | `python 3.12`（`(Resolve-ReverseToolSpec -Name 'pyre').Command`） | ✅ 可用，**拥有全部真实 HTTP** |
 > | `jsdom` / `happy-dom` | ❌ **本机无**（npm 未装） |
 > | `iv8` | ❌ **本机无** |
 
@@ -186,7 +185,7 @@ console.log(JSON.stringify({
 
 调用：
 ```powershell
-D:\Tools\Node\node.exe challenge-exec.js input.json > output.json
+& (Resolve-ReverseToolSpec -Name 'node').Command challenge-exec.js input.json > output.json
 ```
 
 > ⚠ **诚实声明（2026-10-10 本机实测复核）**：

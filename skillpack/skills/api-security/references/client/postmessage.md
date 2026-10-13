@@ -26,7 +26,7 @@ $r = Resolve-ReverseToolSpec -Name '<toolid>'   # 例：sqlmap / httpx / ffuf / 
 & $r.Command <参数>                                # 永远用完整路径，不依赖 cwd
 ```
 
-- Python 解释器用探测层的 `python`（本机逆向库集中在 `D:\EXE\python\python.exe`，`venv-re` 是空壳，别去那里找库）。
+- Python 解释器用探测层的 `python`。
 - 本文脚本默认只读、只打点；扩大范围前先回到 scope 确认。
 
 ## 步骤

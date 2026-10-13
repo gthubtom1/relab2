@@ -75,7 +75,6 @@ try {
 $idaDir = Join-Path $skillsRoot 'ida-reverse/scripts'
 $idaFiles = @{
     'start.ps1'           = (Join-Path $idaDir 'start.ps1')
-    'watchdog.ps1'        = (Join-Path $idaDir 'watchdog.ps1')
     'recover.ps1'         = (Join-Path $idaDir 'recover.ps1')
     'run-supervisor.py'   = (Join-Path $idaDir 'run-supervisor.py')
 }
@@ -160,16 +159,15 @@ if ($start -match '(?im)^\s*(&\s*)?taskkill(\.exe)?\s+[^\n]*/T\b') {
     Ok 'start.ps1 has no taskkill /T'
 }
 
-$watch = Get-Content -LiteralPath $idaFiles['watchdog.ps1'] -Raw
-if ($watch -match 'Test-IdaMcpKeepaliveDeadlockFromFacts' -and $watch -match 'Test-IdaMcpOpeningInFlight' -and $watch -match '-Force') {
-    Ok 'watchdog.ps1 Force-replaces only last-healthy deadlock'
-} else {
-    Bad 'watchdog.ps1 missing last-healthy deadlock -Force path'
-}
-if ($watch -match 'CreationDate') {
-    Bad 'watchdog.ps1 must not use process CreationDate'
-} else {
-    Ok 'watchdog.ps1 has no CreationDate deadlock'
+# ★ 契约：本模块不得有后台常驻（计划任务 / 看门狗 / 开机自启）。
+#   理由（2026-10-14）：常驻保活会①周期性弹 cmd 窗口 ②换机后必然指错路径
+#   ③让「这个服务是本次会话起的还是上次留下的」无法回答。MCP 一律按需启动。
+foreach ($gone in @('watchdog.ps1', 'install-autostart.ps1')) {
+    if (Test-Path -LiteralPath (Join-Path $idaDir $gone)) {
+        Bad ("{0} must not exist — no background keep-alive" -f $gone)
+    } else {
+        Ok ("no background keep-alive: {0} absent" -f $gone)
+    }
 }
 
 $open = Get-Content -LiteralPath (Join-Path $idaDir 'open.ps1') -Raw

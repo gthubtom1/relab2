@@ -4,7 +4,6 @@
 >
 > **什么时候用**：要**验收**一个已声明形态（declared shape）的结果时。重点是：**不要把一个更小的结果悄悄当成 collector，也不要把半个 collector 当成完整的**。
 >
-> **平台与本机状态**：本文是**纯验收规程**，不含必须在本机执行的命令，因此不涉及工具可用性问题。文中提到的 MCP 浏览器家族 `chrome-devtools` / `js-reverse` **在本机 agent 工具注册表中未挂载**（本机挂载的是逆向侧的 `pyghidra-mcp` / `idapro` / `ida-pro-mcp` / `angr-mcp` / `x64dbg-automate-mcp`），交付门本身不依赖它们。源文档引用的 `scripts/` 目录在本包中**不存在**，相关引用已在改编中移除。
 
 ---
 

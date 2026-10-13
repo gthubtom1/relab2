@@ -56,9 +56,9 @@ S3/对象存储技能，按 1.2 不得编造关键词）。
 
 ```text
 $env:PYTHONIOENCODING='utf-8'
-D:\EXE\python\python.exe skills\scripts\test-community-decoys.py --report
-D:\EXE\python\python.exe skills\scripts\verify-routing-signals.py
-D:\EXE\python\python.exe skills\scripts\test-routing-signals.py
-D:\EXE\python\python.exe skills\scripts\test-route-ranking.py
-D:\EXE\python\python.exe skills\scripts\test-community-route.py
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills\scripts\test-community-decoys.py --report
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills\scripts\verify-routing-signals.py
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills\scripts\test-routing-signals.py
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills\scripts\test-route-ranking.py
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills\scripts\test-community-route.py
 ```

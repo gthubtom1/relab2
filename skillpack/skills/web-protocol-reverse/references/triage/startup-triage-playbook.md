@@ -4,7 +4,6 @@
 >
 > **什么时候用**：每一次全新的接入（fresh intake）开始时，或者某个前置结论已经过期（stale）需要重判时。
 >
-> **平台与本机状态**：Windows 10 x64。`python 3.12`（`D:\EXE\python\python.exe`）、`node v24.20.0`（`D:\Tools\Node\node.exe`）、`tshark 4.6.8`（`D:\Tools\Wireshark\tshark.exe`）、`mitmdump`（`D:\EXE\python\Scripts\mitmdump.EXE`）、`frida`、`playwright`、`curl_cffi`、`requests` **本机可用**。`iv8`、`reqable`、esprima/acorn/@babel/parser 等 npm 包 **本机无**。**本机没有源文档假定的那套 MCP 浏览器工具族（`chrome-devtools` / `js-reverse` / Camoufox / AdsPower）** —— 本文所有「角色」都改写为「用本机实际工具去取对应证据」，不再依赖不存在的 MCP 注册表。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -62,23 +61,23 @@
 按本机实际写：
 
 ```powershell
-# Python 解释器（注意：不要用 D:\Tools\runtime\venv-re，实测缺 frida/playwright/curl_cffi/mitmproxy）
-D:\EXE\python\python.exe -c "import sys; print(sys.version)"
+# Python 解释器（注意：不要用 (Resolve-ReverseToolSpec -Name 'pyre').Command，实测缺 frida/playwright/curl_cffi/mitmproxy）
+& (Resolve-ReverseToolSpec -Name 'pyre').Command -c "import sys; print(sys.version)"
 
 # 关键模块在场性
-D:\EXE\python\python.exe -c "import importlib.util as u; print({m: bool(u.find_spec(m)) for m in ['frida','playwright','curl_cffi','requests','mitmproxy']})"
+& (Resolve-ReverseToolSpec -Name 'pyre').Command -c "import importlib.util as u; print({m: bool(u.find_spec(m)) for m in ['frida','playwright','curl_cffi','requests','mitmproxy']})"
 
 # Node（做本地 JS helper 用）
-D:\Tools\Node\node.exe -v
+& (Resolve-ReverseToolSpec -Name 'node').Command -v
 
 # wire 可见性
-D:\Tools\Wireshark\tshark.exe -v
-D:\EXE\python\Scripts\mitmdump.EXE --version
+& (Resolve-ReverseToolSpec -Name 'tshark').Command -v
+& (Resolve-ReverseToolSpec -Name 'mitmdump').Command --version
 ```
 
 ```bash
 # npm 侧静态 AST 依赖自检 —— 本机预期为 False，需先装才能走那套路线
-"D:\Tools\Node\node.exe" -e "['esprima','acorn','@babel/parser'].forEach(m=>{try{require.resolve(m);console.log(m,'OK')}catch(e){console.log(m,'MISSING')}})"
+& (Resolve-ReverseToolSpec -Name 'node').Command -e "['esprima','acorn','@babel/parser'].forEach(m=>{try{require.resolve(m);console.log(m,'OK')}catch(e){console.log(m,'MISSING')}})"
 ```
 
 记录完快照后再往下走。**缺工具就早报**，不要假装它不影响结论。

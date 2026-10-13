@@ -43,18 +43,18 @@ $r2    = (Resolve-ReverseToolSpec -Name 'r2').Command
 
 | 用途 | 工具 | 说明 |
 |---|---|---|
-| Python 解释器 | `D:\EXE\python\python.exe` | **angr / z3 / unicorn 都在这里** |
+| Python 解释器 | `(Resolve-ReverseToolSpec -Name 'pyre').Command` | **angr / z3 / unicorn 都在这里** |
 | 符号执行 | `angr` 10.0.1 | 只装在这个解释器里 |
 | 约束求解 | `z3` | 同上 |
 | 动态插桩 | `frida` / `objection` | Android 与本机进程通用 |
 | 静态定位 | `r2` / `analyzeHeadless` | 找常量引用点 |
 
 ```powershell
-$py = 'D:\EXE\python\python.exe'
+$py = (Resolve-ReverseToolSpec -Name 'pyre').Command
 & $py -c "import angr, z3; print('angr', angr.__version__)"   # 先确认库在
 ```
 
-★ 别在 `D:\Tools\runtime\venv-re\Scripts\python.exe` 里找 angr —— 那个环境是空的。
+★ 别在 `(Resolve-ReverseToolSpec -Name 'pyre').Command` 里找 angr —— 那个环境是空的。
 
 ## 步骤
 

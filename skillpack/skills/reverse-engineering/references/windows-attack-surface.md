@@ -38,7 +38,7 @@
 $r2    = (Resolve-ReverseToolSpec -Name 'r2').Command
 $diec  = (Resolve-ReverseToolSpec -Name 'diec').Command
 $capa  = (Resolve-ReverseToolSpec -Name 'capa').Command
-$py    = 'D:\EXE\python\python.exe'          # pefile 2024.8.26 / yara 4.5.4
+$py    = (Resolve-ReverseToolSpec -Name 'pyre').Command          # pefile 2024.8.26 / yara 4.5.4
 $cdb   = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
 ```
 
@@ -204,9 +204,9 @@ A=[0x140004025 hit0_0 ">rbopen failcommandLineInterpretername="%s">tag " 0x14000
 9. **`TimeDateStamp` 不可信**。实测 `kbgame_probe.exe` 的 `TimeDateStamp=1791563983` 正好是
    当天编译时刻，但很多壳/构建系统会写 0 或任意值。**不要用它当判据**，用哈希。
 10. **capa 在带壳样本上会大面积漏命中** —— 这是信号不是工具坏了。解壳后重跑再对比。
-11. **`D:\Tools\capa\capa.bat` 在 `cmd` 里必须直接调，不能带 `cmd /c` 前缀再包一层引号**
+11. **`(Resolve-ReverseToolSpec -Name 'capa').Command` 在 `cmd` 里必须直接调，不能带 `cmd /c` 前缀再包一层引号**
     （实测 `cmd /c "\"...capa.bat\" file"` 报「不是内部或外部命令」）。用
-    `subprocess.run(r'D:\Tools\capa\capa.bat sample.exe', shell=True)`。
+    `subprocess.run(r'(Resolve-ReverseToolSpec -Name 'capa').Command sample.exe', shell=True)`。
     capa 输出是 UTF-8，**PowerShell 直接看是乱码**（936 码页），要按 UTF-8 解码再用 `│` 过滤。
 12. **上游 README 里的 front-matter（`id`/`board`/`signals`/`mcp_tools`/`keywords`/`tags`/
     `last_updated`）是知识库自身的组织元信息**，不是技术内容，移植时一律丢弃。

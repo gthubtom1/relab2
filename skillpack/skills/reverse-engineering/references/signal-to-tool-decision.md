@@ -34,20 +34,20 @@
 
 | 信号类别 | 工具 id | 实测解析到（仅 sanity check） |
 |----------|---------|------|
-| 查壳 / 判编译器 | `diec` | `D:\Tools\DIE\diec.exe` |
-| 静态 CLI（概览/节区/导入/字符串/搜索/反汇编） | `r2` | `D:\Tools\radare2\bin\r2.exe` |
+| 查壳 / 判编译器 | `diec` | `(Resolve-ReverseToolSpec -Name 'diec').Command` |
+| 静态 CLI（概览/节区/导入/字符串/搜索/反汇编） | `r2` | `(Resolve-ReverseToolSpec -Name 'r2').Command` |
 | 混淆字符串 | `floss` | `D:\Tools\cli\floss.cmd` |
-| 能力识别 / ATT&CK | `capa` | `D:\Tools\capa\capa.bat` |
-| 自动脱壳 | `upx` | `D:\Tools\UPX\upx.exe` |
-| Ghidra 无头 | `analyzeHeadless` | `D:\Tools\Ghidra\support\analyzeHeadless.bat` |
+| 能力识别 / ATT&CK | `capa` | `(Resolve-ReverseToolSpec -Name 'capa').Command` |
+| 自动脱壳 | `upx` | `(Resolve-ReverseToolSpec -Name 'upx').Command` |
+| Ghidra 无头 | `analyzeHeadless` | `(Resolve-ReverseToolSpec -Name 'analyzeHeadless').Command` |
 | IDA 无头 | `idat64` / `idat` | 8.3 便携版 / 9.4 |
 | 动态调试（脚本化） | `cdb` / `cdbX86` | `%LOCALAPPDATA%\Microsoft\WindowsApps\cdbX64.exe` |
 | 动态调试（交互式） | `x64dbg` + MCP | 走 `xd://mcp__x64dbg_automate_mcp_*` |
-| 反反调试 L1（注入式） | `scyllahide` | `D:\Tools\ScyllaHide\InjectorCLIx64.exe` |
+| 反反调试 L1（注入式） | `scyllahide` | `(Resolve-ReverseToolSpec -Name 'scyllahide').Command` |
 | 反反调试 L3（硬件断点） | `cdb` 的 `ba` 命令 | 同上 |
-| 注入 / inline hook 扫描 | `pe-sieve` | `D:\Tools\pe-sieve\pe-sieve64.exe` |
-| 规则匹配 | `yara` | `D:\Tools\yara\yara64.exe` |
-| 符号执行 / 约束 | `python` + `angr` / `z3` | `D:\EXE\python\python.exe` |
+| 注入 / inline hook 扫描 | `pe-sieve` | `(Resolve-ReverseToolSpec -Name 'pe-sieve').Command` |
+| 规则匹配 | `yara` | `(Resolve-ReverseToolSpec -Name 'yara').Command` |
+| 符号执行 / 约束 | `python` + `angr` / `z3` | `(Resolve-ReverseToolSpec -Name 'pyre').Command` |
 | 仿真执行 | `python` + `qiling` / `unicorn` | 同上 |
 | 补丁写入 | `python` + `lief` / `pefile` | 同上 |
 | 抓包 | `tshark` / `mitmdump` | Npcap 服务需 Running |
@@ -314,7 +314,7 @@ iOS 设备：mobile-reverse/SKILL.md
 
 1. 先 L3 试一下 —— 成本最低，且对「查调试器是否存在」这类检测完全隐形
 2. L3 顶不住（比如检测的是硬件断点寄存器）→ L1 注入
-3. 目标是 Themida/VMP 这类强保护 → L2 插件 + 配置档（`D:\Tools\ScyllaHide\scylla_hide.ini` 里按 `[VMProtect x64]` / `[Themida x64]` 段选）
+3. 目标是 Themida/VMP 这类强保护 → L2 插件 + 配置档（`<scyllahide 目录>\scylla_hide.ini` 里按 `[VMProtect x64]` / `[Themida x64]` 段选）
 4. 全部无效 → 走非侵入式（外部内存 dump），放弃「在它里面单步」这个想法
 
 **L3 实测模板**：
@@ -437,7 +437,7 @@ r2 -qc 'ii~wininet'  <file>     # WinINet
       （三级降级：NoVmp / angr DSE / trace 折叠 + 等价性验证脚本）
   ↓
 3. ScyllaHide 配置对齐
-   D:\Tools\ScyllaHide\scylla_hide.ini 里按 [VMProtect x64] / [Themida x64] 段选，
+   <scyllahide 目录>\scylla_hide.ini 里按 [VMProtect x64] / [Themida x64] 段选，
    不要用 [Generic] —— 强保护会检查配置是否生效
 ```
 

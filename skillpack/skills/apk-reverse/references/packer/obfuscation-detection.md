@@ -130,7 +130,7 @@ with open(p, 'rb') as f:
   .init_array[0] = 0x0005352c
 ```
 
-用 `D:\EXE\python\python.exe` 运行（本机逆向库都在这个解释器）。
+用 `(Resolve-ReverseToolSpec -Name 'pyre').Command` 运行（本机逆向库都在这个解释器）。
 
 ### 4. 动态 dump 解密后的 so（Frida）
 
@@ -168,7 +168,7 @@ $idat = (Resolve-ReverseToolSpec -Name 'idat64_83').Command
 - **rabin2 在本机是坏副本**，用 `r2 -qc` 代替。
 - **`.init_array` 为空不代表没有初始化逻辑**：可能放在 `.ctors` 或 `.preinit_array`，或由 `JNI_OnLoad` 触发。
 - **IDA headless：`idat.exe` 是 32 位**，分析 64 位 SO 必须用 `idat64.exe`。
-- **capstone/elftools 在 `D:\EXE\python\python.exe`**，不要在 `venv-re` 里找（那是空的）。
+- **capstone/elftools 在 `(Resolve-ReverseToolSpec -Name 'pyre').Command`**，。
 
 ## 相关
 

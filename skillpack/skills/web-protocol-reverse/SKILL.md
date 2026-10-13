@@ -299,8 +299,8 @@ capability snapshot（先查 ~/.omp/agent/mcp.json，本机只有逆向侧 MCP�
 
 **本机化补充**：上游默认的被动抓包存储是 Reqable，本机**没有装**。需要 wire 证据时用：
 
-- `D:\Tools\Wireshark\tshark.exe`（Wireshark 自带 CLI，抓包后直接切字段）
-- `D:\EXE\python\Scripts\mitmdump.EXE`（mitmproxy，改写/重放中间层）
+- `(Resolve-ReverseToolSpec -Name 'tshark').Command`（Wireshark 自带 CLI，抓包后直接切字段）
+- `(Resolve-ReverseToolSpec -Name 'mitmdump').Command`（mitmproxy，改写/重放中间层）
 
 HAR 导出仍可用浏览器 DevTools 完成；本文不提供 Reqable 的具体操作步骤（未在本机验证）。
 

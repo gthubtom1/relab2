@@ -39,8 +39,11 @@ def _token():
         for line in io.open(cfg, encoding="utf-8", errors="replace"):
             if "experimental_bearer_token" in line and "=" in line:
                 return line.split("=", 1)[1].strip().strip('"')
-    raise SystemExit("no API token: set HUBCORE_API_TOKEN, write 07-kernel-sweep/.token, "
-                     "or put experimental_bearer_token in ~/.codex/config.toml")
+    raise SystemExit(
+        "no API token —— 令牌每台机器都不同，**不要猜**。\n"
+        "  ① 先跑：python 先问我.py        （它会印出该向主人问的原话）\n"
+        "  ② 拿到后：python 先问我.py --set token=<KEY>   （写进 .token，已 gitignore）\n"
+        "  等价做法：设 HUBCORE_API_TOKEN，或在 ~/.codex/config.toml 放 experimental_bearer_token。")
 
 
 T = _token()
@@ -394,8 +397,10 @@ def main():
     args = sys.argv[1:]
     if not B:
         sys.stderr.write(
-            "未配置 API 端点：请设环境变量 HUBCORE_BASE（如 https://<你的端点>/v1）。\n"
-            "本包不再内置任何默认端点（规则 1：不臆造地址）。\n")
+            "未配置 API 端点 —— 端点每台机器都不同，**不要猜**。\n"
+            "  ① 先跑：python 先问我.py        （它会印出该向主人问的原话）\n"
+            "  ② 拿到后：python 先问我.py --set base=<URL>\n"
+            "  本包不内置任何默认端点（规则 1：不臆造地址）。\n")
         return 2
     label = args[0] if args else "adhoc"
     _load_models()

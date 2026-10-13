@@ -4,7 +4,6 @@
 >
 > **什么时候用**：重放逻辑**几乎能跑但就是还差一点**的时候 —— 不是「完全没头绪」（那是 `./startup-triage-playbook.md`），是「已经做了一堆但仍失败」。
 >
-> **平台与本机状态**：Windows 10 x64。`python 3.12`（`D:\EXE\python\python.exe`）、`curl_cffi`、`playwright`、`frida`、`mitmdump`（`D:\EXE\python\Scripts\mitmdump.EXE`）、`tshark`（`D:\Tools\Wireshark\tshark.exe`）、`node`（`D:\Tools\Node\node.exe`）**本机可用**。`iv8` / `reqable` **本机无**。本文命令按本机路径给出。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -33,9 +32,9 @@
 ```bash
 # 干净基线落盘（失败样本 + 成功样本）
 # mitmdump 实时录制
-"D:\EXE\python\Scripts\mitmdump.EXE" --listen-port 8899 --save-stream-file flow.mitm
+& (Resolve-ReverseToolSpec -Name 'mitmdump').Command --listen-port 8899 --save-stream-file flow.mitm
 # 或 tshark 离线读已有 pcap
-"D:\Tools\Wireshark\tshark.exe" -r flow.pcapng -Y "http.request" -T fields -e frame.number -e http.request.full_uri
+& (Resolve-ReverseToolSpec -Name 'tshark').Command -r flow.pcapng -Y "http.request" -T fields -e frame.number -e http.request.full_uri
 ```
 
 ---

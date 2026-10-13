@@ -39,7 +39,7 @@ $r = Resolve-ReverseToolSpec -Name 'apktool'; & $r.Command --version
 $r = Resolve-ReverseToolSpec -Name 'jadx';    & $r.Command --version
 ```
 
-Python 侧（capstone 5.0.7 / pyelftools 0.33 / lief 1.0.0 均在本机 `D:\EXE\python`）：
+Python 侧（capstone 5.0.7 / pyelftools 0.33 / lief 1.0.0 均在本机 `(Resolve-ReverseToolSpec -Name 'pyre').Command`）：
 
 ```powershell
 $r = Resolve-ReverseToolSpec -Name 'python'; & $r.Command -c "import capstone,elftools;print(capstone.__version__, elftools.__version__)"

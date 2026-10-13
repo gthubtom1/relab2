@@ -2,7 +2,7 @@
 
 > **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License）的 `runtime-contracts.md`。
 > **用途**：规定 `env/webapi/runtime-contracts.js` 这个 **opt-in（按需开启）** 兼容模块的边界：它提供什么、明确不提供什么。
-> **前置（本机实测，2026-10-10）**：Node ✅ `D:\Tools\Node\node.exe` v24.20.0。⚠️ `env/webapi/runtime-contracts.js` **未随本包落地**；下文的 `MessageChannel` 派发语义、`__installWebpackChunkCapture__` API、Latin1 `btoa` 向量与 `npm test` 流程**均未在本机执行验证**，它们描述的是上游实现。文末的 `npm test` 依赖上游 `tests/`，本包内不存在。
+> **前置（本机实测，2026-10-10）**：Node ✅ `(Resolve-ReverseToolSpec -Name 'node').Command` v24.20.0。⚠️ `env/webapi/runtime-contracts.js` **未随本包落地**；下文的 `MessageChannel` 派发语义、`__installWebpackChunkCapture__` API、Latin1 `btoa` 向量与 `npm test` 流程**均未在本机执行验证**，它们描述的是上游实现。文末的 `npm test` 依赖上游 `tests/`，本包内不存在。
 > **用法**：**只在固定 fixture 证明目标依赖 `MessageChannel` 调度或某个具名 webpack chunk 数组之后**才加载它。它是兼容性补丁，不是通用浏览器模拟器。
 
 只在固定 fixture 证明目标依赖 `MessageChannel` 调度，或依赖某个明确命名的 webpack chunk 数组之后，才使用 `env/webapi/runtime-contracts.js`。它是一个按需开启的兼容模块，**不是**通用浏览器模拟器。

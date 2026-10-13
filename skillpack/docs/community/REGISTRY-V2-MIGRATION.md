@@ -465,10 +465,10 @@ Still **not** implemented, and not claimed:
 ## 10. Reproducing this migration
 
 ```powershell
-cd D:\Project\skills-hub\integrated-skill-hub
-C:\Users\Toti\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\python.exe skills\scripts\test-community-route.py
-C:\Users\Toti\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\python.exe skills\scripts\test-contract-v2.py
-C:\Users\Toti\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\python.exe scripts\validate-integration.py
+cd C:\relab2
+<python> skills\scripts\test-community-route.py
+<python> skills\scripts\test-contract-v2.py
+<python> scripts\validate-integration.py
 powershell -NoProfile -ExecutionPolicy Bypass -File skills\scripts\verify-routing-coherence.ps1
 ```
 

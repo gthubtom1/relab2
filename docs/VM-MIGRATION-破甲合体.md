@@ -76,7 +76,7 @@ $r.Available; $r.Command; $r.Via
 - `pyghidra-mcp`（Ghidra 无头反编译，20 工具）。配置文件：`~/.omp/agent/mcp.json`
   ```json
   "pyghidra-mcp": {
-    "command": "<VM 里的>\runtime\venv-re\Scripts\pyghidra-mcp.exe",
+    "command": "<VM 里的>\runtime\python-venv\Scripts\pyghidra-mcp.exe",
     "env": { "JAVA_HOME": "<VM 的 JDK>", "GHIDRA_INSTALL_DIR": "<VM 的 Ghidra 根>", "PYTHONUNBUFFERED": "1" }
   }
   ```

@@ -90,7 +90,7 @@ def visibility_of(url: str) -> tuple[str, str]:
 
 def _find_gh() -> str | None:
     """gh 不在 PATH 时常见于 D:\\Tools\\gh\\bin。"""
-    for cand in (r"D:\Tools\gh\bin\gh.exe",):
+    for cand in (r"<工具根>\<分类>\<工具名>\bin\gh.exe",):
         if os.path.isfile(cand):
             return cand
     return None

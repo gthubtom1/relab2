@@ -18,7 +18,7 @@
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
 $cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
 $rasm = (Resolve-ReverseToolSpec -Name 'rasm2').Command
-$py   = 'D:\EXE\python\python.exe'   # pefile 2024.8.26
+$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command   # pefile 2024.8.26
 ```
 
 ## 步骤
@@ -246,7 +246,7 @@ resolved function ptr:  最终函数地址
 6. **`LoadLibraryA` 和 `LoadLibraryW` 要都断**。样本可能只用宽字符版。实测这两个都断才不漏。
 7. **`-y C:\path\*.dll` / `cdb -cf` 脚本里的注释用 `$$`**，不要用 `#`。
 8. **cdb 的退出码不可信**（实测 `-2147024866`），判成功看日志有没有 `Breakpoint 0 hit`。
-9. **`pefile` 不在 `venv-re`**，在 `D:\EXE\python\python.exe` 或 `venv-floss`。见 `aob-signature-scan.md` 坑 4。
+9. **`pefile` 不一定在每个解释器里都有** —— 用探测层别名 `pyre` 指向的那个。见 `aob-signature-scan.md` 坑 4。
 
 ## 相关
 

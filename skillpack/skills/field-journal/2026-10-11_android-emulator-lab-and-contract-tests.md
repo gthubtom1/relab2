@@ -58,7 +58,7 @@ APK 逆向 / 环境能力层 / 工具链建设
 | 契约测试崩在「无法覆盖变量 HOME」 | `$HOME` 是 PowerShell 只读变量（用户主目录），拿它当局部变量直接抛异常 | 改名 `$keyHomeCode` | 2 min |
 | 反例控制组第一次跑不出来 | 副本放 `%TEMP%`，探测层上溯找不到 `Bootstrap.ps1`，`..\..\scripts\...` 解析成 `C:\..\..\...` | 副本放到仓内 gitignore 的 `/work/` 下 | 10 min |
 | 4 张卡初版 validate 全红 | ① fixture 路径按 `skillpack/` 解析却写成仓库根相对；② 一张卡只有 1 次复现 | 加 `resolve_ref()` 按仓库根解析；补第二次独立复现 | 5 min |
-| `emulator-lab.ps1` 用 Bash 语法探测失败 | Bash 不吃 PowerShell 语法；`/d/EXE/python/python.exe` 也不是有效路径 | 探针落盘成 .ps1 再 `-File` 跑；Python 用 PATH 里的 `D:\EXE\python\python.exe` | 3 min |
+| `emulator-lab.ps1` 用 Bash 语法探测失败 | Bash 不吃 PowerShell 语法；`(Resolve-ReverseToolSpec -Name 'pyre').Command` 也不是有效路径 | 探针落盘成 .ps1 再 `-File` 跑；Python 用 PATH 里的 `(Resolve-ReverseToolSpec -Name 'pyre').Command` | 3 min |
 
 ## 工具链发现
 

@@ -33,8 +33,8 @@
 
 ```
 已启动（只听本机）：http://127.0.0.1:58533
-页面地址（带一次性令牌，打开就行）：http://127.0.0.1:58533/?t=A9TGK4WvkS-1aSaP67pQKi9MmFO3YPX_
-令牌：A9TGK4WvkS-1aSaP67pQKi9MmFO3YPX_
+页面地址（带一次性令牌，打开就行）：http://127.0.0.1:58533/?t=<当次运行的一次性令牌，已打码>
+令牌：<当次运行的一次性令牌，已打码>
 Ctrl+C 关掉。
 ```
 
@@ -50,7 +50,7 @@ HTTP 200
 {
     "ok":  true,
     "version":  "0.1.0",
-    "token":  "A9TGK4WvkS-1aSaP67pQKi9MmFO3YPX_",
+    "token":  "<当次运行的一次性令牌，已打码>",
     "package":  {
                     "ready":  true,
                     "reason":  "",
@@ -88,19 +88,19 @@ HTTP 200
 
 ```
 命中 13 条
-codex      家目录在=True  入口=AGENTS.md        入口文件在=True  已装=False 运行中=False pids=  C:\Users\Toti\.codex
-claude     家目录在=True  入口=CLAUDE.md        入口文件在=True  已装=False 运行中=False pids=  C:\Users\Toti\.claude
-cursor     家目录在=True  入口=AGENTS.md        入口文件在=False 已装=False 运行中=False pids=  C:\Users\Toti\.cursor
-grok       家目录在=True  入口=AGENTS.md        入口文件在=True  已装=False 运行中=False pids=  C:\Users\Toti\.grok
-gemini     家目录在=True  入口=GEMINI.md        入口文件在=True  已装=False 运行中=False pids=  C:\Users\Toti\.gemini
-deepseek   家目录在=False 入口=DEEPSEEK.md      入口文件在=False 已装=False 运行中=False pids=  C:\Users\Toti\.deepseek
-hermes     家目录在=False 入口=SOUL.md          入口文件在=False 已装=False 运行中=False pids=  C:\Users\Toti\.hermes
-pi         家目录在=True  入口=agent/AGENTS.md  入口文件在=True  已装=False 运行中=False pids=  C:\Users\Toti\.pi
-dsh        家目录在=True  入口=AGENTS.md        入口文件在=True  已装=False 运行中=True  pids=5968,8064,8236,12112,12876,20152  C:\Users\Toti\.dsh
-zcode      家目录在=False 入口=AGENTS.md        入口文件在=False 已装=False 运行中=False pids=  C:\Users\Toti\.zcode
-opencode   家目录在=True  入口=AGENTS.md        入口文件在=True  已装=False 运行中=False pids=  C:\Users\Toti\.config\opencode
-windsurf   家目录在=False 入口=AGENTS.md        入口文件在=False 已装=False 运行中=False pids=  C:\Users\Toti\.windsurf
-aider      家目录在=False 入口=AGENTS.md        入口文件在=False 已装=False 运行中=False pids=  C:\Users\Toti\.aider
+codex      家目录在=True  入口=AGENTS.md        入口文件在=True  已装=False 运行中=False pids=  <用户目录>\.codex
+claude     家目录在=True  入口=CLAUDE.md        入口文件在=True  已装=False 运行中=False pids=  <用户目录>\.claude
+cursor     家目录在=True  入口=AGENTS.md        入口文件在=False 已装=False 运行中=False pids=  <用户目录>\.cursor
+grok       家目录在=True  入口=AGENTS.md        入口文件在=True  已装=False 运行中=False pids=  <用户目录>\.grok
+gemini     家目录在=True  入口=GEMINI.md        入口文件在=True  已装=False 运行中=False pids=  <用户目录>\.gemini
+deepseek   家目录在=False 入口=DEEPSEEK.md      入口文件在=False 已装=False 运行中=False pids=  <用户目录>\.deepseek
+hermes     家目录在=False 入口=SOUL.md          入口文件在=False 已装=False 运行中=False pids=  <用户目录>\.hermes
+pi         家目录在=True  入口=agent/AGENTS.md  入口文件在=True  已装=False 运行中=False pids=  <用户目录>\.pi
+dsh        家目录在=True  入口=AGENTS.md        入口文件在=True  已装=False 运行中=True  pids=5968,8064,8236,12112,12876,20152  <用户目录>\.dsh
+zcode      家目录在=False 入口=AGENTS.md        入口文件在=False 已装=False 运行中=False pids=  <用户目录>\.zcode
+opencode   家目录在=True  入口=AGENTS.md        入口文件在=True  已装=False 运行中=False pids=  <用户目录>\.config\opencode
+windsurf   家目录在=False 入口=AGENTS.md        入口文件在=False 已装=False 运行中=False pids=  <用户目录>\.windsurf
+aider      家目录在=False 入口=AGENTS.md        入口文件在=False 已装=False 运行中=False pids=  <用户目录>\.aider
 
 真实存在的家目录（exists=true）：8 个
 判定： 通过

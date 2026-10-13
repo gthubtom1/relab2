@@ -4,7 +4,6 @@
 >
 > **什么时候用**：改动 `web-protocol-reverse` 本包之后、提交之前，用本文判断技能包的行为是否仍然 protocol-first。共 160 条用例。
 >
-> **平台与本机状态**：本文是自测规格，不含可执行脚本。源文档提到的 `scripts/forward_test_report.py` 与 `scripts/validate_skill.py` **在本包中不存在** —— `web-protocol-reverse/` 下没有 `scripts/` 目录。改编已把这些引用改写为本机可实际执行的做法（见「步骤」段与「Failure signals」段）。本机 `D:\EXE\python\python.exe` 3.12.0、`node v24.20.0`、`tshark 4.6.8`、`mitmdump` 12.2.3、`frida` 17.17.0、`playwright` 1.62.0（chromium-1243）可用；**本机未挂载任何 web 侧 MCP**（chrome-devtools / js-reverse / WireMCP / AdsPower / Camoufox / reqable 均无），也没有 `iv8`、`esprima`/`acorn`/`@babel/parser`。因此本套件中以这些工具为前提的用例，在本机只能记为「未在本机验证」，**不得声称已通过**。全文的「Expected route」是**路由期望**，不是「本机已跑通」的记录。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -99,7 +98,7 @@
   - `linked_workitem` → `WI-xxx` 必须真实存在
 - 自检命令（Windows）：
   ```powershell
-  D:\EXE\python\python.exe skillpack\skills\case-review\scripts\review_case.py work\<case> --verify-hashes --strict
+  & (Resolve-ReverseToolSpec -Name 'pyre').Command skillpack\skills\case-review\scripts\review_case.py work\<case> --verify-hashes --strict
   ```
 - 每条任务的判定（路由是否正确、结论是否具备）本质上是一条 `evidence` 记录或一条 Finding 依据；要落到 case 包里时按上面的字段写，不要另造字段名。审查流程见 `../../SKILL.md`，落盘模板见 `../../../field-journal/_template.md`。
 
@@ -3202,7 +3201,7 @@ A successful chain and a failing chain have the same final request body hash, bu
 Expected route:
 
 - `../triage/reproducible-evidence-playbook.md`
-- （源文档此处引用 `scripts/transcript_diff.py`，该脚本在本包中不存在；实际动作：用本机可用的 `D:\Tools\Wireshark\tshark.exe` 离线读两条 pcap 做差异，按 Must conclude 判定第一处分歧）
+- （源文档此处引用 `scripts/transcript_diff.py`，该脚本在本包中不存在；实际动作：用本机可用的 `(Resolve-ReverseToolSpec -Name 'tshark').Command` 离线读两条 pcap 做差异，按 Must conclude 判定第一处分歧）
 
 Must conclude:
 

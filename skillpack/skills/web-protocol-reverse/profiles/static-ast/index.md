@@ -3,7 +3,7 @@
 > **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License）的 `index.md`。原文英文，本篇中文改写。
 > **用途**：当一份现成的 JavaScript 资源文件本身已经是证据产物、下一步目标是让其中的签名器（signer）、序列化器（serializer）或解码器（decoder）边界变得可读时，走这条 profile。
 > **前置（本机实测，2026-10-10）**：
-> - Node ✅ `D:\Tools\Node\node.exe` v24.20.0（npm 11.19.0 随附）
+> - Node ✅ `(Resolve-ReverseToolSpec -Name 'node').Command` v24.20.0（npm 11.19.0 随附）
 > - **npm 解析器包 ❌ 本机未安装**：`esprima` / `acorn` / `@babel/parser` / `@babel/traverse` / `@babel/generator` / `acorn-walk` 用 `require.resolve()` 逐个验证，全部 MISSING。要用本文流程，**必须先 `npm i`**（建议装到任务目录，不要装进 skill 树）。
 > - **profile 自带脚本 ❌ 未落地**：本文提到的 `package.json`、`package-lock.json`、`scripts/run-pipeline.js`、`tests/` **都不在本包里**。要用得先从上游 MIT 仓库取，或自行实现等价管线。
 > - 本篇的流程、检测家族与改写范围描述的是上游管线的能力边界，**未在本机端到端跑通**。

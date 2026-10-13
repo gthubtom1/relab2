@@ -28,9 +28,9 @@
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r = Resolve-ReverseToolSpec -Name 'frida'
-& $r.Command --version        # D:\EXE\python\Scripts\frida.exe
+& $r.Command --version        # (Resolve-ReverseToolSpec -Name 'frida').Command
 $r = Resolve-ReverseToolSpec -Name 'objection'
-& $r.Command --version        # D:\EXE\python\Scripts\objection.exe
+& $r.Command --version        # (Resolve-ReverseToolSpec -Name 'objection').Command
 $r = Resolve-ReverseToolSpec -Name 'adb'
 & $r.Command devices
 ```

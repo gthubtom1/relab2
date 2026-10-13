@@ -1,7 +1,7 @@
 # env_core 高级路径（Optional env_core Advanced Path）
 > **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License）的 `env-core-advanced.md`（原标题 `Optional env_core Advanced Path`）。**下方 JavaScript 代码块一字未改**（代码不译）。
 > **用途**：说明**什么时候**才该从 `scripts/env-diagnose.js` + `env/` 模块树，升级到 `scripts/env_core.js` 这条高级手写补环境路径，以及升级后怎么组织 `run.js`。
-> **前置（本机实测，2026-10-10）**：Node ✅ `D:\Tools\Node\node.exe` v24.20.0。⚠️ `scripts/env_core.js` 与 `scripts/webpack_runtime.js` **未随本包落地**；代码中调用的 `env.init` / `env.createProxy` / `env.report` / `env.restore` / `env.monitor` / `env.setFuncNative` 都是**上游 API 形态**，**未在本机验证**。Docker 隔离命令为上游写法，本机未实测执行。
+> **前置（本机实测，2026-10-10）**：Node ✅ `(Resolve-ReverseToolSpec -Name 'node').Command` v24.20.0。⚠️ `scripts/env_core.js` 与 `scripts/webpack_runtime.js` **未随本包落地**；代码中调用的 `env.init` / `env.createProxy` / `env.report` / `env.restore` / `env.monitor` / `env.setFuncNative` 都是**上游 API 形态**，**未在本机验证**。Docker 隔离命令为上游写法，本机未实测执行。
 > **用法**：先跑 `../index.md` 的默认路径；只有命中「高级路径准入」的 4 条之一才升级。升级≠跳过固定样本验证。
 >
 > ⚠️ 安全：`env_core.js` 会在 host Node realm 中执行代码，**风险高于诊断器**。只在无凭据、最小挂载、默认断网的外部 sandbox 里跑。

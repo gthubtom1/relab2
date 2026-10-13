@@ -8,7 +8,7 @@ This document exists because `HANDOFF.md` recorded one symptom — `bloodhound` 
 that trade against each other. Five of them are recall defects and four are precision
 defects, so no fix may be accepted on the evidence of one side alone.
 
-Everything below was produced by read-only scripts in `D:\Project\skills-hub\work\p0\`
+Everything below was produced by read-only scripts in `work\p0\`
 (outside this repository, so the tree stays clean):
 
 | script | what it measures |
@@ -25,8 +25,8 @@ Reproduce any row with:
 
 ```text
 $env:PYTHONIOENCODING='utf-8'
-python D:\Project\skills-hub\work\p0\p0-measure.py
-python D:\Project\skills-hub\work\p0\p0-proof-deadwidening.py
+python work\p0\p0-measure.py
+python work\p0\p0-proof-deadwidening.py
 ```
 
 ## The register

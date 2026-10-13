@@ -8,8 +8,8 @@
 >
 > | 能力 | 本机状态 |
 > |---|---|
-> | `node v24.20.0`（`D:\Tools\Node\node.exe`）+ `vm` + 自建 stub | ✅ 可用（**首选轻量宿主**） |
-> | `playwright（模块在 `D:\EXE\python\Lib\site-packages\playwright`）` + chromium-1243 | ✅ 可用（需显式 `executable_path`） |
+> | `node v24.20.0`（`(Resolve-ReverseToolSpec -Name 'node').Command`）+ `vm` + 自建 stub | ✅ 可用（**首选轻量宿主**） |
+> | `playwright` + <playwright 浏览器> | ✅ 可用（需显式 `executable_path`） |
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -17,7 +17,7 @@
 > **可用写法**：`p.chromium.launch(channel="msedge")`（实测能起、能渲染、能读 DOM），
 > 或 `launch(executable_path=<显式路径>)`。照抄裸 `launch()` 一定失败。
 > 
-> | `python 3.12`（`D:\EXE\python\python.exe`） | ✅ 可用（**拥有真实 HTTP**） |
+> | `python 3.12`（`(Resolve-ReverseToolSpec -Name 'pyre').Command`） | ✅ 可用（**拥有真实 HTTP**） |
 > | **`iv8`** | ❌ **本机无**（社区运行时，PyPI 无此发行版） |
 >
 > 源文档反复以 `iv8` 作为「嵌入式宿主」的**范例**。本机**没有 iv8**，
@@ -89,7 +89,7 @@
 
    | 宿主 | 代价 | 适用 | 本机命令 |
    |---|---|---|---|
-   | `node` + `vm` + 自建 stub | 低 | 定时器、cookie、XHR stub、纯逻辑 | `D:\Tools\Node\node.exe harness.js` |
+   | `node` + `vm` + 自建 stub | 低 | 定时器、cookie、XHR stub、纯逻辑 | `(Resolve-ReverseToolSpec -Name 'node').Command harness.js` |
    | `playwright` | 高 | 真实 DOM / canvas / 原生 `toString` | 见 `iv8-runtime-cheatsheet.md` B 节 |
    | 嵌入式宿主（源文档范例 `iv8`） | 中 | 生命周期 + 网络注入一体化 | ⚠ **本机无** |
 

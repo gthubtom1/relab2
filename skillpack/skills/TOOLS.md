@@ -68,8 +68,8 @@ $r.Via         # 从哪找到的 —— scan 的要留意身份
 >
 > - **环境变量错位**：工具装在非默认位置时 exe 找得到但跑不起来，症状多为**静默无输出**，看着像工具坏了。
 >   `IDADIR` 错位时 `idat.exe` 零输出；`DOTNET_ROOT` 错位时 ilspycmd 报「You must install .NET」。
->   本机 .NET 根就是 `D:\Tools\runtime\dotnet8` —— 直接设 `$env:DOTNET_ROOT = 'D:\Tools\runtime\dotnet8'`。
->   交叉验证：`Resolve-ReverseToolSpec -Name dotnet` 返回的 `Command` 就是 `D:\Tools\runtime\dotnet8\dotnet.exe`。
+>   **修法：探测式取值，不写死路径** —— `$env:DOTNET_ROOT = (Get-Command dotnet).Source.Replace('\dotnet.exe','')`，
+>   或直接读 `Resolve-ReverseToolSpec -Name 'dotnet'` 返回的 `Command`，取它所在目录。
 > - **GUI 混入**：PATH 里 GUI 版与 CLI 版并存，**PATH 级（第 2 级）命中早于 `_map.json` 级（第 3 级）**，
 >   所以探测可能返回 GUI 而你毫无察觉。拿到 `Command` 后先看文件名是不是 CLI 孪生：
 >   `die`→`diec`、`ida`→`idat`、`Wireshark`→`tshark`、`x64dbg`→`headless`。
@@ -156,18 +156,18 @@ SDK 的进 `%LOCALAPPDATA%`。**第 1 步的探测对所有工具都必做**，�
 
 | 工具 | 干什么 | 谁要它 | 装法 | 许可 |
 |---|---|---|---|---|
-| **DIE** (`diec`) | 查壳、判文件类型、识别编译器 | re-triage, ghidra-static | GitHub DIE releases → `D:\Tools\die\` | 🟢 |
-| **capa** | 能力识别（加密/网络/注入分支） | ghidra-static, malware-analysis | GitHub releases → `D:\Tools\capa\`，rules 一并放 `D:\Tools\capa\rules\` | 🟢 |
-| **FLOSS** | 提取静态/混淆/字符串（.NET 加 `--language dotnet`） | ghidra-static, dotnet-reverse | GitHub releases → `D:\Tools\floss\` | 🟢 |
-| **radare2** (`r2`/`rabin2`/`rasm2`) | CLI 侦察、反汇编、patch | radare2 skill | GitHub radare2 releases → `D:\Tools\radare2\` | 🟢 |
+| **DIE** (`diec`) | 查壳、判文件类型、识别编译器 | re-triage, ghidra-static | GitHub DIE releases → `<工具根>\<分类>\<工具名>\` | 🟢 |
+| **capa** | 能力识别（加密/网络/注入分支） | ghidra-static, malware-analysis | GitHub releases → `<工具根>\<分类>\<工具名>\`，rules 一并放 `<工具根>\<分类>\<工具名>\rules\` | 🟢 |
+| **FLOSS** | 提取静态/混淆/字符串（.NET 加 `--language dotnet`） | ghidra-static, dotnet-reverse | GitHub releases → `<工具根>\<分类>\<工具名>\` | 🟢 |
+| **radare2** (`r2`/`rabin2`/`rasm2`) | CLI 侦察、反汇编、patch | radare2 skill | GitHub radare2 releases → `(Resolve-ReverseToolSpec -Name 'r2').Command 所在目录\` | 🟢 |
 | **7-Zip** | 解压样本、解包 | 全局 | `winget install --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity 7zip.7zip` | 🟢 |
-| **UPX** | UPX 加/脱壳 | re-unpack | GitHub releases → `D:\Tools\upx\` | 🟢 |
+| **UPX** | UPX 加/脱壳 | re-unpack | GitHub releases → `<工具根>\<分类>\<工具名>\` | 🟢 |
 | **IDA Pro** | 反编译主力 | ida-reverse | **商业**，自己买 | 🔴 |
-| **Ghidra** | 开源反编译主力（无 IDA 时主入口） | ghidra-reverse | GitHub releases → `D:\Tools\ghidra\`，需 JDK 21 | 🟢 |
-| **x64dbg** | Windows 动态调试 | ghidra-static, re-dynamic | GitHub snapshots → `D:\Tools\x64dbg\` | 🟢 |
+| **Ghidra** | 开源反编译主力（无 IDA 时主入口） | ghidra-reverse | GitHub releases → `<工具根>\<分类>\<工具名>idra\`，需 JDK 21 | 🟢 |
+| **x64dbg** | Windows 动态调试 | ghidra-static, re-dynamic | GitHub snapshots → `<工具根>\<分类>\<工具名>\` | 🟢 |
 | **Binary Ninja** | 商业反编译 | binary-ninja-reverse | **商业** | 🔴 |
 | **WinDbg (`cdb`)** | crash dump 分析 | ghidra-static | Windows SDK Debugging Tools | 🟢 |
-| **pe-sieve** | 注入/inline hook 扫描 | vuln-audit, malware-analysis | GitHub releases → `D:\Tools\pe-sieve\` | 🟢 |
+| **pe-sieve** | 注入/inline hook 扫描 | vuln-audit, malware-analysis | GitHub releases → `<工具根>\<分类>\<工具名>\` | 🟢 |
 
 ### GUI / CLI 孪生对照（**拉错会挂死**）
 
@@ -191,8 +191,8 @@ GUI 程序弹窗等输入、零 stdout、进程永不退出。**agent 不得经 
 | 工具 | 干什么 | 装法 | 许可 |
 |---|---|---|---|
 | **ilspycmd** | .NET 反编译主通道 | `dotnet tool install -g ilspycmd --version 9.1.0.7988`（**锁版本，见下**） | 🟢 |
-| **dnSpyEx** | IL 级调试/补丁 | GitHub dnSpyEx releases → `D:\Tools\dnSpyEx\`（含 `dnSpy.Console.exe`） | 🟢 |
-| **de4dot-cex** | .NET 脱混淆 | GitHub de4dot-cex → `D:\Tools\de4dot\` | 🟢 |
+| **dnSpyEx** | IL 级调试/补丁 | GitHub dnSpyEx releases → `<工具根>\<分类>\<工具名>\`（含 `dnSpy.Console.exe`） | 🟢 |
+| **de4dot-cex** | .NET 脱混淆 | GitHub de4dot-cex → `<工具根>\<分类>\<工具名>\` | 🟢 |
 
 > **★ ilspycmd 必须锁版本**：最新版（11.x）的 NuGet 包里**只有 `tools\net10.0\`**，需要 .NET 10。
 > 装在 .NET 8 上会报 `工具的 NuGet 包中的设置文件无效: 在包中找不到设置文件 "DotnetToolSettings.xml"` ——
@@ -207,11 +207,11 @@ GUI 程序弹窗等输入、零 stdout、进程永不退出。**agent 不得经 
 
 | 工具 | 干什么 | 装法 | 许可 |
 |---|---|---|---|
-| **jadx** | DEX→Java，APK 反编译第一源 | GitHub jadx releases → `D:\Tools\jadx\` | 🟢 |
-| **apktool** | 资源完整还原 + 回编译 | GitHub Apktool jar + `apktool.bat` 包装 → `D:\Tools\apktool\`（本机登记用的是 `android\AndroidKiller_fix\bin\apktool\` 那份，已登记进 `_map.json`） | 🟢 |
+| **jadx** | DEX→Java，APK 反编译第一源 | GitHub jadx releases → `<工具根>\<分类>\<工具名>\` | 🟢 |
+| **apktool** | 资源完整还原 + 回编译 | GitHub Apktool jar + `apktool.bat` 包装 → `<工具根>\<分类>\<工具名>\`（本机登记用的是 `android\AndroidKiller_fix\bin\apktool\` 那份，已登记进 `_map.json`） | 🟢 |
 | **Android SDK platform-tools** (`adb`) | 装机/驱动/截图 | `winget install ... Google.PlatformTools`，或 `sdkmanager "platform-tools"`。★ 见 §4.3 六个 adb 抢端口 | 🟢 |
 | **scrcpy** | 投屏 + 自带能用的 adb | `winget install --id Genymobile.scrcpy --source winget` | 🟢 |
-| **bundletool** | AAB/APKS 处理（分析 .apk 用不到） | jar + wrapper → `D:\Tools\bundletool\`，见 §4.2 | 🟢 |
+| **bundletool** | AAB/APKS 处理（分析 .apk 用不到） | jar + wrapper → `<工具根>\<分类>\<工具名>\`，见 §4.2 | 🟢 |
 | **emulator** | 模拟器（**本包不建议**，见 §4.1） | `sdkmanager "emulator"` + `system-images;android-34;google_apis;x86_64` | 🟢 |
 | **apksigner / zipalign** | 重签名 / 对齐 | 随 Android SDK build-tools，`sdkmanager "build-tools;35.0.0"` | 🟢 |
 | **apkanalyzer / aapt2** | 官方 smali 反汇编、资源解析 | 随 SDK cmdline-tools / build-tools | 🟢 |
@@ -253,9 +253,9 @@ minSdk 31（要 Android 12+），手上这台是 Android 11 → `INSTALL_FAILED_
 
 ```powershell
 # SDK 组件
-sdkmanager --sdk_root=D:\Tools\android-sdk "platform-tools"
-sdkmanager --sdk_root=D:\Tools\android-sdk "emulator"
-sdkmanager --sdk_root=D:\Tools\android-sdk "system-images;android-34;google_apis;x86_64"
+sdkmanager --sdk_root=<工具根>\<分类>\<工具名> "platform-tools"
+sdkmanager --sdk_root=<工具根>\<分类>\<工具名> "emulator"
+sdkmanager --sdk_root=<工具根>\<分类>\<工具名> "system-images;android-34;google_apis;x86_64"
 
 # 许可必须**本人**点接受（法律条款，智能体不得代按），
 # 或自己跑 sdkmanager --licenses 并逐条输入 y
@@ -265,7 +265,7 @@ winget install --id Genymobile.scrcpy --source winget
 ```
 
 `bundletool`（只处理 AAB/APKS，分析 `.apk` 用不到）：下载 `bundletool-all-*.jar`
-到 `D:\Tools\bundletool\`，同目录放一个调 `java -jar` 的 `bundletool.bat`
+到 `<工具根>\<分类>\<工具名>\`，同目录放一个调 `java -jar` 的 `bundletool.bat`
 （**必须 GBK 编码 + CRLF**，否则 cmd 读 UTF-8 会把中文注释当命令执行）。
 
 ### 4.3 六个 adb 抢端口（本包实测踩过，最易误诊）
@@ -286,8 +286,8 @@ daemon 全监听 5037，版本不同就互相 `killing`。第三方助手（Andr
 ```powershell
 adb kill-server
 Get-Process adb -ErrorAction SilentlyContinue | Stop-Process -Force
-D:\Tools\android-sdk\platform-tools\adb.exe start-server
-D:\Tools\android-sdk\platform-tools\adb.exe devices -l   # 设备应稳定出现
+<工具根>\<分类>\<工具名>\platform-tools\adb.exe start-server
+<工具根>\<分类>\<工具名>\platform-tools\adb.exe devices -l   # 设备应稳定出现
 ```
 
 `apk-debug.ps1` 启动时会自动做这件事。
@@ -305,9 +305,9 @@ adb: failed to install app.apk: Failure [INSTALL_FAILED_OLDER_SDK:
 **先对这两个数**（aapt2 拿 APK 的，adb 拿设备的）：
 
 ```powershell
-& 'D:\Tools\android-sdk\build-tools\34.0.0\aapt2.exe' dump badging app.apk |
+& '<工具根>\<分类>\<工具名>\build-tools\34.0.0\aapt2.exe' dump badging app.apk |
   Select-String "sdkVersion"
-& 'D:\Tools\android-sdk\platform-tools\adb.exe' shell getprop ro.build.version.sdk
+& '<工具根>\<分类>\<工具名>\platform-tools\adb.exe' shell getprop ro.build.version.sdk
 ```
 
 `minSdk 31` = 要 Android 12；设备 `30` = Android 11 —— **差一个版本，且无法绕过**。
@@ -428,7 +428,7 @@ python .\skillpack\skills\scripts\experience-card.py validate
 
 | 工具 | 干什么 | 装法 | 许可 |
 |---|---|---|---|
-| **Wireshark/tshark** | pcap 协议分层、`--export-objects` 提取 | 官方安装包（7z 免安装）→ `D:\Tools\wireshark\` | 🟢 |
+| **Wireshark/tshark** | pcap 协议分层、`--export-objects` 提取 | 官方安装包（7z 免安装）→ `<工具根>\<分类>\<工具名>\` | 🟢 |
 | **Npcap** | 实时抓包驱动 | Wireshark 安装器内一并装，需管理员 | 🟢 |
 | **mitmproxy** | HTTPS 中间人、addon | `pip install mitmproxy` | 🟢 |
 | **Fiddler Classic/Everywhere** | Windows 侧抓包 | 官网下载 | 🟡 |
@@ -456,7 +456,7 @@ python .\skillpack\skills\scripts\experience-card.py validate
 | **yara-rules 库** | 通用规则集（反调试 / 加壳器 / 恶意样本 / CVE / 能力） | ★ **`yara` 不吃目录**，只能传单文件；整库靠根目录的 `*_index.yar`（内部用 `include` 串子目录）。装法：`gh api repos/Yara-Rules/rules/tarball/master > _repo.tar.gz` 后解压 —— `git clone` 在部分网络下 TLS 握手会被切断，`urllib` 同样失败，`gh` 的 HTTP 栈可用。解压后把索引文件当 `-r` 目标 | 🟢 |
 | **binwalk** | 固件提取 | `cargo install binwalk`（无 winget 无预编译） | 🟡 |
 
-> **pip 类工具装进 venv**，别污染系统 Python。建议一个 `D:\Tools\pyrev-venv\`，`D:\Tools\pyrev-venv\Scripts\` 加 PATH。
+> **pip 类工具装进 venv**，别污染系统 Python。建议一个 `<工具根>\runtime\<venv 名>\`，`<工具根>\runtime\<venv 名>\Scripts\` 加 PATH。
 > **angr 会把 z3-solver 钉到 4.13**（从 5.x 降级，angr 硬依赖）。两者共存无冲突，别手动升 z3。
 > **sdenv 原生编译铁律**：sdenv 带 `binding.gyp`，`npm i` 会触发 `node-gyp rebuild`。Windows 上必须有
 > **Python + Visual Studio 的「使用 C++ 的桌面开发」工作负载**，否则安装直接失败 —— 这是先决条件，不是装完再补。
@@ -483,9 +483,13 @@ python .\skillpack\skills\scripts\experience-card.py validate
 | 通道 | 端点 | 启停 |
 |---|---|---|
 | **idalib-mcp** | stdio | 装完直接注册；依赖 `IDADIR` 指向 IDA 本体 |
-| **idapro** | `127.0.0.1:13337` | 插件在 IDA GUI 内自动监听 |
-| **pyghidra-mcp** | `127.0.0.1:9111/mcp` | 常驻 HTTP 守护，冷启 7-10s，**按需起** |
-| **x64dbg-mcp** | `127.0.0.1:9094`（x64）/ 9095（x32） | 随 x64dbg/headless 启动，**按需起**；带 Bearer token |
+| **idapro** | `127.0.0.1:13337` | 插件在 IDA GUI 内自动监听；**按需**，用 `ida-reverse/scripts/start.ps1` 拉起 |
+| **pyghidra-mcp** | stdio 或 `127.0.0.1:9111/mcp` | **按需启动，没有常驻守护**；HTTP 形态冷启 7–10s，幂等 |
+| **x64dbg-mcp** | `127.0.0.1:9094`（x64）/ 9095（x32） | **按需**：插件活在被调试进程里，**必须拉 GUI x64dbg**；带 Bearer token |
+
+> ⚠️ **`headless.exe` 起不了 x64dbg MCP。** 三组对照实测：快目标 2.1s 退出、慢目标（Sleep 60s）**同样 2.1s** 退出 ——
+> command loop 无命令即自杀，`MCP listening` 到 `MCP server stopped` 只有 **2.1 秒**窗口，`-cf` 脚本也不执行。
+> 动态调试一律拉 **GUI x64dbg**（插件随进程加载，9094 才监听）。
 
 > **注册 ≠ 已监听。** HTTP 型 MCP 全是按需启动，服务未起只表现为该 server `failed`。
 > **端口必须实测确认，不得猜。** 尤其 **9095 是 x32 的服务口不是控制口**，别向它发 STOP。

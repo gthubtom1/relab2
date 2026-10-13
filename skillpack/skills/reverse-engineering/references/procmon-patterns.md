@@ -20,7 +20,7 @@
 
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
-$pm = 'D:\Tools\Sysinternals\Procmon64.exe'   # GUI + CLI 皆可用
+$pm = '<工具根>\<分类>\<工具名>\Procmon64.exe'   # GUI + CLI 皆可用
 ```
 
 ★ **Procmon 有完整的 CLI**（源文档只提 GUI）。CLI 适合自动化，但**过滤器只能靠 GUI 配置**
@@ -58,7 +58,7 @@ $pm = 'D:\Tools\Sysinternals\Procmon64.exe'   # GUI + CLI 皆可用
 
 ```powershell
 $ErrorActionPreference = 'Continue'
-$pm  = 'D:\Tools\Sysinternals\Procmon64.exe'
+$pm  = '<工具根>\<分类>\<工具名>\Procmon64.exe'
 $dir = 'C:\relab2\_kbverify\pm'
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 Get-ChildItem "$dir\*" | Remove-Item -Force -EA SilentlyContinue

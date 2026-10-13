@@ -4,7 +4,6 @@
 >
 > **什么时候用**：响应体返回 `200` 但**读不懂**；或者数据只有经过一层 decode helper（解码辅助）、字形图（glyph map）、protobuf parser（解析器）或解压器才出现。
 >
-> **平台与本机状态**：`python 3.12.0`（`D:\EXE\python\python.exe`）、`node v24.20.0`（`D:\Tools\Node\node.exe`）本机可用。**推荐最终交付形态是纯 Python 解码器**（判据第 3 条）。抓原始载荷用 `tshark 4.6.8`（`D:\Tools\Wireshark\tshark.exe`）或 `mitmdump 12.2.3`（`D:\EXE\python\Scripts\mitmdump.EXE`），**本机 `reqable` 无**。
 
 ---
 
@@ -48,7 +47,7 @@
 
 ```powershell
 # 纯 Python 优先：protobuf / msgpack / zstd 都有现成库
-D:\EXE\python\python.exe -c "import google.protobuf, msgpack; print('ok')"
+& (Resolve-ReverseToolSpec -Name 'pyre').Command -c "import google.protobuf, msgpack; print('ok')"
 ```
 
 若某层确实只有 JS 实现、短期内移植不划算，可保留一个**极窄的本地 helper**（交付门 `algorithmic` 标签与 `runtimeFree: false` 必须如实标注）—— 但它**不得**需要浏览器。

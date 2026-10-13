@@ -4,7 +4,6 @@
 >
 > **什么时候用**：选「下一个该激活哪个 MCP 家族」时。**它不替代**启动门（Startup Gate）、家族分诊、浏览器交接或交付门。
 >
-> **平台与本机状态**：**本机已挂载的 MCP 全部是逆向侧，无 web 侧**：`pyghidra-mcp`（stdio）、`idapro`（http `127.0.0.1:13337/mcp`）、`ida-pro-mcp`（stdio）、`angr-mcp`（stdio）、`x64dbg-automate-mcp`（stdio）。源文档里的 `chrome-devtools` / `js-reverse` / `Camoufox` / `AdsPower` / `reqable` / `WireMCP` **本机均不可用**。本机实测可用的替代物：`playwright（模块在 `D:\EXE\python\Lib\site-packages\playwright`）`、`frida 17.17.0`、`tshark 4.6.8`、`mitmdump 12.2.3`、`python 3.12.0`、`node v24.20.0`。逐项见 `./local-mcp-environment.md`。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -195,7 +194,7 @@
 **本机 `tshark` 示例**（路径本机可用）：
 
 ```powershell
-D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "http.request" -T fields -e http.host -e http.request.uri
+& (Resolve-ReverseToolSpec -Name 'tshark').Command -r flow.pcapng -Y "http.request" -T fields -e http.host -e http.request.uri
 ```
 
 传输层准入相关的工作走 `./transport-pre-gate-playbook.md` 与相关传输参考。

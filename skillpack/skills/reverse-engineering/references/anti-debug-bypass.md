@@ -138,8 +138,8 @@ $peb=000000d4dda0b000
 ```powershell
 $exe  = 'C:\path\to\adbg.exe'
 $cdb  = "$env:LOCALAPPDATA\Microsoft\WindowsApps\cdbX64.exe"
-$inj  = 'D:\Tools\ScyllaHide\InjectorCLIx64.exe'
-$dll  = 'D:\Tools\ScyllaHide\Generic\HookLibraryx64.dll'
+$inj  = '(Resolve-ReverseToolSpec -Name 'scyllahide').Command'
+$dll  = '<scyllahide 目录>\Generic\HookLibraryx64.dll'
 $log  = "$env:TEMP\cdb_sh.txt"
 $cmds = "$env:TEMP\c_sh.txt"
 
@@ -176,7 +176,7 @@ Loaded VA for NtUserBlockInput = 0x00007FFB630F8470
 Loaded VA for NtUserGetThreadState = 0x00007FFB630F1030
 
 PID    : 5080 0x13D8
-DLL Path: D:\Tools\ScyllaHide\Generic\HookLibraryx64.dll
+DLL Path: <scyllahide 目录>\Generic\HookLibraryx64.dll
 exit=0
 ```
 
@@ -188,15 +188,15 @@ exit=0
 > Usage: InjectorCLIx64.exe pid:<process id> <dll path> [nowait]
 > ```
 
-**配置文件**：本机有 6 套，路径 `D:\Tools\ScyllaHide\<profile>\scylla_hide.ini`：
+**配置文件**：本机有 6 套，路径 `<scyllahide 目录>\<profile>\scylla_hide.ini`：
 
 ```
-D:\Tools\ScyllaHide\scylla_hide.ini              （默认，CurrentProfile=VMProtect x86/x64）
-D:\Tools\ScyllaHide\Generic\scylla_hide.ini
-D:\Tools\ScyllaHide\IDA\scylla_hide.ini
-D:\Tools\ScyllaHide\Olly1\scylla_hide.ini
-D:\Tools\ScyllaHide\Olly2\scylla_hide.ini
-D:\Tools\ScyllaHide\TitanEngine\scylla_hide.ini
+<scyllahide 目录>\scylla_hide.ini              （默认，CurrentProfile=VMProtect x86/x64）
+<scyllahide 目录>\Generic\scylla_hide.ini
+<scyllahide 目录>\IDA\scylla_hide.ini
+<scyllahide 目录>\Olly1\scylla_hide.ini
+<scyllahide 目录>\Olly2\scylla_hide.ini
+<scyllahide 目录>\TitanEngine\scylla_hide.ini
 ```
 
 `Generic` 档实测内容（节选）：
@@ -278,7 +278,7 @@ pe = pefile.PE("sample_patched.exe")
 
 ### 7. 绕过手段四：Frida（可选）
 
-本机 `frida` CLI 在 `D:\EXE\python\Scripts\frida.exe`，但脚本注入类方案**优先级低于 ScyllaHide**（ScyllaHide 不依赖调试器本体，隐蔽性更好）。需要时：
+本机 `frida` CLI 在 `(Resolve-ReverseToolSpec -Name 'frida').Command`，但脚本注入类方案**优先级低于 ScyllaHide**（ScyllaHide 不依赖调试器本体，隐蔽性更好）。需要时：
 
 ```javascript
 // hook 常见反调试 API 返回「未被调试」

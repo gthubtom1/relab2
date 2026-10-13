@@ -8,7 +8,7 @@
 >
 > **`iv8` 是社区运行时，PyPI 上不存在该发行版。**
 >
-> - 本机实测：`D:\Tools` 与 `D:\EXE\python`（`pip` 环境）**均无此包**
+> - 本机实测：`D:\Tools` 与 `(Resolve-ReverseToolSpec -Name 'pyre').Command`（`pip` 环境）**均无此包**
 > - 本文**每一个**涉及 `iv8` 具体 API 的地方，都标注了：
 >   > ⚠ 本机无 iv8（本机实测：`D:\Tools` 与 Python 环境均无此包）。以下 API 形态供具备该运行时时参考，**未在本机验证**。
 > - **不要**把「装 iv8」当成唯一出路 —— 本文下半部分给出了**本机现在就能跑的替代路径**（`node` + `vm` + 自建 stub，以及 `playwright`），两者都已在本机实测跑通。
@@ -24,15 +24,15 @@
 
 | 能力 | 本机路径 | 状态 |
 |---|---|---|
-| Node.js | `D:\Tools\Node\node.exe` v24.20.0 | ✅ 可用 |
-| Python | `D:\EXE\python\python.exe` 3.12.0 | ✅ 可用 |
-| Playwright | `playwright（模块在 `D:\EXE\python\Lib\site-packages\playwright`）`（Python 包） | ✅ 包可用，⚠ 见下方浏览器路径说明 |
-| Chromium | `C:\Users\toti\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe` | ✅ 已存在，需显式 `executable_path` |
-| `tshark` | `D:\Tools\Wireshark\tshark.exe` 4.6.8 | ✅ 可用 |
-| `mitmdump` | `D:\EXE\python\Scripts\mitmdump.EXE` | ✅ 可用 |
+| Node.js | `(Resolve-ReverseToolSpec -Name 'node').Command` v24.20.0 | ✅ 可用 |
+| Python | `(Resolve-ReverseToolSpec -Name 'pyre').Command` 3.12.0 | ✅ 可用 |
+| Playwright | `playwright`（Python 包） | ✅ 包可用，⚠ 见下方浏览器路径说明 |
+| Chromium | `$env:LOCALAPPDATA\ms-playwright\<playwright 浏览器>\chrome-win64\chrome.exe` | ✅ 已存在，需显式 `executable_path` |
+| `tshark` | `(Resolve-ReverseToolSpec -Name 'tshark').Command` 4.6.8 | ✅ 可用 |
+| `mitmdump` | `(Resolve-ReverseToolSpec -Name 'mitmdump').Command` | ✅ 可用 |
 
 > ⚠ **Playwright 本机使用注意**（实测）：`playwright` 包虽在，但**未执行过 `playwright install`**，默认查找会失败。
-> 必须显式传 `executable_path` 指向已存在的 chromium-1243 可执行文件，见下方替代路径 B。
+> 必须显式传 `executable_path` 指向已存在的 <playwright 浏览器> 可执行文件，见下方替代路径 B。
 
 ---
 
@@ -191,7 +191,7 @@ canvas、WebGL、computed style、系统颜色、屏幕尺寸、`deviceMemory`�
 
 本机验证：
 ```powershell
-D:\Tools\Node\node.exe -e "console.log(Buffer.from([0x00,0xff,0x41,0x7a]).toString('base64'))"
+& (Resolve-ReverseToolSpec -Name 'node').Command -e "console.log(Buffer.from([0x00,0xff,0x41,0x7a]).toString('base64'))"
 # AP9Beg==   （本机实测）
 ```
 
@@ -301,7 +301,7 @@ console.log(JSON.stringify(netLog, null, 1));
 
 运行：
 ```powershell
-D:\Tools\Node\node.exe harness.js
+& (Resolve-ReverseToolSpec -Name 'node').Command harness.js
 ```
 
 **本机实测记录**（`node v24.20.0`，用一个自造的挑战片段验证 harness 本身）：
@@ -370,7 +370,7 @@ function watchApis(target, names, log) {
 # pw_harness.py —— 本机实测可启动、可执行 JS
 from playwright.sync_api import sync_playwright
 
-EXE = r'C:\Users\toti\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe'
+EXE = r'$env:LOCALAPPDATA\ms-playwright\<playwright 浏览器>\chrome-win64\chrome.exe'
 
 with sync_playwright() as p:
     b = p.chromium.launch(headless=True, executable_path=EXE, args=['--no-sandbox'])
@@ -389,7 +389,7 @@ cookie= 'a=1'
 isNativeToString= function getBoundingClientRect() { [native code] }
 ```
 
-结论：chromium-1243 可用；JS 求值可用；`document.cookie` 可用；**原生 `toString` 形态天然正确**（这正是 `iv8` 要用 `wrapNative` 手工模拟的东西）。
+结论：<playwright 浏览器> 可用；JS 求值可用；`document.cookie` 可用；**原生 `toString` 形态天然正确**（这正是 `iv8` 要用 `wrapNative` 手工模拟的东西）。
 
 #### B.2 用 `page.route` 做「出网捕获」（对应 `netLog`）
 

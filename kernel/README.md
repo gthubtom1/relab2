@@ -19,7 +19,10 @@
 
 **它只做一件事**：把"这套规矩"装进任何支持入口文件的 AI 客户端——
 `.codex` `.claude` `.cursor` `.grok` `.gemini` `.deepseek` `.hermes`
-`.pi` `.dsh` `.zcode` `.config/opencode` `.codeium/windsurf` `.aider`，共 13 家。
+`.pi` `.omp` `.dsh` `.zcode` `.config/opencode` `.codeium/windsurf` `.aider`，共 14 家。
+
+> 其中 **omp 是唯一一家「两文件形态」**：人设走 `PERSONALITY.md`，规则走 `RULES.md`，
+> 不需要把三段融成一份。详见 `04-console/hosts.py` 的 `entry_base` 字段。
 
 ---
 

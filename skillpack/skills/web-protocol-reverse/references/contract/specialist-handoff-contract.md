@@ -4,7 +4,6 @@
 >
 > **什么时候用**：某条聚焦路线或某个已安装的专员应当接管一个**已被证明存在**的拦路点（blocker）时。交接**收窄**工作范围，它**不放宽**目标 scope、权限、请求预算、运行时访问权或交付要求。
 >
-> **平台与本机状态**：本文是规程与 JSON schema，不依赖具体本机工具，交接契约本身无需实跑命令。但专员名按本包事实标注：源文档默认的专员家族 `camoufox-js-reverse`、`chrome-devtools`、`js-reverse` **本机均未挂载**，`iv8` **本机无**（社区运行时，PyPI 无发行版），`reqable` **本机无**。因此本机执行交接时，`requestedOwner` 只能填本包内置的聚焦路线（`python-collector` / `transport` / `static-ast` / `env-patch` / `pure-python-rebuild` 等），`fallbackRoute` 必须指向另一条可执行的本包路线 —— 详见 `../observe/local-mcp-environment.md`。
 
 ---
 
@@ -156,7 +155,7 @@
 
 ```bash
 # 本机 Python 3.12 可用；该脚本只读、无第三方依赖
-D:\EXE\python\python.exe skillpack/skills/case-review/scripts/review_case.py work/<case> --verify-hashes --strict
+& (Resolve-ReverseToolSpec -Name 'pyre').Command skillpack/skills/case-review/scripts/review_case.py work/<case> --verify-hashes --strict
 ```
 
 字段不合规时 `--strict` 会 FAIL，此时**先修字段，再重跑**，不要先宣称交接完成。

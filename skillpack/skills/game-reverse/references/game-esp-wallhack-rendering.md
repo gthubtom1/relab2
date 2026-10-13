@@ -40,7 +40,7 @@ $cdb     = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
 $peSieve = (Resolve-ReverseToolSpec -Name 'pe-sieve').Command
 $capa    = (Resolve-ReverseToolSpec -Name 'capa').Command
 $yara    = (Resolve-ReverseToolSpec -Name 'yara').Command
-$py      = 'D:\EXE\python\python.exe'
+$py      = (Resolve-ReverseToolSpec -Name 'pyre').Command
 ```
 
 > ★ 通用坑：`/x` 返回空时先查字节序（`7ffe03..` 命中、`7ffe03??` 空，

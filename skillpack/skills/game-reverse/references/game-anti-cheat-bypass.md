@@ -37,7 +37,7 @@ $cdb     = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
 $peSieve = (Resolve-ReverseToolSpec -Name 'pe-sieve').Command
 $scylla  = (Resolve-ReverseToolSpec -Name 'scyllahide').Command
 $yara    = (Resolve-ReverseToolSpec -Name 'yara').Command
-$py      = 'D:\EXE\python\python.exe'
+$py      = (Resolve-ReverseToolSpec -Name 'pyre').Command
 ```
 
 ## 分层观测面（本文主体）

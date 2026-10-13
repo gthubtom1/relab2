@@ -4,7 +4,6 @@
 >
 > **什么时候用**：**页面代码指向一个端点，而线路上走的是另一个**的时候。
 >
-> **平台与本机状态**：本文是纯方法论，不含必须在本机执行的命令。取证手段见 `./local-mcp-environment.md`（本机 `tshark 4.6.8` 读线路、`mitmdump 12.2.3` 实时观察、`frida 17.17.0` 抓 initiator 栈）。**本机 `reqable` 无**；MCP 浏览器家族 `chrome-devtools` / `js-reverse` **本机未挂载**。
 
 ---
 
@@ -26,10 +25,10 @@
 
 ```powershell
 # 方式一：tshark 列出真实出站请求（本机可用）
-D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "http.request" -T fields -e http.request.method -e http.host -e http.request.uri
+& (Resolve-ReverseToolSpec -Name 'tshark').Command -r flow.pcapng -Y "http.request" -T fields -e http.request.method -e http.host -e http.request.uri
 
 # 方式二：mitmproxy 实时观察（本机可用）
-D:\EXE\python\Scripts\mitmdump.EXE --listen-port 8899 --save-stream-file flow.mitm
+& (Resolve-ReverseToolSpec -Name 'mitmdump').Command --listen-port 8899 --save-stream-file flow.mitm
 ```
 
 ## 步骤（Working method）

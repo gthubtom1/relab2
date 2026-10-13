@@ -16,12 +16,12 @@
 
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
-$r2   = (Resolve-ReverseToolSpec -Name 'r2').Command     # D:\Tools\radare2\bin\r2.exe
-$rasm = (Resolve-ReverseToolSpec -Name 'rasm2').Command  # D:\Tools\radare2\bin\rasm2.exe
-$diec = (Resolve-ReverseToolSpec -Name 'diec').Command   # D:\Tools\DIE\diec.exe
+$r2   = (Resolve-ReverseToolSpec -Name 'r2').Command     # (Resolve-ReverseToolSpec -Name 'r2').Command
+$rasm = (Resolve-ReverseToolSpec -Name 'rasm2').Command  # (Resolve-ReverseToolSpec -Name 'rasm2').Command
+$diec = (Resolve-ReverseToolSpec -Name 'diec').Command   # (Resolve-ReverseToolSpec -Name 'diec').Command
 ```
 
-> ★ **不要用 `rabin2`**：本机 `D:\Tools\radare2\bin\rabin2.exe` 与 `r2.exe` 字节数完全相同（153600），是同一份二进制的副本，它的 `-I/-i/-H/-e/-l` 已被 r2 的启动参数占用，报 `Missing file to open`。全部走 `r2 -2 -qc`（见「坑」1）。
+> ★ **不要用 `rabin2`**：本机 `(Resolve-ReverseToolSpec -Name 'rabin2').Command` 与 `r2.exe` 字节数完全相同（153600），是同一份二进制的副本，它的 `-I/-i/-H/-e/-l` 已被 r2 的启动参数占用，报 `Missing file to open`。全部走 `r2 -2 -qc`（见「坑」1）。
 
 需要 `pefile` 时见「坑」4。
 
@@ -306,26 +306,20 @@ verify        : PASS
 
 ## 坑
 
-1. ★ **本机 `rabin2` 是坏副本**。`D:\Tools\radare2\bin\rabin2.exe` 与 `r2.exe` 同为 153600 字节，`rabin2 -I`/`-i`/`-H`/`-e`/`-l` 全部报 `ERROR: Missing file to open`（因为这些短参数被 r2 的启动参数占用了），`-S` 侥幸能用。**统一用 `r2 -2 -qc`**，`-2` 关掉 stderr 噪音。
+1. ★ **本机 `rabin2` 是坏副本**。`(Resolve-ReverseToolSpec -Name 'rabin2').Command` 与 `r2.exe` 同为 153600 字节，`rabin2 -I`/`-i`/`-H`/`-e`/`-l` 全部报 `ERROR: Missing file to open`（因为这些短参数被 r2 的启动参数占用了），`-S` 侥幸能用。**统一用 `r2 -2 -qc`**，`-2` 关掉 stderr 噪音。
 
 2. ★ **r2 的 `/x` 通配符是 `.` 不是 `?`**。`/x eb05b8..0000005dc3` 能命中，`/x eb05b8??0000005dc3` 命不中。写给 YARA 用时才写 `?`。
 
 3. ★ **立即数偏移要数 opcode 宽度**。`B8 <imm32>`（`mov eax,imm32`）的 imm32 在 **+1**，不是 +2；`B8` 只占 1 字节。`C7 05 <disp32> <imm32>` 之类更复杂。算错的表现是 **patch 后二进制直接崩溃**（吃掉了后面的 `pop rbp; ret`），不是逻辑错而是结构性损坏。**判据必须包含「跑一下看行为」**。
 
-4. **pefile 不在 `venv-re` 里**。实测 `D:\Tools\runtime\venv-re\Scripts\python.exe` 里 `import pefile` 直接 `ModuleNotFoundError`。可用的是：
-   - `D:\EXE\python\python.exe` — 有 `pefile 2024.8.26` + `capstone 5.0.7`
-   - `D:\Tools\runtime\venv-floss\Scripts\python.exe` — 有 `pefile` + `flare-floss 3.1.1`
-   
+4. **`pefile` 不在所有解释器里都有**。本机实测：探测层别名 `pyre` 指向的解释器里有
+   `pefile 2024.8.26` + `capstone 5.0.7`；而探测层默认解析出的 `python` 常常是另一个 venv，那里没有。
    用前先探：
+
    ```powershell
-   foreach ($py in @('D:\EXE\python\python.exe',
-                     'D:\Tools\runtime\venv-floss\Scripts\python.exe',
-                     'D:\Tools\runtime\venv-re\Scripts\python.exe')) {
-     if (Test-Path $py) {
-       $v = & $py -c "import pefile;print(pefile.__version__)" 2>&1
-       "{0} -> {1}" -f $py, $v
-     }
-   }
+   $py = (Resolve-ReverseToolSpec -Name 'pyre').Command
+
+   & $py -c "import pefile;print(pefile.__version__)"
    ```
 
 5. **`pefile` 没有 `sect_from_rva` 方法**。想按节区定位要自己遍历 `pe.sections`，或用 `get_offset_from_rva`。而且 `get_offset_from_rva` 对带长节名 / 大量 debug 节（如 mingw 产物的 `/4` `/19` `/45` 那些 COFF 长名节）的二进制**会给出误导性结果** —— 实测它把 RVA `0x1454` 映到文件偏移 `0xa54`，而手工按节表换算应该是 `0xa54` 偏移处内容与 r2 反汇编**对不上**。**所以 patch 后一定要读回字节校验**，别信 `get_offset_from_rva` 一个数就动手。

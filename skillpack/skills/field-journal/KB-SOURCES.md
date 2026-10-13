@@ -13,12 +13,12 @@
 | 上游仓库 | `LING71671/open-reverselab` |
 | 取用范围 | 仓库内 `kb/` 知识库目录 |
 | 上游 License | **GPL-3.0** |
-| 原始副本（本机留存） | `D:\Tools\kb-open-reverselab\` |
+| 原始副本（本机留存） | `<工具根>\kb-open-reverselab\` |
 | 副本规模 | **221 篇 markdown**，约 3.0 MB |
 | 副本板块 | `pe-reverse/`（33）· `apk-reverse/`（27）· `general/`（17）· `ctf-website/`（~150）· `windows/`（2） |
 | 已改编落盘 | **206 篇技术正文**（2026-10-10 实测，见 `KB-INDEX.md` §0；口径=排除 SKILL/README/index，全包 md 共 625 篇） |
 
-**原副本保留不动**。所有对照、diff、回溯都指向 `D:\Tools\kb-open-reverselab\`，
+**原副本保留不动**。所有对照、diff、回溯都指向 `<工具根>\kb-open-reverselab\`，
 不要去改它 —— 它是 GPL 原始来源，改了就失去溯源意义。
 
 ---
@@ -59,8 +59,8 @@ GPL-3.0 允许复制与衍生，前提是**保留许可与声明**。本技能�
   & $r.Command <参数>          # 永远用完整路径，不依赖 cwd
   ```
 
-- Python 脚本指定**带全部逆向库的那个解释器**，即探测层别名 `pyre`（`D:\EXE\python\python.exe`）。
-  **不要写 `D:\Tools\runtime\venv-re\Scripts\python.exe`** —— 那是空壳，见 §4。
+- Python 脚本指定**带全部逆向库的那个解释器**，即探测层别名 `pyre`（`(Resolve-ReverseToolSpec -Name 'pyre').Command`）。
+  **不要写 `(Resolve-ReverseToolSpec -Name 'pyre').Command`** —— 那是空壳，见 §4。
 - 未在本机验证过的命令，**显式标注「未在本机验证」**，不许写成既定事实。
 - 工具在本机不存在时，写清**替代方案**，不要照抄上游裸命令。
 
@@ -100,7 +100,7 @@ GPL-3.0 允许复制与衍生，前提是**保留许可与声明**。本技能�
 |---|---|---|---|
 | 1 | **API hash 常量**（如 `0xEC0E4E8E` 之类）直接可用 | 各家编译器的 ROR13 变体、hash 种子、字符大小写处理各不相同，照抄常量必然对不上 | 常量**不写死**，改为「从 `../reverse-engineering/references/dynamic-api-resolution.md` 的方法现场拟合」 |
 | 2 | `cdb` 写内存用 `eb 0xADDR <bytes>` | `eb` 是**下软件断点**（INT3），不是写内存。写内存是 `e 0xADDR b8 0f 27 00 00`（字节空格分隔） | 命令已更正；写完必须 `d 0xADDR` 回读校验 |
-| 3 | `rabin2` 可用来扒导入表 / 节区 | 探测层能命中 `D:\Tools\radare2\bin\rabin2.exe`（153600 字节），但 `rabin2 -I <PE>` **实跑直接挂起不返回、零输出** —— 看着像能用，实际不可用 | 全文改用 `r2 -qc`；`_map.json` 的 `rabin2` 别名已加 `note` 记录此坑 |
+| 3 | `rabin2` 可用来扒导入表 / 节区 | 探测层能命中 `(Resolve-ReverseToolSpec -Name 'rabin2').Command`（153600 字节），但 `rabin2 -I <PE>` **实跑直接挂起不返回、零输出** —— 看着像能用，实际不可用 | 全文改用 `r2 -qc`；`_map.json` 的 `rabin2` 别名已加 `note` 记录此坑 |
 | 4 | YARA 里 `pe.entry_point` 是 RVA | 实际是**文件偏移**，不是 RVA | 规则里必须自己换算 |
 | 5 | `bp kernel32!X` 能拦住 API | kernel32 公开 PDB 里只有 `*Stub` 别名，`bl` 显示绑定成功但**永远不命中** | 断点下在 `ntdll!NtXxx`（真正的实现所在） |
 | 6 | 「断点列表里能看到该 API」就算下好了 | 自己敲的 `.echo` 也会出现在 `bl` 里，那是**命令回显**不是命中 | 唯一判据是日志里的 `Breakpoint 0 hit` |
@@ -116,7 +116,7 @@ GPL-3.0 允许复制与衍生，前提是**保留许可与声明**。本技能�
 | 16 | 反调试看 `PEB.NtGlobalFlag` 一个偏移 | **x64 是 +0xBC，x86 是 +0x68** | 按架构取偏移，写死一个值必错一半 |
 | 17 | 满屏 `????` 说明内存没读到 | 通常是**读了结构体指针而不是裸字符串** | 先 `dt` / `dq` 逐级解引用 |
 | 18 | IDA headless 用 `idat.exe` 跑 64 位 | `idat.exe` 是 **32 位**，64 位必须 `idat64.exe` | 脚本结尾必须 `idc.qexit(0)`，开头 `idaapi.auto_wait()` |
-| 19 | `pip install` 装完 venv 就齐了 | `python -m venv` **只建骨架不装包**。本机 `D:\Tools\runtime\venv-re\` 就是空壳：能报 3.12.0，但 `pefile`/`capstone`/`lief`/`angr`/`unicorn`/`qiling`/`z3`/`yara`/`dnfile` **全部 NO** | 逆向库实际全在 `D:\EXE\python\python.exe`。用探测层别名 `pyre`；装完**逐个** `find_spec` 验证（见 `../../../环境建设.md` §4.3） |
+| 19 | `pip install` 装完 venv 就齐了 | `python -m venv` **只建骨架不装包**。本机 `(Resolve-ReverseToolSpec -Name 'pyre').Command\` 就是空壳：能报 3.12.0，但 `pefile`/`capstone`/`lief`/`angr`/`unicorn`/`qiling`/`z3`/`yara`/`dnfile` **全部 NO** | 逆向库实际全在 `(Resolve-ReverseToolSpec -Name 'pyre').Command`。用探测层别名 `pyre`；装完**逐个** `find_spec` 验证（见 `../../../环境建设.md` §4.3） |
 | 20 | YARA 递归扫目录即可 | 会**命中规则文件自身** | 排除规则目录，或只传单文件/索引 |
 | 21 | `pe.imports` 匹配 DLL 名不分大小写 | **大小写敏感** | 规则里写对大小写 |
 | 22 | `Get-FileHash` 总能用 | 某些执行上下文不可用 | 备 `.NET` 的 `SHA256` 或 `certutil` |

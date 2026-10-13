@@ -20,7 +20,7 @@
 $r2    = (Resolve-ReverseToolSpec -Name 'r2').Command
 $floss = (Resolve-ReverseToolSpec -Name 'floss').Command
 $cdb   = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
-$frida = 'D:\EXE\python\Scripts\frida.exe'
+$frida = (Resolve-ReverseToolSpec -Name 'frida').Command
 ```
 
 ## 步骤

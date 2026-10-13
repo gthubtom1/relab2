@@ -22,8 +22,8 @@ Owner：T18。依据：规范 §18 T18 卡、§17.12 / §17.25，以及 wave 5 �
 
 ## 2. 数据集：26 用例
 
-所有用例统一：cwd=`D:\Project\skills-hub\integrated-skill-hub`，
-运行时=`D:\EXE\python\python.exe`（先 `$env:PYTHONIOENCODING='utf-8'`），
+所有用例统一：cwd=`C:\relab2`，
+运行时=`(Resolve-ReverseToolSpec -Name 'pyre').Command`（先 `$env:PYTHONIOENCODING='utf-8'`），
 依赖=标准库 only。调用形如
 `python skills/scripts/community-route.py --hint "<hint>" [--source <s>] --json`。
 
@@ -130,12 +130,12 @@ combined:       52/57 = 0.9123   (gate >= 0.75)
 
 ```text
 $env:PYTHONIOENCODING='utf-8'
-D:\EXE\python\python.exe skills/scripts/test-golden-route.py
-D:\EXE\python\python.exe skills/scripts/test-community-route.py
-D:\EXE\python\python.exe skills/scripts/test-community-decoys.py --report
-D:\EXE\python\python.exe skills/scripts/test-route-ranking.py
-D:\EXE\python\python.exe skills/scripts/verify-routing-signals.py --check
-D:\EXE\python\python.exe skills/tests/run-ci-gates.py --runner python
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/scripts/test-golden-route.py
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/scripts/test-community-route.py
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/scripts/test-community-decoys.py --report
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/scripts/test-route-ranking.py
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/scripts/verify-routing-signals.py --check
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/tests/run-ci-gates.py --runner python
 ```
 
 ## 6. 危险样本掩码自检

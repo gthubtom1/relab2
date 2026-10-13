@@ -284,7 +284,7 @@ windows-privilege-escalation/TOKEN_POTATO_TRICKS.md, windows-privilege-escalatio
 在仓库根运行（纯 ASCII 载荷，`$check | python -` 避开 PowerShell 5.1 原生命令引号/代码页问题）：
 
 ```powershell
-cd D:\Project\skills-hub\integrated-skill-hub
+cd C:\relab2
 $check = @'
 import pathlib,re,sys
 C=pathlib.Path('skills/community')
@@ -307,7 +307,7 @@ print(f'C  raw skills / non-conforming    : {len(raw)} / {len(c)} {c}')
 sys.exit(1 if (a1 or a2 or a3 or b or c or len(raw)!=293) else 0)
 '@
 $OutputEncoding = New-Object System.Text.UTF8Encoding($false)
-$check | C:\Users\Toti\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\python\python.exe -
+$check | <python> -
 ```
 
 实测输出（exit 0）：

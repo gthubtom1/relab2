@@ -4,7 +4,6 @@
 >
 > **什么时候用**：真正决定签名（signer）或解码（decoder）逻辑的，是一个不起眼的小资产，而不是那个吵吵闹闹的主 bundle。
 >
-> **平台与本机状态**：`python 3.12`、`node v24`、`tshark 4.6.8`、`mitmdump`、`curl_cffi`、`playwright` 本机可用。`iv8` 本机无；npm 静态 AST 工具链（`esprima` / `acorn` / `@babel/parser`）本机无，相关处已标注。radare2 用于 WASM 初筛，路径见 `../../../radare2/SKILL.md`。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -28,9 +27,9 @@
 1. **一份资产清单**。先把目标站点加载的所有资源列一遍，而不是只盯着主脚本。本机做法：
    ```powershell
    # 从已抓的 pcap 里列出全部被拉取的 JS / wasm / 字体
-   D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "http.request.uri matches \"\\.(js|wasm|ttf|otf|woff2)(\\?|$)\"" -T fields -e http.request.full_uri -e http.content_length
+   & (Resolve-ReverseToolSpec -Name 'tshark').Command -r flow.pcapng -Y "http.request.uri matches \"\\.(js|wasm|ttf|otf|woff2)(\\?|$)\"" -T fields -e http.request.full_uri -e http.content_length
    ```
-   或用 mitmproxy 实时流式看：`D:\EXE\python\Scripts\mitmdump.EXE -p 8899`。
+   或用 mitmproxy 实时流式看：`(Resolve-ReverseToolSpec -Name 'mitmdump').Command -p 8899`。
 2. **按体积排序的能力感**。小资产往往体积小、命名无语义 —— 这正是它容易被漏掉的原因。排序后从最小的可疑项开始。
 3. **本地解码手段**。字体用 Python 的 `fontTools` 本机可用；WASM 用 `wasmtime` 或 Node 内建 `WebAssembly`。`iv8` 本机无，不作为前提。
 4. **授权边界**：仅在你有权访问的目标上操作。
@@ -66,13 +65,13 @@
 # 取回候选 wasm 并本地求值接口
 curl.exe -o side.wasm "https://<target>/<side-asset>"     # 仅限已授权目标
 # 用 node 枚举导出，定位签名函数
-D:\Tools\Node\node.exe -e "const m=new WebAssembly.Module(require('fs').readFileSync('side.wasm'));console.log(WebAssembly.Module.exports(m))"
+& (Resolve-ReverseToolSpec -Name 'node').Command -e "const m=new WebAssembly.Module(require('fs').readFileSync('side.wasm'));console.log(WebAssembly.Module.exports(m))"
 ```
 
 字体类资产用 Python 本地解码，不要开浏览器渲染：
 
 ```powershell
-D:\EXE\python\python.exe -c "from fontTools.ttLib import TTFont; f=TTFont('cmap.woff2'); print(f.getBestCmap())"
+& (Resolve-ReverseToolSpec -Name 'pyre').Command -c "from fontTools.ttLib import TTFont; f=TTFont('cmap.woff2'); print(f.getBestCmap())"
 ```
 
 > 上面的命令形态是通用用法，**未在任何具体目标上实跑验证**；目标 URL 与资产路径必须由你自己在授权范围内确定。

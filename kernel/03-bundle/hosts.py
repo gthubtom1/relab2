@@ -32,6 +32,10 @@ class HostSpec:
     processes: tuple = ()# tasklist 里同名的可执行名（不带 .exe）
     alternates: tuple = ()                     # 其它也认的入口文件名
     note: str = ""
+    # ★ 2026-10-14：有的宿主**把底模和规则分开放**，不是一份入口文件塞三段。
+    #   omp 就是：人设 → PERSONALITY.md，规则 → RULES.md。
+    #   非空时表示「底模卡写到这个文件，其余（中枢段 + 指引卡）仍写 entry」。
+    entry_base: str = ""
 
 
 # 每家的入口文件名按它实际会读的那份来。alternates 是「这家也认」的兜底。
@@ -47,6 +51,11 @@ HOSTS = (
     HostSpec("hermes", "Hermes", ".hermes", "SOUL.md", ("hermes",)),
     HostSpec("pi", "Pi", ".pi/agent", "AGENTS.md", ("pi",),
              note="Pi 的全局入口在 ~/.pi/agent/AGENTS.md。"),
+    HostSpec("omp", "omp", ".omp/agent", "RULES.md", (),
+             alternates=("AGENTS.md",),
+             entry_base="PERSONALITY.md",
+             note="★ 两文件形态（全项目唯一一家）：人设 → PERSONALITY.md，规则 → RULES.md。"
+                  "没有 AGENTS.md，也不需要把三段融成一份。"),
     HostSpec("dsh", "DSH", ".dsh", "AGENTS.md", ("dsh",), alternates=("FUSION.md",)),
     HostSpec("zcode", "ZCode", ".zcode", "AGENTS.md", ("zcode",)),
     HostSpec("opencode", "opencode", ".config/opencode", "AGENTS.md", ("opencode",)),
@@ -162,6 +171,28 @@ def resolve_host(home: Path):
     home = Path(home).resolve()
     for spec in HOSTS:
         if (user_home() / Path(spec.rel)).resolve() == home:
+            return spec
+    return None
+
+
+def two_file_host_shape(home: Path):
+    """按**目录形状**认「两文件形态」的家（omp：PERSONALITY.md + RULES.md）。
+
+    `resolve_host` 只认 `USERPROFILE/<rel>`；验收用的假家（TEMP/FAKE-UA/.claude…）
+    一律被判成 custom。但两文件形态的宿主**装错文件名的代价很大**（底模卡写进
+    规则文件、而且卸不干净），所以给它一个「只看最后两级目录名」的识别，
+    专门给 install.py 的前置拒绝用。
+
+    ★ 只返回 `entry_base` 非空的 spec —— 对其他宿主零影响，不存在误判。
+    """
+    home = Path(home).resolve()
+    parts = [p.lower() for p in home.parts]
+    tail2 = "\\".join(parts[-2:])
+    for spec in HOSTS:
+        if not spec.entry_base:
+            continue
+        rel = str(spec.rel).replace("/", "\\").strip("\\").lower()
+        if rel == tail2 or parts[-1] == rel or tail2.endswith("\\" + rel) or rel.endswith("\\" + tail2):
             return spec
     return None
 

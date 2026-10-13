@@ -31,8 +31,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 > **本节是命令纪律的唯一事实源。** 卡片（`<本仓库>/kernel/04-console/cards/guest/全能专精指引.md`）
 > 只是**指向本文件**的路由指针，它不承载纪律内容、不重复本节；如两者冲突，**以本文件为准**。
 > `../指引卡.md`（本包未落地） 同样只是指针。
-> ⚠️ 不要再去引 `D:\Project\hubcore\04-console\cards\guest\全能专精指引.md`（本包未落地）：那是仓库外的旧副本，
-> §1 写的是「必须在隔离虚拟机执行，严禁在宿主机拉起」，与本包「单机·无跨机假设」**完全相反**。
+> ⚠️ 不要再去引仓库外的旧副本（`<开发根>\hubcore\04-console\cards\guest\`）：那份 §1 写的是「必须在隔离虚拟机执行，严禁在宿主机拉起」，与本包「单机·无跨机假设」**完全相反**。
 > 事故背景：2026-10-04 会话 `01a107ea` 两次无响应停顿，根因是本包 `die.exe` 漏登记导致拉起 GUI 版（弹窗、零 stdout、进程不退）。工具执行是**同步阻塞**的：命令不返回，模型不会运行、不会有任何 token 产出，终端计时器继续走。**没有模型能察觉自己的命令卡住**，因此约束必须前置到命令本身。
 
 ### 本包特有（硬门）
@@ -41,10 +40,30 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 2. **`TOOLS.md` 是装法说明书（机器无关），不是路径索引**：它只说「干什么用 / 哪个 skill 要 / 装法 / 许可」，**不含本机路径，也没有生成器 —— 直接手改**。本项目不维护任何工具状态文件：工具定位是运行时探测，所以不存在「索引过期」的问题，也不存在刷新步骤。
 3. **首次使用某工具前先跑该行「验证命令」列**，确认路径与版本，再进入实际调用。不得凭目录名猜可执行文件名（`die`/`diec`、`Wireshark`/`tshark` 就是同名不同物的现成教训）。
 
+### GitHub 访问（硬门）
+
+**查 GitHub 上的任何东西 —— 仓库、文件、目录、提交历史、issue、PR、release、Actions 日志 —— 一律走 `gh` CLI。** 禁止用网页抓取，也禁止裸 `curl` 打 `api.github.com`。
+
+- **本机已装且已登录**（账号 `gthubtom1`）。路径靠探测层取：`(Resolve-ReverseToolSpec -Name 'gh').Command`，**别写死**。
+- **换机第一件事**：跑 `gh auth status`。不自证就 `gh auth login` —— 凭据在主人手里。登录态存在 `%APPDATA%\GitHub CLI\hosts.yml`，**不进仓库**，所以新机器必须重新登一次。
+- **私有仓库只有 `gh` 拿得到**：网页对私有仓库一律 404，裸 `curl` 无 token 同样 401/404 —— **那不代表「这个仓库不存在」，不要据此下结论**。
+- **网络栈更稳**：本包已有实测记录（见 `TOOLS.md` 的 yara-rules 行）—— `git clone` 在部分网络下 TLS 握手被切断、`urllib` 同样失败，而 **`gh` 的 HTTP 栈可用**。抓取远端仓库内容优先 `gh`。
+- **常用动作**：
+  ```
+  gh repo list                                                    # 有哪些仓库（含私有）
+  gh api "repos/<owner>/<repo>/git/trees/HEAD?recursive=1" --jq '.tree[] | .path'
+  gh api "repos/<owner>/<repo>/contents/<path>" --jq '.content' | base64 -d > <本地文件>
+  gh search code "<关键字>"                                        # 搜代码
+  gh pr view <N> · gh issue list · gh release list · gh run view <id> --log
+  ```
+- ⚠️ Windows / git-bash 下 `base64 -d` 出来的正文可能带 `\r`，比对前先 `tr -d '\r'`；否则会出现「每行都不同」的假差异。
+
 ### 通用八条
 
 4. **每条 shell 必须带 `timeout`**：取值按本包 `默认 timeout` 列（探查 30s / 分析 120s / 构建 600s）。宁可短超时后重试，不可长超时后干等。
-5. **GUI / 交互式二进制禁入 bash**。已实测的替换关系：`die.exe` → `diec.exe -d -e -j <file>`；`wireshark.exe` → `tshark.exe`；`ida.exe` → `idalib-mcp` 或 `pyghidra-mcp` / `analyzeHeadless`；`x64dbg.exe` → **控制台版 headless**（同引擎，首选）。**这些 CLI 孪生的真实路径一律走探测层 `Resolve-ReverseToolSpec`** —— 注意 `x64dbg-headless` 这个名字在多数机器上**不存在**，正确写法是 `Resolve-ReverseToolSpec -Name 'x64dbg'`，它会经 `_map.json` 解析到 `headless.exe`；配合 `x64dbg MCP` 80 个工具调用。确需 GUI 观察才起在交互式桌面会话里，禁经管道/服务方式拉起。
+5. **GUI / 交互式二进制禁入 bash**。已实测的替换关系：`die.exe` → `diec.exe -d -e -j <file>`；`wireshark.exe` → `tshark.exe`；`ida.exe` → `idalib-mcp` 或 `pyghidra-mcp` / `analyzeHeadless`；`x64dbg.exe` → **走 x64dbg MCP，不要用 headless**。
+   > ⚠️ **`headless.exe` 不能当 x64dbg 的 CLI 孪生用**。三组对照实测：快目标 2.1s 退出、慢目标（Sleep 60s）**同样 2.1s** 退出、不带目标 0.3s —— command loop 没命令就自杀，`MCP listening` → `MCP server stopped` 中间只有 **2.1 秒**窗口，`-cf` 脚本也是空壳（不执行）。**唯一可靠通道是 MCP**：拉 GUI x64dbg（插件活在被调试进程里），再走 80 个 MCP 工具。
+   **这些 CLI 孪生的真实路径一律走探测层 `Resolve-ReverseToolSpec`** —— 注意 `x64dbg-headless` 这个名字在多数机器上**不存在**，正确写法是 `Resolve-ReverseToolSpec -Name 'x64dbg'`。确需 GUI 观察才起在交互式桌面会话里，禁经管道/服务方式拉起。
 6. **一条命令只做一件事**：链式 `&&`/`;`/`|` ≤ 8 段，不跨主机、不跨路径体系。Git-Bash 下 `/tmp` 实为 `C:\tmp`，与 Windows 路径混写必错。
 7. **长操作后台 + 轮询**，禁止同步阻塞：大构建、批量解包、首次拉包、大批量传输、长时间分析一律后台起进程再轮询产物。
 8. **快慢命令不得同批并行**：一条无界命令会扣住整轮并行调用中已完成的兄弟结果。
@@ -116,7 +135,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 **能用 MCP 用 MCP → 能用无头/CLI 用 CLI → 都不行才开 GUI 观察 → GUI 严禁经 bash 同步启动**
 
 1. **已生效的 MCP 资产（智能体首选通道）**：
-   - **ghidra / pyghidra-mcp**：**streamable-http 常驻守护 `http://127.0.0.1:9111/mcp`**（不再用 stdio，以免每次 `pi` 启动多付 ~7 s）。提供 20 个静态分析与反编译工具（`import_binary`, `decompile_function`, `search_symbols_by_name`, `list_imports`, `gen_callgraph` 等）。**服务默认不监听**：做 Ghidra 静态分析前先由 agent 自己拉起守护 —— 端点按 `references/tool-registry.md` 里 `pyghidra-mcp` 那一行取（该表四列＝传输方式 / 端点 / 前置依赖 / 备注；前置＝JDK 21+ 与 Ghidra 本体），**启动方式用四级探测现场求**（`Resolve-ReverseToolSpec -Name 'pyghidra_mcp'`；Ghidra 本体路径用 `-Name 'ghidraRun'`），冷启 7–10 s，幂等；按该端点探活确认 `STATE: READY` 后才用，收尾再按同一来源停守护。**不得假设某个固定盘符下的 `start-ghidra-mcp.bat` 存在。**
+   - **ghidra / pyghidra-mcp**：提供 20 个静态分析与反编译工具（`import_binary`, `decompile_function`, `search_symbols_by_name`, `list_imports`, `gen_callgraph` 等）。**按需启动，没有常驻守护**：做 Ghidra 静态分析前先由 agent 自己拉起 —— 端点按 `references/tool-registry.md` 里 `pyghidra-mcp` 那一行取（该表四列＝传输方式 / 端点 / 前置依赖 / 备注；前置＝JDK 21+ 与 Ghidra 本体），**启动方式用四级探测现场求**（`Resolve-ReverseToolSpec -Name 'pyghidra-mcp'`；Ghidra 本体路径用 `-Name 'ghidraRun'`），冷启 7–10 s，幂等；用前按该端点探活（`STATE: READY`）再用，收尾用**同一入口**停。**不得假设某个固定盘符下的 `start-ghidra-mcp.bat` 存在。**
    - **x64dbg-mcp**：HTTP `http://127.0.0.1:9094/`，基于 Bearer Token（由环境变量 `X64DBG_MCP_TOKEN` 动态注入）。提供 80 个动态调试工具（断点、单步、寄存器、读写内存、反汇编、符号搜索、调用栈）。**服务默认不监听**：动态调试前先起 x64dbg —— 端点按 `references/tool-registry.md` 里 `x64dbg-mcp` 那一行取（四列＝传输方式 / 端点 / 前置依赖 / 备注；前置＝x64dbg + 插件 + Bearer token）；**注意 9095 是 x32 的服务口而非控制口**（`bootstrap-manifest.json` 明确 x64=9094 / x32=9095），向 9095 发指令会打到 x32 server 或无人应答。启动方式与插件位置由四级探测现场求（插件活在被调试进程里，9094 才监听），收尾用同一入口停。**不得假设某个固定盘符下的 `start-mcp.bat` 存在。**
    - **MCP 启停纪律（硬门）**：本机 HTTP 型 MCP 全是「按需启动」，注册 ≠ 已监听。启动/关闭由 agent 用上述 .bat 自行完成，**严禁要求用户手工编辑 `mcp.json`、严禁把启停动作甩给人**；服务未起仅表现为该 server `failed`，先跑对应 start 脚本并 `/mcp reconnect <server>` 再定位别的问题。
    - **idalib-mcp / idapro**：IDA Pro 无头 stdio 及 GUI 插件通道（72 个工具）。
@@ -140,7 +159,8 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
   - 动作：优先调用 `pyghidra-mcp`（20 tools；**端点按 `references/tool-registry.md` 的 `pyghidra-mcp` 行取，启动方式用四级探测现场求，不要写死脚本名**；实测全仓与本机都不存在 `start-ghidra-mcp.bat` 这个文件）或 `idalib-mcp` / `idapro` 反编译关键函数；C#/.NET 目标调用 `ilspycmd` 或 `dnSpy.Console --md`；CLI 侦察调用 `radare2.exe -q -c 'iI'`。
   - 产出：定位关键校验分支、文件偏移（File Offset）、内存虚拟地址（VA）与核心调用流。
 - **阶段三：动态追踪与断点取证 (Dynamic Trace & Debugging)**
-  - 动作：遇强混淆或反调试，启动 `headless.exe` 配合 `x64dbg-mcp` HTTP API（80 tools）下断点抓取内存明文；使用 `cdb.exe` 分析 crash dump；调用 `pe-sieve.exe /pid <PID>` 扫描 inline hook；Frida/objection 动态插桩。
+  - 动作：遇强混淆或反调试，**拉起 GUI x64dbg**（`Resolve-ReverseToolSpec -Name 'x64dbg-gui'` 或本模块的按需启动脚本）配合 `x64dbg-mcp` HTTP API（80 tools）下断点抓取内存明文；使用 `cdb.exe` 分析 crash dump；调用 `pe-sieve.exe /pid <PID>` 扫描 inline hook；Frida/objection 动态插桩。
+    > ⚠️ 不要用 `headless.exe`：它的 command loop 无命令即自杀，MCP 窗口只有 2.1 秒（见 §通用八条第 5 条）。
   - 产出：抓取运行时解密密钥、明文通信数据、动态导出函数与跳转判断值。
 - **阶段四：仿真验证与资产固化 (Emulation & Crystallization)**
   - 动作：跨架构或复杂反分析时使用 `qiling` 框架仿真执行；约束路径分支使用 `angr` / `z3` 求解；二进制修补使用 `lief` 打补丁；算法使用 Python 独立脚本还原并对账验证。

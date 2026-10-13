@@ -4,7 +4,6 @@
 >
 > **什么时候用**：**helper 名字看起来标准，但输出和标准库对不上**。
 >
-> **平台与本机状态**：`python 3.12.0`（`D:\EXE\python\python.exe`）本机可用，标准库 `hashlib` / `base64` 足以做基线对照；`node v24.20.0`（`D:\Tools\Node\node.exe`）本机可用，可在 Node 里做定点改写；`iv8`（社区运行时，PyPI 无）**本机无**；静态 AST 那套（`esprima`/`acorn`/`@babel/parser`）**本机未装**。文中的 MCP 浏览器家族**本机未挂载**。
 
 ---
 
@@ -26,7 +25,7 @@
 **本机两个固定输入的建议向量**（**未在任何目标上验证**，仅作为流程示例）：
 
 ```powershell
-D:\EXE\python\python.exe -c "import hashlib,base64; print(hashlib.md5(b'abc').hexdigest()); print(base64.b64encode(b'abc'))"
+& (Resolve-ReverseToolSpec -Name 'pyre').Command -c "import hashlib,base64; print(hashlib.md5(b'abc').hexdigest()); print(base64.b64encode(b'abc'))"
 ```
 
 ## 步骤（Working method）

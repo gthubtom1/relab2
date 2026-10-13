@@ -43,7 +43,7 @@ dump 摸底 → 确认仍无 CodeItem（判定 VMP） → trace 解释器 → �
 本机 `dexdump` 对一个真实解包样本的输出，可直接对照看 `code` 字段与 `insns size`：
 
 ```
-$ D:\Tools\android-sdk\build-tools\34.0.0\dexdump.exe -d classes.dex
+$ <工具根>\<分类>\<工具名>\build-tools\34.0.0\dexdump.exe -d classes.dex
 Processing 'classes.dex'...
 Opened 'classes.dex', DEX version '035'
 Class #0            -

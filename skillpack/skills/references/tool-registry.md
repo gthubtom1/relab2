@@ -34,9 +34,16 @@ Test-ReverseTcpPort -Port <端口>     # 1 秒超时，不阻塞
 | 通道 | 协议 | 端点 | 依赖 | 启动方式 |
 |---|---|---|---|---|
 | `idalib-mcp` | stdio | — | **IDA 本体** + `IDADIR` 环境变量指向它 | pip 装完直接注册即可，无需起服务 |
-| `idapro` | streamable-http | `127.0.0.1:13337/mcp` | IDA GUI 内插件 | 打开 IDA 加载文件后自动监听；多实例端口递增，以 Output 窗口 `[MCP] port=` 日志为准 |
-| `pyghidra-mcp` | streamable-http | `127.0.0.1:9111/mcp` | **JDK 21+** + Ghidra 本体 | 常驻守护，冷启 7–10 s，幂等；探活应报 `STATE: READY` |
-| `x64dbg-mcp` | http（`.dp64`/`.dp32` 插件） | x64=`127.0.0.1:9094`，x32=`127.0.0.1:9095` | x64dbg + 插件 + Bearer token | 随 x64dbg / headless 启动，插件活在被调试进程里 |
+| `idapro` | streamable-http | `127.0.0.1:13337/mcp` | IDA GUI 内插件 | **按需**：用到时跑 `<技能包根>\skills\ida-reverse\scripts\start.ps1`，健康则复用、没人听才起。**没有常驻、没有计划任务**；多实例端口递增，以 Output 窗口 `[MCP] port=` 日志为准 |
+| `pyghidra-mcp` | stdio（本机 omp）或 streamable-http | stdio 无端点；HTTP 形态 `127.0.0.1:9111/mcp` | **JDK 21** + Ghidra 本体 | **按需**：stdio 由宿主按会话拉起；HTTP 形态冷启 7–10 s。**不要设成常驻服务** |
+| `x64dbg-mcp` | http（`.dp64`/`.dp32` 插件） | x64=`127.0.0.1:9094`，x32=`127.0.0.1:9095` | x64dbg + 插件 + Bearer token | **按需**：插件活在被调试进程里，进程不在端口就不在。拉起方式见该技能自己的文档 |
+
+> **★ 全部按需。** 本包**不注册任何计划任务、不装任何看门狗、不做开机自启**。
+> 端口平时关着是**设计**，不是故障。理由：常驻保活会①每分钟弹 cmd 窗口 ②换机后必然指错路径 ③
+> 让「这个服务是本次会话起的还是上次留下的」变得无法回答。
+> 换机后第一件事：确认新机器上也没有这类东西 ——
+> `Get-ScheduledTask | ? { ($_.Actions.Arguments + $_.Actions.Execute) -match 'relab2|ida-reverse|watchdog|reverse-skill' }`
+> （**按 Action 查，别按名字查**：`-match 'ida'` 会误命中 Windows 自带的 `License Validation`）。
 
 ### 三条已知坑（实测，非推测）
 
@@ -83,6 +90,8 @@ Test-ReverseTcpPort -Port <端口>     # 1 秒超时，不阻塞
 ## 5. 启停纪律
 
 - **启停由 agent 自己完成**，不甩给用户。
+- **全部按需。** 用到才起，用完就停。**绝不**注册计划任务、看门狗、开机自启、常驻守护 ——
+  这类东西会把「本会话起的」和「上次留下的」混成一团，换机后还会指错路径。
 - 收尾要停服务时，用**同一个启动入口**停，不要另找方式 kill。
 - Ghidra 类先 `save` 再释放端口，否则分析结果丢失。
 

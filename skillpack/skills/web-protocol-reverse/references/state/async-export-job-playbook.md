@@ -4,7 +4,6 @@
 >
 > **什么时候用**：业务路径不是一次列表请求，而是一条**异步导出、报表、下载或批处理任务流水线**。
 >
-> **平台与本机状态**：`python 3.12`、`curl_cffi`、`requests`、`playwright`、`mitmdump`、`tshark 4.6.8` 本机可用。`iv8` 与 `reqable` 本机无（HAR 路径不适用，改用 mitmproxy / tshark）。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -30,9 +29,9 @@
 2. **状态机的每一级都能独立观测**。本机手段：
    ```powershell
    # 全量流式留存导出流水线
-   D:\EXE\python\Scripts\mitmdump.EXE -p 8899 -w export.mitm
+   & (Resolve-ReverseToolSpec -Name 'mitmdump').Command -p 8899 -w export.mitm
    # 离线读：关注 create / poll / download 三段的状态码
-   D:\Tools\Wireshark\tshark.exe -r export.pcapng -T fields -e frame.number -e http.request.full_uri -e http.response.code -e http.content_disposition
+   & (Resolve-ReverseToolSpec -Name 'tshark').Command -r export.pcapng -T fields -e frame.number -e http.request.full_uri -e http.response.code -e http.content_disposition
    ```
 3. **「创建前历史快照」可获取**。若历史列表可见，这是判据第 4 条的前提；不可见则该判据需换证据，详见「创建前只读探针」段。
 

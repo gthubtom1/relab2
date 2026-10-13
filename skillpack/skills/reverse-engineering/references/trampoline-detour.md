@@ -19,7 +19,7 @@
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
-$py   = 'D:\EXE\python\python.exe'    # capstone 5.0.7（算指令边界）
+$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command    # capstone 5.0.7（算指令边界）
 $cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
 ```
 
@@ -86,7 +86,7 @@ rel32 = dst - src - 5        # 5 = 1(opcode) + 4(rel32)
 那在分配内存时就是已知的，可以一次算对；而**装到目标的那条 `JMP trampoline` 的 `src`
 才是运行时地址**，必须等 `VirtualAlloc` 之后才能填。
 
-实测验证（`D:\EXE\python\python.exe`）：
+实测验证（`(Resolve-ReverseToolSpec -Name 'pyre').Command`）：
 
 ```python
 import struct

@@ -4,7 +4,6 @@
 >
 > **什么时候用**：**业务代码造的是一个参数，线上发的是另一个**的时候。
 >
-> **平台与本机状态**：本文是纯方法论，不含必须在本机执行的命令，因此不涉及工具可用性问题。取证手段见 `./local-mcp-environment.md`（本机 `frida 17.17.0` 可用于抓 wrapper 边界，`tshark 4.6.8` 可用于读出站 header）。文中提到的 `js-reverse` / `chrome-devtools` MCP 家族**本机未挂载**。
 
 ---
 
@@ -27,10 +26,10 @@
 
 ```powershell
 # 方式一：tshark 从 pcap 读出站 query / body（本机可用）
-D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "http.request" -T fields -e http.request.full_uri -e http.request.line
+& (Resolve-ReverseToolSpec -Name 'tshark').Command -r flow.pcapng -Y "http.request" -T fields -e http.request.full_uri -e http.request.line
 
 # 方式二：mitmproxy 实时观察改写（本机可用）
-D:\EXE\python\Scripts\mitmdump.EXE --listen-port 8899 --save-stream-file flow.mitm
+& (Resolve-ReverseToolSpec -Name 'mitmdump').Command --listen-port 8899 --save-stream-file flow.mitm
 ```
 
 > **本机无 `reqable`**；本机 `frida 17.17.0` 可用于在 wrapper ingress/egress 处抓「改写前 vs 改写后」。

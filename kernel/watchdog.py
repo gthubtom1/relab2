@@ -324,7 +324,7 @@ def status() -> int:
 RESUME = """\
 中枢上下文隔离重构 · 接续口令
 ================================
-接着 `D:\\临时项目\\hub-dock\\work\\context-isolation\\TASKBOARD.md` 往下做。
+读本仓的 `TASKBOARD.md` 往下做（就在本文件的同级目录）。
 
 1. 先跑 `python watchdog.py status` 看这一轮推进到哪、哪项验证是红的。
 2. 读 `TASKBOARD.md` 的状态表和推进日志；已完成的不重做。

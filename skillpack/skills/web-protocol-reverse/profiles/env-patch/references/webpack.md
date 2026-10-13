@@ -2,7 +2,7 @@
 
 > **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License）的 `webpack.md`。
 > **用途**：当**已定位**的加密入口位于 webpack bundle 中时，把所需模块抽出来在本地 Node 里加载。
-> **前置（本机实测，2026-10-10）**：Node ✅ `D:\Tools\Node\node.exe` v24.20.0。⚠️ `scripts/webpack_runtime.js` 与 `env/webapi/runtime-contracts.js` **未随本包落地**，本机没有这两个文件；下文的 ESM 配置要求与 chunk 捕获 API **未在本机验证**。
+> **前置（本机实测，2026-10-10）**：Node ✅ `(Resolve-ReverseToolSpec -Name 'node').Command` v24.20.0。⚠️ `scripts/webpack_runtime.js` 与 `env/webapi/runtime-contracts.js` **未随本包落地**，本机没有这两个文件；下文的 ESM 配置要求与 chunk 捕获 API **未在本机验证**。
 > **用法**：⚠️ **入口未知时不要先做本流程。** 按 `../index.md`「准入条件」的表转交（`../../../../js-reverse/SKILL.md` 做 initiator 定位），专用技能不可用时返回 Spider core loop。定位已知入口之后，本文只讲怎么把那个模块抽出来。
 
 当已定位的加密入口位于 webpack bundle 中时使用。入口未知时不要先做本流程，按 `../index.md`「准入条件」表的 capability-aware 契约转交；专用技能不可用时返回 Spider core loop。

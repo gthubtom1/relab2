@@ -4,7 +4,6 @@
 >
 > **什么时候用**：浏览器或 wire（线上报文）输出**已经绑定到固定输入（fixed inputs）**，目标是把 JS 运行时依赖彻底拿掉。这不是站点专属档案 —— 像抖音 `a_bogus` 那样的移植，只是本方法的一个实例。
 >
-> **平台与本机状态**：Windows 10 x64。`python 3.12.0`（`D:\EXE\python\python.exe`）**本机可用，且是本手册的最终依赖**；`curl_cffi 0.16.3` **本机可用**，可直接做 TLS 指纹模拟（transport impersonation），这是本机相对纯 stdlib 的真实优势；`node v24.20.0`（`D:\Tools\Node\node.exe`）**本机可用，但按本文判据第 5 条不得进入最终依赖路径**，只能用作迁移期的对照宿主；`iv8`（社区运行时，PyPI 上无该发行版）**本机无**；`reqable` **本机无**，抓包改用 `tshark` / `mitmdump`（见 `../observe/local-mcp-environment.md`）。本文未在本机跑过的命令与参数均已就地标注。
 
 ---
 
@@ -44,7 +43,7 @@
 
 **本机环境前提**：
 
-- Python 3.12 解释器路径：`D:\EXE\python\python.exe`（本文所有命令按此路径给）
+- Python 3.12 解释器路径：`(Resolve-ReverseToolSpec -Name 'pyre').Command`（本文所有命令按此路径给）
 - 若最终路径需要 TLS 层模拟，`curl_cffi` 本机可用，示例见「步骤」第 9 步
 - 静态 AST 那套（`esprima` / `acorn` / `@babel/parser`）**本机未装**，需要时先装；未装不影响本文九步（九步全是运行时/数值比对，不依赖 AST 解析器）
 
@@ -119,7 +118,7 @@
 本机 `curl_cffi` 的接入形态（**未在本机对具体目标验证**，仅为路径示意）：
 
 ```python
-# D:\EXE\python\python.exe
+# (Resolve-ReverseToolSpec -Name 'pyre').Command
 from curl_cffi import requests as cf
 
 # 传输层模拟浏览器 TLS/H2 指纹，替代 stdlib + 手搓 header

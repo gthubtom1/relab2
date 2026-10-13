@@ -16,11 +16,11 @@
 ## 前置
 
 ```powershell
-$py = 'D:\EXE\python\python.exe'
+$py = (Resolve-ReverseToolSpec -Name 'pyre').Command
 $pd = 'C:\relab2\skillpack\skills\reverse-engineering\scripts\prng_detect.py'
 ```
 
-`prng_detect.py` **只用标准库**，任何解释器都能跑。但本机统一用 `D:\EXE\python\python.exe`。
+`prng_detect.py` **只用标准库**，任何解释器都能跑。但本机统一用 `(Resolve-ReverseToolSpec -Name 'pyre').Command`。
 
 **第一步永远是先造样本自测**（不用找样本，脚本自带生成器）：
 

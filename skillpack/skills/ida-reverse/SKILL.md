@@ -70,11 +70,11 @@ description: |
    - **当前解决办法**：`open.ps1` 新增 `-TimeoutSeconds`，并改为后台请求 + 前台轮询 + 定时进度输出
    - 轮询到会话已就绪时会提前返回 `OK:文件名:session_id`，超时则返回 `ERR:open_timeout_xxs`
 
-9. **HTTP MCP 会在登录后静默退出**
-   - Cursor/Claude 的 `type: http` 不会代为拉起进程；旧计划任务只在登录时跑一次
-   - `pythonw` 无控制台，崩溃时 Application 日志也是空的
-   - **解决办法**：`start.ps1` 默认健康则复用；`watchdog.ps1` 每分钟巡检；日志在 `%LOCALAPPDATA%\reverse-skill\ida-mcp\`
-   - 安装：`scripts/install-autostart.ps1`。HTTP 客户端若启动时端口还没起来，仍需在 MCP 面板手动刷新一次
+9. **HTTP MCP 按需拉起 —— 没有任何常驻**
+   - Cursor/Claude 的 `type: http` **不会代为拉起进程**。所以 13337 平时是关的，这是设计
+   - **解决办法**：用到时跑一次 `scripts/start.ps1` —— 健康则复用，没人听才起，起完就一直在后台服务本次会话
+   - **不要**注册计划任务 / 看门狗 / 开机自启：会每分钟弹 cmd 窗口，且换机后必然指错路径（已全部删除）
+   - HTTP 客户端若启动时端口还没起来，仍需在 MCP 面板手动刷新一次
 
 10. **Streamable HTTP GET `/mcp` 会卡住单线程 supervisor**
    - 部分 HTTP MCP 客户端会对 `/mcp` 发长连接 GET（SSE）。stock `idalib_supervisor` 用 `background=False` 的 `HTTPServer`，一次只处理一个请求
@@ -112,12 +112,15 @@ description: |
 powershell -File "<skill-root>\ida-reverse\scripts\start.ps1"
 ```
 
-### watchdog.ps1 / recover.ps1 / install-autostart.ps1 — 保活
+### recover.ps1 — 重启 supervisor
 
-- `watchdog.ps1`：探测 13337；健康 reuse（并刷新 last-healthy）；GUI / `open.ps1` 开库锁 / last-healthy 未满 3 分钟的 busy → reuse；只有 `tools/list` 连续失败超过 3 分钟才 `start.ps1 -Force`
-- `recover.ps1`：立刻 `start.ps1 -Force`（不杀 `ida.exe`）。HTTP 客户端把 `idapro` 标成 error 时用这个
-- `install-autostart.ps1`：注册计划任务 `reverse-skill-ida-mcp`（登录 + 每分钟）
-- 日志：`%LOCALAPPDATA%\reverse-skill\ida-mcp\watchdog.log`
+- `recover.ps1`：立刻 `start.ps1 -Force`（**不杀 `ida.exe`**）。HTTP 客户端把 `idapro` 标成 error 时用这个
+- 日志：`%LOCALAPPDATA%\reverse-skill\ida-mcp\supervisor.log`
+
+> **★ 本模块没有后台常驻。** 计划任务、看门狗、开机自启**都已删除** ——
+> 它们会每分钟弹一次 cmd 窗口，且换机后必然指错路径。
+> 13337 平时关着是**设计**，不是故障：要用的时候跑一次 `start.ps1`，它自己判断该起还是该复用。
+> 换机后第一件事是确认新机器上也没有这种东西，见 `环境初始化.md` §「换机适配面」。
 
 ### open.ps1 — 打开二进制文件
 

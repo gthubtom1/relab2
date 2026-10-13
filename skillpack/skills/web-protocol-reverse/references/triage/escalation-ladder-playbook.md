@@ -4,7 +4,6 @@
 >
 > **什么时候用**：手里有一个部分证明，正想直接跳到更重的运行时、更宽的补丁面，或者某个路由专用的传输例外时 —— 也就是**手痒想跳级**的时候。
 >
-> **平台与本机状态**：Windows 10 x64。`node v24.20.0`（`D:\Tools\Node\node.exe`）、`playwright`、`frida`、`curl_cffi`、`mitmdump`（`D:\EXE\python\Scripts\mitmdump.EXE`）、`tshark`（`D:\Tools\Wireshark\tshark.exe`）、`python 3.12`（`D:\EXE\python\python.exe`）**本机可用**。**`iv8` 本机无**（社区运行时，PyPI 无发行版）→ 本文明确把它作为升级路径的**终点约束**写入判据。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -30,10 +29,10 @@
 
 ```powershell
 # Node 在位 —— 本机 Rung 4 的首选宿主（实测 v24.20.0）
-& 'D:\Tools\Node\node.exe' -v
+& (Resolve-ReverseToolSpec -Name 'node').Command -v
 
 # iv8 检查：本机预期为「未安装」，因为它是社区运行时，PyPI 上不存在该发行版
-& 'D:\EXE\python\python.exe' -c "import importlib.util as u; print('iv8:', bool(u.find_spec('iv8')))"
+& (Resolve-ReverseToolSpec -Name 'pyre').Command -c "import importlib.util as u; print('iv8:', bool(u.find_spec('iv8')))"
 ```
 
 ---
@@ -81,7 +80,7 @@
 
 **升级条件**：固定输入或 wire diff 已证明剩下的差距**不是**简单的平价、槽位或解码问题。
 
-> 本机做法：用 `D:\EXE\python\python.exe` 跑固定向量；wire 侧用 `mitmdump` 落盘后逐字节 diff。
+> 本机做法：用 `(Resolve-ReverseToolSpec -Name 'pyre').Command` 跑固定向量；wire 侧用 `mitmdump` 落盘后逐字节 diff。
 
 #### Rung 2：窄边界观察（Narrow boundary observation）
 

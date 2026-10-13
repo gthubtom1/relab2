@@ -19,7 +19,7 @@ $r2    = (Resolve-ReverseToolSpec -Name 'r2').Command
 $floss = (Resolve-ReverseToolSpec -Name 'floss').Command
 $capa  = (Resolve-ReverseToolSpec -Name 'capa').Command
 $yara  = (Resolve-ReverseToolSpec -Name 'yara').Command
-$py    = 'D:\EXE\python\python.exe'
+$py    = (Resolve-ReverseToolSpec -Name 'pyre').Command
 ```
 
 验证本机是否有该程序（**没装也不影响往下做方法论演练**，见步骤 5）：

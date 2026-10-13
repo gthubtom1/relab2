@@ -2,7 +2,7 @@
 
 Spec: §17.14 + task card T20 (§19). Importer: `scripts/adapt-community.py`
 (owned by T05 — **not modified by this card**; importer-side changes go
-through a change request). Lab: `D:\Project\skills-hub\work\t20-lab`
+through a change request). Lab: `work\t20-lab`
 (**outside the repo**). Harness: `scripts/t20-transactional-lab.py`,
 `scripts/t20-rollback-audit.py`, `scripts/t20-format-gate.py`.
 Tests: `tests/t20/test_t20_transactional.py` (29/29).
@@ -102,14 +102,14 @@ Until then, full-generation rollback exists only in this lab harness.
 
 ```text
 $env:PYTHONIOENCODING='utf-8'
-D:\EXE\python\python.exe scripts/t20-transactional-lab.py --seed
-D:\EXE\python\python.exe scripts/t20-transactional-lab.py --promote --crash-at B2
-D:\EXE\python\python.exe scripts/t20-transactional-lab.py --recover
-D:\EXE\python\python.exe scripts/t20-transactional-lab.py --promote   # clean -> gen 2
-D:\EXE\python\python.exe scripts/t20-transactional-lab.py --rollback
-D:\EXE\python\python.exe scripts/t20-rollback-audit.py
-D:\EXE\python\python.exe scripts/t20-format-gate.py --self-test
-D:\EXE\python\python.exe tests/t20/test_t20_transactional.py          # 29/29
+& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/t20-transactional-lab.py --seed
+& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/t20-transactional-lab.py --promote --crash-at B2
+& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/t20-transactional-lab.py --recover
+& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/t20-transactional-lab.py --promote   # clean -> gen 2
+& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/t20-transactional-lab.py --rollback
+& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/t20-rollback-audit.py
+& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/t20-format-gate.py --self-test
+& (Resolve-ReverseToolSpec -Name 'pyre').Command ests/t20/test_t20_transactional.py          # 29/29
 ```
 
 Evidence log pattern per window (real output): `journal-begin

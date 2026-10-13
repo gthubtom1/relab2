@@ -2,7 +2,7 @@
 
 > **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License）的 `browser-stubs.md`。**下方 JavaScript 代码块一字未改**（代码不译），只译说明文字。
 > **用途**：在诊断报告出现 `undefinedPaths` / `ERRORS`，或 `env_core.js` 报告需要某类宿主对象时，**按需取用**对应的存根代码。
-> **前置（本机实测，2026-10-10）**：Node ✅ `D:\Tools\Node\node.exe` v24.20.0。⚠️ 这些代码依赖上游 `env_core.js` 提供的 `env.getNativeProto` / `env.setObjNative` / `env.setFuncNative` / `env.init` / `env.monitor` / `env.set` / `env.restore` —— **`env_core.js` 未随本包落地**，本机没有这个文件。代码本身**未在本机执行验证过**，它描述的是上游 API 形态。
+> **前置（本机实测，2026-10-10）**：Node ✅ `(Resolve-ReverseToolSpec -Name 'node').Command` v24.20.0。⚠️ 这些代码依赖上游 `env_core.js` 提供的 `env.getNativeProto` / `env.setObjNative` / `env.setFuncNative` / `env.init` / `env.monitor` / `env.set` / `env.restore` —— **`env_core.js` 未随本包落地**，本机没有这个文件。代码本身**未在本机执行验证过**，它描述的是上游 API 形态。
 > **用法**：**不要一次性把本文件所有存根都塞进项目。** 每轮只取当前诊断报告指向的那一段。
 
 按诊断报告中出现的 `undefinedPaths`、`ERRORS` 或 `env_core.js` 报告按需取用。

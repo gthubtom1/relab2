@@ -20,7 +20,7 @@
 # ★ 先探测、再设 —— 不要凭印象填路径
 powershell -NoProfile -ExecutionPolicy Bypass -Command ". '<技能包根>\skillpack\skills\scripts\lib\Bootstrap.ps1'; Resolve-ReverseToolSpec -Name 'idat'"
 # 把返回的 Command 去掉末尾的 \idat.exe，那才是 IDADIR：
-#   返回 D:\Tools\disasm\IDA Pro 9.3\idat.exe  →  IDADIR = D:\Tools\disasm\IDA Pro 9.3
+#   返回 <工具根>\disasm\IDA Pro <版本>\idat.exe  →  IDADIR = <工具根>\disasm\IDA Pro <版本>
 
 setx IDADIR "<上面探测出来的目录>"
 
@@ -37,28 +37,48 @@ python "<IDADIR>\idalib\python\py-activate-idalib.py" -d "<IDADIR>"
 python -m ida_pro_mcp --install --transport streamable-http --scope global
 ```
 
-## 启动与保活
+## 按需启动（★ 无后台常驻）
 
-`type: http` 的 MCP 条目不会代为拉起进程。13337 没监听时，客户端全部报 error。
+**没有任何计划任务、没有看门狗、没有开机自启。** 13337 平时就是关着的 —— 这是设计，不是故障。
+
+`type: http` 的 MCP 条目不会代为拉起进程。**要用的时候自己起，用完让它自己退。**
 
 | 脚本 | 作用 |
 |------|------|
-| `scripts/start.ps1` | 健康则 `OK:<n>:reuse` 并刷新 last-healthy；端口在听但 RPC 超时视为忙，不杀；只在无人监听、缺 `py_eval`、或 tools/list 连续失败超过 3 分钟（且无 `opening.lock`）时替换 managed supervisor；永不杀 `ida.exe` |
-| `scripts/watchdog.ps1` | 每分钟巡检；健康 reuse；GUI / `open.ps1` 开库锁 / last-healthy 未满 3 分钟 → reuse；**tools/list 连续失败超过 3 分钟才 `-Force`** |
+| `scripts/start.ps1` | **按需启动的唯一入口**。健康则 `OK:<n>:reuse` 并刷新 last-healthy；端口在听但 RPC 超时视为忙，**不杀**；只在无人监听、缺 `py_eval`、或 tools/list 连续失败超过 3 分钟（且无 `opening.lock`）时替换 managed supervisor；**永不杀 `ida.exe`** |
 | `scripts/recover.ps1` | 立刻 `-Force` 重启 supervisor（不杀 `ida.exe`）。HTTP 客户端把 `idapro` 标成 error 时用这个 |
-| `scripts/install-autostart.ps1` | 注册计划任务 `reverse-skill-ida-mcp`（登录 + 每分钟） |
 | `scripts/start-gui.ps1` | idalib license 失败时开 GUI 插件 |
 | `scripts/open.ps1` | HTTP 直调 `idb_open`，绕过部分客户端 schema 校验 |
 
-日志：`%LOCALAPPDATA%\reverse-skill\ida-mcp\supervisor.log` 与 `watchdog.log`。
+日志：`%LOCALAPPDATA%\reverse-skill\ida-mcp\supervisor.log`。
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "skills\ida-reverse\scripts\start.ps1"
-powershell -NoProfile -ExecutionPolicy Bypass -File "skills\ida-reverse\scripts\open.ps1" -Path "C:\path\to\target.exe" -TimeoutSeconds 600
-powershell -NoProfile -ExecutionPolicy Bypass -File "skills\ida-reverse\scripts\install-autostart.ps1"
+# 用到 IDA 工具时才跑这一条 —— 它自己判断该起还是该复用
+powershell -NoProfile -ExecutionPolicy Bypass -File "<技能包根>\skills\ida-reverse\scripts\start.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "<技能包根>\skills\ida-reverse\scripts\open.ps1" -Path "C:\path\to\target.exe" -TimeoutSeconds 600
 ```
 
+> ⚠️ **不要注册计划任务。** 曾经有过一个每分钟跑 `watchdog.ps1` 的保活任务
+> （`reverse-skill-ida-mcp`），它会**每分钟弹一次 cmd 窗口**，且换机后必然指错路径。
+> 已删除。**换机时第一件事是确认这台机器上也没有这种东西**：
+> ```powershell
+> Get-ScheduledTask | ? { ($_.Actions.Arguments + $_.Actions.Execute) -match 'relab2|ida-reverse|watchdog|reverse-skill' } | Select TaskName,State
+> ```
+> **输出应为空。** 见 `环境初始化.md` §11「换机适配面」。
+
 GUI 占用 13337 但一时没回包时，`start.ps1` 输出 `WARN:gui_busy` 并退出，避免把正在分析的 IDA 干掉。
+
+## 用完就关
+
+IDA 分析做完了就放掉，别让它占着 13337 和几百 MB 内存：
+
+```powershell
+# 先 save 再释放，否则分析结果丢失
+# 然后按 start.ps1 的同一入口停，不要另找方式 kill
+```
+
+`IDA` 是重型进程。**保持「用时起、用完退」**，不要为了「省一次启动」把它常驻 ——
+常驻换来的是一台永远有残余进程的机器，而下一次会话根本不知道上一个实例是什么状态。
 
 ## 客户端
 

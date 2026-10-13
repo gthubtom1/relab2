@@ -4,7 +4,6 @@
 >
 > **什么时候用**：**第一次落盘之前**、**把代码从缓存提升（promote）出来之前**，以及**任何一条路线想复用或覆盖已有产物**的时候。
 >
-> **平台与本机状态**：本文是落盘规程与 manifest schema，不含必须实跑的本包脚本命令。需要本机标注的只有两条：**(1)** 本包**没有** `scripts/` 目录，源文档引用的 `scripts/evidence_normalizer.py` 与 `scripts/check_reverse_env.py` **均不存在**，本文已删除该引用并改写为可执行的人工 / 工具做法；**(2)** 运行时环境指纹涉及的 `python 3.12`（`D:\EXE\python\python.exe`）、`node v24.20.0`（`D:\Tools\Node\node.exe`）本机可用，`iv8` 本机无，`reqable` 本机无。挂载现状见 `../observe/local-mcp-environment.md`。
 
 ---
 
@@ -128,8 +127,8 @@
 ```powershell
 # 1) 确认项目根已被绑定（本文「绑定项目根」一节已记录）
 # 2) 确认解释器与运行时版本 —— 本机实测：
-D:\EXE\python\python.exe --version          # Python 3.12.0
-D:\Tools\Node\node.exe --version            # v24.20.0
+& (Resolve-ReverseToolSpec -Name 'pyre').Command --version          # Python 3.12.0
+& (Resolve-ReverseToolSpec -Name 'node').Command --version            # v24.20.0
 
 # 3) 只对显式选定的公开 lockfile 取指纹；不拷贝内容，只记 路径/字节数/SHA-256
 #    （Get-FileHash 只读文件，不复制）
@@ -144,7 +143,7 @@ Get-ChildItem -Path <project>\collector -Filter package-lock.json -Recurse |
 ```
 
 把这三列结果写进 manifest 的 `runtimeEvidence.helperLockfiles`。
-**项目虚拟环境（venv）一致性**同理用 `D:\EXE\python\python.exe -c "import sys; print(sys.prefix)"` 与项目内 `Scripts\python.exe` 对比，取值写 `projectVenv` ∈ `active | advisory-mismatch | required-mismatch | not-required`。
+**项目虚拟环境（venv）一致性**同理用 `(Resolve-ReverseToolSpec -Name 'pyre').Command -c "import sys; print(sys.prefix)"` 与项目内 `Scripts\python.exe` 对比，取值写 `projectVenv` ∈ `active | advisory-mismatch | required-mismatch | not-required`。
 
 ### 四、Proof Manifest
 
@@ -156,9 +155,9 @@ Get-ChildItem -Path <project>\collector -Filter package-lock.json -Recurse |
 
 ```powershell
 # 源产物带密钥指纹（密钥不落盘、不入 manifest）
-D:\EXE\python\python.exe -c "import hmac,hashlib,pathlib;k=pathlib.Path('local-key.txt').read_bytes().strip();d=pathlib.Path('capture.har').read_bytes();print(hmac.new(k,d,hashlib.sha256).hexdigest())"
+& (Resolve-ReverseToolSpec -Name 'pyre').Command -c "import hmac,hashlib,pathlib;k=pathlib.Path('local-key.txt').read_bytes().strip();d=pathlib.Path('capture.har').read_bytes();print(hmac.new(k,d,hashlib.sha256).hexdigest())"
 # 已脱敏证据包的无密钥指纹
-D:\EXE\python\python.exe -c "import hashlib,pathlib;print(hashlib.sha256(pathlib.Path('evidence-redacted.json').read_bytes()).hexdigest())"
+& (Resolve-ReverseToolSpec -Name 'pyre').Command -c "import hashlib,pathlib;print(hashlib.sha256(pathlib.Path('evidence-redacted.json').read_bytes()).hexdigest())"
 ```
 
 ```json
@@ -271,7 +270,7 @@ analysis/
 18. 复核通过：
 
 ```bash
-D:\EXE\python\python.exe skillpack/skills/case-review/scripts/review_case.py work/<case> --verify-hashes --strict
+& (Resolve-ReverseToolSpec -Name 'pyre').Command skillpack/skills/case-review/scripts/review_case.py work/<case> --verify-hashes --strict
 ```
 
 ### E. 交付前五问（源文档 `## Promotion Checklist`，逐条回答）
@@ -325,7 +324,7 @@ D:\EXE\python\python.exe skillpack/skills/case-review/scripts/review_case.py wor
 
 1. **源文档 `## Contents` 目录块指向英文锚点**。已删除，改为中文六段式结构下的自然导航。
 2. **源文档引用 `scripts/evidence_normalizer.py`（`## Proof Manifest` 一节）—— 该脚本在本包不存在**，`scripts/` 目录本身也不存在。已删除该引用，改写为「按 schema v2 手工撰写 manifest + 本机 Python `hmac`/`hashlib` 现场计算指纹」的可执行做法。
-3. **源文档引用 `scripts/check_reverse_env.py --project-root <project>` 与 `--helper-lockfile`（双运行时打包一节）—— 该脚本同样不存在**。已删除该引用，改写为本机 PowerShell 的 `Get-FileHash` + `D:\EXE\python\python.exe --version` 等实做步骤，并说明项目 venv 一致性的取法。改写后**只用了本机实际存在的工具**，未编造任何新脚本路径。
+3. **源文档引用 `scripts/check_reverse_env.py --project-root <project>` 与 `--helper-lockfile`（双运行时打包一节）—— 该脚本同样不存在**。已删除该引用，改写为本机 PowerShell 的 `Get-FileHash` + `(Resolve-ReverseToolSpec -Name 'pyre').Command --version` 等实做步骤，并说明项目 venv 一致性的取法。改写后**只用了本机实际存在的工具**，未编造任何新脚本路径。
 4. **源文档提到 normalizer 的 `--include-raw-hashes` 标志** —— 随 normalizer 一并不存在。已改为等价做法：`redaction.raw_hashes_included` 恒为 `false`。
 5. **源文档所有交叉引用写作扁平 `references/xxx.md`**，实际这些文件在 `references/<group>/xxx.md`。已全部核实存在后改为实际相对路径（`./contract/xxx.md`、`../triage/xxx.md`、`../deliver/xxx.md` 等），未留任何指向不存在路径的引用。
 6. **源文档的 `## Core Rule` 把「PyCharm 右键入口」当作必然产物**，但同一节末尾又说 `evidence` / `local-proof` 不要求入口。本文把布局整理成一张表，把入口标注为「按需」，消除了源文档内部的表面矛盾。

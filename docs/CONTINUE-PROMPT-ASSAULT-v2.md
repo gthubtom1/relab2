@@ -48,7 +48,7 @@
    NtQuerySystemInformation / 读注册表 / 查调试器与工具特征）。F-004 已经确认有设备指纹绑定，顺着它往下看。
 
 ★ 第一步：抓包，看它到底想连哪个服务器 / 为什么连不上。
-- 本机有 tshark（D:\Tools\Wireshark\tshark.exe）+ Npcap(Running)。也支持 mitmdump。
+- 本机有 tshark（(Resolve-ReverseToolSpec -Name 'tshark').Command）+ Npcap(Running)。也支持 mitmdump。
 - 目标正在运行（主人已用任务管理器正常启动，红灯状态；LOGIN 点不了）。
 - 抓它启动时的出站流量：DNS 查询（它解析哪个域名？）、TCP 连接目标 IP:端口、TLS SNI。
   命令示例：tshark -i <接口> -f "tcp or udp port 53 or tcp" -w capture.pcapng

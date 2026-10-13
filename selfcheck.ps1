@@ -16,17 +16,15 @@ if (-not $repoRoot) { $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Pat
 
 # ★ PSModulePath 自愈（2026-10-10 注入）：剔除 WindowsApps 版 PowerShell 7 的模块目录，
 #   否则 PS 5.1 会因 TypeData 重复定义失败而使 Get-FileHash / Get-ExecutionPolicy
-#   不可用（已造成两次假绿 + 一次失败被吞）。重算/迁移后请重跑 inject-psmp.py。
+#   不可用（已造成两次假绿 + 一次失败被吞）。模块本体见 skillpack\skills\scripts\lib\PsModulePathInit.ps1。
 #
-# ★ 2026-10-10 修正硬编码路径：本行原来无条件 dot-source `C:\relab2\...`，
+# ★ 2026-10-10 修正硬编码路径：本行原来无条件 dot-source `<仓根>\...`，
 #   导致把仓库 clone 到任何别的位置（AI-INSTALL.md 明确建议用 `~/reverse-skill`）
 #   的用户在第一步自检就炸在「找不到 PsModulePathInit.ps1」。
 #   现在按 $repoRoot 定位；本机原位时行为不变，换机时按仓内相对路径走。
 $psModulePathInit = Join-Path $repoRoot 'skillpack\skills\scripts\lib\PsModulePathInit.ps1'
 if (Test-Path -LiteralPath $psModulePathInit) {
     . $psModulePathInit
-} elseif (Test-Path -LiteralPath 'C:\relab2\skillpack\skills\scripts\lib\PsModulePathInit.ps1') {
-    . 'C:\relab2\skillpack\skills\scripts\lib\PsModulePathInit.ps1'
 }
 
 # ★ 2026-10-10 修正优先级倒置：原来用 `if (-not $env:X) { $env:X = ... }`，
@@ -45,7 +43,7 @@ $toolRootExplicit  = $PSBoundParameters.ContainsKey('ToolRoot')
 if (-not $skillRootExplicit) {
     # 环境变量只在它指向**真实存在**的目录时才采信。
     # 实测踩过的坑：Process 级残留一个陈旧的 E:\nope-not-here，
-    # User 级明明是对的 C:\relab2，但脚本优先读了 Process 级 ——
+    # User 级明明是对的 <仓根>，但脚本优先读了 Process 级 ——
     # 于是每次 selfcheck 第 3 项都 FAIL，而真正的原因（路径不存在）
     # 跟显示出来的症状（找不到 START-HERE.md）对不上号。
     if ($env:REVERSE_SKILL_ROOT -and (Test-Path -LiteralPath $env:REVERSE_SKILL_ROOT -PathType Container)) {

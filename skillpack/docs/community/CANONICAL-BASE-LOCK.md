@@ -74,7 +74,7 @@ Consequence (17.15): without a verifiable signature no candidate may enter a
 `redistributable` release. Enforcement:
 
 ```
-D:\EXE\python\python.exe scripts/verify-canonical-base-lock.py --require-signatures
+& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/verify-canonical-base-lock.py --require-signatures
 ```
 
 exits 20 on this tree (`base record is unsigned`), and the default mode exits
@@ -113,9 +113,9 @@ merged licenses stays `["MIT", "NOASSERTION", "NONE"]`, verdict
 
 ```
 $env:PYTHONIOENCODING='utf-8'
-D:\EXE\python\python.exe scripts/verify-canonical-base-lock.py
-D:\EXE\python\python.exe scripts/verify-canonical-base-lock.py --require-signatures
-D:\EXE\python\python.exe scripts/verify-canonical-base-lock.py --json
+& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/verify-canonical-base-lock.py
+& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/verify-canonical-base-lock.py --require-signatures
+& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/verify-canonical-base-lock.py --json
 ```
 
 Exit codes (spec 4.7): 0 ok, 10 needs_review (snapshot absent: digest,

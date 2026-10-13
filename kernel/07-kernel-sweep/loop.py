@@ -50,9 +50,28 @@ def transport_ratio(path):
     return {m: (n / t) for m, (n, t) in out.items()}
 
 
+def preflight():
+    """开跑前先体检：地址 / 令牌 / 模型三样齐不齐。缺了就印出「该问主人什么」并拒绝启动。
+
+    这是**故意的**：端点与令牌每台机器都不同，而且不许猜（本模块规则 1）。
+    与其让横扫跑到一半抛一句 no endpoint，不如在第一步就把该问的话问清楚。
+    """
+    p = subprocess.run([PY, os.path.join(HERE, "先问我.py")], cwd=HERE)
+    return p.returncode
+
+
 def main():
     a = sys.argv[1:]
     val = lambda k, d=None: a[a.index(k) + 1] if k in a else d
+
+    if "--no-preflight" not in a:
+        rc = preflight()
+        if rc != 0:
+            print("\n[!] 配置没齐，横扫不启动。")
+            print("    上面那几段就是**该向主人问的原话** —— 问完用 `--set` 落盘，再重跑本命令。")
+            print("    （确实想跳过体检：加 --no-preflight）")
+            return rc
+
     items = val("--items")
     models = val("--models", "")
     tag = val("--tag", "S")

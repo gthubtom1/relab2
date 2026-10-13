@@ -18,8 +18,8 @@
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
 $floss = (Resolve-ReverseToolSpec -Name 'floss').Command
 $cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
-$pm   = 'D:\Tools\Sysinternals\Procmon64.exe'
-$sys  = 'D:\Tools\Sysinternals\Autoruns64.exe'    # 一次性扫全部自启动点
+$pm   = '<工具根>\<分类>\<工具名>\Procmon64.exe'
+$sys  = '<工具根>\<分类>\<工具名>\Autoruns64.exe'    # 一次性扫全部自启动点
 ```
 
 ★ **`Autoruns64.exe` 是本机已有的 Sysinternals 工具**，比手工逐个查注册表全得多。
@@ -30,7 +30,7 @@ $sys  = 'D:\Tools\Sysinternals\Autoruns64.exe'    # 一次性扫全部自启动�
 ### 1. 用 Autoruns 快速摸底（先扫全貌）
 
 ```powershell
-& 'D:\Tools\Sysinternals\Autoruns64.exe' /accepteula /m <异常项的名字片段> /c /v
+& '<工具根>\<分类>\<工具名>\Autoruns64.exe' /accepteula /m <异常项的名字片段> /c /v
 ```
 
 输出会分组列出：Registry Run Keys / Startup Folder / Scheduled Tasks / Services /

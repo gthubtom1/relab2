@@ -17,7 +17,7 @@
 
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
-$py = 'D:\EXE\python\python.exe'   # pefile 2024.8.26（静态提取 SSN）
+$py = (Resolve-ReverseToolSpec -Name 'pyre').Command   # pefile 2024.8.26（静态提取 SSN）
 $cdb = (Resolve-ReverseToolSpec -Name 'cdbX64').Command  # 运行时确认 ntdll 未被 hook
 ```
 

@@ -52,6 +52,6 @@ fixture 见 `tests/security/fixtures/`，驱动见
 
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
-D:\EXE\python\python.exe skills\scripts\verify-path-and-target.py
-D:\EXE\python\python.exe tests\security\test-path-and-target.py
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills\scripts\verify-path-and-target.py
+& (Resolve-ReverseToolSpec -Name 'pyre').Command ests\security\test-path-and-target.py
 ```

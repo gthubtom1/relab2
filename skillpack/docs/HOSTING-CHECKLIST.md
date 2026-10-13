@@ -54,7 +54,7 @@
 
 自查：`git status --porcelain` 为空；`git ls-files | Select-String "work/|reports/"` 为空。
 
-**另一类**：文档里残留的**本机路径**（如 `C:\Users\<你的用户名>\...`、`D:\EXE\python\...`）。
+**另一类**：文档里残留的**本机路径**（如 `C:\Users\<你的用户名>\...`、`(Resolve-ReverseToolSpec -Name 'pyre').Command\...`）。
 它们不是密钥，但会泄漏你的环境。
 
 > **私有库可跳过本条。** 本仓库已确认是**私有、自用**（2026-10-02 仓库主人确认），

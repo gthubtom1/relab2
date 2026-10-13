@@ -4,7 +4,6 @@
 >
 > **什么时候用**：目标**已经**像某个复现过的模式，并且你想知道**最短的、已被验证的第一手**是什么。
 >
-> **平台与本机状态**：Windows 10 x64。`python 3.12`（`D:\EXE\python\python.exe`）、`node v24.20.0`（`D:\Tools\Node\node.exe`）、`tshark 4.6.8`（`D:\Tools\Wireshark\tshark.exe`）、`mitmdump`（`D:\EXE\python\Scripts\mitmdump.EXE`）、`curl_cffi`、`playwright（模块在 `D:\EXE\python\Lib\site-packages\playwright`）` **本机可用**。`iv8` 与 `reqable` **本机无** —— 本文凡涉及抓包处，一律改用 **tshark / mitmproxy** 给出本机命令。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -47,9 +46,9 @@
 2. **wire 可见性**。本机两条路都可用：
    ```powershell
    # 方式一：mitmproxy 实时改写/观察（本机可用）
-   D:\EXE\python\Scripts\mitmdump.EXE --listen-port 8899 --save-stream-file flow.mitm
+   & (Resolve-ReverseToolSpec -Name 'mitmdump').Command --listen-port 8899 --save-stream-file flow.mitm
    # 方式二：tshark 离线读已抓的 pcap（本机可用）
-   D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "http.request" -T fields -e http.request.full_uri -e http.request.method
+   & (Resolve-ReverseToolSpec -Name 'tshark').Command -r flow.pcapng -Y "http.request" -T fields -e http.request.full_uri -e http.request.method
    ```
    ⚠ 源文档提到的 `reqable` **本机无**，抓包一律用上面两条。
 3. **一份可写死的「最短第一手」判据**。见下面「判据」段 —— 这份图谱的价值全在判据上。

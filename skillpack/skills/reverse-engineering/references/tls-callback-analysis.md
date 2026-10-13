@@ -19,7 +19,7 @@
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
 $cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command   # x64 样本
 $cdb86= (Resolve-ReverseToolSpec -Name 'cdbX86').Command   # x86 样本
-$py   = 'D:\EXE\python\python.exe'                        # pefile 2024.8.26
+$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command                        # pefile 2024.8.26
 ```
 
 > ★ cdb **只能走 app execution alias**：`%LOCALAPPDATA%\Microsoft\WindowsApps\cdbX64.exe`。直跑 WindowsApps 包目录里的 `cdb.exe` 会「拒绝访问」，**且绝不要把它加进 PATH**。

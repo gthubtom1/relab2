@@ -4,7 +4,6 @@
 >
 > **什么时候用**：目标的**传输形状本身**就是协议契约的一部分时 —— GraphQL、WebSocket 帧、protobuf/msgpack 二进制信封，或者消息 ID / operationName / channel / opcode 和可见业务字段同等重要。
 >
-> **平台与本机状态**：`python 3.12.0`（`D:\EXE\python\python.exe`）**本机可用**，`protobuf` / `msgpack` 均可作为纯 Python 解码依赖。抓帧用 `tshark 4.6.8`（`D:\Tools\Wireshark\tshark.exe`）或 `mitmdump 12.2.3`（`D:\EXE\python\Scripts\mitmdump.EXE`）；**本机 `reqable` 无**。`iv8` **本机无**；静态 AST 那套（`esprima`/`acorn`/`@babel/parser`）**本机未装**。
 
 ---
 
@@ -84,10 +83,10 @@
 
 ```powershell
 # 1) 用 tshark 直接抽出 grpc-web 帧的十六进制（本机可用）
-D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "http2.data.data" -T fields -e http2.data.data
+& (Resolve-ReverseToolSpec -Name 'tshark').Command -r flow.pcapng -Y "http2.data.data" -T fields -e http2.data.data
 
 # 2) 用 Python 按本文的分帧契约做一次有界检查（只打印 flags/length/offset）
-D:\EXE\python\python.exe -c "d=bytes.fromhex(open('frame.hex').read().strip()); i=0
+& (Resolve-ReverseToolSpec -Name 'pyre').Command -c "d=bytes.fromhex(open('frame.hex').read().strip()); i=0
 while i+5<=len(d):
     flag=d[i]; ln=int.from_bytes(d[i+1:i+5],'big')
     print('flag',flag,'len',ln,'offset',i)

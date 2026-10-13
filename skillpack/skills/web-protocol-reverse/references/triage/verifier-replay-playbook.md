@@ -8,7 +8,6 @@
 > - 没有有意义的业务 signer，但请求在 verifier 通过前一律失败
 > - 浏览器里点一下之后，下一个请求才解锁
 >
-> **平台与本机状态**：Windows 10 x64。`python 3.12`（`D:\EXE\python\python.exe`）、`playwright`、`frida`、`node`（`D:\Tools\Node\node.exe`）、`mitmdump`（`D:\EXE\python\Scripts\mitmdump.EXE`）、`tshark`（`D:\Tools\Wireshark\tshark.exe`）**本机可用**。`iv8` **本机无** → 「本地引导执行器」在本机走 `node` / `playwright`，见 `./escalation-ladder-playbook.md` Rung 4。`reqable` 本机无 → transcript 用 `mitmdump` 落盘。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -37,13 +36,13 @@
 
 ```powershell
 # 实时录制 verifier 整轮
-D:\EXE\python\Scripts\mitmdump.EXE --listen-port 8899 --save-stream-file flow.mitm
+& (Resolve-ReverseToolSpec -Name 'mitmdump').Command --listen-port 8899 --save-stream-file flow.mitm
 
 # 离线读已抓的 pcap，列出有序请求
-D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "http.request" -T fields -e frame.number -e http.request.method -e http.request.full_uri
+& (Resolve-ReverseToolSpec -Name 'tshark').Command -r flow.pcapng -Y "http.request" -T fields -e frame.number -e http.request.method -e http.request.full_uri
 ```
 
-5. **若走本地引导执行器**：本机用 `node`（`D:\Tools\Node\node.exe`）或 `playwright`。**`iv8` 本机没有**；`../crypto/iv8-runtime-cheatsheet.md` 的 API 形态**未在本机验证**。
+5. **若走本地引导执行器**：本机用 `node`（`(Resolve-ReverseToolSpec -Name 'node').Command`）或 `playwright`。**`iv8` 本机没有**；`../crypto/iv8-runtime-cheatsheet.md` 的 API 形态**未在本机验证**。
 
 ---
 

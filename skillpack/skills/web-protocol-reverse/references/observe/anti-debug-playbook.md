@@ -4,7 +4,6 @@
 >
 > **什么时候用**：**线上工具变得不稳定，或者页面在抵抗检查（inspection）**的时候。
 >
-> **平台与本机状态**：`python 3.12.0`（`D:\EXE\python\python.exe`）、`node v24.20.0`（`D:\Tools\Node\node.exe`）本机可用；`tshark 4.6.8`（`D:\Tools\Wireshark\tshark.exe`）本机可读线路。MCP 浏览器家族 `chrome-devtools` / `js-reverse` **本机未挂载**——这一点本身减轻了本文场景的压力（本机不依赖浏览器调试器做取证）。源文档**没有提到 `frida`**，改编按本机事实补入（`frida 17.17.0` 可用）。
 
 ---
 
@@ -39,8 +38,8 @@
 
 源文档的响应计划是「通用动作」，本机可以这样落地（**均本机可用；未对具体目标验证**）：
 
-- **保存资产**：`tshark` 抽 HTTP 响应体落盘，或用 `mitmdump`（`D:\EXE\python\Scripts\mitmdump.EXE`）落流。**本机无 `reqable` / `WireMCP`。**
-- **最小 hook 优先**：`frida 17.17.0`（`D:\EXE\python\Scripts\frida.exe`）可以做**极窄的**、只读的 hook，比挂调试器对目标的影响面小得多。
+- **保存资产**：`tshark` 抽 HTTP 响应体落盘，或用 `mitmdump`（`(Resolve-ReverseToolSpec -Name 'mitmdump').Command`）落流。**本机无 `reqable` / `WireMCP`。**
+- **最小 hook 优先**：`frida 17.17.0`（`(Resolve-ReverseToolSpec -Name 'frida').Command`）可以做**极窄的**、只读的 hook，比挂调试器对目标的影响面小得多。
 - **离线去混淆**：`node v24.20.0` 在本地跑脚本，取固定输入输出。
 - **快速判定反调试 vs 工具故障**：若三条通道（浏览器读 DOM / frida 进程级 hook / tshark 纯抓包）表现不一致，那多半是你的工具状态问题，不是页面反调试。
 

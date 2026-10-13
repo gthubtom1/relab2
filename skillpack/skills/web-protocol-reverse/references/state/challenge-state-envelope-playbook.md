@@ -4,7 +4,6 @@
 >
 > **什么时候用**：入口 HTML 与挑战 JS 在业务 replay 能工作**之前**就种下环境绑定状态；或业务响应自身返回一个机器可读的刷新契约（refresh contract），必须在重试前消费；或多个后续字段看起来共用同一个编码信封族（envelope family）。
 >
-> **平台与本机状态**：`python 3.12`、`node v24`、`mitmdump`、`tshark 4.6.8`、`curl_cffi`、`playwright` 本机可用。`iv8` 与 `reqable` 本机无；相关处已就地标注替代路径。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -50,9 +49,9 @@
 1. **一条新鲜的两阶段 trace（two-stage trace）**。这是本篇的硬前提 —— 没有新鲜的两阶段证据，后面七层证明都是空中楼阁。采集手段（本机可用）：
    ```powershell
    # 方式一：mitmproxy 全量流式留存
-   D:\EXE\python\Scripts\mitmdump.EXE -p 8899 -w chain.mitm
+   & (Resolve-ReverseToolSpec -Name 'mitmdump').Command -p 8899 -w chain.mitm
    # 方式二：tshark 离线读 pcap
-   D:\Tools\Wireshark\tshark.exe -r chain.pcapng -T fields -e frame.number -e http.request.full_uri -e http.response.code
+   & (Resolve-ReverseToolSpec -Name 'tshark').Command -r chain.pcapng -T fields -e frame.number -e http.request.full_uri -e http.response.code
    ```
    `reqable` 本机无，HAR 路径不适用。
 2. **本地挑战执行宿主**。`playwright`（本机可用）保留定时器/微任务语义，是执行 challenge 的首选；纯计算的挑战逻辑用 `node v24`。`iv8` 本机无，`../crypto/iv8-runtime-cheatsheet.md` 的形态未在本机验证。

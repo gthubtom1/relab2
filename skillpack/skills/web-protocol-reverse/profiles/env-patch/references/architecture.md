@@ -2,7 +2,7 @@
 
 > **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License）的 `architecture.md`。
 > **用途**：说明诊断器的加载链、模块分类、顺序约束，以及**自定义补丁该写在哪**。
-> **前置（本机实测，2026-10-10）**：Node ✅ `D:\Tools\Node\node.exe` v24.20.0。⚠️ `scripts/env-diagnose.js`、`core/ProxyMonitor.js`、`core/ProxyEnv.js`、`env/` 模块树与 `env-diagnose.js` 的输出 JSON 格式**均未随本包落地**，本机没有这些文件。下文命令与行为描述**未在本机执行验证**。
+> **前置（本机实测，2026-10-10）**：Node ✅ `(Resolve-ReverseToolSpec -Name 'node').Command` v24.20.0。⚠️ `scripts/env-diagnose.js`、`core/ProxyMonitor.js`、`core/ProxyEnv.js`、`env/` 模块树与 `env-diagnose.js` 的输出 JSON 格式**均未随本包落地**，本机没有这些文件。下文命令与行为描述**未在本机执行验证**。
 > **用法**：本篇是**读代码前的架构地图**，不是操作手册。实际执行见 `../index.md` 的「核心循环」。
 
 本文件记录 Spider env-patch profile 的架构与运行时行为。

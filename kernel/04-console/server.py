@@ -483,13 +483,19 @@ def _entry_file(row: dict) -> Path:
     return Path(row["home"]) / (row.get("entry") or "AGENTS.md")
 
 
-def _direct_text(base_id: str, guest_id: str, hub_id: str):
-    """直写：按顺序把选中的几层拼成一份文本 —— 底模 → 指引 → 中枢。
+def _direct_text(base_id: str, guest_id: str, hub_id: str, split_base: bool = False):
+    """直写：按顺序把选中的几层拼成文本 —— 底模 → 指引 → 中枢。
 
     没别的：不写定界标记、不种 hub/ 树、不记清单。写进去的就是你选的那几层，
     顺序就是页面上那一列的顺序（底模在最上，中枢在最下）。
+
+    ★ 2026-10-14：split_base=True 表示**这家把底模和规则分开放**（omp）。
+    这时返回两段：底模单独一段（写进 entry_base），其余写进 entry。
+    非两文件形态时 base_text 恒为 ""，行为与以前完全一致。
+
+    返回 (main_text, base_text, names, error)。
     """
-    parts, names = [], []
+    main_parts, base_parts, names = [], [], []
     for kind, cid, label in (("base", base_id, "底模"),
                              ("guest", guest_id, "指引"),
                              ("hub", hub_id, "中枢")):
@@ -497,16 +503,28 @@ def _direct_text(base_id: str, guest_id: str, hub_id: str):
             continue
         card = _card_path(cid, kind)
         if card is None:
-            return "", [], "没有这张卡：%s/ 子夹里没有「%s」" % (kind, cid)
+            return "", "", [], "没有这张卡：%s/ 子夹里没有「%s」" % (kind, cid)
         try:
             raw = card.read_text(encoding="utf-8")
         except OSError:
-            return "", [], "这张卡读不出来：%s" % cid
+            return "", "", [], "这张卡读不出来：%s" % cid
         # 不做任何格式判断：文件读得出来就整段拼进去，一个字不改。
-        parts.append("# ==================== %s：%s ====================\n%s\n"
-                     % (label, cid, _card_body(raw, card.stem)))
+        chunk = ("# ==================== %s：%s ====================\n%s\n"
+                 % (label, cid, _card_body(raw, card.stem)))
+        if split_base and kind == "base":
+            base_parts.append(chunk)
+        else:
+            main_parts.append(chunk)
         names.append("%s %s" % (label, cid))
-    return "".join(parts), names, ""
+    return "".join(main_parts), "".join(base_parts), names, ""
+
+
+def _base_file(row: dict):
+    """底模卡的落点。两文件形态（omp）才有，否则就是主入口自己。"""
+    eb = str(row.get("entry_base") or "")
+    if eb:
+        return Path(row["home"]) / eb
+    return None
 
 
 def _safebox_gate(host_id: str, row: dict):
@@ -528,12 +546,19 @@ def _safebox_gate(host_id: str, row: dict):
 
 def _do_load_direct(host_id: str, row: dict, base_id: str, guest_id: str, hub_id: str,
                     steps: list) -> dict:
-    """直写：拼好 → 整份替换入口文件。原来的内容清空（原字节已进保险箱）。"""
-    text, names, err = _direct_text(base_id, guest_id, hub_id)
+    """直写：拼好 → 整份替换入口文件。原来的内容清空（原字节已进保险箱）。
+
+    ★ 两文件形态（omp）：底模卡写进 `entry_base`（PERSONALITY.md），
+    中枢段 + 指引卡写进 `entry`（RULES.md）。两个文件**各自独立**，
+    互不覆盖 —— 换底模不会动到规则，换指引不会动到人设。
+    """
+    base_path = _base_file(row)
+    main_text, base_text, names, err = _direct_text(
+        base_id, guest_id, hub_id, split_base=base_path is not None)
     if err:
         steps.append(_step("拼文本", False, err))
         return {"ok": False, "host_id": host_id, "mode": "direct", "steps": steps, "error": err}
-    if not text:
+    if not (main_text or base_text):
         steps.append(_step("拼文本", False, "一层都没选"))
         return {"ok": False, "host_id": host_id, "mode": "direct", "steps": steps,
                 "error": "一层都没选，没东西可写。先把要写的层打开、选一张卡。"}
@@ -542,25 +567,49 @@ def _do_load_direct(host_id: str, row: dict, base_id: str, guest_id: str, hub_id
     steps.extend(gate)
     if gate_err:
         return {"ok": False, "host_id": host_id, "mode": "direct", "steps": steps, "error": gate_err}
+
+    written = []
     entry = _entry_file(row)
-    before = entry.read_bytes() if entry.is_file() else b""
-    bom = before.startswith(BOM)
-    body = (BOM if bom else b"") + text.encode("utf-8")
-    try:
-        _atomic_write_bytes(entry, body)
-    except OSError as exc:
-        steps.append(_step("替换入口文件", False, "写不进去：%s" % exc))
-        return {"ok": False, "host_id": host_id, "mode": "direct", "steps": steps,
-                "error": "写不进去：%s。原文件没动。" % exc}
-    after = entry.read_bytes()
-    ok = after == body
-    steps.append(_step("替换入口文件", ok, "%s：%d → %d 字节%s"
-                       % (entry.name, len(before), len(after),
-                          "（原来是空的，这次新建）" if not before else "（原来那份已存进保险箱）")))
-    return {"ok": ok, "host_id": host_id, "mode": "direct", "steps": steps,
-            "error": "" if ok else "写完了但字节对不上，先别用这一家。",
-            "entry": str(entry), "bytes": len(after),
-            "say": "写好了：%s → %s（%d 字节）" % (" + ".join(names), entry.name, len(after))}
+
+    def _write(target: Path, text: str, label: str):
+        """写一个文件；空文本就不写。返回错误串（空 = 成功）。"""
+        if not text:
+            return ""
+        before = target.read_bytes() if target.is_file() else b""
+        bom = before.startswith(BOM)
+        body = (BOM if bom else b"") + text.encode("utf-8")
+        try:
+            _atomic_write_bytes(target, body)
+        except OSError as exc:
+            steps.append(_step("写 " + label, False, "写不进去：%s" % exc))
+            return "写 %s 写不进去：%s。该文件原样未动。" % (target.name, exc)
+        after = target.read_bytes()
+        ok = after == body
+        steps.append(_step("写 " + label, ok, "%s：%d → %d 字节%s"
+                           % (target.name, len(before), len(after),
+                              "（原来是空的，这次新建）" if not before else "（原来那份已存进保险箱）")))
+        written.append((str(target), len(after), target.name))
+        return "" if ok else "%s 写完了但字节对不上，先别用这一家。" % target.name
+
+    # 主入口：中枢段 + 指引卡（两文件形态时不含底模；单文件形态时三段都在）
+    e1 = _write(entry, main_text, "入口文件")
+    if e1:
+        return {"ok": False, "host_id": host_id, "mode": "direct", "steps": steps, "error": e1}
+
+    # 两文件形态：底模另写一处
+    if base_text and base_path is not None:
+        e2 = _write(base_path, base_text, "人设文件")
+        if e2:
+            return {"ok": False, "host_id": host_id, "mode": "direct", "steps": steps, "error": e2}
+
+    say = "写好了：" + " + ".join(names) + " → " + "、".join(n for _, _, n in written)
+    if base_text and base_path is not None:
+        say += "（两文件形态：底模→%s，其余→%s）" % (base_path.name, entry.name)
+    return {"ok": True, "host_id": host_id, "mode": "direct", "steps": steps, "error": "",
+            "entry": str(entry),
+            "entry_base": str(base_path) if base_path is not None else "",
+            "files": [{"path": p, "bytes": b, "name": n} for p, b, n in written],
+            "say": say}
 
 
 def do_load(host_id: str, base_id: str = "", guest_id: str = "", hub_id: str = "",

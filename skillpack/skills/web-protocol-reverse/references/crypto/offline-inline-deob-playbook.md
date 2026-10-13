@@ -10,7 +10,6 @@
 > - 某个请求参数含**异常分隔符**或 Unicode 分隔符
 > - 一个 obfuscator.io 类 bundle 需要先在本地还原字符串表，签名器才可读
 >
-> **平台与本机状态**：Windows 10 x64。`node v24.20.0`（`D:\Tools\Node\node.exe`）、`python 3.12`（`D:\EXE\python\python.exe`）、`playwright（模块在 `D:\EXE\python\Lib\site-packages\playwright`）` **本机可用**。⚠ `esprima` / `acorn` / `@babel/parser`（npm）**本机无**，需要真正静态 AST 时须先自行安装；本文主路径**不依赖**它们。本文不涉及 `iv8`（本机无）。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -30,14 +29,14 @@
 1. **完整的 HTML 快照**。第一条动作就是保存全文；不要在「在线反复戳」和「离线还原」之间来回横跳。
 2. **一个能执行 JS 的本机宿主**：
    ```powershell
-   D:\Tools\Node\node.exe -v
+   & (Resolve-ReverseToolSpec -Name 'node').Command -v
    ```
 3. **提取 HTML 与脚本的工具**。本机两条都可用：
    ```powershell
    # 方式一：用 playwright 取渲染后 DOM（能拿到运行时注入的脚本）
    # ⚠ 本机必须显式 executable_path，且 goto() 真实 origin 而非 set_content
    # 方式二：纯静态解析 —— python 内置 html.parser，无需装包
-   D:\EXE\python\python.exe -c "from html.parser import HTMLParser; print('html.parser ok')"
+   & (Resolve-ReverseToolSpec -Name 'pyre').Command -c "from html.parser import HTMLParser; print('html.parser ok')"
    ```
 
 ---

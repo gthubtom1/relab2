@@ -20,12 +20,12 @@ param(
   #   一次性试跑必须显式 -DryRun。
   [switch] $DryRun
 )
-# ★ PSModulePath 自愈（2026-10-10 注入，路径由 inject-psmp.py 统一计算）：剔除 WindowsApps
+# ★ PSModulePath 自愈（2026-10-10 注入）：剔除 WindowsApps
 #   版 PowerShell 7 的模块目录，否则 PS 5.1 会因 TypeData 重复定义失败而使
 #   Get-FileHash / Get-ExecutionPolicy 不可用（已造成两次假绿 + 一次失败被吞）。
-#   重算/迁移后请重跑 work/envinit/inject-psmp.py
+#   模块本体见 skillpack\skills\scripts\lib\PsModulePathInit.ps1
 #
-# ★ 2026-10-10 修正硬编码：本行原来是无条件 `. 'C:\relab2\...'`。
+# ★ 2026-10-10 修正硬编码：本行原来是无条件 `. '<仓根>\...'`。
 #   本文件是新机第一个要跑的入口，仓库 clone 到别处（AI-INSTALL.md 建议
 #   `~/reverse-skill`）时它必然找不到 —— 错误写到 stderr，而
 #   `$ErrorActionPreference = 'Stop'` 要到下一行才设，于是脚本照跑，

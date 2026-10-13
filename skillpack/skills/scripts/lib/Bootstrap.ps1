@@ -42,9 +42,7 @@ Remove-Variable -Name Resolve-Relab2PsModulePathInit -ErrorAction SilentlyContin
 # --------------------------------------------------------------------------
 # 进程环境自愈（不重启也能用）
 # --------------------------------------------------------------------------
-# 事故背景 2026-10-08：本机工具整体从 D:\HACKER\ 迁移到 D:\Tools\，注册表 User PATH
-# 已更新，但**已运行的进程树仍持有启动时的旧快照**（38 条 D:\HACKER\ 死条目，目录
-# 已不存在）。于是 Get-Command 对 diec/r2/idat/ghidraRun 全部返回空，而四级探测的
+# 事故背景 2026-10-08：工具根曾整体迁移过一次，注册表 User PATH 已更新，但**已运行的进程树仍持有启动时的旧快照**（进程里仍留着那一批死条目）。于是 Get-Command 对 diec/r2/idat/ghidraRun 全部返回空，而四级探测的
 # 第 2 级正是靠 Get-Command —— 智能体据此误判「本机缺工具」并直接停手。
 # 语义纪律：
 #   1) 只增不减：已在进程 PATH 里的条目保持原序在前（保住调用方刻意的临时覆盖），
@@ -93,7 +91,7 @@ function Sync-ReverseProcessPath {
     }
 }
 
-# DOTNET_ROOT 自愈：SDK 装在非默认位置（本机 D:\Tools\runtime\dotnet8）时，
+# DOTNET_ROOT 自愈：SDK 装在非默认位置（不在 C:\Program Files\dotnet）时，
 # dotnet tool install -g 装出的 apphost（ilspycmd.exe）找不到 runtime，直接报
 # "You must install .NET to run this application." —— 工具本身是好的。
 # 必须探测式取值（Get-Command dotnet 的所在目录），禁止写死任何盘符路径。
@@ -421,7 +419,7 @@ function Get-ReversePythonCandidates {
     try { $toolRoot = (Get-ReverseToolRoot).TrimEnd('\') } catch { }
     if ($toolRoot -and (Test-Path -LiteralPath $toolRoot)) { [void]$roots.Add($toolRoot) }
     # ★ 从 PATH 上任何 python* 的目录反推常见安装根。
-    #   主人本机的真解释器在 D:\EXE\python\python.exe —— 既不在 REVERSE_TOOL_ROOT
+    #   主人本机的真解释器在 (Resolve-ReverseToolSpec -Name 'pyre').Command —— 既不在 REVERSE_TOOL_ROOT
     #   也不在 Program Files 下，只有 PATH 知道它在哪。stub 目录要跳过。
     foreach ($name in @('python','python3')) {
         $c = Get-Command $name -ErrorAction SilentlyContinue
@@ -498,7 +496,7 @@ function Resolve-ReverseToolSpec {
     # 任何探测失败一律降级成 Available=$false，由调用方报错。
     #
     # 0) 环境自愈：进程可能持有启动时的旧 PATH 快照（本机 2026-10-08 事故：工具从
-    #    D:\HACKER\ 迁到 D:\Tools\，注册表已改但进程未刷新）。不刷新的话下面第 2 级
+    #    工具根迁移后注册表已改但进程未刷新）。不刷新的话下面第 2 级
     #    Get-Command 会全部返回空，进而让调用方误判「本机缺工具」。幂等且不抛异常。
     try { [void](Sync-ReverseEnvironment) } catch { }
 
@@ -531,7 +529,7 @@ function Resolve-ReverseToolSpec {
     if (-not (Test-Path -LiteralPath $root -PathType Container -ErrorAction SilentlyContinue)) {
         # ★ 2026-10-10：工具根不存在时**不能**直接报「工具不可用」。
         #   旧行为把「工具根指错」伪装成「工具全灭」——2026-10-10 实测：
-        #   REVERSE_TOOL_ROOT 指向不存在的 E:\fresh-machine-tools 时，
+        #   REVERSE_TOOL_ROOT 指向一个不存在的工具根时，
         #   快照里 15/25 工具记 Available=false，和「工具真没装」长得一模一样。
         #   快照被 .gitignore 忽略后，这个假象能在磁盘上躺几个钟头没人复核。
         #   现在显式区分：Via='tool-root-missing'。

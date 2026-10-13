@@ -7,7 +7,7 @@
 
 | 项目 | 值 |
 |---|---|
-| 仓库 | `D:\Project\skills-hub\integrated-skill-hub`（分支 `main`） |
+| 仓库 | `C:\relab2`（分支 `main`） |
 | 基线 commit | `cec3d1328b445f5c1e6281a706c5d0935c7bc113` |
 | 基线测量命令 | `python skills/scripts/verify-doc-links.py` |
 | 基线结果 | `342 broken internal link(s)`，exit 1（WORK-BOARD 证据 E3 复现一致） |
@@ -32,7 +32,7 @@
 - 处置决定分布：`rewrite_path` **328**、`upstream_layout_unmappable` **13**、`documented_not_distributed` **1**（wrapper 那条）、
   `needs_human_review` **0**。
 - reference-only 横幅：**4** 个文件（覆盖全部 13 条保持断链的链接）。
-- 基线 342 条断链**全部**能在仓库外只读快照 `D:\Project\skills-hub\upstream\<source>\` 中解析到真实路径
+- 基线 342 条断链**全部**能在仓库外只读快照 `<开发根>\upstream\<source>\` 中解析到真实路径
   （0 条指向不存在的上游路径）。也就是说：断链是**迁移产物**，不是上游 README 的笔误。
 
 ---
@@ -158,7 +158,7 @@ reference-only 横幅的机器标记是 HTML 注释 `<!-- link-triage: reference
 | 断链 | `skills/community/ctf-super-hub/solve-challenge/SKILL.md:72`（基线行号） -> `../scripts/install_ctf_tools.sh`（分类 `wrapper`，source `ctf-super-hub`） |
 | 处置 | `documented_not_distributed`（status `fixed`）：删除该引用，改写为“该脚本**未随本仓库分发**，需按下列步骤手动准备” |
 | 依据 1 | `skills/community/ctf-super-hub/scripts/` 目录**不存在**（`skills/community/ctf-super-hub/` 下只有 35 个技能目录，无 `scripts/`），所以原相对路径在本仓库不可达 |
-| 依据 2 | 该脚本只存在于**仓库外**只读快照 `D:\Project\skills-hub\upstream\ctf-super-hub\scripts\install_ctf_tools.sh`（上游 commit `16926d6d4216183995693e9c7936c042eb7f2fae`），不属于本包分发内容，不能作为链接目标 |
+| 依据 2 | 该脚本只存在于**仓库外**只读快照 `<开发根>\upstream\ctf-super-hub\scripts\install_ctf_tools.sh`（上游 commit `16926d6d4216183995693e9c7936c042eb7f2fae`），不属于本包分发内容，不能作为链接目标 |
 | 依据 3 | 规范 `INTEGRATION-IMPLEMENTATION-SPEC.md:526`（7.1 CTF 合同）明确：**不执行 `install_ctf_tools.sh`，不默认联网** |
 | 依据 4 | `skills/community/registry.json` → `policy.autoInstall = false`；`AGENTS.md` 要求运行任何仓库脚本前取得用户明确批准 |
 | 同时处理 | 同一文件在基线 commit 上共有 **8 处**该引用：第 58、64–69 行 7 条 `bash scripts/install_ctf_tools.sh <mode>` 命令（在代码块内，链接检查器不覆盖）+ 第 72 行那条 Markdown 链接。它们属于同一处错误引用，已一并改为与仓库事实一致的**手动准备步骤**（读 Prerequisites → 从 `skillpack/skills/TOOLS.md` 取真实路径 → 缺失工具写成披露式安装计划并取得批准 → 记录版本）；上游安装器的模式名（`all/python/apt/brew/gems/go/manual`）以文字保留，避免丢失 provenance |

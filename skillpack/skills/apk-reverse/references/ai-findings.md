@@ -29,7 +29,7 @@
 ### F-001 `aapt2 link` 无法自建 APK，要用 apktool
 
 - **触发**：想用 `aapt2 link -o app.apk` 造最小测试 APK。
-- **结论**：`D:\Tools\android-sdk\build-tools\34.0.0\lib\android.jar` **不存在**，`aapt2 link` 报 `Unable to open '...android.jar': No such file or directory` + `error: failed to open APK: I/O error.`，无法产出 APK。
+- **结论**：`<工具根>\<分类>\<工具名>\build-tools\34.0.0\lib\android.jar` **不存在**，`aapt2 link` 报 `Unable to open '...android.jar': No such file or directory` + `error: failed to open APK: I/O error.`，无法产出 APK。
 - **证据**：
   ```
   ziparchive W 10-10 00:26:47  2792 13300] Unable to open

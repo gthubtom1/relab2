@@ -4,7 +4,6 @@
 >
 > **什么时候用**：目标要经过登录、配对（pairing）、扫码或某种预热握手（warm-up handshake）之后才变得有用；真正的业务契约在一个长连接 WebSocket 或其他有状态流上。
 >
-> **平台与本机状态**：`python 3.12`（含 `websockets` / `aiohttp`，本机可用）、`node v24`、`playwright`、`mitmdump`、`tshark 4.6.8` 本机可用。`iv8` 本机无。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -31,7 +30,7 @@
    ```powershell
    # 方式一：浏览器侧走 CDP/代理（本机 playwright 可用），导出 ws 帧日志
    # 方式二：mitmproxy 对 WebSocket 有帧级支持（本机可用）
-   D:\EXE\python\Scripts\mitmdump.EXE -p 8899 --set websocket=true -w ws.mitm
+   & (Resolve-ReverseToolSpec -Name 'mitmdump').Command -p 8899 --set websocket=true -w ws.mitm
    ```
    `reqable` 本机无，HAR 导出路径不适用。
 2. **Python 流客户端**。本机 `websockets` 库可用，是最终交付的首选。

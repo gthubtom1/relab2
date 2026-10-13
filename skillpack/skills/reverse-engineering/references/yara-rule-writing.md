@@ -14,7 +14,7 @@
 
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
-$yara  = (Resolve-ReverseToolSpec -Name 'yara').Command    # D:\Tools\yara\yara64.exe
+$yara  = (Resolve-ReverseToolSpec -Name 'yara').Command    # (Resolve-ReverseToolSpec -Name 'yara').Command
 $r2    = (Resolve-ReverseToolSpec -Name 'r2').Command
 $floss = (Resolve-ReverseToolSpec -Name 'floss').Command
 $procdmp = (Resolve-ReverseToolSpec -Name 'procdump').Command
@@ -185,7 +185,7 @@ rule HackTool_DLL_Injector_Generic
 **从样本提取 AOB 的实操流程**：
 
 ```powershell
-$r2 = 'D:\Tools\radare2\bin\r2.exe'
+$r2 = '(Resolve-ReverseToolSpec -Name 'r2').Command'
 # 1. 定位目标函数
 & $r2 -2 -qc 'aaa; afl~inject; q' .\sample.exe
 # 2. 抽字节
@@ -200,7 +200,7 @@ $r2 = 'D:\Tools\radare2\bin\r2.exe'
 ## 测试规则
 
 ```powershell
-$yara = 'D:\Tools\yara\yara64.exe'
+$yara = (Resolve-ReverseToolSpec -Name 'yara').Command
 
 # 单文件
 & $yara rule.yara .\sample.exe

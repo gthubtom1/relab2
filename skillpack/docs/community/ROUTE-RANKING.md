@@ -35,7 +35,7 @@ Python comment is not a link it can see.
 | `skills/tests/community-decoys.json` | the negative control: 30 hints that must **not** lead to a named target, plus 27 positives that must keep working. |
 | `skills/scripts/test-community-decoys.py` | runs that corpus and prints the per-case result, the over-trigger rate and the named over-triggers. It prints no over-narrowing cases, because the corpus no longer has any: the single one that existed (`recall-s3-bucket`) was measured to be unjustifiable and was converted into the decoy `absence-s3-bucket`. |
 | `docs/community/ROUTING-SIGNAL-DEFECTS.md` | the measured defect register D1-D9 that motivated all of this. |
-| `D:\Project\skills-hub\work\p0\*.py` | the coordinator's read-only measurement battery. `p0-measure.py` produces self-recall and the 38 named probes; `p0-acceptance.py` re-scores the corpus independently of the repo's own gates; `p0-proof-deadwidening.py` is the D1 proof; `p0-diagnose*.py` trace each defect to a field. |
+| `work\p0\*.py` | the coordinator's read-only measurement battery. `p0-measure.py` produces self-recall and the 38 named probes; `p0-acceptance.py` re-scores the corpus independently of the repo's own gates; `p0-proof-deadwidening.py` is the D1 proof; `p0-diagnose*.py` trace each defect to a field. |
 
 ## 1. Two layers, and why they are separate
 
@@ -200,7 +200,7 @@ Measured at the frozen baseline, in `ROUTING-SIGNAL-DEFECTS.md` and
 `DESIGN-FREEZE.md` D1: **293/293** records carried **1748** tokens reachable only
 through the widening, **87** records could not become a candidate for a hint built from
 their own slug, and `lattice` scored one widening hit against zero references.
-Reproduce with `D:\Project\skills-hub\work\p0\p0-proof-deadwidening.py`.
+Reproduce with `work\p0\p0-proof-deadwidening.py`.
 
 Re-measured against the shipped engine today, those three numbers are **not**
 comparable to the baseline, because the baseline itself moved: stopwords are now
@@ -689,7 +689,7 @@ cases that were written, not a claim about the hint space.
 ## Reproducing the numbers in this document
 
 Every figure above comes either from a measurement I ran against the shipped files on
-2026-09-30 or from `D:\Project\skills-hub\work\p0\DESIGN-FREEZE.md`, and this document
+2026-09-30 or from `work\p0\DESIGN-FREEZE.md`, and this document
 labels which is which. The measurements import the real engine:
 
 ```text
@@ -713,9 +713,9 @@ filters — `None` plus the four community sources — recomputing
 The coordinator's battery, which writes its report outside this repository:
 
 ```text
-python D:\Project\skills-hub\work\p0\p0-measure.py
-python D:\Project\skills-hub\work\p0\p0-proof-deadwidening.py
-python D:\Project\skills-hub\work\p0\p0-acceptance.py
+python work\p0\p0-measure.py
+python work\p0\p0-proof-deadwidening.py
+python work\p0\p0-acceptance.py
 ```
 
 `p0-acceptance.py` is worth singling out because it deliberately does not import the

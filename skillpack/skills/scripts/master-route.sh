@@ -47,7 +47,8 @@ if [[ -z "$PYTHON" ]]; then
   echo 'ERROR: no usable Python 3 interpreter found.' >&2
   echo 'HINT: "python3" on this machine may be the 0-byte Microsoft Store stub' >&2
   echo '      (%LOCALAPPDATA%\Microsoft\WindowsApps\python3.exe) which opens the' >&2
-  echo '      Store instead of running code. Use the real interpreter (e.g. D:\EXE\python\python.exe).' >&2
+  echo '      Store instead of running code. Use the real interpreter (a real python.exe' >&2
+  echo '      on PATH), or ask the probe layer: Resolve-ReverseToolSpec -Name pyre.' >&2
   exit 2
 fi
 if [[ ! -f "$CONFIG_PATH" ]]; then

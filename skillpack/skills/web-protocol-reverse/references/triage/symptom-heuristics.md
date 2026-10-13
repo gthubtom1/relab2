@@ -4,7 +4,6 @@
 >
 > **什么时候用**：目标还新鲜、症状还很宽、或者在挑更具体的手册之前需要一个快速家族匹配时。这张表是**路由用**的，不是判定用的 —— 命中不等于确诊。
 >
-> **平台与本机状态**：Windows 10 x64。本文的「下一步」列引用本机可用手段：`playwright`、`frida`、`mitmdump`（`D:\EXE\python\Scripts\mitmdump.EXE`）、`tshark`（`D:\Tools\Wireshark\tshark.exe`）、`node`（`D:\Tools\Node\node.exe`）、`curl_cffi`。`iv8` / `reqable` **本机无**，凡指向它们的建议已改为本机路线。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`

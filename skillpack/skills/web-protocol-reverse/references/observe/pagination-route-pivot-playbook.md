@@ -4,7 +4,6 @@
 >
 > **什么时候用**：分页**不再遵循某一个明显的 URL 家族**；或者下一页的目标**藏在内联 pager 元数据里**，而不是一个普通链接。
 >
-> **平台与本机状态**：本文是纯方法论，但「比较原始 HTML 与解析后 DOM」这一步在本机需要一个 HTML 解析器 —— `python 3.12.0`（`D:\EXE\python\python.exe`）+ 标准库 `html.parser` 即可满足，无需第三方包。静态 AST 那套（`esprima`/`acorn`/`@babel/parser`）**本机未装**，仅在需要还原内联 JS 时才需先装。抓线路见 `tshark 4.6.8`（`D:\Tools\Wireshark\tshark.exe`）。MCP 浏览器家族**本机未挂载**。
 
 ---
 
@@ -57,7 +56,7 @@
 
    **本机做法**（仅示意，未对具体目标验证）：
    ```python
-   # D:\EXE\python\python.exe —— 用标准库对同一属性做「原始片段 vs 解析值」比对
+   # (Resolve-ReverseToolSpec -Name 'pyre').Command —— 用标准库对同一属性做「原始片段 vs 解析值」比对
    from html.parser import HTMLParser
    # 1) 先用正则冻结原始片段
    # 2) 再解析出属性值

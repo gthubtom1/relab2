@@ -21,7 +21,7 @@
 | 工作区 | 路径 | 分支 | 作用 |
 |---|---|---|---|
 | **主仓（实弹对话在用）** | `C:\relab2` | `main` | 实弹对话（另一个会话）在往这里提交逆向成果 |
-| **隔离车间（我的）** | `C:\relab2-uncensor` | `feat/uncensor-skillpack` | 我清闸一/治理根的成果，**未合回 main** |
+| **隔离车间（我的）** | `<隔离 worktree>（按需 git worktree add 重建）` | `wip/uncensor-cleanup-20261013` | 我清闸一/治理根的成果，**未合回 main** |
 
 **为什么隔离**：两个会话同时动一个仓库会打架（实弹对话曾 `git add -A` 把别人的改动扫进自己 commit）。worktree 让两边零干扰。
 
@@ -29,7 +29,7 @@
 
 ## 2. 我的成果（隔离车间，8 个 commit）
 
-分支 `feat/uncensor-skillpack`，HEAD = `149d255`，merge-base = `85f1680`（当时 main 的位置）。
+分支 `wip/uncensor-cleanup-20261013`，HEAD = `149d255`，merge-base = `85f1680`（当时 main 的位置）。
 
 ```
 149d255 清治理根(问题1=A)：移除目标授权硬门，保留副作用同意门
@@ -77,12 +77,12 @@ a048d89 清闸一(续)：剩余6处刹车
 cd C:/relab2                       # 主仓，分支 main
 git worktree list                  # 确认状态
 # 方案A：把清闸分支 rebase 到最新 main 再合
-git merge --no-ff feat/uncensor-skillpack    # 或 rebase 后再 fast-forward
+git merge --no-ff wip/uncensor-cleanup-20261013    # 或 rebase 后再 fast-forward
 # 合完在 main 上跑门禁：
 python skillpack/scripts/verify-evolution.py    # 必须 10/10 ALL GREEN
 # 合完清理隔离车间：
-git worktree remove C:/relab2-uncensor
-git branch -d feat/uncensor-skillpack
+git worktree remove <隔离 worktree>
+git branch -d wip/uncensor-cleanup-20261013
 ```
 
 **若合并冲突**：优先保留实弹对话在 `docs/ASSAULT-GOAL*` 的内容；我的改动集中在 `skillpack/`（技能卡+治理根），冲突应极少。
@@ -91,7 +91,7 @@ git branch -d feat/uncensor-skillpack
 
 ## 5. 恢复/回退点
 
-- **我的成果随时可查**：`git -C C:/relab2 log feat/uncensor-skillpack`
+- **我的成果随时可查**：`git -C C:/relab2 log wip/uncensor-cleanup-20261013`
 - **主仓 main 干净**（我没往 main 写任何东西）。
 - **早期备份分支**：`wip/uncensor-cleanup-20261013`（commit `0340098`，第一版，含后来修正掉的错误，仅作考古）。
 

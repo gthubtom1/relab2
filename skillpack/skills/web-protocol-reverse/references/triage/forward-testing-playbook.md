@@ -4,7 +4,6 @@
 >
 > **什么时候用**：改完本包之后，需要论证的不只是「文件结构对不对」，而是「一个**全新的** AI 读到这份文档，会不会选对路线」。
 >
-> **平台与本机状态**：Windows 10 x64。`python 3.12`（`D:\EXE\python\python.exe`）本机可用。**⚠️ 本包没有 `scripts/` 目录**，`validate_skill.py` / `forward_test_report.py` 均不存在。本包的官方题库见 `../contract/official-self-test-task-suite.md`。
 
 ---
 
@@ -197,10 +196,10 @@ forward-run/
 Test-Path 'D:\task\forward-run\responses'
 
 # 2. 核对响应文件字节哈希与报告中记录的一致（示例，未在本机实跑）
-D:\EXE\python\python.exe -c "import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" D:\task\forward-run\responses\task-000.md
+& (Resolve-ReverseToolSpec -Name 'pyre').Command -c "import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" D:\task\forward-run\responses\task-000.md
 
 # 3. 核对题库与 SKILL.md 的哈希（同样，未在本机实跑）
-D:\EXE\python\python.exe -c "import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" ..\contract\official-self-test-task-suite.md
+& (Resolve-ReverseToolSpec -Name 'pyre').Command -c "import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" ..\contract\official-self-test-task-suite.md
 ```
 
 > 上面三条是**能力示意**，标为「未在本机验证」—— 因为完整的路径逃逸 / 硬链接 / Windows 保留名 / 重解析点检查需要一个专门的验证器，而本包没有。

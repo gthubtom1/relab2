@@ -42,7 +42,7 @@ $r = Resolve-ReverseToolSpec -Name 'python'
 & $r.Command -c "import Crypto; print('pycryptodome OK')"
 ```
 
-本机 `D:\EXE\python` 已装 `Crypto`（pycryptodome）、`cryptography`、`hashlib`、`hmac`、`base64`，全部实测可 import。
+本机 `(Resolve-ReverseToolSpec -Name 'pyre').Command` 已装 `Crypto`（pycryptodome）、`cryptography`、`hashlib`、`hmac`、`base64`，全部实测可 import。
 
 ## 步骤
 

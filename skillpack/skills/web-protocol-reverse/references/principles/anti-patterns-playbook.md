@@ -2,9 +2,8 @@
 
 > **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License）的 `anti-patterns-playbook.md`。原文为英文，本篇为中文改写，**29 条反模式的「诱惑 → 为什么是假进展 → 最小诚实下一步 → 自检」四段结构逐条保留**，未压缩为清单。
 > **什么时候用**：当你觉得**某个捷径比下一个证明更快**的时候。原文对此有一句很直白的话：这份文件存在，是因为**软性原则太容易同意、也太容易忽略**。
-> **平台与本机状态**：本篇是判定层文档，正文不依赖可执行命令。但其中若干条提到的具体工具**在本机不存在**，照抄前请看文末「本机能力对照」：
 > - `chrome-devtools` / `js-reverse` MCP 家族 —— **本机未挂载**；
-> - `Reqable` / `WireMCP` —— **本机无**，被动流量面用 `D:\Tools\Wireshark\tshark.exe`（4.6.8，已验证）与 `D:\EXE\python\Scripts\mitmdump.EXE` 替代；
+> - `Reqable` / `WireMCP` —— **本机无**，被动流量面用 `(Resolve-ReverseToolSpec -Name 'tshark').Command`（4.6.8，已验证）与 `(Resolve-ReverseToolSpec -Name 'mitmdump').Command` 替代；
 > - `iv8` —— **本机无**（社区运行时，PyPI 上不存在）；
 > - `DrissionPage` —— 未在本机验证。
 
@@ -907,7 +906,7 @@
 |---|---|---|
 | `chrome-devtools`（MCP） | ❌ 未挂载 | 本机浏览器 MCP 家族未挂载，需浏览器取证时按 `../../SKILL.md` 报告能力缺口 |
 | `js-reverse`（MCP） | ❌ 未挂载 | 同上 |
-| `reqable` / `WireMCP` | ❌ 本机无 | `D:\Tools\Wireshark\tshark.exe`（4.6.8，已验证）；`D:\EXE\python\Scripts\mitmdump.EXE` |
+| `reqable` / `WireMCP` | ❌ 本机无 | `(Resolve-ReverseToolSpec -Name 'tshark').Command`（4.6.8，已验证）；`(Resolve-ReverseToolSpec -Name 'mitmdump').Command` |
 | `iv8` | ❌ 本机无 | `../../profiles/env-patch/index.md`（Node/VM 环境补丁）；注意它**不等价于**浏览器可见语义 |
 | DrissionPage | 未在本机验证 | `playwright` 在本机可用 |
 
@@ -917,5 +916,5 @@
 > **可用写法**：`p.chromium.launch(channel="msedge")`（实测能起、能渲染、能读 DOM），
 > 或 `launch(executable_path=<显式路径>)`。照抄裸 `launch()` 一定失败。
 > 
-| Python | ✅ 3.12.0 | `D:\EXE\python\python.exe` |
-| Node | ✅ v24.20.0 | `D:\Tools\Node\node.exe` |
+| Python | ✅ 3.12.0 | `(Resolve-ReverseToolSpec -Name 'pyre').Command` |
+| Node | ✅ v24.20.0 | `(Resolve-ReverseToolSpec -Name 'node').Command` |

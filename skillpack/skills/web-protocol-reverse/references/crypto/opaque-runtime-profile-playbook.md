@@ -4,7 +4,6 @@
 >
 > **什么时候用**：一个不透明的 signer（签名器）、指纹载荷、telemetry sidecar、验证器证明（verifier proof）、或 packed 请求，**通过多个运行时阶段组装**，而**本地移植需要捕获的环境或状态输入**才能对齐。
 >
-> **平台与本机状态**：Windows 10 x64。`python 3.12`（`D:\EXE\python\python.exe`）、`node v24.20.0`（`D:\Tools\Node\node.exe`）、`playwright（模块在 `D:\EXE\python\Lib\site-packages\playwright`）` **本机可用**。`iv8` **本机无**。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -171,7 +170,7 @@
 ```powershell
 # 两份 trace 先各自规范化，再按阶段名逐个比对。
 # 只看第一个分叉的阶段 —— 这正是 transform_trace_diff 的用途。
-D:\EXE\python\python.exe compare_traces.py a.json b.json
+& (Resolve-ReverseToolSpec -Name 'pyre').Command compare_traces.py a.json b.json
 ```
 
 比对逻辑（本机可直接实现，无需外部包）：

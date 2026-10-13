@@ -4,7 +4,6 @@
 >
 > **什么时候用**：手上已有一个**解过的 helper、既有 collector、固定向量包、经验卡（experience card）或相似 case 目录**，看起来能复用到新目标或续做的任务上。
 >
-> **平台与本机状态**：本文是复用**判定规程**，纯逻辑，不含必须在本机执行的命令。文中提到的 `reqable` **本机无**，抓包改用 `tshark` / `mitmdump`；`chrome-devtools` / `js-reverse` MCP 家族**本机未挂载**，因此「当前工作区 artifact 优先」这条在本机尤其重要。
 
 ---
 

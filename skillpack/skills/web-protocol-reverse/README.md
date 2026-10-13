@@ -2,7 +2,6 @@
 
 > **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License，https://github.com/aoyunyang/spider-king-skill）的 `README.md`。保留原仓库 MIT 版权声明；本 README 为中文改写，并按本技能包（`C:\relab2\skillpack`）的落地情况做了**实情校正**。
 > **什么时候用**：需要在已授权环境里，把「看起来只能靠浏览器跑」的 Web 目标，还原成可复现、可维护的协议链路或采集器时，先读本 README 建立预期，再进 `SKILL.md`。
-> **平台与本机状态**：本文所有"本机"结论均指 `C:\relab2` 这台 Windows 机器，2026-10-10 实测。
 
 ---
 
@@ -61,18 +60,6 @@ protocol-reverse  (帧层：布局、状态机、序列化）
 
 本 skill 的 `debugger-trace` 阶段默认就交给 `js-reverse` 的工具面，`SKILL.md` 的「不走本 skill」一节明确写了：js-reverse 回答"这段 JS 在哪、怎么调的"，本 skill 回答"这条协议链怎么脱离浏览器复现"。
 
-## 本机工具链实测状态
-
-2026-10-10 在本机实测（`D:\Tools` / `D:\EXE`）：
-
-| 能力 | 状态 | 路径 / 版本 |
-|---|---|---|
-| Python | ✅ | `D:\EXE\python\python.exe` 3.12.0 |
-| Node | ✅ | `D:\Tools\Node\node.exe` v24.20.0（npm 11.19.0 随附） |
-| tshark（Wireshark CLI） | ✅ | `D:\Tools\Wireshark\tshark.exe` 4.6.8 |
-| mitmdump（mitmproxy） | ✅ | `D:\EXE\python\Scripts\mitmdump.EXE` |
-| frida / playwright / curl_cffi / requests | ✅ | —— |
-
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
 > —— python 包期望 1234，本机装的是 **1243**，版本号对不上。
@@ -88,10 +75,10 @@ protocol-reverse  (帧层：布局、状态机、序列化）
 
 ```powershell
 # 抓包后按字段切片（本机实测可执行）
-& 'D:\Tools\Wireshark\tshark.exe' -r cap.pcapng -T fields -e frame.number -e http.request.method -e http.host -e http.request.uri
+& (Resolve-ReverseToolSpec -Name 'tshark').Command -r cap.pcapng -T fields -e frame.number -e http.request.method -e http.host -e http.request.uri
 
 # 需要改写/重放中间层时用 mitmproxy（本机实测可执行）
-& 'D:\EXE\python\Scripts\mitmdump.EXE' --listen-port 8080 --set block_global=false
+& (Resolve-ReverseToolSpec -Name 'mitmdump').Command --listen-port 8080 --set block_global=false
 ```
 
 HAR 导出仍可用浏览器 DevTools 完成。本文不写 Reqable 的具体操作步骤（未在本机验证）。

@@ -6,7 +6,7 @@
 
 ## 0. 三十秒版本
 
-仓库：`D:\Project\skills-hub\integrated-skill-hub`
+仓库：`C:\relab2`
 **最新提交、提交总数、工作树状态一律以当场查为准——本文不再写死这些数字**（写死必然过期，
 本文是"新会话第一份必读"，过期的数字比没有数字更坏）：
 
@@ -39,7 +39,7 @@ git status --porcelain          # 空输出 = 工作树干净；有输出 = 有�
 1. 读本文档 §5 的「派发机制」——那里的规则被实测重写过三次，旧版本都是错的；
 2. 跑一行探针测 `subagent` 是否可用（**当前首选项**：`axon/space-bunny-free` + `xhigh`；
    不工作再退 `axon/muse-spark-1.3-contributor-free` + `high`；深探禁令见 §5）；
-3. 派单包在 `D:\Project\skills-hub\work\` 下（`wave1`…`wave8-briefs.md`、`dispatch-contract.md`、
+3. 派单包在 `work\` 下（`wave1`…`wave8-briefs.md`、`dispatch-contract.md`、
    以及本轮 `round1-verify/card*.md`）——仓库外，故意不做 Markdown 链接（链接到仓库外文件会让
    `verify-doc-links.py` 正确判为断链）；
 4. **当前状态**：27 张规范任务卡全部已开工并交付；门全绿 ≠ 项目完成——剩余的是
@@ -85,7 +85,7 @@ git status --porcelain          # 空输出 = 工作树干净；有输出 = 有�
 
 把 5 个上游技能包融合成一个包，让 AI 助手接到安全/逆向任务时能找到对的技能。
 
-| 上游仓库（快照在 `D:\Project\skills-hub\upstream\`） | commit | 贡献 |
+| 上游仓库（快照在 `<开发根>\upstream\`） | commit | 贡献 |
 |---|---|---|
 | `reverse-skill`（母框架） | `cab634bd…` | 43 个核心技能 + 行为链契约 |
 | `ctf-super-hub` | `16926d6d…` | 35 个 CTF 技能 |
@@ -131,7 +131,7 @@ community-raw/                   ← 仓库根，在发现根之外
 
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
-D:\EXE\python\python.exe skills\tests\run-ci-gates.py --runner python
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills\tests\run-ci-gates.py --runner python
 # 真树（有 ../upstream 快照）: total=21 ok=21 non_blocking=0 skipped=0 blocked=0 failed=0, exit 0
 # clone 到仓库外（无快照）  : total=21 ok=17 non_blocking=3 skipped=1 blocked=0 failed=0, exit 0
 ```
@@ -186,8 +186,8 @@ D:\EXE\python\python.exe skills\tests\run-ci-gates.py --runner python
 **wave 18 实测（`170a5f4` → `work\verify-commit-wave18`）**：
 
 ```powershell
-git clone --quiet --no-hardlinks D:\Project\skills-hub\integrated-skill-hub <lab>
-cd <lab>; D:\EXE\python\python.exe skills\tests\run-ci-gates.py --runner python
+git clone --quiet --no-hardlinks C:\relab2 <lab>
+cd <lab>; (Resolve-ReverseToolSpec -Name 'pyre').Command skills\tests\run-ci-gates.py --runner python
 # total=20 ok=16 non_blocking=3 skipped=1 blocked=0 failed=0   exit 0
 powershell -File skills\scripts\test-routing.ps1         # TOTAL=182 PASS=182   exit 0
 powershell -File skills\scripts\test-routing-natural.ps1 # PASS=76  exit 1（脚本语义：有失败即 1）
@@ -333,7 +333,7 @@ test-routing-natural.ps1         # 76/86    exit 1（脚本语义：有失败即
 
 > **禁止对真仓库执行 `import`（非 dry-run）/ `promote` / `rollback`。**
 > 只读子命令（`--help` / `inspect` / `verify` / `--dry-run`）允许。
-> 一切写路径只许在**仓库外** `D:\Project\skills-hub\work\<卡名>-lab\` 的副本上验证，
+> 一切写路径只许在**仓库外** `work\<卡名>-lab\` 的副本上验证，
 > 并证明真仓库逐字节未变（`git status --porcelain` 空 + 6 个基线哈希不变）。
 
 **双重风险（旧版）**：它输出的还是 **v1 形状的 registry**，跑一次会同时
@@ -377,10 +377,9 @@ test-routing-natural.ps1         # 76/86    exit 1（脚本语义：有失败即
 失败是**静默的**（子代理返回 `null`，不报错、不写文件、`git status` 干净，极易误判成「任务太难」）。
 批量派发前先跑一行探针（读一个已知数字）。
 
-**Python 解释器也变过**：旧的 `C:\Users\Toti\.dsh\dsh-runtimes\...\python.exe` **已被删除**。
-现在用 `D:\EXE\python\python.exe`（3.12.0）。
+现在用 `(Resolve-ReverseToolSpec -Name 'pyre').Command`（3.12.0）。
 
-**派单包**在 `D:\Project\skills-hub\work\`（仓库外，故意不做 Markdown 链接——链接到仓库外文件会让
+**派单包**在 `work\`（仓库外，故意不做 Markdown 链接——链接到仓库外文件会让
 `verify-doc-links.py` 正确判为断链）：`wave1-briefs.md` … `wave7-briefs.md`，
 另有一份**派发契约** `dispatch-contract.md`（通道 / 六项必带 / 七标题回报 / 三条纪律）。
 
@@ -408,8 +407,8 @@ test-routing-natural.ps1         # 76/86    exit 1（脚本语义：有失败即
 
 **复测命令**（协调者口径）：
 ```
-D:\EXE\python\python.exe work\round1-verify\measure-comm.py --out <名字>.json   # community 200，约 3–5 分钟
-D:\EXE\python\python.exe work\round1-verify\measure300.py                       # 全套 300
+& (Resolve-ReverseToolSpec -Name 'pyre').Command ork\round1-verify\measure-comm.py --out <名字>.json   # community 200，约 3–5 分钟
+& (Resolve-ReverseToolSpec -Name 'pyre').Command ork\round1-verify\measure300.py                       # 全套 300
 ```
 
 **下一轮候选**（都有实测支撑，已登记）：
@@ -444,16 +443,16 @@ D:\EXE\python\python.exe work\round1-verify\measure300.py                       
 
 ### 融合新包的标准流程（命令级，2026-10-02 实测）
 
-**0. 环境**：`$env:PYTHONIOENCODING='utf-8'`；Python 用 `D:\EXE\python\python.exe`（3.12.0，纯标准库）。
+**0. 环境**：`$env:PYTHONIOENCODING='utf-8'`；Python 用 `(Resolve-ReverseToolSpec -Name 'pyre').Command`（3.12.0，纯标准库）。
 
 **1. 改之前先冻基线**（五条，全部记录数字；数字必须与当次实跑一致，不许沿用上一轮的）：
 
 ```powershell
-D:\EXE\python\python.exe skills\tests\run-ci-gates.py --runner python        # 期望 total=21 ok=21（清单 23 门，见 §0「门数唯一口径」）
+& (Resolve-ReverseToolSpec -Name 'pyre').Command kills\tests\run-ci-gates.py --runner python        # 期望 total=21 ok=21（清单 23 门，见 §0「门数唯一口径」）
 powershell -NoProfile -ExecutionPolicy Bypass -File skills\scripts\test-routing.ps1          # 182/182
 powershell -NoProfile -ExecutionPolicy Bypass -File skills\scripts\extract-summaries.ps1 -Check  # INDEX.md 是生成物：exit 0 才算与 SKILL.md 同步（CI 唯一检查它的一步）
 powershell -NoProfile -ExecutionPolicy Bypass -File skills\scripts\test-routing-natural.ps1  # 76/86
-D:\EXE\python\python.exe D:\Project\skills-hub\work\round1-verify\measure300.py               # 297/300
+& (Resolve-ReverseToolSpec -Name 'pyre').Command :\Project\skills-hub\work\round1-verify\measure300.py               # 297/300
 ```
 
 **2. 按目标改文件（各自是唯一事实源）**：
@@ -513,7 +512,7 @@ T16 的 D1–D7（未实现清单）共同支撑的**如实状态**。任何"可
 ### 下一波：T04 / T05 / T06 / T10（**已完成，保留作历史**）
 
 四张卡写作用域互不重叠，可并行。完整白名单、禁止项、验收命令、负向对照要求见
-`D:\Project\skills-hub\work\wave1-briefs.md`（仓库外，故意不做 Markdown 链接——链接到仓库外文件会让
+`work\wave1-briefs.md`（仓库外，故意不做 Markdown 链接——链接到仓库外文件会让
 `verify-doc-links.py` 正确判为断链）。
 
 | 卡 | 写作用域 | 一句话 |
@@ -552,8 +551,8 @@ T26 新增的 `verify-routing-signals.py`、`test-routing-signals.py`、`test-co
 
 ### P1：`scripts/adapt-community.py` 重写（T05）
 
-行为规格已就绪：`D:\Project\skills-hub\work\t05-importer-spec.md`（318 行）。
-基线摘要：`D:\Project\skills-hub\work\baseline-digest.json`。
+行为规格已就绪：`work\t05-importer-spec.md`（318 行）。
+基线摘要：`work\baseline-digest.json`。
 
 关键要求：五子命令（inspect/import/verify/promote/rollback）、`--help` 零副作用、
 candidate + digest + 原子提升 + 回滚、**写入根必须指向 `community-raw/`**、
@@ -608,24 +607,23 @@ T21（canonical base record）、T25（`path`/`adapted_path` 双键删除）。
 
 ## 8. 环境信息
 
-> ⚠️ **本仓库大量文档保留了本机路径**（`C:\Users\<本机账号>\`、`D:\Project\skills-hub\`、
-> `D:\EXE\python\`）。它们是**历史证据与当时的实测命令**，不是可移植配置；
+> `(Resolve-ReverseToolSpec -Name 'pyre').Command\`）。它们是**历史证据与当时的实测命令**，不是可移植配置；
 > 在别的机器上照跑请自行替换为你的路径（Python 解释器可设环境变量
 > `REVERSE_SKILL_PYTHON`，题库/产物目录可设 `REVERSE_SKILL_WORK_DIR`）。
 
 | 项 | 值 |
 |---|---|
-| 仓库根 | `D:\Project\skills-hub\integrated-skill-hub` |
+| 仓库根 | `C:\relab2` |
 | 分支 | `main` |
 | 最新 commit | **`1ca4cc3`**（第 **77** 个提交）。`1397d7f` 之后共 **30** 个提交（U19–U31 攻坚段），全部已 clone 复核 |
-| **Python** | **`D:\EXE\python\python.exe`**（3.12.0，只用标准库）。**旧路径 `C:\Users\Toti\.dsh\dsh-runtimes\...\python.exe` 已被删除**，`dsh-runtimes` 整个目录不存在 |
-| **活动 profile** | `web`（`desktop` 已不存在）；目录 `C:\Users\Toti\.dsh\profiles\web\` |
+| **Python** | **`(Resolve-ReverseToolSpec -Name 'pyre').Command`**（3.12.0，只用标准库）。|
+| **活动 profile** | `web`（`desktop` 已不存在）；目录 `<用户目录>\.dsh\profiles\web\` |
 | **子代理 provider** | `axon`（旧名 `newapi` 已失效）。**当前派发顺序（2026-10-02 由仓库主人指定）**：① `space-bunny-free` + `xhigh`（首选）；② 不工作时退 `muse-spark-1.3-contributor-free` + `high`。**"不工作"判据**：返回 `null` / 零落盘 / 无收尾消息 / 启动失败 |
-| **本轮实验室（仓库外）** | `D:\Project\skills-hub\work\round1-verify\`：`measure300.py`（全套 300 条）、`measure-comm.py`（community 200 条）、`diag28.py`（缺口根因）、`miss28.md`、`cardA-signals.md`、`cardB-alias-keywords.md` |
-| 上游快照 | `D:\Project\skills-hub\upstream\`（5 个 clone，全部 clean；**仓库外**，clone 仓库时没有它） |
-| 工作区（协调用） | `D:\Project\skills-hub\work\`（**仓库外**；注意仓库内也有一个 `integrated-skill-hub\work\`，那是 `master-route` 等生成物，两者不同） |
-| **派单包** | `D:\Project\skills-hub\work\`：`wave1`…`wave7-briefs.md` + **`dispatch-contract.md`**（通道/六项必带/回报格式/三条纪律） |
-| **T26 证据脚本** | `D:\Project\skills-hub\work\p0\`（全部只读；`p0-acceptance.py` 是独立验收 harness，`p0-reconcile.py` 复算子代理口径，`p0-negative-control.py` 是 verifier 负向对照） |
+| **本轮实验室（仓库外）** | `work\round1-verify\`：`measure300.py`（全套 300 条）、`measure-comm.py`（community 200 条）、`diag28.py`（缺口根因）、`miss28.md`、`cardA-signals.md`、`cardB-alias-keywords.md` |
+| 上游快照 | `<开发根>\upstream\`（5 个 clone，全部 clean；**仓库外**，clone 仓库时没有它） |
+| 工作区（协调用） | `work\`（**仓库外**；注意仓库内也有一个 `integrated-skill-hub\work\`，那是 `master-route` 等生成物，两者不同） |
+| **派单包** | `work\`：`wave1`…`wave7-briefs.md` + **`dispatch-contract.md`**（通道/六项必带/回报格式/三条纪律） |
+| **T26 证据脚本** | `work\p0\`（全部只读；`p0-acceptance.py` 是独立验收 harness，`p0-reconcile.py` 复算子代理口径，`p0-negative-control.py` 是 verifier 负向对照） |
 | 参考实现（只读） | `D:\Project\临时对话\custom-skill-router` |
 
 **注意**：仓库里 `skills/community/registry.json` 的 4 条 source 记录有 16 个 `null` 值

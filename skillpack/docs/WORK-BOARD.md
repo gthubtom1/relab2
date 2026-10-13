@@ -7,7 +7,7 @@
 
 | 项目 | 值 |
 |---|---|
-| 仓库根 | `D:\Project\skills-hub\integrated-skill-hub` |
+| 仓库根 | `C:\relab2` |
 | 分支 | `main` |
 | 集成 commit（本板建立时） | `4039716cf20267152b76096b76063144c1bd3421` |
 | 该 commit 的 tree | `47c2e45feb830bcf8562fe55a7fe73a03b98179f` |
@@ -21,11 +21,11 @@
 
 | source | snapshot 路径 | commit | 工作树 |
 |---|---|---|---|
-| reverse-skill（母框架 / canonical base） | `D:\Project\skills-hub\upstream\reverse-skill` | `cab634bd855fc287f6e420c1f36fd1a6b9245960` | clean |
-| ctf-super-hub | `D:\Project\skills-hub\upstream\ctf-super-hub` | `16926d6d4216183995693e9c7936c042eb7f2fae` | clean |
-| AI-Fullstack-Delivery-Workflow | `D:\Project\skills-hub\upstream\AI-Fullstack-Delivery-Workflow` | `ab96b897d719941219ab3b3badb47cd6fda3e0eb` | clean |
-| apk-reverse | `D:\Project\skills-hub\upstream\apk-reverse` | `7b6c6932a95f03d778e81e5e1a2cbf6f62dc97fd` | clean |
-| hack-skills | `D:\Project\skills-hub\upstream\hack-skills` | `6fbf0bc8d5c71830d62543a308d8744606c43d7c` | clean |
+| reverse-skill（母框架 / canonical base） | `<开发根>\upstream\reverse-skill` | `cab634bd855fc287f6e420c1f36fd1a6b9245960` | clean |
+| ctf-super-hub | `<开发根>\upstream\ctf-super-hub` | `16926d6d4216183995693e9c7936c042eb7f2fae` | clean |
+| AI-Fullstack-Delivery-Workflow | `<开发根>\upstream\AI-Fullstack-Delivery-Workflow` | `ab96b897d719941219ab3b3badb47cd6fda3e0eb` | clean |
+| apk-reverse | `<开发根>\upstream\apk-reverse` | `7b6c6932a95f03d778e81e5e1a2cbf6f62dc97fd` | clean |
+| hack-skills | `<开发根>\upstream\hack-skills` | `6fbf0bc8d5c71830d62543a308d8744606c43d7c` | clean |
 
 快照在融合仓库之外，所以“单独复制 integrated-skill-hub 即可复核 provenance”当前**不成立**；这是 T12 的验收项，不是既成事实。
 
@@ -121,10 +121,10 @@
 | E7 | registry source 字段缺口 | 同上 | 4 条 source 均缺 `source_kind`/`tree_digest`/`source_manifest`/`snapshot_root`/`distribution`/`adaptation_status`/`importer_version`/`last_verified_at` |
 | E8 | wrapper 记录指向不存在的路径 | 同上 | `skills/community/hack-hub/SKILL.md` 不存在 |
 | E9 | 校验器硬编码统计 | `scripts/validate-integration.py:35,43` | `== 4 sources`、`== 55 excluded` 写死，T21 加入 canonical base 后必然误报 |
-| E10 | 备份 | — | 重排前原文备份在 `D:\Project\skills-hub\work\spec-before-reorder.md` |
+| E10 | 备份 | — | 重排前原文备份在 `work\spec-before-reorder.md` |
 | E11 | **INDEX.md 泄漏 raw 技能路径** | 见下方 3.1 | `skills/INDEX.md` 目录树段逐个列出 297 条 `skills/community/**/SKILL.md`；模块总览含 293 条 community 行 |
 | E12 | 注册表与文件系统的隔离本身是完整的 | 见下方 3.1 | `skills/community` 下 297 个 `SKILL.md` = 293 条 registry 记录 + 4 个 wrapper，无“未登记可发现”文件 |
-| E13 | **导入器覆盖集基线摘要** | `D:\Project\skills-hub\work\baseline-digest.json` | 基线 commit `c9b8303`；覆盖集 **1111** 条；`file_manifest_digest=6f57b141…`、`tree_digest=d258ddc0…`；随机 40 条 `git cat-file` 复算 40/40 一致 |
+| E13 | **导入器覆盖集基线摘要** | `work\baseline-digest.json` | 基线 commit `c9b8303`；覆盖集 **1111** 条；`file_manifest_digest=6f57b141…`、`tree_digest=d258ddc0…`；随机 40 条 `git cat-file` 复算 40/40 一致 |
 | E14 | 覆盖集对账 | 同上 `reconciliation` | 清单有磁盘无 **0**；磁盘有清单无 **5**（全在写入面外：LINK-TRIAGE.md、PATH-CLEANUP.md、REGISTRY-V2-MIGRATION.md、link-triage.json、link-triage.lock.json，且该集合在流动） |
 | E15 | **单次运行有重复写** | 同上 | **310 条路径被写 ≥2 次**（293 个 SKILL.md + 17 个 WORKFLOW.md）。此前"无冗余写"的说法作废 |
 | E16 | **行尾口径必须折叠 CRLF** | 同上 + T00 复核 | `.gitattributes(eol=lf)` + `core.autocrlf=true` 使提交时 CRLF→LF，而导入器 `copy2` 写的是上游 CRLF 原字节。不折叠则 Windows/Linux/no-git 结果不一致（违反 17.26）。T00 独立复核：`docs/community` 25 个文件中**正好 12 个含 CR**，与报告一致 |
@@ -182,7 +182,7 @@
 
 ### 4.2 CR-002（P0）：导入器会静默覆盖在途工作，且不可逆
 
-独立只读逆向报告：`D:\Project\skills-hub\work\t05-importer-spec.md`（318 行），配套 `_t05_analysis.py` / `_t05_analysis.out.txt`。
+独立只读逆向报告：`work\t05-importer-spec.md`（318 行），配套 `_t05_analysis.py` / `_t05_analysis.out.txt`。
 
 **单次运行覆盖 1111 条路径**（1087 个 `skills/community/**` + 23 个 `docs/community/**` + `registry.json`），以纯净上游原文覆盖目标，**不留 diff、不备份、无 digest、无 candidate**。
 

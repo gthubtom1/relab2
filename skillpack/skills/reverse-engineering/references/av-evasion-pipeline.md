@@ -22,10 +22,10 @@
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $gcc = 'D:\Tools\runtime\mingw64\bin\gcc.exe'   # 本机 gcc 15.2.0
-$py  = 'D:\EXE\python\python.exe'
+$py  = (Resolve-ReverseToolSpec -Name 'pyre').Command
 $die = (Resolve-ReverseToolSpec -Name 'diec').Command
 $capa = (Resolve-ReverseToolSpec -Name 'capa').Command
-$pe   = 'D:\Tools\pe-sieve\pe-sieve64.exe'
+$pe   = '(Resolve-ReverseToolSpec -Name 'pe-sieve').Command'
 ```
 
 ★ **本机 gcc 可用，MSVC 不可用**。编译命令用 MinGW 形态。
@@ -51,7 +51,7 @@ Write-Host "sha256 = $hash"
 或 `certutil -hashfile .\payload.bin SHA256`。见 `aob-signature-scan.md` 的同类处理。
 
 ★ **capa 的官方 exe 在本机被 Defender 误报隔离过**，用探测层给的
-`D:\Tools\capa\capa.bat`（PyPI 版）。但注意 PyPI 版可能缺内嵌规则集，
+`(Resolve-ReverseToolSpec -Name 'capa').Command`（PyPI 版）。但注意 PyPI 版可能缺内嵌规则集，
 输出为空时先确认规则库是否完整，别直接下「没命中」的结论。
 
 ### 1. 管线全貌

@@ -8,7 +8,6 @@
 > - 明显补丁都打过了，**Node 或 Python 仍与线上页面不同**
 > - 请求看着对，但**服务端仍不接受**，或**本地解码仍失败**
 >
-> **平台与本机状态**：Windows 10 x64。`python 3.12`（`D:\EXE\python\python.exe`）、`node v24.20.0`（`D:\Tools\Node\node.exe`）、`tshark 4.6.8`（`D:\Tools\Wireshark\tshark.exe`）、`mitmdump`（`D:\EXE\python\Scripts\mitmdump.EXE`）、`curl_cffi`、`playwright（模块在 `D:\EXE\python\Lib\site-packages\playwright`）` **本机可用**。`iv8` 与 `reqable` **本机无** —— 抓包一律用 tshark / mitmproxy。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -39,9 +38,9 @@
 2. **wire 可见性**。本机两条路：
    ```powershell
    # 方式一：mitmproxy 实时观察/改写（本机可用）
-   D:\EXE\python\Scripts\mitmdump.EXE --listen-port 8899 --save-stream-file flow.mitm
+   & (Resolve-ReverseToolSpec -Name 'mitmdump').Command --listen-port 8899 --save-stream-file flow.mitm
    # 方式二：tshark 离线读 pcap（本机可用）
-   D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "http.request" -T fields -e http.request.full_uri
+   & (Resolve-ReverseToolSpec -Name 'tshark').Command -r flow.pcapng -Y "http.request" -T fields -e http.request.full_uri
    ```
    ⚠ 源文档语境里的 `reqable` / HAR **本机无**，用上面两条替代。
 3. **完整重定向链可记录**。

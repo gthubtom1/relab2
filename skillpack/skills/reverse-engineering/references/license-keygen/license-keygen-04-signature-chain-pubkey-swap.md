@@ -20,11 +20,11 @@
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
 $floss = (Resolve-ReverseToolSpec -Name 'floss').Command
-$py   = 'D:\EXE\python\python.exe'    # pefile
+$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command    # pefile
 & $py -m pip show cryptography       # 公钥/私钥生成
 ```
 
-★ 若 `cryptography` 未安装：`& 'D:\EXE\python\python.exe' -m pip install cryptography`。
+★ 若 `cryptography` 未安装：`& (Resolve-ReverseToolSpec -Name 'pyre').Command -m pip install cryptography`。
 
 ## 步骤
 
@@ -217,7 +217,7 @@ $rasm = (Resolve-ReverseToolSpec -Name 'rasm2').Command
    **只改 `getPublicKey()` 返回的数组内容，不改类名/字段/方法数。**
 8. **「验签置空」的 6 字节可能切在指令中间**。用 capstone 算 detourSize。
 9. **本机无 MSVC**。需要编译工具时用 `D:\Tools\runtime\mingw64\bin\gcc.exe`。
-10. **`cryptography` 包需要单独安装**，不保证在 `D:\EXE\python` 里预装。
+10. **`cryptography` 包需要单独安装**，不保证在 `(Resolve-ReverseToolSpec -Name 'pyre').Command` 里预装。
 
 ## 相关
 

@@ -13,7 +13,7 @@ Python 3.12，只用标准库，服务只绑 `127.0.0.1`，页面完全离线自
 顶栏：打包器就绪 / 已装几家 / 刷新
 ┌────────────┬──────────────────────────────┬──────────────┐
 │ 1 智能体    │ 要写进去的几段（顺序固定）      │ 将写入        │
-│  13 家名单  │  底模（心智） [开关] 卡片磁贴   │ 保险箱        │
+│  14 家名单  │  底模（心智） [开关] 卡片磁贴   │ 保险箱        │
 │  点一家选中 │  客套指引     [开关] 卡片磁贴   │ 结果          │
 │            │  宿主原文     [开关] 默认覆盖    │              │
 │            │  中枢标记块   [开关] 写在最末   │              │
@@ -181,8 +181,14 @@ python <03-bundle>/uninstall.py --host-home <家目录> --yes
 ## 认得出的智能体
 
 `.codex` `.claude` `.cursor` `.grok` `.gemini` `.deepseek` `.hermes`
-`.pi`（优先 `.pi/agent`）`.dsh` `.zcode` `.config/opencode`
-`.codeium/windsurf` `.aider`，共 13 家。
+`.pi`（优先 `.pi/agent`）**`.omp/agent`** `.dsh` `.zcode` `.config/opencode`
+`.codeium/windsurf` `.aider`，共 14 家。
+
+> **★ omp 是唯一一家「两文件形态」**：家目录 `~/.omp/agent/` 下
+> **没有 `AGENTS.md`** —— 人设在 `PERSONALITY.md`，规则在 `RULES.md`。
+> 所以它不走「三段融成一份」，而是**底模卡 → `PERSONALITY.md`，中枢段 + 指引卡 → `RULES.md`**。
+> 两个文件各自独立：换底模不动规则，换指引不动人设。实现见 `hosts.py` 的 `entry_base` 字段、
+> `server.py` 的 `_direct_text(split_base=True)`、`safebox.py` 的同 tag 整组备份。
 
 「在不在跑」用 `tasklist /FO CSV /NH` 拿镜像名；
 node 一类的命令行程序再用一次 CIM 查询拿完整命令行来分辨是哪一家。

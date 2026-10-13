@@ -4,7 +4,6 @@
 >
 > **什么时候用**：拿到一个逆向任务，需要在「先做什么、后做什么、拿哪个工具」之间做选择时。这篇是**任务到工具的快速地图**。
 >
-> **平台与本机状态**：Windows 10 x64。下表是**实测确认**的本机能力（`python -c "import importlib.util"` 逐个探测 + 直接执行版本命令），未实测处已显式标注。
 
 ---
 
@@ -22,13 +21,13 @@
 2. **确认过本机能力**。直接跑：
 
 ```powershell
-D:\EXE\python\python.exe -c "import importlib.util as u; print({m: bool(u.find_spec(m)) for m in ['frida','playwright','curl_cffi','requests','mitmproxy']})"
-D:\Tools\Node\node.exe -v
-D:\Tools\Wireshark\tshark.exe -v
-D:\EXE\python\Scripts\mitmdump.EXE --version
+& (Resolve-ReverseToolSpec -Name 'pyre').Command -c "import importlib.util as u; print({m: bool(u.find_spec(m)) for m in ['frida','playwright','curl_cffi','requests','mitmproxy']})"
+& (Resolve-ReverseToolSpec -Name 'node').Command -v
+& (Resolve-ReverseToolSpec -Name 'tshark').Command -v
+& (Resolve-ReverseToolSpec -Name 'mitmdump').Command --version
 ```
 
-> ⚠️ **`D:\Tools\runtime\venv-re` 实测存在但缺关键模块**（本机实测：`frida` / `playwright` / `curl_cffi` / `mitmproxy` **均不在其中**，只有 `requests`）。本文所有 Python 命令一律用 `D:\EXE\python\python.exe`。
+> ⚠️ **`(Resolve-ReverseToolSpec -Name 'pyre').Command` 实测存在但缺关键模块**（本机实测：`frida` / `playwright` / `curl_cffi` / `mitmproxy` **均不在其中**，只有 `requests`）。本文所有 Python 命令一律用 `(Resolve-ReverseToolSpec -Name 'pyre').Command`。
 
 ---
 
@@ -38,10 +37,10 @@ D:\EXE\python\Scripts\mitmdump.EXE --version
 
 | 能力 | 完整路径 | 版本 | 用途 |
 |---|---|---|---|
-| Python | `D:\EXE\python\python.exe` | 3.12.0 | 采集器主体、重放、编解码 |
-| Node.js | `D:\Tools\Node\node.exe` | v24.20.0 | 本地 JS helper、`vm`/`node:vm` 宿主 |
-| tshark | `D:\Tools\Wireshark\tshark.exe` | 4.6.8 | **离线**读 pcap，抽 wire 字段 |
-| mitmdump | `D:\EXE\python\Scripts\mitmdump.EXE` | 随 Python 安装 | 实时 MITM、看/改请求头、落盘 flow |
+| Python | `(Resolve-ReverseToolSpec -Name 'pyre').Command` | 3.12.0 | 采集器主体、重放、编解码 |
+| Node.js | `(Resolve-ReverseToolSpec -Name 'node').Command` | v24.20.0 | 本地 JS helper、`vm`/`node:vm` 宿主 |
+| tshark | `(Resolve-ReverseToolSpec -Name 'tshark').Command` | 4.6.8 | **离线**读 pcap，抽 wire 字段 |
+| mitmdump | `(Resolve-ReverseToolSpec -Name 'mitmdump').Command` | 随 Python 安装 | 实时 MITM、看/改请求头、落盘 flow |
 | frida | Python 模块已装 | — | 运行时 hook，注入到浏览器或目标进程 |
 | playwright | Python 模块已装 | — | 真浏览器 + CDP（网络事件、断点、`add_init_script`） |
 | curl_cffi | Python 模块已装 | — | 浏览器指纹 impersonation（对应「伪装传输」） |
@@ -116,10 +115,10 @@ D:\EXE\python\Scripts\mitmdump.EXE --version
 ```powershell
 # 启动代理并把整条流落盘（-p 与 --listen-port 等价；-w 与 --save-stream-file 等价）
 # 实测：这两个 flag 在本机 mitmproxy 12.2.3 上存在
-D:\EXE\python\Scripts\mitmdump.EXE --listen-port 8899 --save-stream-file flow.mitm
+& (Resolve-ReverseToolSpec -Name 'mitmdump').Command --listen-port 8899 --save-stream-file flow.mitm
 
 # 改写请求头：用 -s 加载一个自定义 addon 脚本
-D:\EXE\python\Scripts\mitmdump.EXE -p 8899 -w flow.mitm -s rewrite_addon.py
+& (Resolve-ReverseToolSpec -Name 'mitmdump').Command -p 8899 -w flow.mitm -s rewrite_addon.py
 ```
 
 > ⚠️ **不要写 `--set flow_detail=1`** —— 本机实测 `mitmproxy.options.Options()` 中**没有** `flow_detail` 这个键（该 flag 是旧版 mitmdump 的），写了会直接报错。
@@ -130,13 +129,13 @@ D:\EXE\python\Scripts\mitmdump.EXE -p 8899 -w flow.mitm -s rewrite_addon.py
 
 ```powershell
 # 列出所有 HTTP 请求的 URI 与方法
-D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "http.request" -T fields -e frame.number -e http.request.method -e http.request.full_uri
+& (Resolve-ReverseToolSpec -Name 'tshark').Command -r flow.pcapng -Y "http.request" -T fields -e frame.number -e http.request.method -e http.request.full_uri
 
 # 只看 cookie 头的出现与变化
-D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "http.cookie" -T fields -e frame.number -e http.cookie
+& (Resolve-ReverseToolSpec -Name 'tshark').Command -r flow.pcapng -Y "http.cookie" -T fields -e frame.number -e http.cookie
 
 # TLS 握手失败定位（对应 transport-gated）
-D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "tls.handshake" -T fields -e frame.number -e tls.handshake.type
+& (Resolve-ReverseToolSpec -Name 'tshark').Command -r flow.pcapng -Y "tls.handshake" -T fields -e frame.number -e tls.handshake.type
 ```
 
 限制：tshark 是**离线**的，只对你已经抓到的 pcap 有效；它不解 TLS，所以 HTTPS 场景下只有元数据可见 —— 密文内容要走 `mitmdump` 或浏览器侧证据。
@@ -175,7 +174,7 @@ D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "tls.handshake" -T fields -e fra
 
 ```bash
 # 先确认 npm 侧依赖在不在（本机预期 MISSING）
-"D:\Tools\Node\node.exe" -e "['esprima','acorn','@babel/parser'].forEach(m=>{try{require.resolve(m);console.log(m,'OK')}catch(e){console.log(m,'MISSING')}})"
+& (Resolve-ReverseToolSpec -Name 'node').Command -e "['esprima','acorn','@babel/parser'].forEach(m=>{try{require.resolve(m);console.log(m,'OK')}catch(e){console.log(m,'MISSING')}})"
 ```
 
 **没装之前不要承诺 AST 路线。** 降级方案：
@@ -318,7 +317,7 @@ D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "tls.handshake" -T fields -e fra
 - 直接照抄源文档的工具名（`js-reverse`、`list_scripts`、`save_script_source` 等）而不确认本机有没有
 - 声称用了 `iv8` 或 Camoufox
 - 把「本机没有的 npm 包」当成已装直接跑 AST 路线
-- 在 `D:\Tools\runtime\venv-re` 里跑 `frida` / `playwright` / `curl_cffi` —— 实测那些模块不在那个 venv 里
+- 在 `(Resolve-ReverseToolSpec -Name 'pyre').Command` 里跑 `frida` / `playwright` / `curl_cffi` —— 实测那些模块不在那个 venv 里
 - 声称「实测通过」但其实没跑
 
 ## 常见坑（Common traps）
@@ -326,7 +325,7 @@ D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "tls.handshake" -T fields -e fra
 - **以为有 MCP 工具族**。本机没有 `chrome-devtools` / `js-reverse`，照抄源文档会一路找不到工具
 - **以为 npm 包已装**。`esprima`/`acorn`/`@babel/parser` 本机没有，AST 路线开箱不可用
 - **以为 `iv8` 能装**。社区运行时，PyPI 上不存在该发行版
-- **用 `venv-re` 当主解释器**。它实测缺 `frida` / `playwright` / `curl_cffi` / `mitmproxy`，只有 `requests`。
+- **用 `python-venv` 当主解释器**。它实测缺 `frida` / `playwright` / `curl_cffi` / `mitmproxy`，只有 `requests`。
 - **拿 tshark 当实时工具**。它只读已有 pcap，不抓包
 - **拿被动 store 当活证据**。HAR/pcap 与浏览器外发冲突时信活的
 - **把 hook 安静当字段不存在**。先排除并发写入方
@@ -355,7 +354,7 @@ D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "tls.handshake" -T fields -e fra
 4. **静态 AST 依赖本机未装**。源文档把 AST 路线当既有能力；本机 `esprima`/`acorn`/`@babel/parser` 均缺，已标注并给出降级链。
 5. **不存在的脚本**。源文档「Local helper scripts」列出 4 个 `scripts/*.py`；**本包没有 `scripts/` 目录**，四个全部无法执行。已逐条给出手工替代。
 6. **源文档第 56 行被截断**：原文最后一句 `…then js-reverse a…` 未写完（疑似上游文件损坏）。改编时不臆补，改为按本机手段陈述。
-7. **`venv-re` 陷阱（实测修正）**：任务简报把 `D:\Tools\runtime\venv-re` 描述为「空壳」。本机实测**不是空壳** —— 它有解释器（3.12.0，`base_prefix` 指向 `D:\EXE\python`）、42 个 Scripts 条目、208 个 site-packages 条目。但**关键模块确实缺失**：`frida` / `playwright` / `curl_cffi` / `mitmproxy` 全部 `False`。本文按实测事实写为「缺关键模块」而非「空壳」。
+7. **`python-venv` 陷阱（实测修正）**：任务简报把 `(Resolve-ReverseToolSpec -Name 'pyre').Command` 描述为「空壳」。本机实测**不是空壳** —— 它有解释器（3.12.0，`base_prefix` 指向 `(Resolve-ReverseToolSpec -Name 'pyre').Command`）、42 个 Scripts 条目、208 个 site-packages 条目。但**关键模块确实缺失**：`frida` / `playwright` / `curl_cffi` / `mitmproxy` 全部 `False`。本文按实测事实写为「缺关键模块」而非「空壳」。
 8. **保留未本地化的部分**：关键词包、基线优先证明流程、角色与证据面的关系判断、「不同证据面干的是不同的事」这张表 —— 这些与工具无关，是方法论核心，原样保留（译为中文）。
 9. **本文命令的校验范围**：已在本机实跑校验的是**工具存在性与 flag 合法性** —— `python -V` / `node -v` / `tshark -v` / `mitmdump --version` / `importlib.util` 模块探测 / `mitmdump --help` 的 `-p`、`-w`、`--listen-port`、`--save-stream-file`、`-s` / `tshark -G fields` 的 `http.request.full_uri`、`http.cookie`、`tls.handshake.type`、`frame.number`。**未实跑、需要真实目标或 pcap 的命令**（`tshark -r <文件>`、各 `playwright` / `frida` 调用）**只保证语法与字段名正确，不保证在你的目标上生效**。用户自写脚本（`normalize_evidence.py`、`practice_lab.py`）已标注「未在本机验证」。
-10. **写作过程中自查出并修正的两处错误**（记录在案，避免再次发生）：① 最初按任务简报把 `venv-re` 写成「空壳」，实测证伪，已改为「缺关键模块」；② 最初给出的 `--set flow_detail=1` 在本机 mitmproxy 12.2.3 上不存在，已删除并在正文加警告。
+10. **写作过程中自查出并修正的两处错误**（记录在案，避免再次发生）：① 最初按任务简报把 `python-venv` 写成「空壳」，实测证伪，已改为「缺关键模块」；② 最初给出的 `--set flow_detail=1` 在本机 mitmproxy 12.2.3 上不存在，已删除并在正文加警告。

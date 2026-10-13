@@ -48,8 +48,11 @@ def base_url():
                     return _BASE_CACHE[0]
         except Exception:
             continue
-    raise SystemExit("no endpoint: set HUBCORE_BASE (e.g. http://host/v1), or write a one-line "
-                     "07-kernel-sweep/.base, or keep baseURL in the harness profile patch yml")
+    raise SystemExit(
+        "no endpoint —— 端点每台机器都不同，**不要猜**。\n"
+        "  先跑：python 先问我.py            （它会印出该向主人问的原话）\n"
+        "  拿到后：python 先问我.py --set base=<URL>\n"
+        "  其他等价做法：设环境变量 HUBCORE_BASE，或保留宿主 profile 里的 baseURL。")
 
 def io_lines(path):
     with open(path, encoding="utf-8", errors="replace") as fh:
@@ -64,7 +67,11 @@ def token():
     p = os.path.join(here, ".token")
     if os.path.exists(p):
         return open(p, encoding="utf-8").read().strip()
-    raise SystemExit("no API token: set HUBCORE_API_TOKEN or write 07-kernel-sweep/.token")
+    raise SystemExit(
+        "no API token —— 令牌每台机器都不同，**不要猜**。\n"
+        "  先跑：python 先问我.py            （它会印出该向主人问的原话）\n"
+        "  拿到后：python 先问我.py --set token=<KEY>     （写进 .token，已 gitignore）\n"
+        "  其他等价做法：设环境变量 HUBCORE_API_TOKEN。")
 
 B = base_url()
 T = token()

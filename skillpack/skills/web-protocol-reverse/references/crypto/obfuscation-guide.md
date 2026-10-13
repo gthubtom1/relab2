@@ -4,7 +4,6 @@
 >
 > **什么时候用**：页面下发的 JavaScript 是 packed（打包）、flattened（控制流平坦化）、或 string-table-heavy（字符串表密集）的。
 >
-> **平台与本机状态**：Windows 10 x64。`node v24.20.0`（`D:\Tools\Node\node.exe`）、`python 3.12`（`D:\EXE\python\python.exe`）**本机可用**。⚠ `esprima` / `acorn` / `@babel/parser`（npm 解析器）**本机无**，需要静态 AST 的那部分要**先自行安装**；本文主路径**不依赖**这些包，用的是「文本切分 + 本地执行 decoder」的路子。本文不涉及 `iv8`。
 
 ---
 
@@ -23,7 +22,7 @@
 1. **原始字节先落盘**。任何改写之前先保存原始文件 —— 这是唯一能让你 diff 出「我改了什么」的基准。
 2. **一个能执行 JS 的本机宿主**。本机 `node` 即可：
    ```powershell
-   D:\Tools\Node\node.exe -v
+   & (Resolve-ReverseToolSpec -Name 'node').Command -v
    # v24.20.0
    ```
    decoder 只需要一个最小 harness（脚手架），不需要完整浏览器。
@@ -101,14 +100,14 @@ console.log(JSON.stringify(table, null, 1));
 
 运行：
 ```powershell
-D:\Tools\Node\node.exe dump-table.js .\bundle.js > table.json
+& (Resolve-ReverseToolSpec -Name 'node').Command dump-table.js .\bundle.js > table.json
 ```
 
 > ⚠ `atob`/`btoa` 的 Latin-1 语义必须正确。`btoa` 遇到 `0xff` 以上的码元要**抛错**，不能做 UTF-8 编码。
 > 自测向量（**本机实测**）：`btoa("\x00\xffAz")` 应为 `"AP9Beg=="`。
 > 验证：
 > ```powershell
-> D:\Tools\Node\node.exe -e "console.log(Buffer.from([0x00,0xff,0x41,0x7a]).toString('base64'))"
+> (Resolve-ReverseToolSpec -Name 'node').Command -e "console.log(Buffer.from([0x00,0xff,0x41,0x7a]).toString('base64'))"
 > # AP9Beg==
 > ```
 

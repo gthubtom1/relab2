@@ -23,8 +23,8 @@
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2    = (Resolve-ReverseToolSpec -Name 'r2').Command
 $cdb   = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
-$frida = 'D:\EXE\python\Scripts\frida.exe'
-$py    = 'D:\EXE\python\python.exe'
+$frida = (Resolve-ReverseToolSpec -Name 'frida').Command
+$py    = (Resolve-ReverseToolSpec -Name 'pyre').Command
 ```
 
 ## 步骤

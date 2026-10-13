@@ -2,7 +2,6 @@
 
 > **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License）的 `workflow-overview.md`。原文为英文，本篇为中文改写，**Startup Gate 与 Phase 0–5 的逐条要点全部保留**，未压缩。
 > **什么时候用**：**新任务开工的第一篇**。当你要回答「一个新任务按什么顺序走」时，读本篇。它是纯 Web 协议恢复任务的最短端到端地图。
-> **平台与本机状态**：原文假设 `chrome-devtools` / `js-reverse` 两个浏览器 MCP 家族可用。**本机 agent 工具注册表中这两个家族未挂载**（已挂载的是 `pyghidra-mcp` / `idapro` / `ida-pro-mcp` / `angr-mcp` / `x64dbg-automate-mcp`，均为二进制/反编译向，非浏览器向）。因此本篇的**阶段顺序与判据完全适用**，但「浏览器交接检查点」一节所依赖的双浏览器角色序列**在本机不可执行** —— 遇到需要浏览器取证的任务时，先按 `../../SKILL.md` 的 Non-Negotiables 报告能力缺口，**不要伪造浏览器取证结论**。本机的 `Reqable` / `WireMCP` 同样不存在，被动流量面用 `D:\Tools\Wireshark\tshark.exe` 与 `D:\EXE\python\Scripts\mitmdump.EXE` 替代。
 
 ---
 

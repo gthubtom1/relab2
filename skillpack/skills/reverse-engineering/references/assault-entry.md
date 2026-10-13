@@ -108,8 +108,8 @@
 | 「这个程序你帮我分析 / 破解 / 脱壳 / 复刻」 | **本卡**：Q1–Q3 → 四状态机 | skillpack（本项目） |
 | 「给脚本加个参数」「修个 bug」（一句话小修） | 既有路由与技能，**零额外工序** | 原样，不建案、不进本卡 |
 
-（前四行是 kernel 六条业务线的主场，入口：`kernel/04-console/cards/hub/04-全能工程中枢.md`
-的选线表 + `kernel/02-hubcore/workflows/<线名>.md` 的具体工作流
+（前四行是 kernel 六条业务线的主场：入口 `kernel/03-bundle/dist/hubcore/CORE.md`（选线），
+选定后读同目录 `workflows/<线名>.md`
 （`desktop-product` / `web-service` / `cli-tool` / `source-takeover` / `exe-rebuild` /
 `protocol-automation`）。**本卡只指路，不重写、不替代它们。**）
 

@@ -144,7 +144,7 @@ Get-Content $log | Select-String -NotMatch 'Nuget|Repository|Extension|Path vali
 `pe-sieve` 专门扫运行中进程的注入、替换、shellcode、inline hook、IAT hook。
 
 ```powershell
-$pesis = 'D:\Tools\pe-sieve\pe-sieve64.exe'
+$pesis = '(Resolve-ReverseToolSpec -Name 'pe-sieve').Command'
 
 # 基本扫描
 & $pesis /pid <PID>
@@ -187,7 +187,7 @@ Built on: Sep 13 2025
 #### 3c. procdump（保底）
 
 ```powershell
-$procdmp = 'D:\Tools\Sysinternals\procdump.exe'
+$procdmp = '<工具根>\<分类>\<工具名>\procdump.exe'
 
 # 全内存 dump（-ma = full dump with all sections）
 & $procdmp -ma <PID> C:\dumps\target.dmp

@@ -80,15 +80,15 @@
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
 $cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
 $floss = (Resolve-ReverseToolSpec -Name 'floss').Command
-$py   = 'D:\EXE\python\python.exe'
-$frida = 'D:\EXE\python\Scripts\frida.exe'    # 05/06/07 的进程内操作
-$pm   = 'D:\Tools\Sysinternals\Procmon64.exe'
+$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command
+$frida = (Resolve-ReverseToolSpec -Name 'frida').Command    # 05/06/07 的进程内操作
+$pm   = '<工具根>\<分类>\<工具名>\Procmon64.exe'
 ```
 
 ★ **cdb 断点一律用 `ntdll!NtXxx`**，不要用 `kernel32!X`（PDB 里只有 `*Stub` 别名，断不上，
 见 `../debugger-breakpoints.md`）。
 
-★ **`frida` 在本机可用**（`D:\EXE\python\Scripts\frida.exe` + Python `frida` 包），
+★ **`frida` 在本机可用**（`(Resolve-ReverseToolSpec -Name 'frida').Command` + Python `frida` 包），
 但 05/06/07 里的 Frida 脚本**未在本机实跑验证**，判据标为「命令形态已验证，参数需按样本调整」。
 
 ## 证据链的通用要求

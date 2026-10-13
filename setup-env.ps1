@@ -27,7 +27,7 @@
     工具根目录。默认 D:\Tools；不存在时按 §2.5.3 换到实际盘符。
 
 .PARAMETER VenvPath
-    pip 生态独立虚拟环境路径，默认 <ToolRoot>\runtime\venv-re（§4.3，绝不污染系统 Python）。
+    pip 生态独立虚拟环境路径，默认 <ToolRoot>\runtime\python-venv（§4.3，绝不污染系统 Python）。
 
 .PARAMETER NoDownload
     跳过 GitHub releases 直装环节（只装 winget 能覆盖的 + 已就位的）。
@@ -57,8 +57,8 @@ param(
     [switch] $NoDownload,
     [switch] $KeepWork
 )
-# ★ PSModulePath 自愈（2026-10-10 注入，路径由 inject-psmp.py 统一计算）：剔除 WindowsApps 版 PowerShell 7 的模块目录，否则 PS 5.1 会因 TypeData 重复定义失败而使 Get-FileHash / Get-ExecutionPolicy 不可用（已造成两次假绿 + 一次失败被吞）。重算/迁移后请重跑 work/envinit/inject-psmp.py
-# ★ 2026-10-10 去掉硬编码 `C:\relab2\...` 绝对路径。
+# ★ PSModulePath 自愈（2026-10-10 注入）：剔除 WindowsApps 版 PowerShell 7 的模块目录，否则 PS 5.1 会因 TypeData 重复定义失败而使 Get-FileHash / Get-ExecutionPolicy 不可用（已造成两次假绿 + 一次失败被吞）。模块本体见 skillpack\skills\scripts\lib\PsModulePathInit.ps1
+# ★ 2026-10-10 去掉硬编码 `<仓根>\...` 绝对路径。
 #   原来无条件 dot-source 固定路径：仓库 clone 到别处时它静默失效 ——
 #   错误写到 stderr，但 $ErrorActionPreference 在后面才设，主流程照跑，
 #   于是「PSModulePath 自愈」悄悄没了，只留一屏红字。
@@ -588,7 +588,6 @@ function Install-ReverseTools {
     $boot = $null
     foreach ($c in @(
         (Join-Path $PSScriptRoot 'skillpack\skills\scripts\lib\Bootstrap.ps1'),
-        'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1',
         (Join-Path $env:REVERSE_SKILL_ROOT 'skillpack\skills\scripts\lib\Bootstrap.ps1')
     )) {
         if ($c -and (Test-Path -LiteralPath $c -ErrorAction SilentlyContinue)) { $boot = $c; break }
@@ -692,7 +691,7 @@ function Install-ReverseTools {
     }
     Add-Finding 'Defender 排除项' $(if ($capaExe -and $capaRules) { 'capa 完好在位（未被隔离）' } else { '未验证' })
 
-    # ── FLOSS：官方 zip 或 venv-floss（§4.3：装 flare-floss 得到 floss.exe）─────
+    # ── FLOSS：官方 zip 或装进 python-venv（§4.3：装 flare-floss 得到 floss.exe）───
     $flossBin = Resolve-Tool -Name 'floss' -FallbackRel 'cli\floss.cmd'
     if ($flossBin) { Write-Skip "FLOSS 已就位 -> $flossBin"; Add-Action '工具链' 'flare-floss' '跳过（已就位）' }
     else {
@@ -766,16 +765,16 @@ function Install-PipEcosystem {
         Write-Warn2 'python 不存在，§4.3 跳过'
         return
     }
-    $venv = Join-Path $script:ToolRoot 'runtime\venv-re'
+    $venv = Join-Path $script:ToolRoot 'runtime\python-venv'
     $venvPy = Join-Path $venv 'Scripts\python.exe'
 
     if (-not (Test-Path $venvPy)) {
-        if ($DryRun) { Write-Dry "python -m venv $venv"; Add-Action 'pip' 'venv-re' 'dryrun'; return }
+        if ($DryRun) { Write-Dry "python -m venv $venv"; Add-Action 'pip' 'python-venv' 'dryrun'; return }
         Write-Act "建 venv: $venv"
         try {
             & python -m venv $venv
-            if ($LASTEXITCODE -eq 0) { Write-Done "venv 建好 -> $venvPy"; Add-Action 'pip' 'venv-re' '已创建' }
-            else { Write-Err "venv 创建失败 rc=$LASTEXITCODE"; Add-Action 'pip' 'venv-re' '失败'; return }
+            if ($LASTEXITCODE -eq 0) { Write-Done "venv 建好 -> $venvPy"; Add-Action 'pip' 'python-venv' '已创建' }
+            else { Write-Err "venv 创建失败 rc=$LASTEXITCODE"; Add-Action 'pip' 'python-venv' '失败'; return }
         } catch { Write-Err "venv 创建异常: $($_.Exception.Message)"; return }
     } else {
         Write-Skip "venv 已在 -> $venvPy"
@@ -876,7 +875,7 @@ function Install-YaraRules {
     } else {
         Write-Err 'YARA 规则库两条路都没成（gh clone / curl tarball）'
         Note-Blocker '两条路都不通' 'YARA-Rules 规则库' 'gh repo clone 与 curl tarball 均失败' `
-                    '手动下载 https://github.com/Yara-Rules/rules/releases 的 zip 解压到 D:\Tools\yara\yara-rules'
+                    '手动下载 https://github.com/Yara-Rules/rules/releases 的 zip 解压到 <工具根>\yara\yara-rules'
         Add-Action '规则库' 'YARA-Rules' '失败'
     }
 }
@@ -1480,7 +1479,6 @@ q
     # ── 门 1 · 自检退出码 ────────────────────────────────────────────────────
     Write-Step '门1 · selfcheck 退出码'
     $sc = Join-Path $PSScriptRoot 'selfcheck.ps1'
-    if (-not (Test-Path $sc)) { $sc = 'C:\relab2\selfcheck.ps1' }
     if (Test-Path $sc) {
         $p = $null
         try {
@@ -1783,7 +1781,7 @@ if (-not $script:ToolRoot) {
         $script:ToolRoot = Join-Path $root 'Tools'
     }
 }
-if (-not $VenvPath) { $VenvPath = Join-Path $script:ToolRoot 'runtime\venv-re' }
+if (-not $VenvPath) { $VenvPath = Join-Path $script:ToolRoot 'runtime\python-venv' }
 $script:VenvPath = $VenvPath
 
 # ── 反反调试探针源码（门 3 用；放在工作目录，不污染仓库）─────────────────────
@@ -1832,7 +1830,6 @@ Invoke-Survey
 # 探测层要先加载，后面 §4.1 与验收门都依赖它
 foreach ($c in @(
     (Join-Path $PSScriptRoot 'skillpack\skills\scripts\lib\Bootstrap.ps1'),
-    'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1',
     (Join-Path $env:REVERSE_SKILL_ROOT 'skillpack\skills\scripts\lib\Bootstrap.ps1')
 )) {
     if ($c -and (Test-Path -LiteralPath $c -ErrorAction SilentlyContinue)) { $script:Boot = $c; break }

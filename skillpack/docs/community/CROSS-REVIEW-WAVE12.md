@@ -2,10 +2,10 @@
 
 复核者：T13（对抗性复核，不是开发者）。复核对象冻结为三提交：
 `29825b7`（T04/T05/T06/T10）、`8f0571b`（U11/T11/T12+T14/T24）、`7a1d453`（CR-T24-01）。
-复核在仓库外快照 `D:\Project\skills-hub\work\t13-clone`（HEAD=`7a1d453`，工作树干净）执行；
-证据脚本在 `D:\Project\skills-hub\work\t13-evidence/`；负向对照在
+复核在仓库外快照 `work\t13-clone`（HEAD=`7a1d453`，工作树干净）执行；
+证据脚本在 `work\t13-evidence/`；负向对照在
 `work/t13-neg-a`、`work/t13-neg-c`（均为 scratch 拷贝，真树零修改）。
-Python 一律 `D:\EXE\python\python.exe`，先 `$env:PYTHONIOENCODING='utf-8'`。
+Python 一律 `(Resolve-ReverseToolSpec -Name 'pyre').Command`，先 `$env:PYTHONIOENCODING='utf-8'`。
 
 ## 1. 门基线（复算）
 
@@ -32,7 +32,7 @@ D3 备注：通用 hint（`fullstack delivery workflow deploy pipeline`）得
 `adapt-community.py inspect --source apk-reverse-community` 在无快照时
 exit 21（missing_input，JSON 走 stderr），行为诚实。
 
-复算：`D:\Project\skills-hub\work\t13-evidence\dryrun.py`。
+复算：`work\t13-evidence\dryrun.py`。
 
 ## 3. 三条负向测试（全部真实失败/真实非零）
 

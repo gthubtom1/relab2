@@ -43,7 +43,7 @@
 9. **R49 首步曾经断链**：APK wrapper 原来把 `known-limitations.md` 写成 source 根目录路径，实际文件在 `evidence/known-limitations.md`；这类入口路径必须有可执行 fixture，不能只靠结构检查。wrapper 路径已修正，但社区 APK 正文仍引用 canonical 目录中不存在的 `doctor.py`、`capabilities.py` 和证据摘要，说明高级能力尚未真正并入 canonical APK。
 10. **R48 交付流程仍有删除后的引用**：适配后的 workflow 仍引用已排除的 `reverse-skill-private/`，并调用未迁入的 `scripts/bootstrap-project.ps1`。只要按文档执行到 bootstrap 或安全工作流分支就会失败；交付 wrapper 还没有定义普通本地项目如何完成 case 输入而不被安全目标门误拦。
 11. **导入器本身会原地覆盖**：`adapt-community.py` 没有 `--help`、dry-run、候选输出或原子切换；重复调用会直接覆盖适配树和 registry。应先写候选目录，执行清洗/验证后再提升为已验证快照，并保留 source digest 和回退点。
-12. **来源快照不随融合目录交付**：五个 clone 目前在 `D:\Project\skills-hub\upstream/`，而 `integrated-skill-hub/` 自身没有 `upstream/`。单独移动或打包融合目录后只能看到 URL/commit，不能离线复核来源。需要明确“构建输入”边界，或随 release 提供不可执行的 source bundle/digest。
+12. **来源快照不随融合目录交付**：五个 clone 目前在 `<开发根>\upstream/`，而 `integrated-skill-hub/` 自身没有 `upstream/`。单独移动或打包融合目录后只能看到 URL/commit，不能离线复核来源。需要明确“构建输入”边界，或随 release 提供不可执行的 source bundle/digest。
 13. **安全验证器也依赖 Git**：已为本地副本增加工作树回退，但当前安全门会把我们运行验证时生成的 `__pycache__` 当未审查二进制；发布前应清理生成物并让 `.gitignore`/扫描规则明确区分临时缓存与交付文件。没有 Git 的目录不能再直接 traceback。
 14. **社区工作流的边界说明放在末尾不够强**：`WORKFLOW.md` 前部仍有 bootstrap/安全动作指导，适配合同只是追加到文件末尾；模型按顺序读取时可能先执行旧规则。安全/交付边界必须置于文件顶部，或将原文降级为 docs-only reference 后再由 wrapper 提供唯一动作入口。
 

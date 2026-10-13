@@ -18,7 +18,7 @@
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
 $rasm = (Resolve-ReverseToolSpec -Name 'rasm2').Command
 $diec = (Resolve-ReverseToolSpec -Name 'diec').Command
-$py   = 'D:\EXE\python\python.exe'   # 有 pefile 2024.8.26 + capstone 5.0.7
+$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command   # 有 pefile 2024.8.26 + capstone 5.0.7
 ```
 
 > ★ `rabin2` 不可用，理由见 `aob-signature-scan.md` 坑 1。
@@ -244,7 +244,7 @@ print(json.dumps(parse_pe(open("sample.exe","rb").read()), indent=2, default=str
 
 ## 坑
 
-1. ★ **`rabin2` 在本机是坏副本**。`D:\Tools\radare2\bin\rabin2.exe` 与 `r2.exe` 文件大小完全相同（153600 字节），是同一份二进制的副本，`rabin2 -I/-i/-H/-e/-l` 全报 `Missing file to open`。统一走 `r2 -2 -qc`。
+1. ★ **`rabin2` 在本机是坏副本**。`(Resolve-ReverseToolSpec -Name 'rabin2').Command` 与 `r2.exe` 文件大小完全相同（153600 字节），是同一份二进制的副本，`rabin2 -I/-i/-H/-e/-l` 全报 `Missing file to open`。统一走 `r2 -2 -qc`。
 2. ★ **`iE` 输出远比预期长**，mingw 产物会把整个符号表都列出来（ptgt2.exe 的 `iE` 返回 74 行）。要过滤就 `iE~Answer` 或 `iE~tlstest`。
 3. **`pe.get_section_by_rva` 不是稳定 API**；`pefile` 里没有 `sect_from_rva`。自己遍历 `pe.sections` 最可靠。
 4. **`iI` 里 `dbg_file notepad.pdb` 直接泄露了原始 PDB 路径**，这是免费的线索，但要意识到它在告密样本里会指向构建机的用户名和目录。

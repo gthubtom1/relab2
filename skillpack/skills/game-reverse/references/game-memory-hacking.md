@@ -36,7 +36,7 @@ $diec    = (Resolve-ReverseToolSpec -Name 'diec').Command
 $capa    = (Resolve-ReverseToolSpec -Name 'capa').Command
 $yara    = (Resolve-ReverseToolSpec -Name 'yara').Command
 $peSieve = (Resolve-ReverseToolSpec -Name 'pe-sieve').Command
-$py      = 'D:\EXE\python\python.exe'
+$py      = (Resolve-ReverseToolSpec -Name 'pyre').Command
 ```
 
 > ★ cdb 只能走 `%LOCALAPPDATA%\Microsoft\WindowsApps\cdbX64.exe` alias，不能加进 PATH。

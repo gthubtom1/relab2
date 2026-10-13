@@ -4,7 +4,6 @@
 >
 > **什么时候用**：**仅当** `./transport-pre-gate-playbook.md` 已证明目标路由**传输受限（transport-gated）**，且**最接近的可用客户端后端无法表达**那个能放行的浏览器 profile 时。
 >
-> **平台与本机状态**：本机 `python 3.12.0`（`D:\EXE\python\python.exe`）、`curl_cffi 0.16.3`（**本手册第 5 步阶梯的第一/二档本机就位**）、`tshark 4.6.8`（`D:\Tools\Wireshark\tshark.exe`，包级比对本机可用）、`rustc`/`cargo` **本机未验证是否安装**（**未在本机验证**）。本文描述的「原生 TLS 后端（native TLS backend）」在本机**没有现成实现**，因此本文第 4 步的后端阶梯在实践中通常停在第 1-2 档 —— 这本身就是本手册最该被记住的结论：**大多数情况下你不需要走到这里**。
 
 ---
 
@@ -206,9 +205,9 @@
 - 在**同一网络路径**上捕获候选后端
 - 比较**原始 TLS 与 H2 字段**，不只比较摘要哈希
 - 把每一个残余不匹配解释为**已观察的可变性、路由状态，或一个明确的「不支持字段」**
-- **本机做法**：`tshark`（`D:\Tools\Wireshark\tshark.exe`）抓双方 ClientHello 与 H2 SETTINGS 做结构化对比
+- **本机做法**：`tshark`（`(Resolve-ReverseToolSpec -Name 'tshark').Command`）抓双方 ClientHello 与 H2 SETTINGS 做结构化对比
   ```powershell
-  D:\Tools\Wireshark\tshark.exe -r candidate.pcapng -Y "tls.handshake.type == 1" -V
+  & (Resolve-ReverseToolSpec -Name 'tshark').Command -r candidate.pcapng -Y "tls.handshake.type == 1" -V
   ```
   （**未对具体目标验证**；这是本机替代源文档中那个不存在的 `scripts/transport_profile_diff.py` 的实际做法）
 

@@ -25,7 +25,7 @@
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2  = (Resolve-ReverseToolSpec -Name 'r2').Command
-$py  = 'D:\EXE\python\python.exe'
+$py  = (Resolve-ReverseToolSpec -Name 'pyre').Command
 ```
 
 ## 步骤
@@ -111,7 +111,7 @@ def from_base32(text: str) -> int:
 ```python
 """keygen 骨架: parse → verify → generate，全程自校验断言。
 
-★ 本模板已在本机 D:\EXE\python\python.exe (3.12) 实跑通过，
+★ 本模板已在本机 (Resolve-ReverseToolSpec -Name 'pyre').Command (3.12) 实跑通过，
   修正了源文档模板的两个真实 bug（见文末「模板的两个坑」）。
   常量按你的反编译结果替换。
 """
@@ -249,7 +249,7 @@ A    = up[19:24]  25 bit  ← checksum 上限 0x1FFFFFF
 ### 3. ★ 官方 key 回归（还原正确性的硬证据）
 
 ```powershell
-& 'D:\EXE\python\python.exe' .\keygen.py --verify "AAAAA-BBBBB-CCCCC-DDDDD-EEEEE"
+& (Resolve-ReverseToolSpec -Name 'pyre').Command .\keygen.py --verify "AAAAA-BBBBB-CCCCC-DDDDD-EEEEE"
 ```
 
 ★ **官方 key 必须返回 VALID**。这是判断「还原对不对」的**唯一客观标准** ——

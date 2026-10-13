@@ -4,7 +4,6 @@
 >
 > **什么时候用**：修改 `web-protocol-reverse` 本包本身之后、提交之前，用本文决定「这次改动算不算完成」。
 >
-> **平台与本机状态**：本文是维护规范，不含可执行脚本。源文档列出的校验命令（`python scripts/validate_skill.py`、`scripts/forward_test_report.py` 等）**在本包中不存在** —— 本包没有 `scripts/` 目录。改编已把这些引用改写为本机可实际执行的做法。`D:\EXE\python\python.exe` 3.12.0、`node v24.20.0`（`D:\Tools\Node\node.exe`）、`tshark 4.6.8`（`D:\Tools\Wireshark\tshark.exe`）本机可用；本机**未挂载任何 web 侧 MCP**（chrome-devtools / js-reverse 等），因此凡以这些工具为前提的通过条件在本机只能记为「未在本机验证」。
 
 ---
 
@@ -111,7 +110,7 @@
 - 报告默认脱敏，并要求一个**无秘密**的 `analysis/proof_manifest.json`。
 - 报告脱敏要求与本包 `../../../field-journal/_template.md` 的「契约对齐（review_case.py）」一节同源：若本次改动产出了独立证据目录 `evidence/E-xxx.md`，须满足 `../../../case-review/scripts/review_case.py` 的字段契约（`severity` ∈ critical/high/medium/low/info/n/a；`status` ∈ observed/candidate/validated/false_positive/accepted_risk；`repro_command` 必填；`content_hash` 需配套 `artifact_path`；`linked_workitem` → 真实存在的 `WI-xxx`），并以 `--verify-hashes --strict` 自检：
   ```powershell
-  D:\EXE\python\python.exe skillpack\skills\case-review\scripts\review_case.py work\<case> --verify-hashes --strict
+  & (Resolve-ReverseToolSpec -Name 'pyre').Command skillpack\skills\case-review\scripts\review_case.py work\<case> --verify-hashes --strict
   ```
 - 静态 `validation=PASS` 只是结构结果，**绝不可**被描述为真实前向测试或抗退化证明。
 - 行为结论需要一份由**全新执行器**产出、并经**独立复核人**签署的前向测试报告，且该报告保存在技能树之外。

@@ -78,7 +78,7 @@ APK 哈希/Manifest
 | `so-structure-audit.py` | so 节区/符号/build-id/构造函数体检 | 本机已验证 |
 | `decode.ps1` / `frida-run.ps1` / `rebuild-sign-install.ps1` / `manifest-summary.ps1` | 原有的解包/动态/重建/Manifest 封装 | — |
 
-脚本依赖 `capstone` / `pyelftools`，一律用 `D:\EXE\python\python.exe` 跑：
+脚本依赖 `capstone` / `pyelftools`，一律用 `(Resolve-ReverseToolSpec -Name 'pyre').Command` 跑：
 
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'

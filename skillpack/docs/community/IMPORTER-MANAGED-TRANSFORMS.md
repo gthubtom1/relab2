@@ -97,7 +97,7 @@ diff summary 里并阻断 promote（见 §4），这是有意为之，不是漏�
 1. 在上节 JSON 的 `transforms` 里追加条目（含 `id`/`scope`/`kind`/
    `pattern`/`replacement`/`basis`/`evidence`；`kind` 仅 `literal` 或 `regex`）。
 2. 用规范 JSON 重算顶层 `digest`（命令见下），更新 `digest` 字段。
-3. 在仓库副本（`D:\Project\skills-hub\work\t05-lab\` 下的复制体，
+3. 在仓库副本（`work\t05-lab\` 下的复制体，
    **不得**对真仓库跑 `import`/`promote`）重跑
    `scripts/test-adapt-community.py`，确认新用例通过且旧 60 项全绿。
 4. 旧候选自动过期（digest 已变），需重建候选后再 promote。
@@ -105,7 +105,7 @@ diff summary 里并阻断 promote（见 §4），这是有意为之，不是漏�
 重算 digest：
 
 ```text
-D:\EXE\python\python.exe -c "import json,hashlib,pathlib,re;
+& (Resolve-ReverseToolSpec -Name 'pyre').Command c "import json,hashlib,pathlib,re;
 t=pathlib.Path('docs/community/IMPORTER-MANAGED-TRANSFORMS.md').read_text(encoding='utf-8');
 b=re.search(r'```json managed-transforms\s+(.*?)```',t,re.S).group(1);
 rec=json.loads(b);

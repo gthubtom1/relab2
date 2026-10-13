@@ -4,7 +4,6 @@
 >
 > **什么时候用**：任何一次协议逆向调查要落报告时 —— 阶段推进、勘测、动态验证、实现决策、交付、proof manifest（证明清单），都用这里的固定标题，保证不同项目的产出可横向对比。
 >
-> **平台与本机状态**：本文是纯文档规范，不含可执行脚本，不依赖任何工具。涉及的 `analysis/` `collector/` 目录树按本文推荐布局落地；`review_case.py` 校验用的是本机 `D:\EXE\python\python.exe` 3.12.0（`../../../case-review/scripts/review_case.py`，本机存在）。文中所有目录与文件均为**约定名**，不代表本机已存在任何实体。
 
 ---
 
@@ -48,7 +47,7 @@
 - 字段必须齐：`severity` ∈ `critical|high|medium|low|info|n/a`；`status` ∈ `observed|candidate|validated|false_positive|accepted_risk`；`repro_command` 必填（离线场景在 `notes` 里注明 offline/离线）；填了 `content_hash: sha256` 就必须配套 `artifact_path:`（case 内相对路径）。
 - 自检命令（Windows）：
   ```powershell
-  D:\EXE\python\python.exe skillpack\skills\case-review\scripts\review_case.py work\<case> --verify-hashes --strict
+  & (Resolve-ReverseToolSpec -Name 'pyre').Command skillpack\skills\case-review\scripts\review_case.py work\<case> --verify-hashes --strict
   ```
 - 脱敏 case 的落盘模板见 `../../../field-journal/_template.md`，其 `## 脱敏要求` 一节给出的占位符表（`{target_domain}` `{token}` `{user_email}` …）与本文上面的「敏感数据规则」是同一套约束；两者冲突时以 `../../../field-journal/anonymization.md` 的正则检测为准。
 

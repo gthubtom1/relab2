@@ -48,6 +48,8 @@ SOURCE_NOTES = {
     "deepseek": "官方 deepseek-harness 仓库 dsh-agent-instructions：$DSH_HOME/AGENTS.md",
     "hermes": "官方 hermes-agent 文档：~/.hermes/SOUL.md（身份文件，在系统提示词最前）",
     "pi": "本机安装源码 getAgentDir()= ~/.pi/agent（**不是 ~/.pi**）",
+    "omp": "本机实测：~/.omp/agent/ 下是 PERSONALITY.md（人设）+ RULES.md（规则）两文件形态；"
+           "无 AGENTS.md，不融合三段",
     "pidesktop": "社区 dsh-desktop，沿用 pi 的 agent/ 约定；未验证",
     "dsh": "官方 deepseek-harness：$DSH_HOME/AGENTS.md，预算 65536 B",
     "zcode": "官方 zcode.z.ai 有 memory 机制，AGENTS.md 位置未见明文；未验证",
@@ -127,6 +129,22 @@ HOST_SPECS: tuple[dict, ...] = (
         "entry_alternates": (),
         "images": ("pi.exe",),
         "markers": (".pi",),
+    },
+    {
+        "id": "omp",
+        "name": "omp",
+        # ★ 2026-10-14：omp 是**全项目唯一一家把底模和规则分开放的**。
+        #   本机实测：~/.omp/agent/ 下只有 PERSONALITY.md（人设/破甲，kind: base）
+        #   和 RULES.md（规则/指引，kind: guest），**没有 AGENTS.md**，
+        #   也不需要把三段融成一份。所以：
+        #     base 卡 → entry_base（PERSONALITY.md）
+        #     中枢段 + guest 卡 → entry（RULES.md）
+        "home": ".omp/agent",
+        "entry": "RULES.md",
+        "entry_base": "PERSONALITY.md",
+        "entry_alternates": ("AGENTS.md",),
+        "images": ("omp.exe", "oh-my-pi.exe"),
+        "markers": (".omp",),
     },
     {
         "id": "pidesktop",
@@ -363,16 +381,21 @@ def add_custom(name: str, home: str) -> dict:
     if new_id in used_ids:
         return {"ok": False, "error": "这家名字会和已有宿主冲突，换一个名字再加。"}
     entry = _entry_in(target)
+    # ★ 手加的家也要继承名单里同款宿主的槽位（omp：RULES.md + PERSONALITY.md）。
+    #   不然手加一个 ~/.omp/agent 会拿到 AGENTS.md，底模也塞错地方。
+    inh_entry, inh_base = _inherit_slots({"home": str(target), "custom": True}, target)
     row = {
         "id": new_id,
         "name": title,
         "home": str(target),
-        "entry": entry or ENTRY_CANDIDATES[0],
+        "entry": entry or inh_entry or ENTRY_CANDIDATES[0],
         "entry_alternates": (),
         "images": (),
         "markers": (),
         "custom": True,
     }
+    if inh_base:
+        row["entry_base"] = inh_base
     rows.append(row)
     save_custom(rows)
     return {"ok": True, "id": row["id"], "home": str(target), "entry": row["entry"]}
@@ -404,6 +427,7 @@ def load_custom() -> list[dict]:
             "name": title,
             "home": raw,
             "entry": str(row.get("entry") or ENTRY_CANDIDATES[0]),
+            "entry_base": str(row.get("entry_base") or ""),
             "entry_alternates": (),
             "images": (),
             "markers": (),
@@ -473,7 +497,7 @@ def _es_bin() -> str | None:
     # 只认 PATH 上的 es.exe，并且不许它在临时目录里。
     # shutil.which 会先命中 PATH 上任何同名的东西——在临时目录里放一个叫 es.exe 的文件，
     # 点一次「深扫全盘」就等于以当前用户权限执行了那个文件。
-    # 注意：Everything 装在哪都行（主人这台在 D:\HACKER\es\），不能只认 Program Files。
+    # 注意：Everything 装在哪都行（主人这台在 <工具根>\Everything\），不能只认 Program Files。
     for name in ("es", "es.exe"):
         found = shutil.which(name)
         if not found:
@@ -679,6 +703,35 @@ _cache: dict = {"at": 0.0, "value": None}
 def user_home() -> Path:
     raw = os.environ.get("USERPROFILE") or os.environ.get("HOME") or ""
     return Path(raw) if raw else Path.home()
+
+
+def _inherit_slots(spec: dict, home: Path):
+    """扫到/手加的家，把名单里同款宿主的**槽位定义**继承过来。
+
+    名单里的 omp 自带 `entry=RULES.md` + `entry_base=PERSONALITY.md`；
+    但**扫到/手加**的家是从盘上推出来的 spec，两个字段都会退到默认值 ——
+    不继承的话，主人手加一个 `~/.omp/agent` 会拿到 `AGENTS.md`（错的文件名），
+    而且丢掉「底模单独一个文件」这个行为，底模会被塞进那份错文件里。
+
+    返回 `(entry, entry_base)`；没匹配上就返回空串。
+    """
+    named = (spec.get("entry"), spec.get("entry_base") or "")
+    if named[1] and not (spec.get("custom") or spec.get("extra")):
+        return "", str(named[1])
+    rel = str(spec.get("home") or "").replace("/", "\\").strip("\\").lower()
+    try:
+        tail = "\\".join(Path(home).parts[-2:]).lower()
+    except (TypeError, ValueError):
+        tail = ""
+
+    def _match(s: dict) -> bool:
+        key = str(s["home"]).replace("/", "\\").strip("\\").lower()
+        return bool(key) and (key == rel or (tail and (key == tail or key.endswith("\\" + tail))))
+
+    for s in HOST_SPECS:
+        if _match(s):
+            return str(s["entry"]), str(s.get("entry_base") or "")
+    return "", ""
 
 
 def _resolve_home(spec: dict, base: Path) -> Path:
@@ -896,45 +949,75 @@ def _count_files(root: Path) -> int:
     return total
 
 
-def _entry_state(home: Path, entry: str) -> dict:
+def _entry_state(home: Path, entry: str, entry_base: str = "") -> dict:
     """入口文件实测：中枢写的那几段现在真在不在。
 
     页面说「装好了 / 正在用」，必须由这里支撑。只看 hub/ 目录在不在是不作数的——
     有人手删了入口文件里的块，hub/ 还照样躺在那儿。
+
+    ★ 2026-10-14：omp 这类**两文件形态**的宿主，底模块不在 entry 里，在 entry_base 里。
+    传了 entry_base 就分开判：`has_marker` / `has_guest` 看 entry，`has_base` 看 entry_base。
     """
+    blank = {"entry_blocks": 0, "entry_ok": False, "entry_note": "",
+             "has_marker": False, "has_base": False, "has_guest": False,
+             "base_file": entry_base, "base_file_note": ""}
     if not entry:
-        return {"entry_blocks": 0, "entry_ok": False, "entry_note": "没定入口文件",
-                "has_marker": False, "has_base": False, "has_guest": False}
+        d = dict(blank); d["entry_note"] = "没定入口文件"; return d
     p = home / entry
     if not p.is_file():
-        return {"entry_blocks": 0, "entry_ok": False, "entry_note": "入口文件不在",
-                "has_marker": False, "has_base": False, "has_guest": False}
+        d = dict(blank); d["entry_note"] = "入口文件不在"; return d
     try:
         text = p.read_text(encoding="utf-8", errors="replace")
     except OSError:
-        return {"entry_blocks": 0, "entry_ok": False, "entry_note": "入口文件读不出来",
-                "has_marker": False, "has_base": False, "has_guest": False}
+        d = dict(blank); d["entry_note"] = "入口文件读不出来"; return d
     lines = [ln.strip() for ln in text.splitlines()]
     has_marker = "# >>> hubcore hub >>>" in lines
-    has_base = "# >>> hubcore base >>>" in lines
     has_guest = "# >>> hubcore guest >>>" in lines
-    begins = sum(1 for ln in lines if ln in ("# >>> hubcore hub >>>", "# >>> hubcore base >>>",
-                                             "# >>> hubcore guest >>>"))
-    ends = sum(1 for ln in lines if ln in ("# <<< hubcore hub <<<", "# <<< hubcore base <<<",
-                                           "# <<< hubcore guest <<<"))
+
+    # 两文件形态：底模块单独一个文件
+    base_note = ""
+    if entry_base:
+        bp = home / entry_base
+        if not bp.is_file():
+            has_base = False
+            base_note = "%s 不在（底模卡还没写进去）" % entry_base
+        else:
+            try:
+                blines = [ln.strip() for ln in bp.read_text(encoding="utf-8", errors="replace").splitlines()]
+                has_base = "# >>> hubcore base >>>" in blines
+                base_note = "%s %s" % (entry_base, "有底模块" if has_base else "里没有底模块")
+            except OSError:
+                has_base = False
+                base_note = "%s 读不出来" % entry_base
+        # 两文件形态下，底模块**不参与**入口文件的配对计数
+        begins = sum(1 for ln in lines if ln in ("# >>> hubcore hub >>>", "# >>> hubcore guest >>>"))
+        ends = sum(1 for ln in lines if ln in ("# <<< hubcore hub <<<", "# <<< hubcore guest <<<"))
+        has_base_in_entry = "# >>> hubcore base >>>" in lines
+    else:
+        has_base = "# >>> hubcore base >>>" in lines
+        has_base_in_entry = has_base
+        begins = sum(1 for ln in lines if ln in ("# >>> hubcore hub >>>", "# >>> hubcore base >>>",
+                                                 "# >>> hubcore guest >>>"))
+        ends = sum(1 for ln in lines if ln in ("# <<< hubcore hub <<<", "# <<< hubcore base <<<",
+                                               "# <<< hubcore guest <<<"))
     if begins == 0:
         return {"entry_blocks": 0, "entry_ok": False, "entry_note": "入口文件里没有中枢的段",
-                "has_marker": has_marker, "has_base": has_base, "has_guest": has_guest}
+                "has_marker": has_marker, "has_base": has_base, "has_guest": has_guest,
+                "base_file": entry_base, "base_file_note": base_note}
     if begins != ends:
         return {"entry_blocks": begins, "entry_ok": False,
                 "entry_note": "定界行不成对（%d 开 / %d 闭），装卸可能没摘干净" % (begins, ends),
-                "has_marker": has_marker, "has_base": has_base, "has_guest": has_guest}
-    return {"entry_blocks": begins, "entry_ok": True,
-            "entry_note": "入口文件里有 %d 段中枢" % begins,
-            "has_marker": has_marker, "has_base": has_base, "has_guest": has_guest}
+                "has_marker": has_marker, "has_base": has_base, "has_guest": has_guest,
+                "base_file": entry_base, "base_file_note": base_note}
+    note = "入口文件里有 %d 段中枢" % begins
+    if entry_base and not has_base_in_entry:
+        note += "；底模另存 %s" % (entry_base if has_base else "（还没写）")
+    return {"entry_blocks": begins, "entry_ok": True, "entry_note": note,
+            "has_marker": has_marker, "has_base": has_base, "has_guest": has_guest,
+            "base_file": entry_base, "base_file_note": base_note}
 
 
-def _install_state(home: Path, entry: str = "") -> dict:
+def _install_state(home: Path, entry: str = "", entry_base: str = "") -> dict:
     hub = _hub_dir(home)
     core = home / CORE_RELPATH
     manifest = home / MANIFEST_RELPATH
@@ -961,7 +1044,7 @@ def _install_state(home: Path, entry: str = "") -> dict:
         "legacy": legacy.is_dir(),
         "legacy_files": _count_files(legacy) if legacy.is_dir() else 0,
     }
-    state.update(_entry_state(home, entry))
+    state.update(_entry_state(home, entry, entry_base))
     if installed:
         try:
             state["core_kb"] = round(core.stat().st_size / 1024.0, 1) if core.is_file() else 0.0
@@ -1000,6 +1083,14 @@ def describe_host(spec: dict, base: Path | None = None) -> dict:
     root = base if base is not None else user_home()
     home = _resolve_home(spec, root)
     entry = _resolve_entry(home, spec)
+    entry_base = str(spec.get("entry_base") or "")
+    # 扫到/手加的家：把名单里同款宿主的槽位继承过来（omp 的 RULES.md + PERSONALITY.md）
+    if spec.get("custom") or spec.get("extra"):
+        inh_entry, inh_base = _inherit_slots(spec, home)
+        if inh_base:
+            entry_base = inh_base
+            if inh_entry and not (home / entry).is_file():
+                entry = inh_entry
     entry_path = home / entry
     exists = home.is_dir()
     row = {
@@ -1007,12 +1098,14 @@ def describe_host(spec: dict, base: Path | None = None) -> dict:
         "name": spec["name"],
         "home": str(home),
         "entry": entry,
+        "entry_base": entry_base,
+        "entry_base_exists": bool(entry_base) and (home / entry_base).is_file(),
         "entry_exists": entry_path.is_file(),
         "exists": exists,
         "custom": bool(spec.get("custom")),
         "scanned": bool(spec.get("extra")),
     }
-    row.update(_install_state(home, entry))
+    row.update(_install_state(home, entry, entry_base))
     if spec.get("extra") or spec.get("custom"):
         run = _custom_process_state(home)
         row.update({"running": bool(run["running"]), "running_known": bool(run["known"]),

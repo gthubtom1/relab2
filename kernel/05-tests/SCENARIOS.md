@@ -3,13 +3,13 @@
 > 全套 **1 – 9**，一条不留。
 >
 > 被测对象：`work/context-isolation/ctxiso/`（只读，一行没改）
-> 被测产品：`D:\临时项目\hub-dock`（只读）
+> 被测产品：`<仓根>\kernel`（只读）
 > 假产品：全部建在 `05-tests/TEMP/`，跑完整个目录删掉
 
 ## 跑法
 
 ```powershell
-cd D:\临时项目\hub-dock\work\context-isolation\05-tests
+cd <仓根>\kernel\05-tests
 python run_all.py
 ```
 
@@ -69,7 +69,7 @@ python run_all.py
 **怎么做**：
 
 ```
-python -m ctxiso pack --product D:\临时项目\hub-dock --intent "给主人解释载入流程" --stage 0-spec --json
+python -m ctxiso pack --product <仓根>\kernel --intent "给主人解释载入流程" --stage 0-spec --json
 ```
 
 **判定标准**：

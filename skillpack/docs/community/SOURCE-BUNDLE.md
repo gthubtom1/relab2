@@ -72,8 +72,8 @@ base 一行另可用 `scripts/verify-canonical-base-lock.py --json` 的 `recompu
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
 # 把 integrated-skill-hub 复制到任何位置（不需要 .git，不需要 ../upstream）
-D:\EXE\python\python.exe scripts\verify-source-attestation.py
-D:\EXE\python\python.exe scripts\verify-community-bundle.py
+& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts\verify-source-attestation.py
+& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts\verify-community-bundle.py
 ```
 
 有快照时两脚本 exit 0；复制体旁没有 `../upstream` 时 attestation 脚本 exit 10，

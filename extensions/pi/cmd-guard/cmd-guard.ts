@@ -345,7 +345,7 @@ const SEG_SPLIT = /&&|\|\||[;\n|]/;
 /**
  * 抽出命令里**真正被调用**的可执行文件名。
  * 只看「命令位置」—— 字符串开头，或分段（`&&` `||` `;` `|` 换行）之后的第一个词元。
- * 这样 `Test-Path D:\Tools\die\die.exe` 这种「探测文件在不在」不会被误拦。
+ * 这样 `Test-Path <工具根>\<分类>\<工具名>\xxx.exe` 这种「探测文件在不在」不会被误拦。
  */
 function invokedNames(cmd: string): string[] {
 	const out: string[] = [];
@@ -410,7 +410,7 @@ const PROBE = [
 	/^\s*(git\s+(status|log|diff|show|branch|rev-parse))\b/i,
 ];
 const RECURSIVE_SCAN =
-	/\b(find|rg|grep|Get-ChildItem|gci)\b[^\n]*(\s-r\b|-Recurse|[A-Za-z]:[\\/](HACKER|Project|Users|Windows|node_modules|EXE|Tools|\.git)\b|\/(usr|var|opt|home)\b)/i;
+	/\b(find|rg|grep|Get-ChildItem|gci)\b[^\n]*(\s-r\b|-Recurse|[A-Za-z]:[\\/](Windows|Users|Program Files|ProgramData|node_modules|\.git|Tools)\b|\/(usr|var|opt|home)\b)/i;
 const DRIVE_ROOT_SCAN =
 	// 只认「命令词 + 路径正好停在盘符根」。旧版两处写法都有问题：
 	//   顶层 `|` 让第二个分支脱离命令词 → 任何带 C:\ 的命令都被当成全盘扫描；

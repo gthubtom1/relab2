@@ -37,18 +37,18 @@
 
 | 用途 | 工具 id | 本机解析到（2026-10-09 实测，仅供 sanity check，**不要写死**） |
 |------|---------|------|
-| 查壳 / 判编译器 | `diec` | `D:\Tools\DIE\diec.exe` |
-| 二进制概览 / 节区 / 导入 / 字符串 | `r2` | `D:\Tools\radare2\bin\r2.exe` |
+| 查壳 / 判编译器 | `diec` | `(Resolve-ReverseToolSpec -Name 'diec').Command` |
+| 二进制概览 / 节区 / 导入 / 字符串 | `r2` | `(Resolve-ReverseToolSpec -Name 'r2').Command` |
 | 混淆字符串还原 | `floss` | `D:\Tools\cli\floss.cmd` |
-| 能力识别 / ATT&CK 映射 | `capa` | `D:\Tools\capa\capa.bat` |
-| 自动脱壳 | `upx` | `D:\Tools\UPX\upx.exe` |
-| Ghidra 无头 | `analyzeHeadless` | `D:\Tools\Ghidra\support\analyzeHeadless.bat` |
-| IDA 无头 | `idat` | `D:\Tools\disasm\IDA Pro 9.3\idat.exe` |
+| 能力识别 / ATT&CK 映射 | `capa` | `(Resolve-ReverseToolSpec -Name 'capa').Command` |
+| 自动脱壳 | `upx` | `(Resolve-ReverseToolSpec -Name 'upx').Command` |
+| Ghidra 无头 | `analyzeHeadless` | `(Resolve-ReverseToolSpec -Name 'analyzeHeadless').Command` |
+| IDA 无头 | `idat` | `(Resolve-ReverseToolSpec -Name 'idat').Command` |
 | 动态调试（x64） | `cdb` | `%LOCALAPPDATA%\Microsoft\WindowsApps\cdbX64.exe` |
-| 反反调试注入器 | `scyllahide` | `D:\Tools\ScyllaHide\InjectorCLIx64.exe` |
-| 注入 / hook 扫描 | `pe-sieve` | `D:\Tools\pe-sieve\pe-sieve64.exe` |
-| YARA 规则匹配 | `yara` | `D:\Tools\yara\yara64.exe` |
-| Python 专精库（pefile / lief / angr / capstone / z3 / dnfile / yara） | `python` | `D:\EXE\python\python.exe` |
+| 反反调试注入器 | `scyllahide` | `(Resolve-ReverseToolSpec -Name 'scyllahide').Command` |
+| 注入 / hook 扫描 | `pe-sieve` | `(Resolve-ReverseToolSpec -Name 'pe-sieve').Command` |
+| YARA 规则匹配 | `yara` | `(Resolve-ReverseToolSpec -Name 'yara').Command` |
+| Python 专精库（pefile / lief / angr / capstone / z3 / dnfile / yara） | `python` | `(Resolve-ReverseToolSpec -Name 'pyre').Command` |
 | .NET 反编译 | `ilspycmd` / `de4dot` / `dnSpy.Console` / `Confuser.CLI` | 见探测层 |
 
 ### 案件与授权门禁

@@ -22,11 +22,11 @@ $diec = (Resolve-ReverseToolSpec -Name 'diec').Command
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
 ```
 
-★ **解释器用 `D:\EXE\python\python.exe`**。`algo_identify.py` 只依赖标准库，任何解释器都能跑，
-但本机统一用这一个，免得踩 `venv-re` 是空环境的坑。
+★ **解释器用 `(Resolve-ReverseToolSpec -Name 'pyre').Command`**。`algo_identify.py` 只依赖标准库，任何解释器都能跑，
+但本机统一用这一个，免得踩 该 venv 是空环境的坑。
 
 ```powershell
-$py = 'D:\EXE\python\python.exe'
+$py = (Resolve-ReverseToolSpec -Name 'pyre').Command
 $ai = 'C:\relab2\skillpack\skills\reverse-engineering\scripts\algo_identify.py'
 ```
 
@@ -34,7 +34,7 @@ $ai = 'C:\relab2\skillpack\skills\reverse-engineering\scripts\algo_identify.py'
 |---|---|---|
 | 常量指纹扫描 | `algo_identify.py` | 本篇主力，纯标准库 |
 | 先确认有没有壳 | `diec` | 有壳的话常量被压缩，必须先脱壳再扫 |
-| 节表与段信息 | `pefile`（在 `D:\EXE\python\python.exe`） | 段熵、raw offset |
+| 节表与段信息 | `pefile`（在 `(Resolve-ReverseToolSpec -Name 'pyre').Command`） | 段熵、raw offset |
 | 常量命中后找引用 | `r2` | `axt @ <偏移>` 看谁引用了这张表 |
 
 ## 步骤

@@ -12,36 +12,37 @@
 
 ## 本机环境现状（务必先读）
 
-本机**没有** C++ 工具链形态的 NoVmp / VTIL / Triton。实测三个 Python 解释器的库情况：
+本机**没有** C++ 工具链形态的 NoVmp / VTIL / Triton。实测两个解释器的库情况
+（2026-10-14，逐包 `importlib.util.find_spec`）：
 
 ```
-=== D:\EXE\python\python.exe ===
-  pefile YES  capstone YES  lief YES  angr YES  unicorn YES
-  triton no   qiling YES   z3 YES     yara YES  dnfile YES
+=== (Resolve-ReverseToolSpec -Name 'pyre').Command      # 带全部逆向库的那个
+  pefile YES  capstone YES  lief no   angr YES  unicorn YES
+  qiling YES  z3 YES        yara YES  dnfile no  triton no
 
-=== D:\Tools\runtime\venv-floss\Scripts\python.exe ===
-  pefile YES  其余全 no
-
-=== D:\Tools\runtime\venv-re\Scripts\python.exe ===
-  全部 no（连 pefile 都没有）
+=== (Resolve-ReverseToolSpec -Name 'python').Command    # 探测层默认解析到的
+  pefile YES  capstone YES  lief no   angr YES  unicorn YES
+  qiling no   z3 YES        yara no   dnfile no  triton no
 ```
 
-**唯一可用的 DSE 栈是 `D:\EXE\python\python.exe` 的 `angr`**（实测 `10.0.1.post1`）。
+版本（`pyre` 实测）：`angr 9.2.213` · `z3 4.13.0` · `unicorn 2.1.2` ·
+`capstone 5.0.6` · `pefile 2024.8.26` · `yara 4.5.4`。
+
+**唯一可用的 DSE 栈是 `pyre` 的 `angr`**（实测 `9.2.213`）。
 
 ```powershell
-& 'D:\EXE\python\python.exe' -c "
-import lief, capstone, pefile, angr, unicorn
-print('lief', lief.__version__); print('capstone', capstone.__version__)
-print('pefile', pefile.__version__); print('angr', angr.__version__)
-print('unicorn', unicorn.__version__)"
-# 实测输出:
-#   lief 1.0.0-d05b3499b / capstone 5.0.7 / pefile 2024.8.26
-#   angr 10.0.1.post1 / unicorn 2.1.4
+& (Resolve-ReverseToolSpec -Name 'pyre').Command -c "
+import capstone, pefile, angr, unicorn
+print('capstone', capstone.__version__); print('pefile', pefile.__version__)
+print('angr', angr.__version__);         print('unicorn', unicorn.__version__)"
+# 实测输出（2026-10-14）:
+#   capstone 5.0.6 / pefile 2024.8.26 / angr 9.2.213 / unicorn 2.1.2
 ```
 
 > ★ **`triton` 装不上**。PyPI 的 `triton` 包名和 OpenAI GPU 编译器冲突，源文档说「需源码构建」—— 本机没做，别按那条路规划。
 >
-> ★ **`venv-re` 是空的**，它只有 `pyghidra` / `mcp` / `onnxruntime` 那一套 agent 运行时依赖，没有任何逆向库。
+> ★ **不是每个 venv 都有逆向库**：只装了 agent 运行时依赖（`pyghidra` / `mcp` / `onnxruntime`）的 venv
+> 能跑 `python --version`，但 `pefile` 都 import 不出来。**要用库一律走别名 `pyre`**（见 §上一节）。
 
 ## 三级降级策略
 
@@ -234,9 +235,9 @@ q
 ## 坑
 
 1. ★★ **本机没有 NoVmp / VTIL / Triton**。源文档第 1、2 级依赖的 C++ 工具链**一个都没装**，`D:\Tools` 下也没有 Visual Studio。第 1 级要人工下载+编译，第 2 级的 Triton 路线**直接放弃**（PyPI 包名冲突，装不了）。
-2. ★ **`venv-re` 里没有任何逆向库**。任务简报里写的「venv 里已有 pefile/capstone/lief/angr/unicorn/qiling/z3/dnfile/yara-python」**与实测不符** —— 实际这些全在 `D:\EXE\python\python.exe`，`venv-re` 只有 `pefile` 都没有。用前先探：
+2. ★ **`python-venv` 里没有任何逆向库**。任务简报里写的「venv 里已有 pefile/capstone/lief/angr/unicorn/qiling/z3/dnfile/yara-python」**与实测不符** —— 实际这些全在 `(Resolve-ReverseToolSpec -Name 'pyre').Command`，`python-venv` 只有 `pefile` 都没有。用前先探：
    ```powershell
-   & 'D:\EXE\python\python.exe' -c "import importlib.util as u; \
+   & (Resolve-ReverseToolSpec -Name 'pyre').Command -c "import importlib.util as u; \
      [print(m, 'YES' if u.find_spec(m) else 'no') for m in ['pefile','capstone','lief','angr','unicorn','z3']]"
    ```
 3. ★ **`claripy` 不能单独 import**（`from angr import *` 之后才可用作 `state.regs` 等 API）。写 DSE 脚本不要写 `import claripy` 开头。

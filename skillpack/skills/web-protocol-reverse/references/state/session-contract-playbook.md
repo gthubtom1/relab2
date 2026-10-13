@@ -4,7 +4,6 @@
 >
 > **什么时候用**：页面提到 `sessionid`、登录，或结果与用户账号相关；查询和提交看起来需要同一份账号状态。
 >
-> **平台与本机状态**：`python 3.12`、`curl_cffi`（本机可用，是带会话与 TLS 指纹的 HTTP 客户端首选）、`mitmdump`、`tshark 4.6.8`、`playwright` 本机可用。`iv8` 本机无。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -34,7 +33,7 @@
    换会话对象就等于丢掉累积的 cookie —— 这是本篇最常见的自伤。
 3. **wire 可见性**，用于「页面文案只是假设」这一判据：
    ```powershell
-   D:\Tools\Wireshark\tshark.exe -r auth.pcapng -Y "http.cookie" -T fields -e http.request.full_uri -e http.cookie
+   & (Resolve-ReverseToolSpec -Name 'tshark').Command -r auth.pcapng -Y "http.cookie" -T fields -e http.request.full_uri -e http.cookie
    ```
 
 ## 步骤（Working method）

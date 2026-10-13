@@ -17,12 +17,12 @@
 
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
-$r2   = (Resolve-ReverseToolSpec -Name 'r2').Command      # D:\Tools\radare2\bin\r2.exe
+$r2   = (Resolve-ReverseToolSpec -Name 'r2').Command      # (Resolve-ReverseToolSpec -Name 'r2').Command
 $cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command # WindowsApps alias
-$py   = 'D:\EXE\python\python.exe'                        # pefile 2024.8.26 + capstone 5.0.7
+$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command                        # pefile 2024.8.26 + capstone 5.0.7
 ```
 
-`pefile` / `capstone` 只在 `D:\EXE\python\python.exe`（`D:\Tools\runtime\venv-re` 是空的，只有 pyghidra-mcp）。用探测层确认解释器路径。
+`pefile` / `capstone` 只在 `(Resolve-ReverseToolSpec -Name 'pyre').Command`（`(Resolve-ReverseToolSpec -Name 'pyre').Command` 是空的，只有 pyghidra-mcp）。用探测层确认解释器路径。
 
 ## 步骤
 
@@ -255,7 +255,7 @@ chain -> *pRoot+0x00 vec3 = (1.0, 2.0, 3.0)
 5. **`movss` 也可能是「加载 float 存进 double 字段」**。看写入侧：`cvtps2pd` 之后是 `movsd`，那才是真 double。
 6. **满屏 `????` 通常是读了指针不是裸值**。先用第 3 步判别，别急着解释成「字符串被加密」。
 7. **同名函数不同偏移**。同一个 `update()` 在不同类里偏移不同，合并结构体前务必核对调用者的 `this` 来源。
-8. **`pefile` 不在 `venv-re`**，见「前置」。
+8. **`pefile` 不在 `python-venv`**，见「前置」。
 
 
 ## 出口（结论回填）

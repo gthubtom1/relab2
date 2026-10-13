@@ -246,21 +246,48 @@ def _take_unlocked(host_id: str) -> dict:
         return {"ok": False, "host": host_id, "error": "这家家目录不在：%s" % home}
     src = home / entry
     if not src.is_file():
-        return {"ok": False, "host": host_id,
-                "error": "入口文件不在（%s\\%s），没什么可锁的。" % (home, entry)}
+        # ★ 2026-10-14：入口文件不存在**不是错误**，是「第一次装」的正常状态。
+        #   以前这里返回 ok:False（「没什么可锁的」），而 server.py 的保险箱闸门
+        #   见 ok:False 就中止整次装载 —— 于是新装的智能体（还没有 AGENTS.md 的）
+        #   永远装不进去，必须主人手建一个空文件才行。这是 bug，不是设计。
+        #   没有原文就没有原文可备份，直接放行，由写入端去建文件。
+        return {"ok": True, "host": host_id, "empty": True, "tag": "", "path": "",
+                "bytes": 0, "sha256": "", "stage": "首次安装",
+                "files": 0, "top": 0, "skills": 0,
+                "say": "这家还没有入口文件（首次安装），没有原文要备份 —— 直接装、顺手把它建出来。"}
     data = src.read_bytes()
+    # ★ 两文件形态（omp）：底模卡那个文件也要保底。
+    #   直写是**整份替换**，不备份就是把主人的人设覆盖掉了 —— 那是不可接受的数据损失。
+    #   两份 .bak 共享同一个 tag，恢复时按 tag 整组还原（见 _restore_unlocked）。
+    base_rel = str(_host_row(host_id).get("entry_base") or "")
+    extra = []
+    if base_rel and base_rel != entry:
+        bp = home / base_rel
+        if bp.is_file():
+            try:
+                extra.append((base_rel, bp.read_bytes()))
+            except OSError:
+                pass
     # 先清掉旧的那一份：一家只留一个 .bak，再点就是覆盖。
     gone = _prune(host_id, keep=0)
     tag = _tag()
     dst = _snap_dir(host_id) / ("%s.%s.bak" % (_flatten(entry), tag))
     atomic_write_bytes(dst, data)
+    wrote = [dst.name]
+    for rel, blob in extra:
+        d2 = _snap_dir(host_id) / ("%s.%s.bak" % (_flatten(rel), tag))
+        atomic_write_bytes(d2, blob)
+        wrote.append(d2.name)
     atomic_write_bytes(_snap_dir(host_id) / HOME_NOTE, str(home).encode("utf-8"))
     say = "已存 %s（%d 字节）→ %s" % (entry, len(data), dst.name)
+    if extra:
+        say += "；另存 " + "、".join("%s（%d 字节）" % (r, len(b)) for r, b in extra)
     if gone:
         say = "覆盖了旧的那一份（%s）；%s" % (gone[-1], say)
     return {"ok": True, "host": host_id, "tag": tag, "path": str(dst),
             "bytes": len(data), "sha256": _sha(data), "stage": "锁定时",
-            "files": 1, "top": 1, "skills": 0, "say": say}
+            "files": len(wrote), "top": len(wrote), "skills": 0,
+            "also": [str(_snap_dir(host_id) / n) for n in wrote[1:]], "say": say}
 
 
 def compare(host_id: str) -> dict:
@@ -340,24 +367,42 @@ def _restore_unlocked(host_id: str) -> dict:
     home, _entry = _entry_of(host_id)
     if not str(home) or not home.is_dir():
         return {"ok": False, "host": host_id, "error": "这家家目录不在：%s" % home}
-    kept = latest(host_id)
-    if kept is None:
+    files = _bak_files(host_id)
+    if not files:
         return {"ok": False, "host": host_id, "error": "还没锁过，没得恢复。"}
-    kept_entry, tag = _split(kept.name)
-    data = kept.read_bytes()
-    dst = home / kept_entry
-    before = dst.read_bytes() if dst.is_file() else b""
-    # 恢复 = 把那份 bak 换回 md：先写回入口文件，再把 bak 用掉。
-    # 于是「备份」是一次性的一个文件，按你说的来（要再退就先重新锁定）。
-    atomic_write_bytes(dst, data)
-    try:
-        kept.unlink()
-    except OSError:
-        pass
-    return {"ok": True, "host": host_id, "tag": tag, "path": str(dst),
-            "bytes": len(data), "consumed": True,
-            "say": "已把 %s 换回 %s 那一版（%d → %d 字节）。备份用掉了，要再退就先重新锁定。"
-                   % (kept_entry, tag, len(before), len(data))}
+    # ★ 同一次「锁定」写出来的 .bak 共享一个 tag（两文件形态会写成两份）。
+    #   恢复要按**同一个 tag 的整组**还原 —— 只挑文件名最后那份会出现
+    #   「人设退回去了、规则没退」这种半截状态，比不恢复更坏。
+    tag = _split(files[-1].name)[1]
+    group = [p for p in files if _split(p.name)[1] == tag]
+    done = []
+    for p in group:
+        rel, _t = _split(p.name)
+        if not rel:
+            continue
+        data = p.read_bytes()
+        dst = home / rel
+        before = dst.read_bytes() if dst.is_file() else b""
+        # 恢复 = 把那份 bak 换回 md：先写回原文件，再把 bak 用掉。
+        # 于是「备份」是一次性的一个文件，要再退就先重新锁定。
+        atomic_write_bytes(dst, data)
+        try:
+            p.unlink()
+        except OSError:
+            pass
+        done.append((rel, len(before), len(data)))
+    if not done:
+        return {"ok": False, "host": host_id, "error": "保险箱里那一组文件名认不出来。"}
+    rel0, b0, a0 = done[0]
+    say = "已把 %s 换回 %s 那一版（%d → %d 字节）" % (rel0, tag, b0, a0)
+    if len(done) > 1:
+        say += "；同组的 " + "、".join(
+            "%s（%d → %d 字节）" % (r, b, a) for r, b, a in done[1:]) + " 一并还原"
+    say += "。备份用掉了，要再退就先重新锁定。"
+    return {"ok": True, "host": host_id, "tag": tag, "path": str(home / rel0),
+            "bytes": a0, "consumed": True,
+            "files": [{"name": r, "before": b, "after": a} for r, b, a in done],
+            "say": say}
 
 
 # ---------------------------------------------------------------- CLI

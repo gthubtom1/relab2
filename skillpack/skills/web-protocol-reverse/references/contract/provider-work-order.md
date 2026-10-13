@@ -4,7 +4,6 @@
 >
 > **什么时候用**：在把工作交给某条聚焦路线（focused route）之前、下一步动作被门禁（gate）挡住时，先落一份这份轻量契约。它比完整项目管理 schema 故意轻得多，目的是**在不让正常逆向流程变慢的前提下，阻止范围无声膨胀**。
 >
-> **平台与本机状态**：本文主要是**规程与 JSON schema**，不含必须实跑的脚本命令，因此不依赖具体本机工具。但文中出现的路线名与专员名按本包事实标注：`camoufox-js-reverse`、`chrome-devtools`、`js-reverse` 这三个专员技能**本机均未挂载**，`iv8`（本地 JS 运行时）**本机无**（社区运行时，PyPI 上不存在该发行版），`reqable` **本机无**（改用 `tshark` / `mitmdump`）。本机实际可用的是 `python 3.12`（`D:\EXE\python\python.exe`）、`node v24.20.0`（`D:\Tools\Node\node.exe`）、`tshark 4.6.8`、`mitmdump 12.2.3`、`frida 17.17.0`、`playwright（模块在 `D:\EXE\python\Lib\site-packages\playwright`）`、`curl_cffi`。本包**没有** `scripts/` 目录，源文档提到的 `scripts/*` 工具一律未引用。挂载现状见 `../observe/local-mcp-environment.md`。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`

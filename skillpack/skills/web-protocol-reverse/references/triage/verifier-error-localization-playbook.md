@@ -4,7 +4,6 @@
 >
 > **什么时候用**：验证门（verifier-gated）流程**在报文结构看起来已经合理之后仍然失败**，或者目标返回**不断变化的拒绝码 / 子码（subcode）**时。
 >
-> **平台与本机状态**：Windows 10 x64。`python 3.12`（`D:\EXE\python\python.exe`）、`playwright`、`frida`、`mitmdump`（`D:\EXE\python\Scripts\mitmdump.EXE`）、`tshark`（`D:\Tools\Wireshark\tshark.exe`）本机可用。本文方法论不依赖具体工具 —— 消融靠「改一个变量、跑一次」，本机两条路都能实现（`curl_cffi` 打业务请求，`playwright` 跑整轮）。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`

@@ -31,7 +31,7 @@ const STATE = {
   cards: [],
   selected: '',
   locks: {},
-  on: { hub: true, base: false, guest: false, origin: true },
+  on: { hub: true, base: false, guest: false },
   pick: { hub: '', base: '', guest: '' },
   showAll: false,
   busy: false,
@@ -459,13 +459,12 @@ function renderSlots() {
   renderCards('hub');
   renderCards('base');
   renderCards('guest');
-  ['hub', 'base', 'guest', 'origin'].forEach(function (k) {
+  ['hub', 'base', 'guest'].forEach(function (k) {
     $('sw-' + k).setAttribute('aria-pressed', STATE.on[k] ? 'true' : 'false');
     const slot = $('slot-' + k);
     if (slot) { slot.className = 'slot slot-' + k + ' ' + (STATE.on[k] ? 'on' : 'off'); }
   });
   $('hub-tag').textContent = STATE.on.hub ? '12 块底线 · 约 23.6 KB' : '关着，不写这一段';
-  $('origin-tag').textContent = STATE.on.origin ? '直写：整份替换' : '完整安装：走打包器';
   ['base', 'guest'].forEach(function (k) {
     $('sw-' + k).title = (KIND[k].name + '：开/关') + (STATE.on[k] ? '（现在开着）' : '（现在关着）');
     $((k === 'base' ? 'base' : 'guest') + '-tag').textContent = STATE.on[k]
@@ -519,9 +518,7 @@ function renderPlan() {
   const rows = [];
   if (STATE.on.base) rows.push(STATE.pick.base ? ('宿主原文之后：底模「' + STATE.pick.base + '」') : '底模开关开着，但还没点卡片');
   if (STATE.on.guest) rows.push(STATE.pick.guest ? ('再往后：客套指引「' + STATE.pick.guest + '」') : '指引开关开着，但还没点卡片');
-  rows.push(STATE.on.origin
-    ? '直写：选中的几层按顺序拼成一份，整份替换入口文件（原来那份进保险箱，随时能退）'
-    : '完整安装：叫打包器，另外把 hub/ 那棵树也写进去；原文保留在开头');
+  rows.push('直写：选中的几层按顺序拼成一份，整份替换入口文件（原来那份进保险箱，随时能退）');
   if (STATE.on.hub) rows.push('最后一段：中枢标记块（12 块底线，永远最终裁决）');
   if (!STATE.on.hub && !STATE.on.base && !STATE.on.guest) rows.push('三段都没勾，没东西可写');
   if (h.installed) {
@@ -604,28 +601,21 @@ function act(kind) {
   if (!h) { say(['先在左边点一家智能体。'], 'bad'); toast('先在左边点一家智能体。', 'bad'); return; }
   if (STATE.busy) { say(['上一个动作还在跑，等它完。'], 'bad'); toast('上一个动作还在跑，等它完。', 'bad'); return; }
   if (kind === 'unload' && !window.confirm(
-      STATE.on.origin
-        ? ('把 ' + h.name + ' 的入口文件按保险箱那份换回来？\n'
-           + '直写模式只有这一条退路：保险箱里那份会覆盖现在这份，备份用掉（要再退就先重新锁定）。')
-        : ('把 ' + h.name + ' 上的几段卸掉？\n只摘中枢自己写的：标记块、底模、指引，别人的东西一个字不动。'))) return;
+      '把 ' + h.name + ' 的入口文件按保险箱那份换回来？\n'
+      + '直写模式只有这一条退路：保险箱里那份会覆盖现在这份，备份用掉（要再退就先重新锁定）。')) return;
   if (kind === 'restore' && !window.confirm(
       '按保险箱那版把 ' + h.name + ' 的配置和入口文件还原？\n清单只报不删。')) return;
 
   const payload = { host_id: h.id };
   let path = '';
   if (kind === 'load') {
-    const gone = pendingRemovals(h);
     const why = [];
-    if (STATE.on.origin) {
-      why.push('· 写法：直写 —— 这一家的入口文件整份换成我们拼的那一份（原来那份进保险箱，随时能退）');
-    } else if (gone.length) {
-      why.push('· 被「不写」的那几段会被摘掉：\n  · ' + gone.join('\n  · '));
-    }
+    why.push('· 写法：直写 —— 这一家的入口文件整份换成我们拼的那一份（原来那份进保险箱，随时能退）');
     if (why.length && !window.confirm(
         '写入 ' + h.name + ' 时会动这些：\n\n' + why.join('\n') + '\n\n继续吗？')) return;
     path = '/api/load';
     payload.with_marker = !!STATE.on.hub;
-    payload.mode = STATE.on.origin ? 'direct' : 'install';
+    payload.mode = 'direct';
     payload.replace_origin = true;
     if (STATE.on.base && STATE.pick.base) payload.base_id = STATE.pick.base;
     if (STATE.on.guest && STATE.pick.guest) payload.guest_id = STATE.pick.guest;
@@ -636,7 +626,7 @@ function act(kind) {
     }
   } else if (kind === 'unload') {
     path = '/api/unload';
-    payload.mode = STATE.on.origin ? 'direct' : 'install';
+    payload.mode = 'direct';
   } else {
     path = '/api/safebox';
     payload.action = kind;
@@ -819,7 +809,7 @@ document.addEventListener('keydown', function (ev) {
 
 // 只有这颗开关能开关。槽位标题行不再挂任何点击 —— 整行可点必然误触。
 // 中枢段没有卡片、没有「＋新建」；底模和指引各有各的。
-['hub', 'base', 'guest', 'origin'].forEach(function (key) {
+['hub', 'base', 'guest'].forEach(function (key) {
   $('sw-' + key).onclick = function () { toggle(key); };
   const nb = $('new-' + key);
   if (nb) { nb.onclick = function () { openCard(key, 'new', ''); }; }
@@ -828,16 +818,14 @@ document.addEventListener('keydown', function (ev) {
 function toggle(key) {
   STATE.on[key] = !STATE.on[key];
   renderSlots(); renderPlan();
-  const label = { hub: '中枢内核', base: '底模', guest: '客套指引', origin: '写法' }[key];
+  const label = { hub: '中枢内核', base: '底模', guest: '客套指引' }[key];
   if (['base', 'guest'].indexOf(key) >= 0 && STATE.on[key] && !STATE.pick[key]) {
     // 不再“自动挑最近一张”：那是主人没选过的卡，闷头写进去他不会知道。
     // 只提示该选一张，选没选由他点磁贴上的「用这张」。
     say([label + '开关开了，还没选卡。', '点磁贴上那张的「用这张」，或者点它头上那个「＋ 新建」。'], '');
   }
-  const picked = (key === 'hub' || key === 'origin') ? '' : (STATE.pick[key] ? '，用 ' + STATE.pick[key] : '');
-  const text = (key === 'origin')
-    ? ('写法：' + (STATE.on.origin ? '直写（整份替换）' : '完整安装（带 hub/ 工具树）'))
-    : (label + (STATE.on[key] ? '：开' : '：关') + picked);
+  const picked = (key === 'hub') ? '' : (STATE.pick[key] ? '，用 ' + STATE.pick[key] : '');
+  const text = label + (STATE.on[key] ? '：开' : '：关') + picked;
   note(text);
   toast(text);
   if (key !== 'hub' && STATE.on[key] && !cardsOf(key).length) {

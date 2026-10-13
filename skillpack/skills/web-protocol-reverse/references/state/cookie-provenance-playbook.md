@@ -4,7 +4,6 @@
 >
 > **什么时候用**：replay（重放）依赖某个 cookie，但**它是谁写的、怎么刷新**还不清楚。
 >
-> **平台与本机状态**：Windows 10 x64。`tshark 4.6.8`（`D:\Tools\Wireshark\tshark.exe`）、`mitmdump`（`D:\EXE\python\Scripts\mitmdump.EXE`）、`curl_cffi`、`playwright`、`python 3.12`（`D:\EXE\python\python.exe`）、`node v24`（`D:\Tools\Node\node.exe`）**本机可用**。`iv8` 与 `reqable` **本机无**，本文凡涉及处已就地标注。本文所列命令均按本机路径给出；标注「未在本机验证」处表示该路径在本机缺少前提，未实跑过。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -33,9 +32,9 @@
 2. **wire 可见性**。优先用 mitmproxy 直接看到出站请求头；若走浏览器，用 `tshark` 抓 loopback 或 CDP 代理流量。本机两条路都可用：
    ```powershell
    # 方式一：mitmproxy 实时改写/观察（本机可用）
-   D:\EXE\python\Scripts\mitmdump.EXE --listen-port 8899 --save-stream-file flow.mitm
+   & (Resolve-ReverseToolSpec -Name 'mitmdump').Command --listen-port 8899 --save-stream-file flow.mitm
    # 方式二：tshark 离线读已抓的 pcap（本机可用）
-   D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "http.cookie" -T fields -e http.request.full_uri -e http.cookie
+   & (Resolve-ReverseToolSpec -Name 'tshark').Command -r flow.pcapng -Y "http.cookie" -T fields -e http.request.full_uri -e http.cookie
    ```
 3. **本地执行宿主的定位**。若怀疑是「服务端返回的 JS 写了 cookie」，需要能跑 JS 的宿主。本机现状：
    - `node` 可用 —— 对「只需要 `document.cookie` 赋值」的 bootstrap（引导）脚本，通常够用。

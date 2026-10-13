@@ -2,7 +2,6 @@
 
 > **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License）的 `doctrine-index.md`。原文为英文，本篇为中文改写，**编号 1–26 共 26 条教条（正文 29 个条目，编号 14 下分 14A/14B/14C）的论证结构逐条保留**，未压缩为摘要。
 > **什么时候用**：目标还很宽、失败形态看着眼熟、或者你在加载更细的 playbook 之前需要一套「家族级（family-level）」规则时，先读本篇。这些是**可迁移规则**，不是某个站点的现场笔记。
-> **平台与本机状态**：本文是纯方法论，不含任何需要本机执行的命令，因此不涉及工具可用性问题。文中提到的浏览器取证角色 `chrome-devtools` / `js-reverse`（MCP 家族）**在本机 agent 工具注册表中未挂载**（本机已挂载的是 `pyghidra-mcp` / `idapro` / `ida-pro-mcp` / `angr-mcp` / `x64dbg-automate-mcp`），照搬原文的浏览器角色序列前需先确认可用性 —— 见 `../../SKILL.md` 的 Non-Negotiables。文中提到的 `iv8` 运行时**本机无**（社区运行时，PyPI 上不存在），相关 API 形态仅供有该运行时时参考，**未在本机验证**。
 
 ---
 

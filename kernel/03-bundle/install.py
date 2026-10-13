@@ -361,9 +361,22 @@ def _install_unlocked(source: Path, host_home: Path, dry_run: bool = False,
         raise InstallError("宿主家目录不存在：%s" % host_home)
 
     host_id = H.host_id_for(host_home)
-    spec = H.resolve_host(host_home)
+    spec = H.resolve_host(host_home) or H.two_file_host_shape(host_home)
     entry_name = entry or (H._resolve_entry(host_home, spec) if spec else H.entry_name_for(host_home))
     entry_path = host_home / entry_name
+
+    # ★ 2026-10-14：两文件形态的宿主（omp：PERSONALITY.md + RULES.md）。
+    #   这条路的备份 / 清单 / 回滚 / 卸载**只认一个入口文件**，硬装会把底模卡
+    #   写进错的文件（RULES.md），而且卸不干净。所以这里**明确拒绝**，
+    #   指去工作台的直写 —— 那条路已支持两文件（底模单独落 entry_base）。
+    #   宁可不装，也不要装错地方。
+    entry_base = str(getattr(spec, "entry_base", "") or "") if spec else ""
+    if base_path and entry_base and entry_base != entry_name:
+        raise InstallError(
+            "这家把底模和规则**分开放**（底模 → %s，其余 → %s）。\n"
+            "  完整安装（install.py）只认一个入口文件，硬装会把底模卡写错地方、且卸不干净。\n"
+            "  这家请改用工作台的直写（页面默认那条路），它支持两文件形态。"
+            % (entry_base, entry_name))
 
     # 底线自检：标记块每轮都注入，12 块底线少一块都不许装。
     # 这是机器证明「底线真的在每轮里」，不是靠嘴说。

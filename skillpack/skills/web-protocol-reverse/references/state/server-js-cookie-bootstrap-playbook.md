@@ -4,7 +4,6 @@
 >
 > **什么时候用**：接口第一次返回的不是数据，而是一段要跑一下的 JavaScript。
 >
-> **平台与本机状态**：`node v24.20.0`（`D:\Tools\Node\node.exe`）、`python 3.12`（`D:\EXE\python\python.exe`）、`curl_cffi`、`mitmdump`、`playwright` **本机可用**，是本文主力路径。`iv8` **本机无**；`esprima` / `acorn` / `@babel/parser`（npm 静态 AST）**本机无**，凡涉及静态 AST 拆解处已标注需先安装。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -33,7 +32,7 @@
    - 需要真实解析器与脚本执行顺序保真时，用 `playwright`（本机可用）加载空白页注入脚本，或建一个最小 HTML 宿主。
 3. **wire 可见性**，用于判据第 6 条。本机用 mitmproxy：
    ```powershell
-   D:\EXE\python\Scripts\mitmdump.EXE -p 8899 -w bootstrap.mitm
+   & (Resolve-ReverseToolSpec -Name 'mitmdump').Command -p 8899 -w bootstrap.mitm
    ```
 4. **仅在有权访问的目标上操作**。本文是协议逆向方法论：目标是理解「服务端返回代码 → 本地执行 → 拿到状态 → 重放」这条链路，**不是**教人绕验证码或风控。
 

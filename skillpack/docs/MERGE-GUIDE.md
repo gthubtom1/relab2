@@ -13,7 +13,7 @@
 ## 0. 你现在在什么地方
 
 ```
-D:\Project\skills-hub\                     <- 开发根（仓库外）
+<开发根>\                     <- 开发根（仓库外）
 ├── integrated-skill-hub\                  <- 融合包本体（这才是仓库）
 │   ├── skills\                            <- 客户端发现根：只有这里的内容会被智能体看到
 │   │   ├── <43 个 canonical 技能>\
@@ -57,7 +57,7 @@ D:\Project\skills-hub\                     <- 开发根（仓库外）
 ## 2. 第 1 步：把新包拉下来
 
 ```powershell
-cd D:\Project\skills-hub
+cd <开发根>
 git clone --depth 1 <新包仓库URL> upstream\<短名>
 ```
 
@@ -75,8 +75,8 @@ git clone --depth 1 <新包仓库URL> upstream\<短名>
 
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
-$py = 'D:\EXE\python\python.exe'
-$new = 'D:\Project\skills-hub\upstream\<短名>'
+$py = '(Resolve-ReverseToolSpec -Name 'pyre').Command'
+$new = '<开发根>\upstream\<短名>'
 
 # a) 有多少技能
 (Get-ChildItem $new -Recurse -Filter SKILL.md | Measure-Object).Count
@@ -139,8 +139,8 @@ d 问把过滤词换成**本包已有的框架名**（如 `reverse-skill`）在�
 **工具**：`scripts/adapt-community.py`（五个子命令）
 
 > **在 lab 里做**：下面每条命令的 `$repo` 都换成你的 lab 路径
-> （如 `D:\Project\skills-hub\work\<卡名>-lab`），且 `import` 必须显式传
-> `--upstream-root D:\Project\skills-hub\upstream`——lab 默认的
+> （如 `work\<卡名>-lab`），且 `import` 必须显式传
+> `--upstream-root <开发根>\upstream`——lab 默认的
 > `<repo>/../upstream`（即 `work/upstream`）**不存在**，不传就找不到上游。
 > 所有实验只许在 lab 副本上跑，真仓库零改动。
 
@@ -163,7 +163,7 @@ d 问把过滤词换成**本包已有的框架名**（如 `reverse-skill`）在�
 ### 5.1 pin 上游 HEAD（新 source 的 commit 从这里来）
 
 ```powershell
-git -C D:\Project\skills-hub\upstream\<短名> rev-parse HEAD
+git -C <开发根>\upstream\<短名> rev-parse HEAD
 # 把输出的 40 位 commit 填进 SOURCES[] 条目的 "commit" 字段
 ```
 
@@ -174,9 +174,9 @@ git -C D:\Project\skills-hub\upstream\<短名> rev-parse HEAD
 
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
-$py = 'D:\EXE\python\python.exe'
-$repo = 'D:\Project\skills-hub\integrated-skill-hub'   # lab 里换成 lab 路径
-$up = 'D:\Project\skills-hub\upstream'
+$py = '(Resolve-ReverseToolSpec -Name 'pyre').Command'
+$repo = 'C:\relab2'   # lab 里换成 lab 路径
+$up = '<开发根>\upstream'
 
 # ① 看现状（只读，安全）
 & $py "$repo\scripts\adapt-community.py" --repo-root $repo --upstream-root $up inspect
@@ -323,7 +323,7 @@ canonical 技能名；`reference_ids` 必须与手写的 `skills[]` id 一一对
 
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
-& 'D:\EXE\python\python.exe' -c "import json; r=json.load(open(r'$repo\skills\config\routing.json',encoding='utf-8')); print('routes:',len(r['routes'])); print('missing:',[k for k in ['R'+str(i) for i in range(0,50)] if k not in r['routes']])"
+& '(Resolve-ReverseToolSpec -Name 'pyre').Command' -c "import json; r=json.load(open(r'$repo\skills\config\routing.json',encoding='utf-8')); print('routes:',len(r['routes'])); print('missing:',[k for k in ['R'+str(i) for i in range(0,50)] if k not in r['routes']])"
 # 实测输出：routes: 48，missing: ['R42', 'R43']——取最小的 R42
 ```
 
@@ -403,7 +403,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$repo\skills\scripts\verify
 
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
-& 'D:\EXE\python\python.exe' "$repo\skills\tests\run-ci-gates.py" --runner python
+& '(Resolve-ReverseToolSpec -Name 'pyre').Command' "$repo\skills\tests\run-ci-gates.py" --runner python
 ```
 
 **门数口径（唯一真值，2026-10-02 实测复核）**：`skills/tests/ci-gates.json` 共 **23** 门 =
@@ -482,10 +482,10 @@ git add -A
 git commit -m "<改了什么>"
 
 # ★必须★：clone 到仓库外重跑全门
-cd D:\Project\skills-hub\work
+cd work
 Remove-Item verify-merge -Recurse -Force -EA SilentlyContinue
 git clone $repo verify-merge
-& 'D:\EXE\python\python.exe' verify-merge\skills\tests\run-ci-gates.py --runner python
+& '(Resolve-ReverseToolSpec -Name 'pyre').Command' verify-merge\skills\tests\run-ci-gates.py --runner python
 ```
 
 **为什么不可跳过**：见 §11 坑 #2——**提交前看不出来的红**。
@@ -493,17 +493,17 @@ git clone $repo verify-merge
 ### 10.1 lab 版（融合演练时用这套，命令逐条可复制）
 
 ```powershell
-$lab = 'D:\Project\skills-hub\work\<卡名>-lab'   # lab 副本路径
+$lab = 'work\<卡名>-lab'   # lab 副本路径
 cd $lab
 git add -A
 git commit -m "<改了什么>"
 
 # 最小可验证的 clone 复核：clone 刚提交的 lab，再跑门
-cd D:\Project\skills-hub\work
+cd work
 Remove-Item verify-merge -Recurse -Force -EA SilentlyContinue
 git clone $lab verify-merge
 $env:PYTHONIOENCODING='utf-8'
-& 'D:\EXE\python\python.exe' verify-merge\skills\tests\run-ci-gates.py --runner python
+& '(Resolve-ReverseToolSpec -Name 'pyre').Command' verify-merge\skills\tests\run-ci-gates.py --runner python
 ```
 
 lab 里允许的差异与真树一致（§9：无 `../upstream` 的复制体 `ok=16 non_blocking=3 skipped=1`，
@@ -532,7 +532,7 @@ lab 里允许的差异与真树一致（§9：无 `../upstream` 的复制体 `ok
 
 ```powershell
 $env:GIT_DIR='D:\__no_such_git_dir__'
-& 'D:\EXE\python\python.exe' "$repo\skills\scripts\verify-repository-security.py"
+& '(Resolve-ReverseToolSpec -Name 'pyre').Command' "$repo\skills\scripts\verify-repository-security.py"
 Remove-Item Env:\GIT_DIR
 ```
 
@@ -573,7 +573,7 @@ Remove-Item Env:\GIT_DIR
 
 ### 坑 #8 · lab 必须在仓库外
 
-`D:\Project\skills-hub\work\<卡名>-lab\`。
+`work\<卡名>-lab\`。
 曾经在仓库内的 `work/` 建 lab——那会被 `git status` 看见、被门扫到。
 
 ### 坑 #9 · 关键词"多塞词" → 过宽（见 §7 三条铁律）

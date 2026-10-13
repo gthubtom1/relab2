@@ -16,7 +16,7 @@
 
 ## 本地原始副本
 
-`D:\Tools\kb-open-reverselab\`（解压副本，非 git clone，因此无 .git 可查 commit）。
+`<工具根>\kb-open-reverselab\`（解压副本，非 git clone，因此无 .git 可查 commit）。
 所有 diff / 回溯比对均指向该副本。
 
 ## 许可证含义（须由仓库所有者决策）

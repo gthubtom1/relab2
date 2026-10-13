@@ -11,7 +11,6 @@
 >
 > **什么时候用**：抽出来的逻辑在本地运行时**能跑**，但**输出仍与页面对不上**。
 >
-> **平台与本机状态**：Windows 10 x64。`node v24.20.0`（`D:\Tools\Node\node.exe`）+ `vm` 模块、**本机实测可用**；`python 3.12`（`D:\EXE\python\python.exe`）可用；`playwright（模块在 `D:\EXE\python\Lib\site-packages\playwright`）` + chromium-1243 **本机实测可启动**，但⚠ **必须显式传 `executable_path`**（本机未跑过 `playwright install`），且⚠ **`set_content()` 无可用 origin，写 cookie 会抛 `SecurityError`** —— 详见 `iv8-runtime-cheatsheet.md` B 节。`iv8` **本机无**。
 
 ---
 
@@ -55,7 +54,7 @@
 2. **宿主分类的前置判断**（见下面「步骤」第 1 步）—— **先分类，再动手**。
 3. **本机执行宿主**：
    ```powershell
-   D:\Tools\Node\node.exe -v   # v24.20.0
+   & (Resolve-ReverseToolSpec -Name 'node').Command -v   # v24.20.0
    ```
    需要真实 DOM / canvas / 原生 `toString` 时升级到 playwright（本机实测可启动，见顶部说明）。
 4. **加载顺序契约已画出来** —— 环境表面 → polyfill → hook → init → trigger，这四者的顺序**本身就是契约**。
@@ -155,15 +154,14 @@
 
 ## 本机参考路径：playwright 侧的 hook 写法
 
-> 原文提到「浏览器 hook」但未给代码。本节给出**本机 playwright（模块在 `D:\EXE\python\Lib\site-packages\playwright`） 的对应写法**。
+> 原文提到「浏览器 hook」但未给代码。本节给出**本机 playwright 的对应写法**。
 > 下方代码形态在本机实测跑通（对本地静态服务），**但目标 hook 本身未在本机验证**。
 
 ### ⚠ 本机前置（实测）
 
 ```python
 # 本机 playwright 未执行过 `playwright install`，默认查找失败。
-# 必须显式传 executable_path 指向已存在的 chromium-1243：
-EXE = r'C:\Users\toti\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe'
+EXE = r'$env:LOCALAPPDATA\ms-playwright\<playwright 浏览器>\chrome-win64\chrome.exe'
 # 且必须 goto() 真实 origin —— set_content() 后写 document.cookie 会抛
 # SecurityError: Access is denied for this document（本机实测）
 ```

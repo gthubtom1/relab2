@@ -4,7 +4,6 @@
 >
 > **什么时候用**：**干净基线在有意义的应用语义出现之前就死掉**的时候。
 >
-> **平台与本机状态**：**本机在这条路线上有真实优势**：`curl_cffi 0.16.3`（Python 包，`D:\EXE\python\python.exe` 环境内）**可用**，可直接做 TLS 指纹模拟（transport impersonation），这正是本手册第 1/2/3 步的默认手段。`tshark 4.6.8`（`D:\Tools\Wireshark\tshark.exe`）本机可用，可读 ClientHello 做包级对比；`mitmdump 12.2.3`（`D:\EXE\python\Scripts\mitmdump.EXE`）本机可用。`iv8`（社区运行时，PyPI 无）**本机无**；`reqable` **本机无**。文中提到的 `js-reverse` / `chrome-devtools` MCP 家族**本机未挂载**。
 
 ---
 
@@ -25,11 +24,11 @@
    - `curl_cffi` 抓不到 ClientHello，**包级证据要靠 `tshark`**：
      ```powershell
      # 本机可用：抓 ClientHello 与 ALPN
-     D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "tls.handshake.type == 1" -V
+     & (Resolve-ReverseToolSpec -Name 'tshark').Command -r flow.pcapng -Y "tls.handshake.type == 1" -V
      ```
    - 本机无 `reqable`；实时改写/流落盘用 `mitmdump`：
      ```powershell
-     D:\EXE\python\Scripts\mitmdump.EXE --listen-port 8899 --save-stream-file flow.mitm
+     & (Resolve-ReverseToolSpec -Name 'mitmdump').Command --listen-port 8899 --save-stream-file flow.mitm
      ```
 4. **授权边界已记录**（见 `../contract/provider-work-order.md`）。本文会触发真实外联，必须先有 egress 授权。
 

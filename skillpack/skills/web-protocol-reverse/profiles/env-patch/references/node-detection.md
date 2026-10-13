@@ -2,7 +2,7 @@
 
 > **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License）的 `node-detection.md`。**下方 JavaScript 代码块一字未改**（代码不译）。
 > **用途**：安全 SDK 常通过 Node.js 特征检测运行环境。本篇列出常见检测项与对策。
-> **前置（本机实测，2026-10-10）**：Node ✅ `D:\Tools\Node\node.exe` v24.20.0。文中"Node 18+ 有 `fetch`、Node 19+ 有 WebCrypto、Node 21+ 有 `navigator`"的说法与本机 v24.20.0 一致（该版本高于上述所有门槛），但**未逐个验证**这些全局对象在本机的实际行为。
+> **前置（本机实测，2026-10-10）**：Node ✅ `(Resolve-ReverseToolSpec -Name 'node').Command` v24.20.0。文中"Node 18+ 有 `fetch`、Node 19+ 有 WebCrypto、Node 21+ 有 `navigator`"的说法与本机 v24.20.0 一致（该版本高于上述所有门槛），但**未逐个验证**这些全局对象在本机的实际行为。
 > **用法**：**只在签名格式降级、长度不一致，或诊断报告无法解释偏差时**读本文。常规补环境流程不需要它。
 >
 ⚠️ **重要**：这些对策**不能保证**绕过所有检测。VMP 可能在 opcode 层面完成检测，不经过外部 JS API —— 撞到这种情况时，正确动作是读 `limitations.md` 并如实报告天花板，不是继续堆对策。

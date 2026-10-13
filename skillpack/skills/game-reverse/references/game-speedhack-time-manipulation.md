@@ -34,7 +34,7 @@ Unity `Time.timeScale`、Unreal `TimeDilation`）。本篇改写为**防守视�
 $r2  = (Resolve-ReverseToolSpec -Name 'r2').Command
 $cdb = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
 $capa= (Resolve-ReverseToolSpec -Name 'capa').Command
-$py  = 'D:\EXE\python\python.exe'
+$py  = (Resolve-ReverseToolSpec -Name 'pyre').Command
 ```
 
 ## Windows 上的时间源清单（先做静态普查）

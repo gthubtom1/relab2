@@ -4,7 +4,6 @@
 >
 > **什么时候用**：需要知道「这台机器上**现在到底有什么**、哪些没有」的时候。通用路由教条在 `./mcp-routing-playbook.md` 和 `../triage/tool-playbook.md`，本文只回答「本机现状」。
 >
-> **平台与本机状态**：**本节下表是本机实测结果，可直接采信；其余标注「未在本机验证」的条目不要当成事实。**
 
 ---
 
@@ -29,19 +28,19 @@
 | MCP server | 传输 | 能力 | 本机状态 |
 |---|---|---|---|
 | `pyghidra-mcp` | stdio | Ghidra 反编译，20 个工具 | ✅ 已实测握手；需 `JAVA_HOME` + `GHIDRA_INSTALL_DIR` |
-| `idapro` | http `127.0.0.1:13337/mcp` | IDA，69 工具 | ⚠ 服务在线；`idb_open` 需 IDA license（本机为示例许可） |
+| `idapro` | http `127.0.0.1:13337/mcp` | IDA，69 工具 | ⚠ 按需启动（用前跑 `start.ps1`）；`idb_open` 需 IDA license（本机为示例许可） |
 | `ida-pro-mcp` | stdio | IDA 工具（GUI 内插件侧） | ⚠ 同样需 license |
 | `angr-mcp` | stdio | 符号执行 | ✅ 已实测握手 |
 | `x64dbg-automate-mcp` | stdio | x64dbg 自动化，48 工具 | ✅ 已实测握手 |
 
 注册位置：`~/.omp/agent/mcp.json`（4 个 stdio + 1 个 http）。
-`13337` 由计划任务 `reverse-skill-ida-mcp` 每分钟巡检保活。
+`13337` **按需启动**（2026-10-14 起）：原「每分钟巡检保活」任务 `reverse-skill-ida-mcp` 已按用户要求停用（不用时不后台跑，也避免每分钟闪窗）；需要时跑 `ida-reverse/scripts/start.ps1`（冷启约 9s）。
 
 **源文档里点名的 web 侧 MCP，本机一个都没有**：
 
 | 源文档工具 | 本机状态 | 本机替代 |
 |---|---|---|
-| `chrome-devtools`（MCP） | ❌ **未挂载** | `playwright（模块在 `D:\EXE\python\Lib\site-packages\playwright`）`（本机可用，`chromium-1243` 已装） |
+| `chrome-devtools`（MCP） | ❌ **未挂载** | `playwright`（本机可用，`<playwright 浏览器>` 已装） |
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -58,12 +57,12 @@
 
 | 能力 | 可执行路径 | 版本 |
 |---|---|---|
-| Python | `D:\EXE\python\python.exe` | 3.12.0 |
-| Node | `D:\Tools\Node\node.exe` | v24.20.0 |
-| tshark | `D:\Tools\Wireshark\tshark.exe` | 4.6.8 |
-| mitmdump / mitmproxy | `D:\EXE\python\Scripts\mitmdump.EXE` | 12.2.3 |
-| frida（含 17 个 `frida-*` 辅助工具） | `D:\EXE\python\Scripts\frida.exe` | 17.17.0 |
-| playwright | `D:\EXE\python\python.exe -m playwright` | 1.62.0（浏览器 `chromium-1243` 已装） |
+| Python | `(Resolve-ReverseToolSpec -Name 'pyre').Command` | 3.12.0 |
+| Node | `(Resolve-ReverseToolSpec -Name 'node').Command` | v24.20.0 |
+| tshark | `(Resolve-ReverseToolSpec -Name 'tshark').Command` | 4.6.8 |
+| mitmdump / mitmproxy | `(Resolve-ReverseToolSpec -Name 'mitmdump').Command` | 12.2.3 |
+| frida（含 17 个 `frida-*` 辅助工具） | `(Resolve-ReverseToolSpec -Name 'frida').Command` | 17.17.0 |
+| playwright | `(Resolve-ReverseToolSpec -Name 'pyre').Command -m playwright` | 1.62.0（浏览器 `<playwright 浏览器>` 已装） |
 | curl_cffi | Python 包 | 0.16.3 |
 | requests | Python 包 | 2.32.3 |
 
@@ -76,7 +75,7 @@
 | `Camoufox` | 未见安装 | `playwright` + 受控 profile |
 | `AdsPower Local API` | 未见安装 | `playwright` 自建持久化 profile |
 | `esprima` / `acorn` / `@babel/parser` | npm 未装 | 需先装；见 `../../profiles/static-ast/index.md` |
-| `D:\Tools\runtime\venv-re` | **空壳，不要用** | 用系统 `D:\EXE\python\python.exe` |
+| `(Resolve-ReverseToolSpec -Name 'pyre').Command` | **空壳，不要用** | 用系统 `(Resolve-ReverseToolSpec -Name 'pyre').Command` |
 
 ### Auto Judge 分支 → 本机手段映射
 
@@ -107,10 +106,10 @@
 
 ```powershell
 # 方式一：mitmproxy 实时流落盘
-D:\EXE\python\Scripts\mitmdump.EXE --listen-port 8899 --save-stream-file flow.mitm
+& (Resolve-ReverseToolSpec -Name 'mitmdump').Command --listen-port 8899 --save-stream-file flow.mitm
 
 # 方式二：tshark 离线读 pcap（本机替代 reqable 的 HAR 检索）
-D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "http.cookie" -T fields -e http.request.full_uri -e http.cookie
+& (Resolve-ReverseToolSpec -Name 'tshark').Command -r flow.pcapng -Y "http.cookie" -T fields -e http.request.full_uri -e http.cookie
 ```
 
 ### Chrome 调试 profile 约定（源文档的通用要求，本机同样适用）
@@ -180,7 +179,7 @@ Camoufox 是高指纹压力下的可选本机容量，**既不是常开默认，
 - 照抄源文档的 `Reqable` 端点（`127.0.0.1:18765/...`）—— **本机没装 Reqable**，那个端口不会有服务
 - 照抄 `Camoufox` / `AdsPower` 流程 —— **本机未安装**
 - 期待 `iv8` 可用 —— **本机无**
-- 用了 `D:\Tools\runtime\venv-re` —— **它是空壳**
+- 用了 `(Resolve-ReverseToolSpec -Name 'pyre').Command` —— **它是空壳**
 - 把调试 profile 指向日常浏览 profile
 - 启动器指向已失效的绝对路径，却把 attach 失败归因于目标防护
 - 把机器私有绝对路径或 API key 提交进技能包

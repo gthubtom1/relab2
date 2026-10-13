@@ -2,7 +2,7 @@
 
 > **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License）的 `module-contracts.md`。
 > **用途**：给手写补环境模块或高级 `run.js` 补丁一个**统一的输入/输出格式**，避免每个模块各写一套。
-> **前置（本机实测，2026-10-10）**：Node ✅ `D:\Tools\Node\node.exe` v24.20.0。⚠️ `scripts/analyze-gap-log.js` 与 `scripts/collect-browser-env.js` **未随本包落地**，本机没有这两个文件；下文 gap-log 输入/输出格式与 `CONFIG` allowlist 语义**未在本机验证**，它们描述的是上游实现。
+> **前置（本机实测，2026-10-10）**：Node ✅ `(Resolve-ReverseToolSpec -Name 'node').Command` v24.20.0。⚠️ `scripts/analyze-gap-log.js` 与 `scripts/collect-browser-env.js` **未随本包落地**，本机没有这两个文件；下文 gap-log 输入/输出格式与 `CONFIG` allowlist 语义**未在本机验证**，它们描述的是上游实现。
 > **用法**：本篇**不是新的触发入口**，也不替代 `scripts/env-diagnose.js` 和现有 `env/` 模块树 —— 只有模块树表达不了某个缺口时才按本文手写。
 
 这份参考用于设计手写补环境模块或高级 `run.js` 补丁。它不是新的触发入口，也不替代 `scripts/env-diagnose.js` 和现有 `env/` 模块树。

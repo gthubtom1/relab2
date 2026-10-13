@@ -8,7 +8,6 @@
 > - 成功与失败的会话链在最后一个请求上**看起来一模一样**时
 > - 需要把真实抓包落盘、但**不能连可复用秘密一起发布**时
 >
-> **平台与本机状态**：Windows 10 x64。`python 3.12`（`D:\EXE\python\python.exe`）、`mitmdump`（`D:\EXE\python\Scripts\mitmdump.EXE`）、`tshark`（`D:\Tools\Wireshark\tshark.exe`）本机可用。**本包无 `scripts/` 目录**，见下方「脚本可用性对照表」。
 
 ---
 
@@ -60,14 +59,14 @@
 
 ```powershell
 # 第一步：把 wire 抓包落盘
-D:\EXE\python\Scripts\mitmdump.EXE --listen-port 8899 --save-stream-file flow.mitm
+& (Resolve-ReverseToolSpec -Name 'mitmdump').Command --listen-port 8899 --save-stream-file flow.mitm
 # 或直接读已有 pcap
-D:\Tools\Wireshark\tshark.exe -r flow.pcapng -Y "http.request" -T fields -e frame.number -e http.request.method -e http.request.full_uri
+& (Resolve-ReverseToolSpec -Name 'tshark').Command -r flow.pcapng -Y "http.request" -T fields -e frame.number -e http.request.method -e http.request.full_uri
 ```
 
 ```powershell
 # 第二步：生成高熵任务本地 HMAC 密钥，写入任务本地文件（不要写在命令行参数里）
-D:\EXE\python\python.exe -c "import secrets; k=secrets.token_hex(32); open('task_hmac_key.txt','w').write(k); print('wrote task_hmac_key.txt, hex chars =',len(k))"
+& (Resolve-ReverseToolSpec -Name 'pyre').Command -c "import secrets; k=secrets.token_hex(32); open('task_hmac_key.txt','w').write(k); print('wrote task_hmac_key.txt, hex chars =',len(k))"
 
 # 在当前 shell 会话里指向它（`$env:` 不会传给子进程，必须在父 shell 设置）
 $env:EVIDENCE_HMAC_KEY = (Get-Content -Raw task_hmac_key.txt).Trim()
@@ -77,7 +76,7 @@ $env:EVIDENCE_HMAC_KEY = (Get-Content -Raw task_hmac_key.txt).Trim()
 # 第三步：自己写一个小规范化脚本，落盘到任务目录
 #   js_reverse_cache/tasks/<task-id>/normalize_evidence.py
 #   产出 analysis/proof_manifest.json（按键 HMAC-SHA-256 指纹，不含原文）
-D:\EXE\python\python.exe js_reverse_cache\tasks\<task-id>\normalize_evidence.py capture.har evidence.json --hmac-key-env EVIDENCE_HMAC_KEY
+& (Resolve-ReverseToolSpec -Name 'pyre').Command js_reverse_cache\tasks\<task-id>\normalize_evidence.py capture.har evidence.json --hmac-key-env EVIDENCE_HMAC_KEY
 ```
 
 > **命令里的 `<task-id>` 是占位符，请替换成你实际的 task-id。上面这一步在本机未实跑过（脚本需自写），标注为「未在本机验证」。**
@@ -110,11 +109,11 @@ D:\EXE\python\python.exe js_reverse_cache\tasks\<task-id>\normalize_evidence.py 
 
 ```powershell
 # 用 tshark 列出成功链与失败链的有序请求，逐行人工/脚本比对
-D:\Tools\Wireshark\tshark.exe -r success.pcapng  -Y "http.request" -T fields -e frame.number -e http.request.method -e http.request.full_uri > success_reqs.txt
-D:\Tools\Wireshark\tshark.exe -r failure.pcapng  -Y "http.request" -T fields -e frame.number -e http.request.method -e http.request.full_uri > failure_reqs.txt
+& (Resolve-ReverseToolSpec -Name 'tshark').Command -r success.pcapng  -Y "http.request" -T fields -e frame.number -e http.request.method -e http.request.full_uri > success_reqs.txt
+& (Resolve-ReverseToolSpec -Name 'tshark').Command -r failure.pcapng  -Y "http.request" -T fields -e frame.number -e http.request.method -e http.request.full_uri > failure_reqs.txt
 
 # 第一处不同出现在第 N 行 —— 从那里开始查
-D:\EXE\python\python.exe -c "import sys;a=open('success_reqs.txt',encoding='utf-8').read().splitlines();b=open('failure_reqs.txt',encoding='utf-8').read().splitlines();[print('FIRST DIVERGENCE at line',i+1,'\n  OK :',a[i],'\n  BAD:',b[i],'\n  break') for i,(x,y) in enumerate(zip(a,b)) if x!=y] or print('no divergence in common prefix')"
+& (Resolve-ReverseToolSpec -Name 'pyre').Command -c "import sys;a=open('success_reqs.txt',encoding='utf-8').read().splitlines();b=open('failure_reqs.txt',encoding='utf-8').read().splitlines();[print('FIRST DIVERGENCE at line',i+1,'\n  OK :',a[i],'\n  BAD:',b[i],'\n  break') for i,(x,y) in enumerate(zip(a,b)) if x!=y] or print('no divergence in common prefix')"
 ```
 
 **从报告出的第一处分歧开始查。** 在调后面的 signer、body 或 verifier 字段之前，先查**写入方**和**第一个下游消费者**。
@@ -137,7 +136,7 @@ D:\EXE\python\python.exe -c "import sys;a=open('success_reqs.txt',encoding='utf-
 
 ```powershell
 # 自建靶场（脚本需自写，以下命令未在本机验证）
-D:\EXE\python\python.exe js_reverse_cache\tasks\<task-id>\practice_lab.py --self-test
+& (Resolve-ReverseToolSpec -Name 'pyre').Command js_reverse_cache\tasks\<task-id>\practice_lab.py --self-test
 ```
 
 > **不需要开浏览器**。这个靶场是确定性夹具（fixture），不是活目标。

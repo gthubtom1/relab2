@@ -45,7 +45,7 @@
   .\emulator-lab.ps1 start -Vendor mumu -Index 0
   .\emulator-lab.ps1 tap 127.0.0.1:16384 540 1200
   .\emulator-lab.ps1 proxy on -Port 8080
-  .\emulator-lab.ps1 frida deploy -Server D:\Tools\frida\frida-server-17.9.6-android-arm64
+  .\emulator-lab.ps1 frida deploy -Server <工具根>\<分类>\<工具名>\frida-server-17.9.6-android-arm64
 #>
 [CmdletBinding()]
 param(
@@ -315,7 +315,7 @@ $script:VendorProfiles = @(
     }
     [pscustomobject]@{
         Id = 'ldplayer14'; Label = '雷电模拟器 14'; Key = 'ld14'
-        # ★ 2026-10-11 实测（用户装在 D:\Tools\android\LDPlayer\LDPlayer14）：
+        # ★ 2026-10-11 实测（安装路径由探测层现查，不要写死）：
         #   **adb 端口是 2222**，不是雷电 9 的 5555-5561 —— 版本不同端口就变，
         #   所以必须扫，不能靠固定表。控制 CLI 仍是 ldconsole.exe，
         #   `list2` 输出格式（index,title,topWindowHandle,bindWindowHandle,
@@ -1073,7 +1073,7 @@ switch ($Action) {
                     Say '模拟器流量走虚拟网卡，不指定就抓到物理网卡（看不到模拟器里的包）。'
                 }
                 # ★ 2026-10-11 实测根因：dumpcap 对**正斜杠**路径的处理与反斜杠不同 ——
-                #   `-w C:/Users/toti/Desktop/x.pcapng` 会让它把 `C:/Users/toti/Desktop`
+                #   `-w <用户目录>/Desktop/x.pcapng` 会让它把 `<用户目录>/Desktop`
                 #   当成**接口名**，于是 1.4 秒内以 rc=0 静默退出、不产文件、stderr 也是空的。
                 #   同一命令换成 `C:\Users\...` 立刻正常（实测抓到 2776 包）。
                 #   所以这里统一把输出路径规范成 Windows 反斜杠。

@@ -10,7 +10,7 @@ NOTE verify-repository-security: provenance notice_file is empty for source ai-f
 OK verify-repository-security: tracked=1753 executable_sources=157 binary_like=1 agent_entries=4 symlinks=0 vendored_router_files=70 vendored_router_occurrences=71 vendored_router_digest=274b3e9a51fc injection_shapes=12 secrets=0 provenance_advisories=1
 ```
 
-- 运行：`D:\EXE\python\python.exe skills/scripts/verify-repository-security.py`（cwd=仓库根，`PYTHONIOENCODING=utf-8`），exit 0。
+- 运行：`(Resolve-ReverseToolSpec -Name 'pyre').Command skills/scripts/verify-repository-security.py`（cwd=仓库根，`PYTHONIOENCODING=utf-8`），exit 0。
 - `registry.json` 只读：前轮已证运行期间逐字节未变；本轮未写该文件。
 - 覆盖门类：Git index（`ls-files -s`，无 `.git` 时回退 working-tree）→
   agent 入口合同（4 根文件 + 同意标记 + execute-on-read 中英文形）/
@@ -91,7 +91,7 @@ C5 以修正调用路径的重跑为准，判定逻辑未动；其余 C1–C4/C6
    ```powershell
    $env:PYTHONIOENCODING='utf-8'
    $env:GIT_DIR='D:\__no_such_git_dir__'
-   D:\EXE\python\python.exe skills\scripts\verify-repository-security.py
+   & (Resolve-ReverseToolSpec -Name 'pyre').Command kills\scripts\verify-repository-security.py
    Remove-Item Env:\GIT_DIR
    ```
    原理：`GIT_DIR` 指向不存在路径迫使 `rev-parse --is-inside-work-tree` 失败，

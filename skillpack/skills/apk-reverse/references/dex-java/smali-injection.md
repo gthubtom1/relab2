@@ -107,7 +107,7 @@ I: Built apk into: C:\...\demo-unsigned.apk
 重建后用 `dexdump` 确认注入的指令真的进了 dex：
 
 ```powershell
-$ddexdump = 'D:\Tools\android-sdk\build-tools\34.0.0\dexdump.exe'
+$ddexdump = '<工具根>\<分类>\<工具名>\build-tools\34.0.0\dexdump.exe'
 & $ddexdump -d unz\classes.dex
 ```
 

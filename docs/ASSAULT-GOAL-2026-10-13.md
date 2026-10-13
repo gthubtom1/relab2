@@ -654,7 +654,7 @@ vendor 两周即过期、pin 即锁死。**只学三条设计，不融代码**�
   的 case-init 产出：文件集 `[README.md, scope.md, timeline.md, workitems.md]`,
   **无 assault.md、无 `- assault: true`、无 layers 表、无任何工序**——
   路径行为与日常开发一致。**达成**
-- 附：Q0 测试用的是 case-init 真实跑（`C:\Users\toti\AppData\Local\Temp\q0-test`），
+- 附：Q0 测试用的是 case-init 真实跑（`$env:TEMP\q0-test`），
   判据为外部可观测事实（文件真不存在 + deliverables 段真无标记），非日志标记。
 
 **六条同时满足 → 本项目完成。** 完成 commit：`攻坚交付闭环 · 完成`（见下）。
@@ -760,8 +760,8 @@ vendor 两周即过期、pin 即锁死。**只学三条设计，不融代码**�
   唯一入口是 app execution alias」；`anti-debug-bypass.md` line 25/71 已写明
   「cdb 只能走 alias」并给出完整用法（`$env:LOCALAPPDATA\Microsoft\WindowsApps\cdbX64.exe`）。
   alias 直跑验证：`cdb version 10.0.29661.1004` 回显正常。判据与实际一致，无需改。
-  补充实测（MCP/库通道）：`x64dbg` 目录在 `D:\Tools\x64dbg`（GUI 需真实桌面会话，
-  与既有 KNOWN-BOUNDARIES 一致）；`Ghidra` 在 `D:\Tools\Ghidra`；
+  补充实测（MCP/库通道）：`x64dbg` 目录在 `<工具根>\<分类>\<工具名>`（GUI 需真实桌面会话，
+  与既有 KNOWN-BOUNDARIES 一致）；`Ghidra` 用 `Resolve-ReverseToolSpec -Name 'analyzeHeadless'` 现查；
   `pyghidra-mcp` 已注册于 `~/.omp/agent/mcp.json`；`angr+qiling+z3` Python 库导入 OK。
 
 ### 维度 F：五条接入判断链（机制兜底）

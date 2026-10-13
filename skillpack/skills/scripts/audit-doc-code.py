@@ -49,16 +49,13 @@ def _find(*cands):
     return None
 
 
-PY = _find(r"D:\EXE\python\python.exe",
-           sys.executable) or sys.executable
-YARA = _find(r"D:\Tools\yara\yara64.exe", r"D:\Tools\yara\yara.exe",
-             _shutil.which("yara"), _shutil.which("yara64"))
+PY = _find(_shutil.which("python"), sys.executable) or sys.executable
+YARA = _find(_shutil.which("yara"), _shutil.which("yara64"))
 # ★ 2026-10-10 扩展：R2-DocCodeAudit 统计出 bash 1993 / js 444 / sql 300 /
 #   c 293 / json 175 块，第一版只覆盖 python+yara+powershell，漏掉大头。
 BASH_CHECKER = _find(r"C:\Program Files\Git\bin\bash.exe",
                    _shutil.which("bash"))
-NODE_CHECKER = _find(r"D:\Tools\Node\node.exe",
-                   _shutil.which("node"))
+NODE_CHECKER = _find(_shutil.which("node"))
 JSON_CHECKER = True   # python 自带
 
 PS = (["powershell", "-NoProfile", "-Command"]

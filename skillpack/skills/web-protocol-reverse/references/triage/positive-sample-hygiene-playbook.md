@@ -4,7 +4,6 @@
 >
 > **什么时候用**：验证门恢复需要人工或浏览器的正向基准（oracle）时 —— 尤其是行为敏感的滑块、点击顺序、或被风险评分的 transcript。**一句话**：在你准备调轨迹之前，先看这一篇。
 >
-> **平台与本机状态**：Windows 10 x64。`playwright`、`frida`、`mitmdump`（`D:\EXE\python\Scripts\mitmdump.EXE`）、`tshark`（`D:\Tools\Wireshark\tshark.exe`）、`curl_cffi` 本机可用。**本文的核心纪律是「别用自动化去采正向基准」** —— 也就是说 `playwright` 在本文里的角色是**反面教材兼最后的退路**，不是推荐工具。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`

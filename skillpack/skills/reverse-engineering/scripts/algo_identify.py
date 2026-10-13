@@ -21,13 +21,13 @@ algo_identify.py — 二进制盲算法识别器
 
 依赖:
     仅 Python 3 标准库，不装任何第三方包 —— 所以用哪个解释器都能跑。
-    本机实测两个都行：D:\EXE\python\python.exe 与 D:\Tools\runtime\venv-re\Scripts\python.exe。
-    探测层别名 pyre（= 带全部逆向库的那个系统 Python）：
+    要跑本包其它依赖第三方库的脚本时，统一用探测层别名 pyre（= 带全部逆向库的那个解释器：
 
         . C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1
         & (Resolve-ReverseToolSpec -Name 'pyre').Command algo_identify.py sample.exe
 
-    ★ 别用 venv-re 当「逆向库齐全」的解释器：它是空的（见 _map.json 的 pyre.note）。
+    ★ pyre 具体指向哪个路径由**本机 `_map.json`** 决定 —— 别在文档或脚本里写死解释器路径
+      （见 `_map.json` 的 `pyre.note`）。探测层的 `python` 常常不是它。
 """
 
 from __future__ import annotations

@@ -60,7 +60,7 @@ tools/  15 文件              运行核（从 hub/tools 原样搬）
 
 ```
 # >>> hubcore hub >>>
-本机中枢在 C:\Users\Toti\.dsh\hub\：规则 AGENTS.md，底线卡 CORE.md，工具 tools\，
+本机中枢在 <用户目录>\.dsh\hub\：规则 AGENTS.md，底线卡 CORE.md，工具 tools\，
 按需读 ctxiso\，一键卸 uninstall.py --host-home <家目录>。
 掌舵不是施工；对面普通人，听不懂的句子等于没说。
 六条线抱到底，选定读 workflows/<线>.md。

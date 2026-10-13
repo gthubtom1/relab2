@@ -128,7 +128,7 @@ if ($null -eq $primary) {
 # （advisory，永不改 PRIMARY、不改 routing.json；改 routing.json 是红线⑤禁止的），
 # 不论当前 PRIMARY 是兜底还是某条真实路由，只要 hint 命中日常工程语就提示去 Q0 人话表 + kernel 六线。
 if ($t -match '(帮我做|我想做|做个|做一个|搞个|弄个|写个|建个|搭个).{0,8}(网站|软件|工具|程序|app|应用|服务|脚本|命令行|接口|后端|前端|系统|平台)|接手|二开|二次开发|采集.{0,6}(数据|接口|协议|app)|抓.{0,4}(协议|接口|包)|自动化.{0,6}(脚本|流程|任务)|加.{0,3}参数|修.{0,3}(个)?(bug|缺陷)|改.{0,3}(个)?(bug|缺陷)|(?<![a-z])部署(?![a-z])|上线|写.{0,4}文档') {
-    [void]$notes.Add('日常工程/开发任务（Q0=A）：走 kernel 六条业务线（desktop-product / web-service / cli-tool / source-takeover / exe-rebuild / protocol-automation），入口 kernel/04-console/cards/hub/04-全能工程中枢.md；人话对照见 reverse-engineering/references/assault-entry.md Q0 人话表。不是逆向任务时勿套逆向工序。')
+    [void]$notes.Add('日常工程/开发任务（Q0=A）：走 kernel 六条业务线（desktop-product / web-service / cli-tool / source-takeover / exe-rebuild / protocol-automation），入口 kernel/03-bundle/dist/hubcore/CORE.md（选线）→ 选定后读同目录 workflows/<线>.md；人话对照见 reverse-engineering/references/assault-entry.md Q0 人话表。不是逆向任务时勿套逆向工序。')
 }
 
 # 防御：priority 若含 routes 之外的幽灵 id（配置错误），回退到 fallback 而非崩溃

@@ -62,6 +62,20 @@ pyghidra_mcp_projects/
 # 与 kernel/04-console/cards/base/ 内容重复，仓里只留一份。
 kernel/07-kernel-sweep/_backup-*/
 
+# ★ 2026-10-14 补：破甲横扫的临时槽 dump 产物。
+#   `_slot-out.md` 是从宿主加密槽 dump 出来的提示词原文（跟现役卡同名不同内容）；
+#   `_slot.mjs` 是 dump 脚本，里面写死了 `C:/Users/<用户名>/.dsh/...` 本机绝对路径。
+#   两个都实测进过库（`git rm --cached` 已于 2026-10-14 移除），一律挡住。
+kernel/07-kernel-sweep/_slot*
+kernel/07-kernel-sweep/_*.mjs
+
+# ★ 2026-10-14 补：任何位置的 `_backup-cards/`。
+#   `_archive/kernel-sweep-history/_backup-cards/` 曾漏网进库 —— 里面 8 张卡跟
+#   `cards/base/` 里的【同名但内容完全不同】，是最容易装错的一类。
+#   已改名为 `_backup-cards-20261009/`（带日期，一眼看出是历史）；
+#   以后新产生的裸 `_backup-cards/` 一律不进库。
+_backup-cards/
+
 # diagram-generator 脚本吐的临时样例（sample.svg / .mmd / .dot / .puml）。
 # 2026-10-10 实测这 4 个文件无任何文档或脚本引用，是运行残留。
 /samples/

@@ -4,8 +4,7 @@
 >
 > **什么时候用**：**运行时证明比静态阅读更快**的时候 —— 你已经大致知道在哪，但要确认「谁调了它、传了什么、什么时候改的」。
 >
-> **平台与本机状态**：本机 hook / 观察能力实测如下（**均已在本机验证**）：
-> - `playwright（模块在 `D:\EXE\python\Lib\site-packages\playwright`）`（`D:\EXE\python\python.exe -m playwright`，浏览器 `chromium-1243` 已装于 `%USERPROFILE%\AppData\Local\ms-playwright`）**可用**
+> - `playwright`（`(Resolve-ReverseToolSpec -Name 'pyre').Command -m playwright`，浏览器 `<playwright 浏览器>` 已装于 `%USERPROFILE%\AppData\Local\ms-playwright`）**可用**
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -13,8 +12,8 @@
 > **可用写法**：`p.chromium.launch(channel="msedge")`（实测能起、能渲染、能读 DOM），
 > 或 `launch(executable_path=<显式路径>)`。照抄裸 `launch()` 一定失败。
 > 
-> - `frida 17.17.0`（`D:\EXE\python\Scripts\frida.exe`，Python 包同版本）**可用** —— 本机主力 hook 路径
-> - `node v24.20.0`（`D:\Tools\Node\node.exe`）**可用**，用于把目标 JS 拉到 Node 里做定点改写
+> - `frida 17.17.0`（`(Resolve-ReverseToolSpec -Name 'frida').Command`，Python 包同版本）**可用** —— 本机主力 hook 路径
+> - `node v24.20.0`（`(Resolve-ReverseToolSpec -Name 'node').Command`）**可用**，用于把目标 JS 拉到 Node 里做定点改写
 > - MCP 浏览器家族 `chrome-devtools` / `js-reverse` **本机 agent 工具注册表中未挂载**（本机挂载的是 `pyghidra-mcp` / `idapro` / `ida-pro-mcp` / `angr-mcp` / `x64dbg-automate-mcp`，**均为逆向侧，无 web 侧**）
 > - 因此本文源文档中「MCP 浏览器家族注入 / preload」那一列的**方法论原样保留**，但**本机执行路径改用 `frida` + `playwright`**
 
@@ -109,10 +108,10 @@
 
 ```powershell
 # 列出本机可用设备（确认浏览器/进程可见）
-D:\EXE\python\Scripts\frida-ps.exe -Uai
+& (Resolve-ReverseToolSpec -Name 'frida-ps').Command -Uai
 
 # 启动一个带 hook 脚本的浏览器进程（示例形态，未对具体目标验证）
-D:\EXE\python\Scripts\frida.exe -f <exe> -l hook.js --no-pause
+& (Resolve-ReverseToolSpec -Name 'frida').Command -f <exe> -l hook.js --no-pause
 ```
 
 frida 相比页面内注入的关键优势，正好覆盖了上面矩阵里最痛的三行：
@@ -130,7 +129,7 @@ frida 相比页面内注入的关键优势，正好覆盖了上面矩阵里最�
 
 ### 路径 B：playwright（本机可用）
 
-`playwright（模块在 `D:\EXE\python\Lib\site-packages\playwright`）` + 已装的 `chromium-1243` 适合两种场景：
+`playwright` + 已装的 `<playwright 浏览器>` 适合两种场景：
 
 - **干净基线采集**：起一个受控浏览器，把请求/响应/HAR 落盘，**不加任何 hook**。这正是「先抓 clean baseline」那一步的本机实现。
 - **CDP attach**：`playwright.chromium.connect_over_cdp()` 接到一个已开着的 Chrome 调试端口，然后在其上下文里做窄观察。
@@ -171,7 +170,7 @@ frida 相比页面内注入的关键优势，正好覆盖了上面矩阵里最�
 
 **本机补充**：
 
-- 看到 `D:\EXE\python\Scripts\` 下有 17 个 `frida-*` 工具就觉得需要全用 —— 先用 `frida.exe` / `frida-ps.exe`，其余按需
+- 看到 frida 的 Scripts 目录下有 17 个 `frida-*` 工具就觉得需要全用 —— 先用 `frida` / `frida-ps`，其余按需
 - 静态 AST 定位需要 `esprima` / `acorn` / `@babel/parser`，**本机未装**，先装再用；未装时不要卡在「必须先有 AST 工具」而跳过 hook 取证
 - 期待 `iv8` 可用 —— **本机无**
 

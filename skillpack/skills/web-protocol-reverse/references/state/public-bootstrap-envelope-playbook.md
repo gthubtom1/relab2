@@ -4,7 +4,6 @@
 >
 > **什么时候用**：页面公开可见，但成功 replay 仍依赖某个 bootstrap（引导）响应、入口路由 cookie，或一层加密的外层信封（outer envelope）。
 >
-> **平台与本机状态**：`python 3.12`、`curl_cffi`、`tshark 4.6.8`、`mitmdump`、`playwright` 本机可用。`iv8` 与 `reqable` 本机无；凡涉及处已就地标注替代方案。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -31,9 +30,9 @@
 2. **wire 可见性**（判据依赖）。本机两条路：
    ```powershell
    # mitmproxy 实时观察匿名链路
-   D:\EXE\python\Scripts\mitmdump.EXE -p 8899 -w public.mitm
+   & (Resolve-ReverseToolSpec -Name 'mitmdump').Command -p 8899 -w public.mitm
    # tshark 离线读 pcap
-   D:\Tools\Wireshark\tshark.exe -r public.pcapng -Y "http.response.code" -T fields -e frame.number -e http.response.code -e http.content_type
+   & (Resolve-ReverseToolSpec -Name 'tshark').Command -r public.pcapng -Y "http.response.code" -T fields -e frame.number -e http.response.code -e http.content_type
    ```
    `reqable` 本机无，HAR 导出路径不适用，改用上面两条。
 3. **一条成功 + 一条失败的匿名样本**，用于固定入口路由的作用。

@@ -20,8 +20,8 @@
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2    = (Resolve-ReverseToolSpec -Name 'r2').Command
 $floss = (Resolve-ReverseToolSpec -Name 'floss').Command
-$py    = 'D:\EXE\python\python.exe'    # pefile
-$pm    = 'D:\Tools\Sysinternals\Procmon64.exe'
+$py    = (Resolve-ReverseToolSpec -Name 'pyre').Command    # pefile
+$pm    = '<工具根>\<分类>\<工具名>\Procmon64.exe'
 ```
 
 ## 步骤

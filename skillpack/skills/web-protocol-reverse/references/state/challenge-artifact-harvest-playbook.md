@@ -4,7 +4,6 @@
 >
 > **什么时候用**：敌意运行时（hostile runtime）**已经在本地产出了决定性产物**，而任务是在不把方案退化成浏览器自动化的前提下把它摘出来。
 >
-> **平台与本机状态**：`playwright`、`node v24`、`python 3.12`、`mitmdump`、`curl_cffi`、`tshark 4.6.8` 本机可用。`iv8` 本机无；`reqable` 本机无（改用 mitmproxy / tshark）。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`

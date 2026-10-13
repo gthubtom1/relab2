@@ -2,7 +2,7 @@
 
 > **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License）的 `index.md`。原文主体已中文化，本次改编补齐中文标题、来源声明与本机化标注。
 > **用途**：围绕**用户已知的观察点**，交付一段最小、可恢复、低噪声的浏览器 Hook。
-> **前置**：本 profile **不依赖任何 npm 包**，Hook 片段是纯 JS，贴进 DevTools Console / Snippets 即可运行。Node `D:\Tools\Node\node.exe` v24.20.0 仅在你想在 Node 里跑片段时需要。
+> **前置**：本 profile **不依赖任何 npm 包**，Hook 片段是纯 JS，贴进 DevTools Console / Snippets 即可运行。Node `(Resolve-ReverseToolSpec -Name 'node').Command` v24.20.0 仅在你想在 Node 里跑片段时需要。
 > **⚠️ 本包实情**：本 profile 自带的 `scripts/`（`xhr_fetch.js`、`cookie_header.js`、`crypto_api.js`、`storage.js`）与 `tests/` **未随包落地**。下方「资源路由」里对这些脚本的引用是**上游路径**，本包内没有对应文件 —— 要用得先从上游 MIT 仓库取，或按 `references/` 里的结构约束自行实现。所有 `references/*.md` 只规定 Hook 点选择与交付约束，**不内嵌第二套可粘贴实现**。
 
 ---

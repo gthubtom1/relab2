@@ -4,7 +4,6 @@
 >
 > **什么时候用**：目标在账号登录之后**还没完** —— 同一个账号仍有可变的业务上下文。
 >
-> **平台与本机状态**：`python 3.12`、`curl_cffi`（本机可用，会话对象首选）、`playwright`、`mitmdump`、`tshark 4.6.8` 本机可用。`iv8` 本机无。
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：
 > `launch()` 默认启动会报 `Executable doesn't exist at %LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1234\...`
@@ -32,7 +31,7 @@
 3. **一个可读取权威身份的「最终面」（authoritative final surface）**。这是 Gate B 的硬前提 —— 你需要一个地方重新读取当前身份，而不是靠推断。常见形态：业务页面 bootstrap blob、session introspection 端点。**若找不到这样的面，本篇的核心纪律无法执行**，应先解决它。
 4. **wire 可见性**（判据第 4 条需要）：
    ```powershell
-   D:\Tools\Wireshark\tshark.exe -r ctx.pcapng -T fields -e http.request.full_uri -e http.response.code -e http.cookie
+   & (Resolve-ReverseToolSpec -Name 'tshark').Command -r ctx.pcapng -T fields -e http.request.full_uri -e http.response.code -e http.cookie
    ```
 
 ## 步骤（Steps）

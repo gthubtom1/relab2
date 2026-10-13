@@ -2,7 +2,7 @@
 
 > **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License）的 `verification-and-replay.md`。**下方 JavaScript / Python 代码块一字未改**（代码不译）。
 > **用途**：在 `env-diagnose.js` **已经能加载**目标脚本之后，走完"功能验证 → 封装可调用接口 → HTTP 重放校验"这三步。
-> **前置（本机实测，2026-10-10）**：Node ✅ `D:\Tools\Node\node.exe` v24.20.0；Python ✅ `D:\EXE\python\python.exe` 3.12.0，`curl_cffi` ✅ 已安装。⚠️ `env-diagnose.js` **未随本包落地**，本机跑不了第一步；下文示例中的 `curl_cffi` 与 `requests` API 形态**未在本机对真实目标验证**，示例 URL 均为 `example.com` / `target.example` 占位。
+> **前置（本机实测，2026-10-10）**：Node ✅ `(Resolve-ReverseToolSpec -Name 'node').Command` v24.20.0；Python ✅ `(Resolve-ReverseToolSpec -Name 'pyre').Command` 3.12.0，`curl_cffi` ✅ 已安装。⚠️ `env-diagnose.js` **未随本包落地**，本机跑不了第一步；下文示例中的 `curl_cffi` 与 `requests` API 形态**未在本机对真实目标验证**，示例 URL 均为 `example.com` / `target.example` 占位。
 > **用法**：本篇的核心结论是 —— **加载成功只是语法/运行时里程碑，不证明目标的 sign / token / cookie / 加密字段会被服务端接受。** 这一条在 `../index.md` 的「非协商项」和 `../../../SKILL.md` 的「判据」里都重复了，别跳过。
 
 在 `env-diagnose.js` 能加载目标脚本之后使用本参考。加载成功只是语法/运行时里程碑，**不证明**目标的 sign、token、cookie 或加密字段会被服务端接受。

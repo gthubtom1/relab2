@@ -24,7 +24,7 @@
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2 = (Resolve-ReverseToolSpec -Name 'r2').Command
 $floss = (Resolve-ReverseToolSpec -Name 'floss').Command   # 静态+栈+解码三路字符串
-$py  = 'D:\EXE\python\python.exe'
+$py  = (Resolve-ReverseToolSpec -Name 'pyre').Command
 ```
 
 ★ **`floss` 比裸 `strings` 强**：它会做栈字符串解码、API hash 反解。

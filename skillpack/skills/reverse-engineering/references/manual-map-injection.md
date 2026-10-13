@@ -20,8 +20,8 @@
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2  = (Resolve-ReverseToolSpec -Name 'r2').Command
 $cdb = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
-$py  = 'D:\EXE\python\python.exe'    # pefile 2024.8.26
-$sys = 'D:\Tools\Sysinternals'       # Listdlls64.exe（验证模块列表里没有它）
+$py  = (Resolve-ReverseToolSpec -Name 'pyre').Command    # pefile 2024.8.26
+$sys = '<工具根>\<分类>\<工具名>'       # Listdlls64.exe（验证模块列表里没有它）
 ```
 
 ★ 本机有 gcc（`D:\Tools\runtime\mingw64\bin\gcc.exe`），需要编译 loader 时可用。
@@ -215,7 +215,7 @@ def build_dllmain_shellcode(image_base, entry_point):
     return bytes(sc)
 ```
 
-**实测反汇编回环**（`D:\EXE\python\python.exe`，本机 capstone 5.0.7）：
+**实测反汇编回环**（`(Resolve-ReverseToolSpec -Name 'pyre').Command`，本机 capstone 5.0.7）：
 
 ```
 48 83 ec 28 48 b9 20 30 4b f4 f6 7f 00 00 48 c7 c2 01 00 00 00
@@ -251,7 +251,7 @@ WaitForSingleObject(th, INFINITE)
 
 1. ★★ **模块列表里没有这个 DLL**。判据形态：
    ```powershell
-   & 'D:\Tools\Sysinternals\Listdlls64.exe' /accepteula /t target.exe |
+   & '<工具根>\<分类>\<工具名>\Listdlls64.exe' /accepteula /t target.exe |
      Select-String -Pattern 'mydll'
    ```
    **无输出 = 手动映射成功（对「不留痕」这个目标而言）。**

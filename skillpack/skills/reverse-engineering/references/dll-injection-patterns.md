@@ -23,7 +23,7 @@
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
 $inj  = (Resolve-ReverseToolSpec -Name 'scyllahide').Command  # InjectorCLIx64.exe
-$py   = 'D:\EXE\python\python.exe'
+$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command
 ```
 
 ## 步骤
