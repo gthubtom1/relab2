@@ -38,7 +38,7 @@ C:\relab2\
 ├─ README.md                     本文件
 │
 ├─ kernel\                  ① 行为层 —— agent 怎么做事
-│  ├─ 04-console\cards\        42 张卡片（行为/底模/风格）
+│  ├─ 04-console\cards\        44 张卡片（3 个可读池 hub/base/guest + 各停车位）
 │  │  └─ guest\全能专精指引.md  ★ 安全逆向总控路由（常驻卡片）
 │  ├─ 02-hubcore\               中枢本体
 │  ├─ 03-bundle\                卡片打包/装卸/校验
