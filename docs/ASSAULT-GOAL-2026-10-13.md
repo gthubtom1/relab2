@@ -1461,3 +1461,29 @@ payload 是**明文 + 指令混淆（junk-byte）+ 自擦除 `.text`** 的模块
   `NtCreateThreadEx`/`RtlCreateUserThread`/`CreateRemoteThread` **全 0 命中** → 排除另起线程；
   该栈 = **线程入口链**（主线程也走），payload 在**主线程**上执行。
 - 教训：栈底 BaseThreadInitThunk 不足以判「另起线程」；必须 hook 线程创建 API 佐证。
+
+### §9d 追加 · Frida 决定性发现（2026-10-13 09:xx）
+
+**Frida 单轮打点揭示释放时序与线程归属：**
+```
+T+7   OBJ-SET     静态 ctor 分配 Process 单例
+T+90  FREE-OBJ    HeapFree 释放该对象（CRT atexit 析构链）
+T+92  PAYLOAD-ENTRY / FATAL-CALL（用已释放对象调 vtable+0x138 → UAF）
+```
+- 释放链：`HeapFree ← sub_14004BFE0 ← … ← sub_140001DF0 ← … ← sub_14003CF40`（CRT atexit 析构器）。
+- 全局指针**只被写过 1 次**（MemoryAccessMonitor 证实此后无写）→ 对象内存被释放，指针未变。
+
+**★ 线程纠正**：单轮 thread-id 打点 `T29216`(main) → `T32008`(payload) →
+**payload 跑在独立线程**（main 结束时启动），**推翻上一轮「主线程」结论**。
+
+**crash 性质**：cdb 实测 `c0000409 / Subcode 0x7 FAST_FAIL_FATAL_APP_EXIT / int 29h @ base+0x4979d`
+= 应用自己的 abort（UAF 间接调用抛 AV 后转终止），**不是堆毒直接崩**。
+
+**关键否证**：Frida 防止释放（rcx=0）→ `*rcx` 有效、slot39 确实执行，但内部 `call qword_14008C4A0` 后仍崩
+→ **不只是释放问题**；保活对象后仍有未就绪依赖。
+
+**目标性质**：类名 `Process`/`ImageEx`/`Wad::MmReader` + 门栓查 `RiotClientServices.exe` + 资源 `XWGZSkins`
+→ **Blackbone 手工映射框架 + 游戏客户端相关**（Riot = LoL/Valorant 客户端；Wad = 游戏资源包）。
+→ **原「无宿主依赖」存疑**：该类工具通常需访问目标进程。
+
+门禁：case audit --strict --verify-hashes 0e/0w。
