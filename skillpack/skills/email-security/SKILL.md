@@ -1,6 +1,6 @@
 ﻿---
 name: email-security
-description: Email security review — 当用户收到可疑邮件或要查域名邮箱配置，或说“这封邮件是钓鱼吗”“帮我查下SPF配对没”“BEC诈骗长啥样”时使用。Use when phishing analysis, SPF/DKIM/DMARC check.
+description: 邮件安全与钓鱼分析：Received 链、SPF/DKIM/DMARC 校验、BEC 欺诈。用于：这封邮件是钓鱼吗、帮我查下 SPF 配对没、BEC 诈骗长啥样。不要用于：附件样本本体→malware-analysis；OAuth/令牌→identity-federation；检测规则→threat-hunting。
 ---
 
 # Email Security & Phishing Analysis

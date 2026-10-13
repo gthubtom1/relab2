@@ -1,6 +1,6 @@
 ﻿---
 name: digital-forensics
-description: Digital forensics and IR — 当用户要分析内存转储、磁盘时间线或可疑流量，或说“这个mem.dmp帮我看看”“电脑中招了怎么溯源”“PCAP里有啥异常”时使用。Use when memory dump, disk timeline, PCAP triage.
+description: 数字取证与应急响应（IR）：内存转储 Volatility、E01 磁盘时间线、PCAP 溯源、IOC 提炼。用于：看 mem.dmp、电脑中招怎么溯源、PCAP 有啥异常。不要用于：样本本体→malware-analysis；主动扫描→pentest-tools；协议还原→protocol-reverse。
 ---
 
 # Digital Forensics & IR Artifacts

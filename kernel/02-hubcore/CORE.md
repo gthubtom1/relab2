@@ -8,6 +8,7 @@
 
 **六条线，选一条抱到底：** desktop-product ｜ web-service ｜ cli-tool ｜ source-takeover ｜ exe-rebuild ｜ protocol-automation
 选定后**必须读 `workflows/<线>.md`**。
+**线不改，技能/工具随时换：** 节点上拿到决定性新证据、工具报错、静动态结论矛盾、或任务进入新域（开发中突然要逆向/渗透/抓包）→ **当场换**，记一行「换了什么、为什么」。技能目录常驻（宿主的 Skill 列表 / `read skill://<name>`）。
 
 **三步判断**（每个工作块一遍）
 1. 推演实际使用——从主人真正拿到结果的地方倒推，找必要条件。

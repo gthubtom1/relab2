@@ -1,6 +1,6 @@
 ﻿---
 name: apk-reverse
-description: APK reverse — 当用户要解包反编译APK/改smali/重打包/用Frida动态hook，或说"这个apk装不上""想把广告去掉""看看它连了哪些服务器"时使用。Use when unpacking, decompiling, patching, re-signing an APK or hooking with Frida.
+description: APK 逆向：jadx/apktool 解包、改 smali/AndroidManifest、重打包、Frida hook。用于：APK 逻辑、装不上、去广告、查服务器、root 检测。不要用于：IPA→mobile-reverse；.NET→dotnet-reverse；带壳→reverse-engineering；Web 协议→web-protocol-reverse。
 ---
 
 ## ACTION REQUIRED（读完后立刻执行）

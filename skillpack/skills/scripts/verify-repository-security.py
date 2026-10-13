@@ -47,6 +47,9 @@ SCAN_EXCLUDES = {"skills/scripts/verify-repository-security.py"}
 EXPECTED_PATTERN_HITS = {
     ("kali/scripts/lib/tool-discovery.sh", "dev-tcp-port-probe"),
     ("skills/scripts/lib/Bootstrap.ps1", "tcp-client-health-probe"),
+    # mcp-status.ps1 的三列里有一列就是"谁在监听"——所以它必须真的探一次端口。
+    # 与 Bootstrap.ps1 同一个模式、同一个理由：这是健康探针，不是被投递的载荷。
+    ("skills/scripts/mcp-status.ps1", "tcp-client-health-probe"),
 }
 PATTERNS = {
     "dynamic-powershell-eval": re.compile(r"Invoke" r"-Expression|\bIEX\b", re.I),

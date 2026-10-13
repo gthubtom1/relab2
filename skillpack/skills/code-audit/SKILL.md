@@ -1,6 +1,6 @@
 ﻿---
 name: code-audit
-description: Source-code security review — 当用户要白盒审代码/审PR差分/跑Semgrep找注入点，或说"帮我审下这段代码有没有注入""PR合之前过一遍安全""看看鉴权是不是漏了"时使用。Use when reviewing source, SAST scans, dangerous APIs and fix verification.
+description: 白盒源码审计：PR/差分审查、Semgrep/CodeQL/Bandit/gosec SAST、注入点、鉴权缺失。用于：审代码注入、PR 合前过安全、IDOR/多租户。不要用于：无源码二进制→reverse-engineering；依赖/CI→supply-chain-security；接口越权→api-security。
 ---
 
 # Source Code Security Audit

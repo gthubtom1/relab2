@@ -1,6 +1,6 @@
 ﻿---
 name: windows-ad
-description: Use for authorized Active Directory and Windows identity attacks including Kerberos, AD CS, BloodHound paths, NTLM relay, and domain privilege escalation research.
+description: 授权 AD/Windows 身份攻击：Kerberos(Kerberoast/AS-REP)、ADCS ESC1-ESC8、BloodHound、NTLM relay、域内提权。用于：域渗透身份枚举、impacket/certipy/nxc、pass-the-hash。不要用于：全链→attack-chain；客户端→thick-client；Web 越权→api-security。
 ---
 
 # Windows / Active Directory Security

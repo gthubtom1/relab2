@@ -1,6 +1,6 @@
 ﻿---
 name: hardware-security
-description: Hardware interface research — 当用户能摸到板子想找调试口提镜像，或说“这个UART口在哪”“JTAG能连上吗”“Flash怎么dump出来”时使用。Use when UART JTAG discovery, firmware extraction.
+description: 硬件/嵌入式接口安全：UART/JTAG/SWD 调试口发现、root shell 获取、拆机提取 SPI/NOR Flash。用于：UART 口在哪、JTAG 能连上吗、Flash 怎么 dump。不要用于：固件解包与仿真→firmware-pentest；固件内二进制→ida-reverse；工控协议→ot-ics。
 ---
 
 # Hardware / Embedded Interface Security

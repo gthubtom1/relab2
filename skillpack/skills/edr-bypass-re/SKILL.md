@@ -1,6 +1,6 @@
 ﻿---
 name: edr-bypass-re
-description: EDR绕过研究 — 当已授权红队要在EDR驻守主机上投递载荷，或说“Defender老杀我马怎么办”“怎么做unhook过EDR”“ETW和AMSI怎么处理”时使用。Use when EDR bypass, unhook, syscall in authorized test.
+description: 已授权红队 EDR 绕过：unhook、direct syscall、AMSI/ETW 绕过、反射加载 implant。用于：Defender 老杀我马、unhook 过 EDR、AMSI/ETW 怎么处理。不要用于：全链路打域控→attack-chain；木马免杀→malware-analysis；内网 AD 提权→windows-ad。
 ---
 
 ## ACTION REQUIRED（读完后立刻执行）

@@ -1,6 +1,6 @@
 ﻿---
 name: docs-generator
-description: Write technical docs and reports — 当用户做完逆向或渗透要落盘成报告，或说“帮我写份渗透测试报告”“出个CTF writeup”“补个README和API文档”时使用。Use when write report, documentation, writeup.
+description: 把逆向/渗透/CTF 结论写成技术文档并落盘（渗透测试报告、CTF writeup、README、API 文档）。用于：帮我写份渗透测试报告、出个 writeup、补个 README。不要用于：只要图表→diagram-generator；审报告证据链→case-review。
 ---
 
 # Technical Documentation

@@ -1,6 +1,6 @@
 ﻿---
 name: binary-diff
-description: 跨版本符号迁移与二进制差分 — 当用户手里有旧版符号要迁到新版/程序更新后找新偏移/内核缺PDB推导，或说"更新后函数地址变了""新版PDB下不到了""帮我把旧版函数名迁过来"时使用。Use when migrating symbols across versions or diffing binaries.
+description: 二进制差分/符号迁移：旧版符号迁到新版、更新后找偏移、内核缺 PDB。用于：更新后地址变了、新版 PDB 下不到、旧版函数名迁移。不要用于：从零逆向→ida-reverse/radare2；加壳→reverse-engineering；N-day 差分→patch-diff-exploit。
 ---
 
 # 跨版本符号迁移 (Binary Diff)

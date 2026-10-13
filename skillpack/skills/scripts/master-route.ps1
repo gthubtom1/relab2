@@ -282,11 +282,25 @@ foreach ($d in $uniq) {
 }
 $secText = if ($sec.Count -gt 0) { ($sec -join ', ') } else { '(none)' }
 [void]$sb.AppendLine(("- secondary: {0}" -f $secText))
+# ★ 候选全集（含分数）：PRIMARY 只是"入口"，不是"路线"。
+#   旧版只给 1 个 secondary，模型看不到别的候选 —— 于是"开工选一次"之后永不换技能。
+$candText = if ($uniq.Count -gt 0) { (($uniq | ForEach-Object { "{0}({1})" -f $_, $scores[$_] }) -join ', ') } else { '(none)' }
+[void]$sb.AppendLine(("- candidates: {0}" -f $candText))
+[void]$sb.AppendLine("- candidates_skills: {0}" -f $(if ($uniq.Count -gt 0) { (($uniq | ForEach-Object { "skills/{0}" -f $cfg.routes.$_.skill }) -join ', ') } else { '(none)' }))
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('## MUST open next')
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('1. skills/MASTER-ROUTING.md')
 [void]$sb.AppendLine(("2. skills/{0}" -f $primaryPath))
+[void]$sb.AppendLine('3. skills/references/tool-registry.md   # 工具通道事实源：注册/监听/怎么起（HTTP MCP 按需，端口平时关着是设计）')
+[void]$sb.AppendLine('4. skills/reverse-engineering/references/triage-first-30-min.md   # 未知样本先 triage，再谈走哪个技能')
+[void]$sb.AppendLine('')
+[void]$sb.AppendLine('## 怎么用这份路由（读一次，别忘）')
+[void]$sb.AppendLine('')
+[void]$sb.AppendLine('- **PRIMARY 是入口，不是路线。** 它回答"这件事属于哪个域"，不回答"整条路怎么走"。')
+[void]$sb.AppendLine('- **方向定一次，"技能"必须随时换。** 出现任一条就回技能目录重选：①拿到决定性新证据（判出壳/语言/协议/服务端依赖）②工具或环境报错且说不通 ③静态与动态结论矛盾 ④同一假设连续两次没有新证据 ⑤任务进入新域（开发项目里突然要逆向/渗透/抓包）。')
+[void]$sb.AppendLine('- 换完在时间线记一行：`换技能：<旧> → <新>，因为 <信号>`。')
+[void]$sb.AppendLine('- 技能正文按需读：`read skill://<name>`（宿主已注册本包 46 个技能，name+description 常驻）。')
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('## Notes')
 if ($notes.Count -eq 0) { [void]$sb.AppendLine('- (none)') }

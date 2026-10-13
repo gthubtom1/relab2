@@ -1,6 +1,6 @@
 ﻿---
 name: attack-chain
-description: Multi-stage attack-path orchestration — 当用户要做完整渗透/从外网打到域控/规划攻击路径，或说"帮我做一次完整渗透""拿到webshell下一步怎么办""从这个漏洞能打到什么程度"时使用。Use when planning recon, initial access, privesc, lateral movement and impact.
+description: 多阶段攻击链编排：侦察、初始访问、提权、横向、影响评估。用于：完整渗透、外网打到域控、HW 演练、webshell 下一步。不要用于：端口/SQLi→pentest-tools；APK→apk-reverse；域渗透→windows-ad；只写报告→docs-generator。
 ---
 # Attack Chain Orchestration Skill
 

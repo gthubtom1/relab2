@@ -1,6 +1,6 @@
 ﻿---
 name: web-protocol-reverse
-description: 把"看起来只能靠浏览器跑"的敌意 Web 客户端，还原成不依赖浏览器的纯 Python 协议采集器。当目标是 web sign/token/cookie 签名链路、响应解码、挑战/challenge、bootstrap 状态、WebSocket/GraphQL/protobuf 包裹、WebAssembly 签名，且最终要交付可复现的协议重放或采集器时使用；已有 HAR / 抓包 / 固定向量只做 artifact-only 离线证明时同样适用。不适用于 APK、原生 App、小程序主任务。
+description: 敌意 Web 客户端还原成不依赖浏览器的采集器：sign/token/cookie、challenge、WebSocket/GraphQL/protobuf、WebAssembly。用于：403/412/429、HAR 离线复现、可重放采集器。不要用于：APK→apk-reverse；小程序→mobile-reverse；JS→js-reverse。
 ---
 
 # Web 协议恢复（Spider King）

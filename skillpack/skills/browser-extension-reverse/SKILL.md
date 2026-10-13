@@ -1,6 +1,6 @@
 ﻿---
 name: browser-extension-reverse
-description: Browser extension reverse engineering — 当用户要分析浏览器插件/查恶意扩展/看manifest权限，或说"这个插件是不是在偷数据""帮我看看它后台干了什么""扩展权限是不是给多了"时使用。Use when analyzing manifests, background workers, content scripts and extension traffic.
+description: 浏览器扩展逆向：crx/xpi 解包、manifest 权限、service_worker、content script、流量与 IOC。用于：插件是否偷数据、后台干了什么、权限给多了。不要用于：网页 JS→js-reverse；自动化→browser-automation；网页协议→web-protocol-reverse。
 ---
 
 # Browser Extension Reverse Engineering

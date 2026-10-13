@@ -1,6 +1,6 @@
 ﻿---
 name: threat-intelligence
-description: Use for authorized OSINT and cyber threat intelligence that enriches IOCs, campaigns, impersonation, scams, or threat actors from public sources. Includes bounded X/Twitter search through Xquik, source preservation, corroboration, and evidence handoff.
+description: 授权 OSINT 与威胁情报：公开来源 IOC 富化、campaign 与威胁组织画像、仿冒诈骗线索、Xquik 公开 X/Twitter 检索。用于：IOC 归属、情报包准备。不要用于：私有数据收集、样本分析→malware-analysis、落地规则→threat-hunting。
 ---
 
 # Threat Intelligence & Public-Source OSINT

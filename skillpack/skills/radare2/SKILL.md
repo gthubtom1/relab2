@@ -1,7 +1,6 @@
 ﻿---
 name: radare2
-description: |
-  Use this skill whenever the user wants to analyze binaries with radare2/r2 from the command line, including reverse engineering, disassembly, function analysis, strings/import inspection, patching, binary diffing, hex inspection, or r2 scripting. Also use it when the user mentions PE/ELF/Mach-O/DEX/WASM files together with CLI analysis, `rabin2`, `rasm2`, `radiff2`, `r2pipe`, or asks for radare2 command help on Windows/Linux/macOS.
+description: radare2/r2 命令行二进制分析：反汇编、交叉引用、strings/imports、patch、r2pipe/rabin2/rasm2/radiff2。用于：r2 CLI 分析 exe/dll/so/elf/apk/dex/wasm、定位函数。不要用于：GUI 伪代码→ida-reverse；APK→apk-reverse；JS→js-reverse。
 ---
 
 # radare2

@@ -1,6 +1,6 @@
 ﻿---
 name: api-security
-description: API security assessment — 当用户要测REST/GraphQL/WebSocket接口的认证鉴权越权限流问题，或说"这个接口有没有越权""帮我测下登录token安不安全""graphql能不能内省"时使用。Use when testing API discovery, JWT/OAuth auth, BOLA/IDOR and rate-limit.
+description: API 安全测试：REST/GraphQL/WebSocket 接口发现、JWT/OAuth、BOLA/IDOR/BFLA 越权。用于：接口越权、JWT 弱密钥、GraphQL 内省。不要用于：JS 签名→web-protocol-reverse；前端→js-reverse；扩展→browser-extension-reverse；多阶段→attack-chain。
 ---
 # API 安全测试
 

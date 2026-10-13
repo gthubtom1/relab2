@@ -1,6 +1,6 @@
 ﻿---
 name: ctf-sandbox
-description: CTF/AWD sandbox entry — 当用户说要打CTF/做靶场题/比赛切题，或说"来道CTF题""靶场这个pwn怎么做""比赛环境跑起来"时使用。Use when handling CTF, AWD or range tasks via the sidecar orchestrator.
+description: CTF/AWD 靶场入口：case-init 门禁 + sidecar orchestrator 选竞赛子技能。用于：打 CTF、AWD、比赛切题、靶场题、pwn 怎么做、环境跑起来。不要用于：题型已明确（pwn→pwn-chain；APK→apk-reverse）；真实外网→attack-chain。
 ---
 
 # CTF sandbox entry (sidecar, not a second router)

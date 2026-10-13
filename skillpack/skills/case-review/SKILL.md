@@ -1,6 +1,6 @@
 ﻿---
 name: case-review
-description: Case package review — 当用户要交报告前审一遍case包/查证据链完整性，或说"帮我审下这个case能不能交""证据到结论链条全不全""交报告前过一遍"时使用。Use when reviewing scope readiness, Evidence-Finding-Path traceability and artifact hashes.
+description: case 包只读审查：scope 就绪度、Evidence 链可追溯、artifact SHA-256、rebuild/update 表核对。用于：交报告前审 case、证据链全不全、复核哈希。不要用于：渗透/逆向→pentest-tools/ida-reverse；写报告→docs-generator；样本→malware-analysis。
 ---
 
 # Evidence Graph Review

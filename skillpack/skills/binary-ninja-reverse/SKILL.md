@@ -1,6 +1,6 @@
 ---
 name: binary-ninja-reverse
-description: Binary Ninja reverse engineering — 当用户点名用Binary Ninja看HLIL/MLIL数据流/查交叉引用，或说"用BN看下这个函数逻辑""帮我跟一下这个调用链""IDA结果对不上来交叉验证下"时使用。Use when inspecting HLIL/MLIL/LLIL, xrefs, types or automating via Python API.
+description: Binary Ninja 逆向：HLIL/MLIL/LLIL 数据流、xrefs、类型与重命名、Python API。用于：点名 BN 看函数逻辑、跟调用链、与 IDA/Ghidra/radare2 交叉验证。不要用于：IDA→ida-reverse；Ghidra→ghidra-reverse；radare2→radare2。
 ---
 
 # Binary Ninja reverse engineering

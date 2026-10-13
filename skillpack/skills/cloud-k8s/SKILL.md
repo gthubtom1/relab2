@@ -1,6 +1,6 @@
 ﻿---
 name: cloud-k8s
-description: Cloud/container/K8s security assessment — 当用户要查云元数据SSRF/IAM越权/容器逃逸/K8s RBAC，或说"帮我看看这个存储桶是不是公开的""容器能不能逃逸""集群RBAC配得对不对"时使用。Use when assessing metadata SSRF, IAM misconfig, container escape and cluster RBAC.
+description: 云/容器/K8s 安全评估：元数据 SSRF、IAM 越权、公开桶、容器逃逸、K8s RBAC。用于：云元数据 SSRF、容器逃逸、集群 RBAC。不要用于：Web/漏扫→pentest-tools；镜像管道→supply-chain-security；数据库→database-security；横向→attack-chain。
 ---
 
 # Cloud / Container / Kubernetes Security

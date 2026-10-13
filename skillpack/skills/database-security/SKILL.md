@@ -1,6 +1,6 @@
 ﻿---
 name: database-security
-description: Database security assessment — 当用户要查数据库是否对外暴露、有弱口令或权限过大，或说“数据库好像被脱库了”“Redis能写文件提权吗”“这个账号权限是不是太大了”时使用。Use when database exposure, weak password, authz review.
+description: 数据库安全评估：0.0.0.0 绑定、弱口令、权限过大、危险功能（xp_cmdshell/UDF）、NoSQL 注入。用于：库是否暴露、被脱库、Redis 写文件提权。不要用于：源码注入→code-audit；云 RDS/K8s→cloud-k8s；OS 命令横向→attack-chain。
 ---
 
 # Database Security Assessment

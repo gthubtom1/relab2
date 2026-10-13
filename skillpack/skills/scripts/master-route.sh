@@ -189,6 +189,9 @@ if using_default_out_dir:
         print(f"WARN: route archive skipped: {exc}", file=sys.stderr)
 
 secondary = [f"skills/{routes[item]['skill']}" for item in selected_order if item != primary]
+# ★ 候选全集（含分数）：PRIMARY 只是"入口"，不是"路线"（与 master-route.ps1 逐字对齐）。
+cand_scored = ", ".join(f"{item}({scores.get(item, 0)})" for item in selected_order) or "(none)"
+cand_skills = ", ".join(f"skills/{routes[item]['skill']}" for item in selected_order) or "(none)"
 lines = [
     "# reverse-skill Master route (PRIMARY)",
     f"- created: {datetime.datetime.now(datetime.timezone.utc).astimezone().isoformat()}",
@@ -200,11 +203,22 @@ lines = [
     f"- confidence: {confidence}",
     f"- project_root: {project_root}",
     f"- secondary: {', '.join(secondary) if secondary else '(none)'}",
+    f"- candidates: {cand_scored}",
+    f"- candidates_skills: {cand_skills}",
     "",
     "## MUST open next",
     "",
     "1. skills/MASTER-ROUTING.md",
     f"2. skills/{primary_path}",
+    "3. skills/references/tool-registry.md   # 工具通道事实源：注册/监听/怎么起（HTTP MCP 按需，端口平时关着是设计）",
+    "4. skills/reverse-engineering/references/triage-first-30-min.md   # 未知样本先 triage，再谈走哪个技能",
+    "",
+    "## 怎么用这份路由（读一次，别忘）",
+    "",
+    "- **PRIMARY 是入口，不是路线。** 它回答\"这件事属于哪个域\"，不回答\"整条路怎么走\"。",
+    "- **方向定一次，\"技能\"必须随时换。** 出现任一条就回技能目录重选：①拿到决定性新证据（判出壳/语言/协议/服务端依赖）②工具或环境报错且说不通 ③静态与动态结论矛盾 ④同一假设连续两次没有新证据 ⑤任务进入新域（开发项目里突然要逆向/渗透/抓包）。",
+    "- 换完在时间线记一行：`换技能：<旧> → <新>，因为 <信号>`。",
+    "- 技能正文按需读：`read skill://<name>`（宿主已注册本包 46 个技能，name+description 常驻）。",
     "",
     "## Notes",
 ]

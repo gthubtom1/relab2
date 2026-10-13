@@ -1,6 +1,6 @@
 ﻿---
 name: browser-automation
-description: 统一自动化入口 — 当用户要自动打开网页点点填表爬取截图/自动登录，或说"帮我自动填下这个表单""把这个页面内容爬下来""自动登录后截图看看"时使用。Use when automating browser clicks, forms, scraping, screenshots or desktop GUI apps.
+description: 浏览器/桌面 GUI 自动化：Playwright/agent-browser 点击/填表/截图/登录；OpenReverse 操作 Windows GUI。用于：填表、爬页面、登录截图、提交 payload。不要用于：签名/CDP→js-reverse；抓包→web-protocol-reverse；扩展→browser-extension-reverse。
 ---
 
 # 自动化操作 (Desktop & Browser Automation)

@@ -1,6 +1,6 @@
 ﻿---
 name: reverse-engineering
-description: Provides reverse engineering techniques. Use when the main job is to understand how a compiled, obfuscated, packed, or virtualized target works before exploiting or solving it, including binaries, APKs, WASM, firmware, custom VMs, bytecode, malware-like loaders, and anti-debug or anti-analysis logic. Do not use it when the vulnerability is already understood and the remaining task is exploitation; use pwn instead. Do not use it for pure web workflows, log or disk forensics, or standalone crypto problems unless reversing the implementation is the real blocker.
+description: 通用逆向方法论：triage→static→dynamic，判壳/混淆/虚拟化、custom VM、anti-debug。用于：搞不清样本怎么跑、加固挡路、调试器一用就退。不要用于：写 exploit→pwn-chain；IDA→ida-reverse；APK→apk-reverse；.NET→dotnet-reverse。
 license: MIT
 compatibility: Requires a filesystem-based code agent or CLI with shell access, Python 3, and internet access for tool installation.
 allowed-tools: Bash Read Write Edit Glob Grep Task WebFetch WebSearch
