@@ -303,6 +303,28 @@ Interceptor.attach(sit, {
 });
 ```
 
+### 8. 特殊形态：运行时自翻页（自保护 / 反篡改）
+
+**症状**：目标把自身 `.text` / 载荷节在运行时翻成 `PAGE_NOACCESS`（自解密壳、反篡改常见的
+`VirtualProtect` 自翻页）。此后调试器**再想读/设/删该页内的断点全部被拒**——cdb 会报
+`Unable to remove breakpoint … Win32 error 0n998`。**这个报错不是命中**（详见经验卡
+`cdb-noaccess-breakpoint-is-not-hit`）。
+
+**关键认知**：ScyllaHide（hook API）与硬件断点（走 DR 寄存器）**都绕过不了「页保护自翻转」**——
+前者改的是 API 返回值，后者不写目标内存，但**翻页本身把代码页变成不可读**，两者都没解决。
+这不是反调试检测，是**反篡改**，需要另一套手法：
+
+| 手法 | 做法 | 适用 |
+|---|---|---|
+| **翻转前 dump** | 在 `VirtualProtect`→NOACCESS 的**调用点**下断，命中的那一刻把该页 dump 出来（此时还是可读的） | 一次性拿到明文载荷 |
+| **patch 掉翻转逻辑** | NOP 掉那次 `VirtualProtect(x, size, PAGE_NOACCESS)`，让它**永远不翻页**，之后正常下断点 | 要持续动态跟踪时 |
+| **hook VirtualProtect 记录** | Frida/注入 hook `VirtualProtect`/`NtProtectVirtualMemory`，记录每次 `(addr,size,prot)` ——先看清它翻了哪些页、翻成什么 | 摸清翻页地图 |
+| **在系统 DLL 下断** | 载荷要调用的系统 API（如 `WinHttp*`）下断，避开被翻页的目标区 | 载荷内部不可读时的替代观测点 |
+
+★ **判据同经验卡**：一切断点结论用**断点命令内原子打印的 `@rip`** + 跑 **≥3 轮**看稳定性；
+**单轮命中/未命中都不能定论**（bp 可能恰好被页翻吞掉）。运行时地址一律 **base + RVA 复核**，
+差一位会得出完全相反的结论（本机实测：少进一位 → 误判「全局全程 NULL」）。
+
 ## 判据
 
 反调试被成功绕过，必须**同时**满足：

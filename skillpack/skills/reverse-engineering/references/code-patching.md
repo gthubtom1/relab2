@@ -341,6 +341,10 @@ patch 成功的**外部可观测**判据，四条全过才算数：
 10. **`.text` 的 `perm` 无 `w`**，磁盘 patch 不受影响，但**运行时 patch 必须 `VirtualProtect(PAGE_EXECUTE_READWRITE)`**，否则 `Access Violation`。
 11. **有代码完整性自检的样本 patch 后会自毁**。先确认有没有 CRC/hash 自检（见 `dynamic-api-resolution.md` 的 hash 循环识别），有的话要先 patch 自检本身。
 12. **别在原始样本上直接改**。永远 `shutil.copyfile` 到新文件再改，原样本保持可复现。
+13. ★★ **动态验证 patch 是否生效，判据必须是原子 `@rip` + ≥3 轮稳定性；单轮命中/未命中都不能定论。**
+   patch 后常靠 cdb 断点验证控制流是否到达某处——但若目标会运行时翻页（`PAGE_NOACCESS`），
+   断点可能被页翻吞掉或报 `0n998`（**那是移除失败，不是命中**）。详见经验卡
+   `cdb-noaccess-breakpoint-is-not-hit` 与 `anti-debug-bypass.md` §8。运行时地址一律 `base+RVA` 复核。
 
 ## 相关
 
