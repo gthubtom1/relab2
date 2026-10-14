@@ -165,8 +165,10 @@ function Invoke-Setup {
     if ($LASTEXITCODE -ne 0 -and -not $DryRun) { $rc = 1 }
 
     Write-Host ''
-    Write-Host '  MCP 注册：走 kernel\04-console 工作台（选智能体 → 勾三段 → 载入），或 skills\scripts\switch-mcp.py <daily|full>。' -ForegroundColor Yellow
-    Write-Host '  这两条都没有本脚本代做 —— 它们会写各智能体的入口文件，属于你的机器状态。' -ForegroundColor DarkGray
+    Write-Host '  MCP 注册：走 kernel\04-console 工作台（选智能体 → 勾三段 → 载入）。' -ForegroundColor Yellow
+    Write-Host '  出厂形态是 5 条通道：pyghidra / angr / relab2-tools 直连 stdio；' -ForegroundColor DarkGray
+    Write-Host '  idapro / x64dbg-mcp 走 skills\scripts\mcp-lazy-http.py（stdio·懒启，后端被调用时才拉起）。' -ForegroundColor DarkGray
+    Write-Host '  换机要改的是 args 里的 launcher 路径与 x64dbg 的 Bearer token —— 见 环境初始化.md §11.1-B 第 10 条。' -ForegroundColor DarkGray
 
     if (-not $DryRun) {
         Write-Host ''

@@ -37,6 +37,15 @@ Test-ReverseTcpPort -Port <端口>     # 1 秒超时，不阻塞
 | `idapro` | streamable-http | `127.0.0.1:13337/mcp` | IDA GUI 内插件 | **按需**：用到时跑 `<技能包根>\skills\ida-reverse\scripts\start.ps1`，健康则复用、没人听才起。**没有常驻、没有计划任务**；多实例端口递增，以 Output 窗口 `[MCP] port=` 日志为准 |
 | `pyghidra-mcp` | stdio（本机 omp）或 streamable-http | stdio 无端点；HTTP 形态 `127.0.0.1:9111/mcp` | **JDK 21** + Ghidra 本体 | **按需**：stdio 由宿主按会话拉起；HTTP 形态冷启 7–10 s。**不要设成常驻服务** |
 | `x64dbg-mcp` | http（`.dp64`/`.dp32` 插件） | x64=`127.0.0.1:9094`，x32=`127.0.0.1:9095` | x64dbg + 插件 + Bearer token | **按需**：插件活在被调试进程里，进程不在端口就不在。拉起方式见该技能自己的文档 |
+| `relab2-tools` | stdio | — | Python（`mcp` SDK） | **宿主按会话自动拉起**。把**本机工具链**暴露给模型：`local_tools`（实时清单）/ `run_tool`（按 id 调工具，路径走探测层）/ `triage_target` / `find_capability`（按能力找工具）。实现见 `skills/scripts/relab2-tools-mcp.py` |
+
+> **★ 上表是「通道本体」。本包出厂时**把 `idapro` 与 `x64dbg-mcp` 注册成
+> **stdio·懒启动代理**（`skills/scripts/mcp-lazy-http.py`）—— 这是为了治「模型不主动按开关」的病：
+> 代理让**工具常驻可见**，而**后端只在被调用时才由代理拉起**，所以那两个通道**不需要人先起服务**。
+> 代理自身是 stdio，宿主按会话拉起；它 args 里那个 `http://…` 只是**它要去拉起的后端端点**。
+> 换机后要改的是 args 里的 `--launcher` 路径与（x64dbg 的）Bearer token，**不是**去改通道形态。
+> **怎么验**：`relab2.ps1 doctor`，或单跑 `powershell -File skills/scripts/mcp-status.ps1`
+> （后者会把这两条报成 `stdio·懒启`）。
 
 > **★ 全部按需。** 本包**不注册任何计划任务、不装任何看门狗、不做开机自启**。
 > 端口平时关着是**设计**，不是故障。理由：常驻保活会①每分钟弹 cmd 窗口 ②换机后必然指错路径 ③

@@ -39,6 +39,23 @@ $r.Available; $r.Command; $r.Via
    `ghidraRun` 全部返回空，据此误判「本机缺工具」并停手 —— 实际工具全都在。**单条 `Get-Command` 只是四级里的
    第 2 级，必须走完探测层；环境自检见 `references/env-selfcheck.md`。**
 
+**★ 不知道工具 id 怎么办？—— 按「能力」问，不要背清单。**
+
+上面第 1 步是按**工具名**找。换台电脑、装的是别的同类软件、名字你根本没见过时，按名字是问不出来的。
+这时改用**能力发现**（运行时扫描本机：先按规则归类，规则认不出的再跑一次 `--help` 抓关键词兜底）：
+
+```powershell
+# 按能力问本机有谁能干这件事
+python <仓根>\skillpack\skills\scripts\capability-index.py --find firmware-unpack   # 谁能解固件
+python <仓根>\skillpack\skills\scripts\capability-index.py --find portscan          # 谁能扫端口
+python <仓根>\skillpack\skills\scripts\capability-index.py --list-capabilities      # 能力词表
+python <仓根>\skillpack\skills\scripts\capability-index.py --scan                    # 换机后重建索引
+```
+
+索引落在 `%LOCALAPPDATA%\reverse-skill\capabilities\`（**机器状态，不入库**），换机后第一次调用会自动重建。
+**要点：装了什么就认什么，不需要谁去登记。** 所以「新增一个工具就打个补丁」这种做法是不需要的。
+（MCP 里同名能力叫 `find_capability`，见 `references/tool-registry.md` §1 的 `relab2-tools` 通道。）
+
 ### 工具根与四级定位
 
 工具根 **`D:\Tools\`**（可用 `REVERSE_TOOL_ROOT` 覆盖）。绿色软件解压到

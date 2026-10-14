@@ -22,6 +22,22 @@ cd C:\relab2
 
 clone 完**在这个目录下开一个新的智能体会话** —— 之后读到的一切都在这里。
 
+**第 0.5 步 · 一条命令问「这台机器现在能不能干活」**
+
+```powershell
+# 先看它要干什么（一个字都不改）
+powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2.ps1 setup -DryRun
+# 真跑：仓根定位 → 环境变量 → 技能挂载（幂等，可反复跑）
+powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2.ps1 setup
+# 一条命令报就绪度，退出码 0 = 就绪
+powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2.ps1 doctor
+```
+
+`doctor` 逐项报：仓根 / 环境变量 / selfcheck / **MCP 通道**（注册了几条、哪条是懒启、后端在不在监听）/ 技能挂载 /
+技能卡数 / 门禁清单 / 破甲卡 / 要求门 R1–R13。**它就是「换机 = 一条命令」的那条命令。**
+
+> ⚠️ 它只证明「**本机配置**就绪」，**不证明「能力」就绪** —— 能力只由真实验收证明。
+
 **第 1 步 · 读 [`环境初始化.md`](环境初始化.md) ★ 这是你最重要的一份文档**
 
 **先看它的 §11「换机适配面」** —— 那是**完整清单**，照它过一遍再动手：
@@ -36,8 +52,9 @@ clone 完**在这个目录下开一个新的智能体会话** —— 之后读�
 | **11.2 旧状态** | 会被旧机缓存污染的目录（`hostlist` / `state` / `.hub` 快照 / worktree…）—— **清掉** |
 | **11.3 自动适配** | 不用你管的（工具路径 / 端口 / 版本号 / `%TEMP%`） |
 | **11.4 永远不动** | 技能正文 / `routing.json` / 门禁 / 中枢本体 |
-| **11.5 顺序** | 换机第一天的 11 步 |
+| **11.5 顺序** | 换机第一天：**先走一键路径**（`relab2.ps1 setup -DryRun` → `setup` → `doctor`），再按 4–10 步补人做的部分 |
 | **11.6 三个已知坑** | ① `toolmap.default.json` 的生成器**不存在**（自称「请勿手工编辑」，其实要手改）② 文档里的「本机读数」**不是配置**（换机后整表重测）③ **宿主入口文件缺失 = 首次安装，不是错误**（工作台会直接建出来再写） |
+| **11.7 四个新组件** | `relab2.ps1`（门面）/ `mcp-lazy-http.py`（懒启动代理）/ `relab2-tools-mcp.py`（工具箱 MCP）/ `capability-index.py`（能力发现）—— **全属「永远不动」**；但它们的缓存（`%LOCALAPPDATA%\reverse-skill\` 下的 `capabilities\`、`mcp-lazy\`、`tools-mcp\`、`ida-mcp\`）**换机要清**，让新机器重新生成 |
 
 其余章节是验收与排查手册：§1 四步入口链 / §2 摸底四件 / §4 工具怎么被找到 /
 §5 宿主接入与 MCP / §7 四道验收门 / §10 路径纪律。
