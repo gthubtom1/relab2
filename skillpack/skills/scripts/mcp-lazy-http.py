@@ -79,6 +79,18 @@ class Ctx:
         self.state = _state_dir()
         self.cache_file = self.state / f"{self.name}.json"
         self.log_file = self.state / f"{self.name}.log"
+        # ★ 2026-10-15（审计实测后的补丁）：新机器上本机缓存是空的 → tools/list 回空表 →
+        #   模型**第一会话看不见任何工具**，等于这套机制白做。所以仓库里带一份**种子清单**
+        #   （工具 schema 是 MCP 服务器给的，与机器无关），兜底顺序：实时 → 本机缓存 → 种子 → 空。
+        self.seed_file: Path | None = None
+        if args.seed:
+            self.seed_file = Path(args.seed)
+        else:
+            # __file__ = <仓根>/skillpack/skills/scripts/mcp-lazy-http.py
+            # parents[1] = <仓根>/skillpack/skills  ← 种子在它的 references/ 下
+            cand = Path(__file__).resolve().parents[1] / "references" / "mcp-lazy-seeds" / f"{self.name}.json"
+            if cand.exists():
+                self.seed_file = cand
 
     def log(self, msg: str) -> None:
         line = f"{time.strftime('%Y-%m-%d %H:%M:%S')} {msg}"
@@ -98,10 +110,21 @@ class Ctx:
 
     # -- 缓存 --
     def load_cache(self) -> list[dict]:
+        """兜底顺序：本机缓存 → 仓库种子 → 空。返回空时**必须记日志**，否则
+        『新机第一会话看不见工具』会以静默失败的形式复现（2026-10-15 审计实测就是这样）。"""
         try:
             return json.loads(self.cache_file.read_text(encoding="utf-8"))
         except (OSError, ValueError):
-            return []
+            pass
+        if self.seed_file and self.seed_file.exists():
+            try:
+                data = json.loads(self.seed_file.read_text(encoding="utf-8"))
+                self.log(f"cache miss -> 用仓库种子 {self.seed_file.name}（{len(data)} 个工具）")
+                return data
+            except (OSError, ValueError) as e:
+                self.log(f"seed read failed: {e}")
+        self.log("cache miss 且无种子 -> 回空表（模型将看不见本通道的工具）")
+        return []
 
     def save_cache(self, tools: list[types.Tool]) -> None:
         try:
@@ -237,6 +260,9 @@ def main() -> int:
     ap.add_argument("--launcher", default=None, help="后端未监听时执行的命令行（幂等启动器）")
     ap.add_argument("--header", action="append", default=[],
                     help="转发时附加的 HTTP 头，形如 'Authorization: Bearer xxx'；可重复")
+    ap.add_argument("--seed", default=None,
+                    help="工具清单种子文件（本机无缓存时的兜底；默认自动找 "
+                         "<仓根>/skillpack/skills/references/mcp-lazy-seeds/<name>.json）")
     ap.add_argument("--wait", type=int, default=40, help="拉起后等待监听的最长秒数")
     args = ap.parse_args()
 

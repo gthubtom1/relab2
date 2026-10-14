@@ -1,0 +1,17 @@
+set GO111MODULE=
+set GOARCH=amd64
+set GOBIN=D:\Tools\runtime\go\go\bin
+set GODEBUG=
+set GOENV=off
+set GOFLAGS=
+set GOHOSTARCH=amd64
+set GOHOSTOS=windows
+set GOOS=windows
+set GOPROXY=https://proxy.golang.org,direct
+set GOROOT=D:\Tools\runtime\go\go
+set GOTMPDIR=
+set GOTOOLDIR=D:\Tools\runtime\go\go\pkg\tool\windows_amd64
+set GOAMD64=v1
+set GOWORK=off
+set PATH=D:\Tools\runtime\go\go\bin;C:\Program Files\PowerShell\7;C:\Program Files\WindowsApps\Microsoft.WindowsTerminal_1.10.2714.0_x64__8wekyb3d8bbwe;D:\Tools\net\nmap;C:\Windows\System32\OpenSSH;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Users\Administrator\dsh-cli;C:\Users\Administrator\AppData\Local\Programs\Python\Python314;C:\Users\Administrator\AppData\Local\Programs\Python\Python314\Scripts;C:\Users\Administrator\AppData\Roaming\Python\Python314\Scripts;C:\Users\Administrator\.dotnet\tools;D:\Tools\cli;D:\Tools\runtime\jdk21\jdk-21.0.12.1+1\bin;D:\Tools\runtime\dotnet8;D:\Tools\runtime\go\go\bin;D:\Tools\runtime\mingw64\mingw64\bin;C:\Program Files\7-Zip;C:\Program Files\GitHub CLI;C:\Program Files\Git\cmd;C:\Users\Administrator\.bun\bin;C:\Program Files\Git\bin;C:\Program Files\Git\usr\bin
+set DIST_UNMODIFIED_PATH=C:\Program Files\PowerShell\7;C:\Program Files\WindowsApps\Microsoft.WindowsTerminal_1.10.2714.0_x64__8wekyb3d8bbwe;D:\Tools\net\nmap;C:\Windows\System32\OpenSSH;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Users\Administrator\dsh-cli;C:\Users\Administrator\AppData\Local\Programs\Python\Python314;C:\Users\Administrator\AppData\Local\Programs\Python\Python314\Scripts;C:\Users\Administrator\AppData\Roaming\Python\Python314\Scripts;C:\Users\Administrator\.dotnet\tools;D:\Tools\cli;D:\Tools\runtime\jdk21\jdk-21.0.12.1+1\bin;D:\Tools\runtime\dotnet8;D:\Tools\runtime\go\go\bin;D:\Tools\runtime\mingw64\mingw64\bin;C:\Program Files\7-Zip;C:\Program Files\GitHub CLI;C:\Program Files\Git\cmd;C:\Users\Administrator\.bun\bin;C:\Program Files\Git\bin;C:\Program Files\Git\usr\bin

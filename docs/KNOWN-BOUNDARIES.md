@@ -174,6 +174,6 @@ tail -5 "$TEMP/out.log"
 
 ## 相关
 
-- [`../docs/HANDOFF-2026-10-11.md`](_history/HANDOFF-2026-10-11.md) —— 最近一轮的交付与**待办**（会更新）
-- [`AUDIT-2026-10-10-FINAL.md`](_history/AUDIT-2026-10-10-FINAL.md) —— 20 小时全项目终审，含 6 个「从未真正工作过」的门禁
+- [`HANDOFF-2026-10-11.md`](../_归档-禁读-历史文档/_history/HANDOFF-2026-10-11.md) —— 最近一轮的交付与**待办**（**已归档，AI 禁读**；只有人需要追溯时再翻）
+- [`AUDIT-2026-10-10-FINAL.md`](../_归档-禁读-历史文档/_history/AUDIT-2026-10-10-FINAL.md) —— 20 小时全项目终审，含 6 个「从未真正工作过」的门禁（**已归档，AI 禁读**）
 - [`../START-HERE.md`](../START-HERE.md) —— 项目入口

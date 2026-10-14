@@ -30,6 +30,10 @@ param(
 )
 
 $ErrorActionPreference = 'Continue'
+# ★ 2026-10-15：子进程（powershell 5.1）把 UTF-8 写到管道，父进程若按控制台码页（936）解码，
+#   中文会变成乱码（实测：stdio·懒启动 → stdio路鎳掑惎）。先把父进程的解码器钉成 UTF-8。
+try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
+$OutputEncoding = [System.Text.Encoding]::UTF8
 $RepoRoot = $PSScriptRoot
 $Results = New-Object System.Collections.Generic.List[object]
 
@@ -67,7 +71,17 @@ function Invoke-Doctor {
     # 2 环境变量
     $sk = $env:REVERSE_SKILL_ROOT
     $tk = $env:REVERSE_TOOL_ROOT
-    if ($sk) { Add-Result 'REVERSE_SKILL_ROOT' 'OK' $sk } else { Add-Result 'REVERSE_SKILL_ROOT' 'WARN' '未设置（跑 setup 或 relab2-root.ps1）' }
+    if ($sk) {
+        # ★ 2026-10-15：环境变量指向**另一棵树**时必须报出来 —— 否则在异地克隆里跑 doctor，
+        #   它会报「仓根 = 这份 clone」，而模型实际用的是环境变量指的那棵树，两边不是一个东西。
+        if ($sk.TrimEnd('\') -ieq $RepoRoot.TrimEnd('\')) {
+            Add-Result 'REVERSE_SKILL_ROOT' 'OK' $sk
+        }
+        else {
+            Add-Result 'REVERSE_SKILL_ROOT' 'FAIL' "指向另一棵树（$sk），而本脚本在 $RepoRoot —— 模型实际用的是前者。要么改环境变量，要么别在这份 clone 里跑。"
+        }
+    }
+    else { Add-Result 'REVERSE_SKILL_ROOT' 'WARN' '未设置（跑 setup 或 relab2-root.ps1）' }
     if ($tk) { Add-Result 'REVERSE_TOOL_ROOT' 'OK' $tk } else { Add-Result 'REVERSE_TOOL_ROOT' 'WARN' '未设置（跑 setup）' }
 
     # 3 部署自检（selfcheck 的退出码就是结论）
@@ -137,9 +151,15 @@ function Invoke-Doctor {
     $fail = @($Results | Where-Object { $_.结果 -eq 'FAIL' }).Count
     $warn = @($Results | Where-Object { $_.结果 -eq 'WARN' }).Count
     Write-Host ''
-    if ($fail -eq 0) {
-        Write-Host ("就绪：全部通过（{0} 项，{1} 项警告）" -f $Results.Count, $warn) -ForegroundColor Green
+    if ($fail -eq 0 -and $warn -eq 0) {
+        Write-Host ("就绪：全部通过（{0} 项）" -f $Results.Count) -ForegroundColor Green
         Write-Host '注意：doctor 只证明「本机配置就绪」，不证明「能力就绪」。能力只由真实验收证明。' -ForegroundColor DarkGray
+        return 0
+    }
+    if ($fail -eq 0) {
+        # ★ 2026-10-15：以前这里也印「全部通过」，等于把 WARN 说成全绿（审计实测：异地克隆里
+        #   两个环境变量都没设，仍报「就绪：全部通过（10 项，0 项警告）」退出码 0）。改掉。
+        Write-Host ("就绪，但带 {0} 项警告 —— 不是全绿。先看上面 WARN 的那几行。" -f $warn) -ForegroundColor Yellow
         return 0
     }
     Write-Host ("未就绪：{0} 项 FAIL，{1} 项 WARN —— 按上面的 FAIL 项处理后重跑。" -f $fail, $warn) -ForegroundColor Red

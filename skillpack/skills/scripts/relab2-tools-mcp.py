@@ -217,7 +217,10 @@ def build_server(ctx: Ctx) -> Server:
             i = args.index("--find")
             find = args[i + 1] if i + 1 < len(args) else None
         if want_scan or mod.load() is None:
-            idx = mod.build(probe_help=False)
+            # ★ 2026-10-15：以前这里写的是 probe_help=False —— 等于把「规则认不出的新工具
+            #   也能被认出来」这条**唯一卖点**关掉了（审计实测：help_probes=0、unknown=4537）。
+            #   现在打开；预算只花在工具根里的候选上（见 capability-index.build）。
+            idx = mod.build(probe_help=True)
             mod.state_dir().joinpath("capabilities.json").write_text(
                 json.dumps(idx, ensure_ascii=False, indent=1), encoding="utf-8")
         else:

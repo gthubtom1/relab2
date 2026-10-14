@@ -163,9 +163,40 @@ SKIP_DIR_PARTS = {"node_modules", "__pycache__", ".git", "_dl", "docs", "db", "d
                   "tests", "test-data", "man", "locale", "cmake", "pkgconfig"}
 EXEC_EXT = {".exe", ".cmd", ".bat", ".ps1"}
 
-PROBE_TIMEOUT = 2.0
+# ★ 2026-10-15（审计实测后的补丁）：这些是**通用启动器/示例名**，光看名字说明不了能力。
+#   旧版拿「文件名 **或** 完整路径」匹配规则，于是 `...\angr-mcp-venv\Scripts\mcp.exe`
+#   因为路径里含 `\angr` 被误判成「符号执行」；hashcat 自带的 `example0.cmd` 被当成「口令破解」。
+#   修法：对通用名**只拿文件名匹配**，不拿路径匹配。
+GENERIC_STEMS = {"mcp", "python", "pythonw", "pip", "pip3", "run", "uninstall", "activate",
+                 "start", "setup", "install", "update", "main", "app", "cli", "test",
+                 "loaddll", "injector", "example0", "example400", "example500"}
+
+# ★ help 探测**绝不碰**这些名字：它们是 GUI 版，跑 `--help` 会弹窗（本包纪律：不得拉起 GUI）。
+#   与 `TOOLS.md` 的「GUI / CLI 孪生对照」同源。
+GUI_HINTS = {"ida", "ida64", "die", "x64dbg", "x32dbg", "x96dbg", "wireshark", "dnspy",
+             "ghidrarun", "jadx-gui", "mitmweb", "charles", "fiddler", "pe-bear",
+             "exeinfope", "ollydbg", "jeb", "androidkiller", "inspectrum", "urh"}
+
+# ★★ 2026-10-15 事故后加的死名单（**永远不许执行**）：
+#   help 探测曾经撞上 `D:\Tools\net\nmap\Uninstall.exe` —— 跑一次 `--help` **直接弹出了 Nmap 的卸载向导**，
+#   还带出了一个反馈网页。nmap 本体没被卸掉（已核：`nmap --version` 正常），但这是**不可接受的副作用**。
+#   任何名字像安装器/卸载器/修复器的，一律**不执行**。
+NEVER_EXEC = re.compile(
+    r"(^|[^a-z])(unins|uninstall|setup|install|installer|installutil|repair|modify|"
+    r"remove|uninst|vc_redist|dotnetfx|msiexec|regsvr|silent_uninstall)([^a-z]|$)",
+    re.IGNORECASE)
+# ★ 进一步收口：help 探测**只探我们自己写的 wrapper**（`<工具根>\cli\` 下）。
+#   理由：那里的 .cmd/.bat 是我们自己写的、可审计、无副作用；工具根其余部分是第三方
+#   （厂商安装目录里什么都可能有，卸载器、更新器、带 UI 的维护程序）。
+#   想扫全量？显式加 `--probe-help-anywhere`，并自己承担后果。
+OWN_PROBE_DIR = "cli"
+
+# 默认 False：help 探测只探「我们自己的 wrapper」。想扫工具根其余部分，加 --probe-help-anywhere。
+PROBE_ANYWHERE = False
+
+PROBE_TIMEOUT = 1.5
 MAX_CANDIDATES = 6000
-MAX_HELP_PROBES = 220
+MAX_HELP_PROBES = 150
 
 
 def state_dir() -> Path:
@@ -263,51 +294,137 @@ def scan_candidates(roots: list[Path], max_depth: int = 5) -> list[Path]:
 
 def classify_by_rules(p: Path) -> tuple[str, str] | None:
     """先拿**文件名**匹配（规则里的 ^ 才是有意义的），再退到**完整路径**匹配
-    （有些能力只体现在目录名上，例如 `\\wireshark\\` 下的 exe）。"""
+    （有些能力只体现在目录名上，例如 `\\wireshark\\` 下的 exe）。
+    **例外**：通用启动器名（`mcp` / `run` / `python` …）**只拿文件名匹配** ——
+    否则 `...\\angr-mcp-venv\\Scripts\\mcp.exe` 会因为路径里有 `\\angr` 被误判成「符号执行」。"""
+    generic = p.stem.lower() in GENERIC_STEMS
     for pat, cap, why in RULES:
         try:
-            if re.search(pat, p.name, re.IGNORECASE) or re.search(pat, str(p), re.IGNORECASE):
+            if re.search(pat, p.name, re.IGNORECASE):
+                return cap, why
+            if not generic and re.search(pat, str(p), re.IGNORECASE):
                 return cap, why
         except re.error:
             continue
     return None
 
 
-def classify_by_help(p: Path) -> tuple[str, str] | None:
-    for flag in ("--help", "-h", "-?"):
+def _safe_to_probe(p: Path) -> bool:
+    """能不能跑它一次 `--help`？三条都要过：
+    ① 不是安装器/卸载器/修复器（NEVER_EXEC）—— 2026-10-15 撞出过 Nmap 卸载向导；
+    ② 不是已知 GUI 版（GUI_HINTS）—— 会弹窗；
+    ③ **只探我们自己写的 wrapper**（默认 `<工具根>\\cli\\`）—— 第三方安装目录里什么都可能有。"""
+    name = p.name.lower()
+    if NEVER_EXEC.search(name) or NEVER_EXEC.search(p.stem):
+        return False
+    if p.stem.lower() in GUI_HINTS:
+        return False
+    if not PROBE_ANYWHERE:
+        cli = (Path(os.environ.get("REVERSE_TOOL_ROOT") or r"D:\Tools") / OWN_PROBE_DIR)
         try:
-            r = subprocess.run([str(p), flag], capture_output=True, text=True,
-                               encoding="utf-8", errors="replace", timeout=PROBE_TIMEOUT)
-        except (OSError, subprocess.TimeoutExpired, ValueError):
+            if cli.resolve() not in p.resolve().parents:
+                return False
+        except OSError:
+            return False
+    return True
+
+
+def classify_by_help(p: Path) -> tuple[str, str] | None:
+    """跑一次 `--help` 抓关键词。
+    ★ 2026-10-15 实测教训（三处，都踩过）：
+      1) **绝不能用 `capture_output=True`** —— GUI 程序会把子进程 detach 出去，孙进程继承管道写端，
+         `communicate()` 永远等不到 EOF，`timeout=` 也救不了 → 整轮扫描卡死（实测 7 分钟跑不完）。
+         改用「输出重定向到临时文件 + 超时就 kill」，不碰管道。
+      2) **不能对 GUI 版乱跑 `--help`** —— 会弹窗。
+      3) ★ **绝不能对安装器/卸载器跑任何东西** —— 实测撞上 nmap 目录下的 `Uninstall.exe`，
+         直接弹出了卸载向导 + 反馈网页。见 `_safe_to_probe`。"""
+    if not _safe_to_probe(p):
+        return None
+    import tempfile
+    flags = ("--help", "-h")
+    for flag in flags:
+        tmp = None
+        try:
+            tmp = tempfile.TemporaryFile()
+            proc = subprocess.Popen(
+                [str(p), flag], stdin=subprocess.DEVNULL,
+                stdout=tmp, stderr=subprocess.STDOUT,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+            try:
+                proc.wait(timeout=PROBE_TIMEOUT)
+            except subprocess.TimeoutExpired:
+                try:
+                    proc.kill()
+                    proc.wait(timeout=3)
+                except Exception:                       # noqa: BLE001
+                    pass
+                continue
+            tmp.seek(0)
+            txt = tmp.read(8000).decode("utf-8", "replace")
+        except (OSError, ValueError):
             return None
-        txt = ((r.stdout or "") + (r.stderr or ""))[:8000]
+        finally:
+            if tmp is not None:
+                try:
+                    tmp.close()
+                except OSError:
+                    pass
         if len(txt) < 20:
             continue
+        # ★ 2026-10-15：单条关键词命中太松（实测 fzf 的帮助里有 "fuzzy" → 被判成「目录爆破」；
+        #   rg 的帮助里有 "pattern" → 被判成 YARA；ffprobe 里有 "hash" → 被判成「口令破解」）。
+        #   改成**同一能力要有 ≥2 条不同关键词命中**才认，且取命中数最多的那个。
+        hits: dict[str, list[str]] = {}
         for pat, cap in HELP_HINTS:
             if re.search(pat, txt, re.IGNORECASE):
-                return cap, f"help 关键词命中 /{pat}/"
+                hits.setdefault(cap, []).append(pat)
+        if hits:
+            best = max(hits.items(), key=lambda kv: len(kv[1]))
+            if len(best[1]) >= 2:
+                return best[0], f"help 关键词命中 {len(best[1])} 条（{best[1][0]} 等）"
     return None
 
 
-def build(probe_help: bool = True) -> dict:
+def build(probe_help: bool = True, help_budget: int = MAX_HELP_PROBES) -> dict:
+    from concurrent.futures import ThreadPoolExecutor
+
     roots = search_roots()
     cands = scan_candidates(roots)
+    tool_root = (os.environ.get("REVERSE_TOOL_ROOT") or r"D:\Tools").lower()
     index: dict[str, list[dict]] = {c: [] for c in CAPABILITIES}
     unknown: list[str] = []
-    probes = 0
+    need_help: list[Path] = []
+
+    def _add(p: Path, cap: str, why: str) -> None:
+        index.setdefault(cap, []).append(
+            {"tool": p.stem, "path": str(p), "why": why,
+             "how": "help-probe" if "help" in why else "rule"})
+
     for p in cands:
         hit = classify_by_rules(p)
-        if not hit:
-            if probe_help and probes < MAX_HELP_PROBES:
-                probes += 1
-                hit = classify_by_help(p)
-            if not hit:
-                unknown.append(str(p))
-                continue
-        cap, why = hit
-        index.setdefault(cap, []).append({"tool": p.stem, "path": str(p), "why": why,
-                                          "how": "rule" if "help" not in why else "help-probe"})
-    # 去重 + 排序：clawer/wrapper 优先（cli 下的）→ 路径短优先 → 名字字典序；每个能力最多留 12 个
+        if hit:
+            _add(p, hit[0], hit[1])
+            continue
+        # ★ 2026-10-15：help 探测的预算**只花在「我们自己写的 wrapper」上**，而且**并发跑**。
+        #   旧版把预算花在 PATH 扫到的系统目录上（PowerShell / WindowsApps / system32），
+        #   串行 220 次 → 实测 200 秒跑不完；更糟的是会撞上第三方安装目录里的卸载器（见 _safe_to_probe）。
+        if probe_help and len(need_help) < help_budget and _safe_to_probe(p):
+            need_help.append(p)
+        else:
+            unknown.append(str(p))
+
+    probes = 0
+    if need_help:
+        probes = len(need_help)
+        with ThreadPoolExecutor(max_workers=8) as ex:
+            for p, hit in zip(need_help, ex.map(classify_by_help, need_help)):
+                if hit:
+                    _add(p, hit[0], hit[1])
+                else:
+                    unknown.append(str(p))
+
+    # 去重 + 排序：cli 下的 wrapper 优先 → 路径短优先 → 名字字典序；每个能力最多留 12 个
     cli = (Path(os.environ.get("REVERSE_TOOL_ROOT") or r"D:\Tools") / "cli")
     for cap, lst in index.items():
         best: dict[str, dict] = {}
@@ -349,10 +466,16 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--scan", action="store_true", help="重建索引")
     ap.add_argument("--no-help-probe", action="store_true", help="不跑 --help 探测（快，但认不出没见过的新工具）")
+    ap.add_argument("--probe-help-anywhere", action="store_true",
+                    help="把 --help 探测扩到工具根全部（默认**只探我们自己写的 cli/ wrapper**）—— "
+                         "谨慎使用：第三方安装目录里可能有卸载器/更新器，跑起来会有副作用")
     ap.add_argument("--find", metavar="CAP", help="按能力查工具")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--list-capabilities", action="store_true")
     a = ap.parse_args()
+
+    global PROBE_ANYWHERE
+    PROBE_ANYWHERE = bool(a.probe_help_anywhere)
 
     if a.list_capabilities:
         for cid, (name, domain) in CAPABILITIES.items():
