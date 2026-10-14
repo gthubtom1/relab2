@@ -177,3 +177,26 @@ tail -5 "$TEMP/out.log"
 - [`HANDOFF-2026-10-11.md`](../_归档-禁读-历史文档/_history/HANDOFF-2026-10-11.md) —— 最近一轮的交付与**待办**（**已归档，AI 禁读**；只有人需要追溯时再翻）
 - [`AUDIT-2026-10-10-FINAL.md`](../_归档-禁读-历史文档/_history/AUDIT-2026-10-10-FINAL.md) —— 20 小时全项目终审，含 6 个「从未真正工作过」的门禁（**已归档，AI 禁读**）
 - [`../START-HERE.md`](../START-HERE.md) —— 项目入口
+
+---
+
+## 8. `check_r4_no_fixed_flow` 的扫描边界（明写的取舍，不是漏的）
+
+2026-10-15 独立审计指出：「无固定流程」这条门的旧判据只抓**章节标题**式的 `## 第 1 步 / Step 1`，
+正文里成串的 `Step 1 / Step 2 / Step 3 …` 全部漏过 —— 实测 `binary-diff`、`patch-diff-exploit`、
+`firmware-pentest`、`ida-reverse` 四张卡都中招，门却一直报 PASS。
+
+**已修**：判据加了「连续 ≥3 行的 `Step N / 第N步` 正文块」检测 + 自带控制组（喂一份只在正文成串的样本必须判红）。
+那四张卡已全部改成**判据表 / 信号标题**（`Step 1..9` → 「信号：… → 动作」，`完整流程` → `怎么走（判据，不是流程）`）。
+
+**边界**：本判据**只扫 `skills/*/SKILL.md`**，不扫各卡 `references/**` 下成串的 `Step N`。理由：
+- `SKILL.md` 是"这个技能该怎么做"的**第一读面**，那里的工序会被当成流程 → 必须清；
+- `references/**` 里成串的 `Step` 多是**具体技法的演练**（某条 IDOR 利用链、某个固件场景的复盘），
+  属于技术内容，不是"全局任务流程"。
+
+**这不是"没做"，是"明写不做"**：如果你（主人）认为 references 里那一层也该清，说一声，判据扩一行就行。
+
+已知仍在 `references/**` 里的成串 Step（截至 2026-10-15）：
+`api-security/references/dos/05-http2-continuation.md`、`dos/09-cache-cdn-dos.md`、
+`idor/01-idor-enumeration.md`、`rate-limit/02-brute-force-tactics.md`、
+`patch-diff-exploit/references/diff-tools-comparison.md`。

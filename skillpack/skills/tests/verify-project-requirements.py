@@ -180,6 +180,34 @@ def _step_blocks(txt: str, min_run: int = 3) -> list[tuple[int, int]]:
     return out
 
 
+SEQ_STEP_RE = re.compile(r"^\s*(?:Step\s*\d|第\s*[一二三四五六七八九十\d]{1,2}\s*步)", re.IGNORECASE)
+
+
+def _seq_step_blocks(txt: str, min_run: int = 3) -> list[tuple[int, int]]:
+    """找出「连续 ≥min_run 行的 Step N / 第N步」**正文块** -> [(起始行号, 行数)]。
+
+    ★ 2026-10-15 审计实测补洞：旧 R4 只抓**章节标题**式的 Step N，
+      正文里成串的「Step 1 / Step 2 / Step 3 …」全部漏过（binary-diff / patch-diff-exploit /
+      firmware-pentest / ida-reverse 四张卡都中招，门却一直报 PASS）。
+      单个引用（"见本卡 §… 第 4 步"）不算 —— 成串的才是编排。
+    """
+    out: list[tuple[int, int]] = []
+    run_start, run_len = None, 0
+    for i, line in enumerate(txt.splitlines(), 1):
+        if SEQ_STEP_RE.match(line):
+            if run_start is None:
+                run_start, run_len = i, 1
+            else:
+                run_len += 1
+        else:
+            if run_start is not None and run_len >= min_run:
+                out.append((run_start, run_len))
+            run_start, run_len = None, 0
+    if run_start is not None and run_len >= min_run:
+        out.append((run_start, run_len))
+    return out
+
+
 def check_r1_base_cards() -> list[str]:
     errs = []
     cards = _base_cards()
@@ -235,6 +263,13 @@ def check_r3_entry_card() -> list[str]:
 
 
 def check_r4_no_fixed_flow() -> list[str]:
+    """无固定流程（铁律①的判据）。
+
+    ★ 扫描范围**故意只到 `skills/*/SKILL.md`**，不扫各卡的 `references/**`。理由：
+      SKILL.md 是"这个技能该怎么做"的第一读面 —— 那里的 `## 工作流 / Step 1..5` 会被当成工序，
+      必须清；而 references 里成串的 Step 多是**具体技法的演练**（某条 IDOR 利用链、某个固件场景的复盘），
+      那是技术内容，不是"全局任务流程"。**这条边界是明写的，不是漏的**（见 docs/KNOWN-BOUNDARIES.md）。
+    """
     errs = []
     for p in _skill_files():
         txt = _read(p)
@@ -250,6 +285,16 @@ def check_r4_no_fixed_flow() -> list[str]:
         for m in re.finditer(r"^#{2,4}\s*(第\s*[一二三四1-4]\s*步|Step\s*[1-4])\b", txt, re.MULTILINE):
             ln = txt[:m.start()].count("\n") + 1
             errs.append(f"无固定流程 {name}/SKILL.md:{ln} 章节标题就是「第N步/Step N」")
+        # ★ 2026-10-15 审计实测补洞：旧判据只抓**章节标题**，正文里那种「连续 ≥3 行的 Step N / 第N步」
+        #   编排全部漏过（实测 binary-diff / patch-diff-exploit / firmware-pentest / ida-reverse 都中招，
+        #   全包仍报 PASS）。现在把「连续 ≥3 行的步骤块」也当成固定流程 ——
+        #   单个引用（"见本卡 §Analysis workflow 第 4 步"）不算，成串的才算。
+        for start, n in _seq_step_blocks(txt):
+            errs.append(f"无固定流程 {name}/SKILL.md:{start} 连续 {n} 行「Step N / 第N步」步骤编排")
+        # 「进入工作流第一步并执行」这类措辞本身就预设了序列
+        for m in re.finditer(r"进入[「\"']?工作流[」\"']?\s*第一步", txt):
+            ln = txt[:m.start()].count("\n") + 1
+            errs.append(f"无固定流程 {name}/SKILL.md:{ln} 「进入工作流第一步」预设了步骤序列")
     return errs
 
 
@@ -461,6 +506,11 @@ def run_selftest() -> list[str]:
        not re.search(r"^#{2,4}\s*(第\s*[一二三四1-4]\s*步|Step\s*[1-4])\b",
                      CONTROLS["R4"][1], re.MULTILINE):
         fails.append("R4 控制组未转红")
+    # ★ 2026-10-15：新加的「正文步骤块」判据**必须自带控制组**，否则又是一个不会红的门。
+    #   这份样本只在**正文**里成串出现，没有任何标题、也没有「必须按顺序」字样 —— 只有新判据能抓到它。
+    r4_body = "## 工作流\n\nStep 1 准备数据\nStep 2 批量导出\nStep 3 LLM 比对\nStep 4 应用结果\n"
+    if not _seq_step_blocks(r4_body):
+        fails.append("R4 正文步骤块控制组未转红（新判据抓不到）")
     if not re.search(r"给我.{0,4}卡密|需要一张卡密", CONTROLS["R6"][1]):
         fails.append("R6 控制组未转红")
     if not re.search(STALE_PATTERNS[0][0], CONTROLS["R12"][1]):

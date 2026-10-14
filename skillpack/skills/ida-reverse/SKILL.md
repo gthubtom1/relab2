@@ -15,7 +15,7 @@ description: IDA Pro 静态逆向：反汇编、反编译、交叉引用、定�
 3. `NOW`: 确认当前任务是否命中本 skill 的适用范围
 5. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
 6. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
-7. `ACT`: 进入"工作流"第一步并执行，不要停在确认状态
+7. `ACT`: 按本卡的「工作流」挑**当下适用**的那一条动手；不要停在确认状态
 
 ## 已知问题与反思（必读）
 
@@ -169,7 +169,7 @@ ERR:open_timeout_600s
 
 ## 核心工具列表
 
-### 概况分析（第一步）
+### 概况分析（先摸清它到底是什么）
 - `idapro_survey_binary(detail_level="minimal")` — 快速概况：函数数、字符串、段、入口点、导入分类（加密/网络/文件IO）
 - `idapro_list_funcs(queries)` — 列出函数（分页、按名称过滤）
 - `idapro_list_globals(queries)` — 列出全局变量
@@ -298,7 +298,7 @@ idapro_survey_binary(detail_level="minimal")
 - **干净导入表**：注明动态加载嫌疑，推动动态 API 断点验证
 - 热门函数（高 xref 计数的函数通常是关键逻辑）
 
-**硬门禁**：未将 imports 视图/分类摘要（或合法等价锚点）写入 Evidence 前，MUST NOT 进入 Step 4 深挖结论，MUST NOT 声称 survey 完成。导入表为空或查询失败时仍 MUST 记录失败现象。加壳 IAT 修复失败时 MUST 记 `E-iat-repair-fail` 并转动态调试抓 API，禁止静态死磕。用户要求重做导入表/IAT 检查时 MUST 重做被点名步骤（阻塞时可行性门闩：说明+确认；强制则标 quality=unreadable），禁止改换无关步骤。
+**硬门禁**：未将 imports 视图/分类摘要（或合法等价锚点）写入 Evidence 前，MUST NOT 进入「深入关键函数」下结论，MUST NOT 声称 survey 完成。导入表为空或查询失败时仍 MUST 记录失败现象。加壳 IAT 修复失败时 MUST 记 `E-iat-repair-fail` 并转动态调试抓 API，禁止静态死磕。用户要求重做导入表/IAT 检查时 MUST 重做被点名步骤（阻塞时可行性门闩：说明+确认；强制则标 quality=unreadable），禁止改换无关步骤。
 
 ### 深入关键函数
 ```
@@ -310,20 +310,20 @@ idapro_decompile(addr="函数名")
 idapro_disasm(addr="函数名", max_instructions=50)
 ```
 
-### Step 5: 数据流和交叉引用
+### 数据流与交叉引用（信号：已经定位到一个关键地址/字符串，想看它从哪来、到哪去）
 ```
 idapro_xrefs_to(addrs="关键地址/字符串")
 idapro_callgraph(roots=["关键函数"], max_depth=3)
 idapro_trace_data_flow(addr="关键地址", direction="backward", max_depth=5)
 ```
 
-### Step 6: 记录和优化
+### 把理解写回 IDB（信号：函数看懂了，想让它对下一个人/下一轮可读）
 ```
 idapro_set_comments(items=[{"addr": "0x140001000", "comment": "你的理解"}])
 idapro_rename(batch={"func": [{"addr": "函数地址", "name": "有意义的名字"}]})
 ```
 
-### Step 7: 输出报告
+### 出报告（信号：分析告一段落，要把结论与证据落盘）
 分析完成后，生成 `../../examples/ctf-demo/report/report.md` 记录发现和步骤。
 
 ## Prompt 工程准则
@@ -447,7 +447,7 @@ ida-pro-mcp --config
 - 数据库落盘：`open.ps1 -TimeoutSeconds 600` 返回 `OK:文件:session_id`（标 `(temp copy)` 时另记副本路径），且 `idb_save` 后 `<目标名>.i64`（或 `.id0/.id1/.nam` 三件套）在目标目录可 `rahash2 -a sha256` 出值
 - 重命名结果：`idapro_rename(batch)` 后 `idapro_list_funcs` 中可见新名字；`idapro_export_funcs(addrs, format="c_header")` 落盘文件非空
 - 补丁 diff：`idapro_patch`/`idapro_patch_asm` 前后各取一次 `idapro_get_bytes`，两组字节 + 原样本 sha256 全部写入证据
-- 报告存在：`../../examples/ctf-demo/report/report.md` 含 Step 3 的 `E-imports`（DLL/SYS 另有 `E-exports`）
+- 报告存在：`../../examples/ctf-demo/report/report.md` 含导入表那一步的 `E-imports`（DLL/SYS 另有 `E-exports`）
 - 可运行最小命令（自验通道仍通）：
   - `powershell -File "<skill-root>\ida-reverse\scripts\start.ps1"` → `OK:<工具数>`
   - `powershell -File "<skill-root>\ida-reverse\scripts\open.ps1" -Path "<目标>" -TimeoutSeconds 600` → `OK:...:session`

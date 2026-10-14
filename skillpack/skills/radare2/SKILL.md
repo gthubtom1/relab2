@@ -17,7 +17,7 @@ description: radare2/r2 命令行二进制分析：反汇编、交叉引用、st
 3. `NOW`: 确认当前任务是否命中本 skill 的适用范围
 5. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
 6. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
-7. `ACT`: 进入"工作流"第一步并执行，不要停在确认状态
+7. `ACT`: 按本卡的「工作流」挑**当下适用**的那一条动手；不要停在确认状态
 
 ## 适用范围
 

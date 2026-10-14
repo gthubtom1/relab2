@@ -13,7 +13,7 @@ description: 红队 EDR 绕过：unhook、direct syscall、AMSI/ETW 绕过、反
 3. `NOW`: 确认当前任务是否命中本 skill 的适用范围
 5. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
 6. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
-7. `ACT`: 进入"工作流"第一步并执行，不要停在确认状态
+7. `ACT`: 按本卡的「工作流」挑**当下适用**的那一条动手；不要停在确认状态
 
 # EDR 绕过：从防御方实现逆向到红队绕过
 
@@ -124,7 +124,7 @@ pe-sieve64.exe /pid 1234 /shellc 3 /modules 3 /dir hooks_dump
 
 代码骨架见 `references/unhook-techniques.md` 与 `references/telemetry-blinding.md`。
 
-### Step 5：本地 sandbox 验证
+### 验证：在本地隔离环境里过一遍（信号：implant 已经能在测试机上跑起来）
 
 ```powershell
 # 在隔离环境部署目标 EDR 试用版（Defender 默认即可起步）
@@ -138,7 +138,7 @@ sysmon64.exe -i sysmonconfig.xml
 #   - EDR 控制台
 ```
 
-### Step 6：投递
+### 投递形态（信号：本地不告警了，才轮到想怎么落地）
 
 - 文件落地路径用合法软件目录
 - PPID spoof 到 explorer.exe

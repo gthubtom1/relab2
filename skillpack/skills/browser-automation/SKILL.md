@@ -14,7 +14,7 @@ description: 浏览器/桌面 GUI 自动化：Playwright/agent-browser 点击/�
 2. `NOW`：确认当前任务是否命中本 skill 的适用范围
 3. `NOW`：读取 `../TOOLS.md`，校验工具可用性和实际路径
 4. `NEXT`：缺工具时调用 bootstrap，不要猜路径
-5. `ACT`：进入"工作流"第一步并执行，不要停在确认状态
+5. `ACT`：按本卡的「工作流」挑**当下适用**的那一条动手；不要停在确认状态
 
 ## 适用范围
 
