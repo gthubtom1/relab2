@@ -185,7 +185,53 @@ def build_server(ctx: Ctx) -> Server:
                     "timeout_s": {"type": "integer", "description": "每步超时秒数，默认 180"}},
                     "required": ["path"]},
             ),
+            types.Tool(
+                name="find_capability",
+                description=("按**能力**找本机工具 —— 「谁能解固件」「谁能抓包」「谁能反编译」。"
+                             "能力索引是运行时扫描出来的（按规则 + help 关键词归类），"
+                             "所以**换机、装了我们没见过的同类新工具，也能被认出来**；不看工具名清单。"
+                             "capability 留空 = 列出本机所有已识别能力及数量。"),
+                inputSchema={"type": "object", "properties": {
+                    "capability": {"type": "string",
+                                   "description": "能力 id，如 firmware-unpack / static-decompile / portscan / websql / capture / crack / apk / hook / dynamic-debug"},
+                    "rescan": {"type": "boolean", "description": "true = 先重新扫描本机（首次或换机后跑一次）"}}},
+            ),
         ]
+
+    def _cap_index(args: list[str], timeout: int = 300) -> tuple[int, str]:
+        """在同一目录下直接 import capability-index.py，**不起子进程** ——
+        子进程会把 stdio 管道一起带进去，在 MCP 服务器里极易把调用拖住（2026-10-15 实测）。
+        找不到索引时按需重建。"""
+        try:
+            import importlib.util
+            here = Path(__file__).resolve().parent
+            spec = importlib.util.spec_from_file_location("capindex", here / "capability-index.py")
+            mod = importlib.util.module_from_spec(spec)          # type: ignore[arg-type]
+            spec.loader.exec_module(mod)                         # type: ignore[union-attr]
+        except Exception as e:                                   # noqa: BLE001
+            return 2, f"加载 capability-index 失败：{e}"
+
+        want_scan = "--scan" in args
+        find = None
+        if "--find" in args:
+            i = args.index("--find")
+            find = args[i + 1] if i + 1 < len(args) else None
+        if want_scan or mod.load() is None:
+            idx = mod.build(probe_help=False)
+            mod.state_dir().joinpath("capabilities.json").write_text(
+                json.dumps(idx, ensure_ascii=False, indent=1), encoding="utf-8")
+        else:
+            idx = mod.load()
+        if find is None:
+            lines = [f"扫描 {idx['candidates']} 个候选，未知 {idx['unknown_count']} 个"]
+            for c, lst in idx["capabilities"].items():
+                lines.append(f"  {c:18s} {len(lst):3d} 个  e.g. "
+                             + ", ".join(x["tool"] for x in lst[:4]))
+            return 0, "\n".join(lines)
+        lst = idx["capabilities"].get(find) or []
+        if not lst:
+            return 1, f"本机没有能做「{find}」的工具。"
+        return 0, "\n".join(f"  {x['tool']:22s} {x['why']:26s} {x['path']}" for x in lst)
 
     @server.call_tool()
     async def call_tool(name: str, arguments: dict) -> types.CallToolResult:
@@ -229,6 +275,21 @@ def build_server(ctx: Ctx) -> Server:
                            "下一步按信号选刀，见 reverse-engineering/references/signal-to-tool-decision.md")
             return types.CallToolResult(content=[types.TextContent(
                 type="text", text=json.dumps(out, ensure_ascii=False, indent=1)[:24000])])
+
+        if name == "find_capability":
+            cap = (arguments.get("capability") or "").strip()
+            if arguments.get("rescan") or not cap:
+                rc, out = await anyio.to_thread.run_sync(
+                    lambda: _cap_index(["--scan", "--no-help-probe"]))
+                if rc != 0 and not cap:
+                    return types.CallToolResult(isError=True, content=[types.TextContent(
+                        type="text", text=f"扫描失败：{out[:2000]}")])
+                if not cap:
+                    return types.CallToolResult(content=[types.TextContent(type="text", text=out[:8000])])
+            rc, out = await anyio.to_thread.run_sync(lambda: _cap_index(["--find", cap]))
+            return types.CallToolResult(
+                isError=(rc != 0),
+                content=[types.TextContent(type="text", text=out[:8000] or f"本机没有能做「{cap}」的工具。")])
 
         return types.CallToolResult(isError=True, content=[types.TextContent(
             type="text", text=f"未知工具名：{name}")])
