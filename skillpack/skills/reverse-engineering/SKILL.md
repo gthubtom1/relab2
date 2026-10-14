@@ -29,7 +29,7 @@ metadata:
    （Q0 任务归类 / Q1 目标类型 / Q2 保护层次 / Q3 目标成品），按分流结果进入对应工序卡。
    日常开发 / 维护 / 修 bug / 部署 / 文档：Q0 判 A，本卡到此为止，零额外工序。
 5. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
-6. `NEXT`: **看一眼工具通道**（与工具定位同时做，1 秒）—— `powershell -NoProfile -ExecutionPolicy Bypass -File C:\relab2\skillpack\skills\scripts\mcp-status.ps1` 给三列：注册了哪些 / 谁在监听 / 怎么起。要用 IDA/x64dbg/Ghidra 联动而通道 `closed` → 照它给的命令自己起，起完重跑确认 `LISTEN`。**注册 ≠ 在监听；HTTP 型冷启是设计，不是故障**；起通道是 agent 自己的活，不许假装看不见工具，也不许让用户手改 `mcp.json`（端点事实源 `../references/tool-registry.md`）。
+6. `NEXT`: **工具取用优先级：MCP 通道 > CLI 孪生 > GUI** —— `idalib-mcp`（stdio）/ `idapro`（http 13337，`scripts/start.ps1`）/ `pyghidra-mcp`（stdio 或 http 9111）/ `x64dbg-mcp`（http 9094，`mcp-status.ps1` 打印本机启动命令）；没有 MCP 就用 CLI 孪生（`idat`/`analyzeHeadless`/`r2`/`diec`，走探测层）；GUI 是同步阻塞的最后手段。**只在真要用某个通道时才启动它**；只有观测到阻塞（通道 `closed`、工具报错、拿不到结果）才跑 `../scripts/mcp-status.ps1` 诊断 —— 不做事前自检。**注册 ≠ 在监听；HTTP 型冷启是设计，不是故障**；不许让用户手改 `mcp.json`（端点事实源 `../references/tool-registry.md`）。
 7. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
 8. `ACT`: 按 re-agent-workflow 推进；进入工作流第一步并执行，不要停在确认状态
 

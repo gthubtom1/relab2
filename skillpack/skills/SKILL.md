@@ -6,9 +6,35 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 
 本目录收录了一系列逆向工程相关的技能模块，每个子目录是一个独立模块，内含 `SKILL.md` 描述其适用场景、工具链和工作流程。
 
-## CRITICAL: 路由执行契约（必须立即执行）
+## 第一屏 · 目标形态 → 第一个动作（直通表）
 
-读完本文件后，不允许只回复“已读/已理解”。必须按顺序执行：
+> 拿到东西先看这一屏，**先做表里的第一个动作，再谈别的**。这里只给「第一动」，不给流程；
+> 走完第一动之后换不换技能、换什么，由那张卡自己的判据说话（完整决策树见
+> `reverse-engineering/references/signal-to-tool-decision.md`）。
+
+| 拿到的东西 | 第一个动作（先做这个） |
+|---|---|
+| Windows PE（.exe/.dll/.sys） | `diec -d -e -j` 查壳/熵/编译器 → 判 L0–L4 层次（`reverse-engineering/references/assault-entry.md`） |
+| Linux ELF / .so | `file` + `readelf -h -S`（或 `rabin2 -I`）；Go/Rust 先恢复符号（`go-rust-reverse/`） |
+| .NET 托管程序集 | `ilspycmd` / `dnSpy.Console` 直接反编译（`dotnet-reverse/`） |
+| APK / DEX | `jadx -d out` + `apktool d`；native 逻辑再切 `.so`（`apk-reverse/`） |
+| Mach-O / IPA | `file` + `otool -l`；先看 `codesign -dv`（`macos-reverse/`） |
+| JS / Electron / 前端包 | 解 `asar`、在 CDP 里看 network；签名在 JS 里 → `js-reverse/` / `web-protocol-reverse/` |
+| 固件镜像（.bin/.img/ROM） | `binwalk` 或 `unblob` 先解出文件系统，再谈仿真（`firmware-pentest/`） |
+| 抓包（.pcap/.har/.saz） | 按域名 + 状态码 + `sign/token/auth` 过滤，先出请求清单（`protocol-reverse/` / `web-protocol-reverse/`） |
+| 源码在手 | `code-audit/` 读源码；不要进二进制路线 |
+| 桌面客户端（Electron/Qt/.NET GUI） | 先画信任边界表（`thick-client/`） |
+| 只有网络资产（域名/IP） | 先被动侦察 + 指纹（`pentest-tools/`），再谈漏洞面 |
+
+**工具在手边（取用优先级：MCP 通道 > CLI 孪生 > GUI）**：
+`idalib-mcp`（stdio，装好即用）/ `idapro`（http `127.0.0.1:13337`，起 `<技能包根>\skills\ida-reverse\scripts\start.ps1`）/
+`pyghidra-mcp`（stdio，或 http `127.0.0.1:9111`）/ `x64dbg-mcp`（http `127.0.0.1:9094`，启动命令 `mcp-status.ps1` 会打印）。
+没有 MCP 时用 CLI 孪生（`idat`/`analyzeHeadless`/`r2`/`diec`…，路径走探测层 `Resolve-ReverseToolSpec -Name <id>`）；GUI 是同步阻塞的最后手段。
+**只在真要用某个通道时才启动它**；只有观测到阻塞（通道 `closed` / 工具报错 / 拿不到结果）才去诊断或唤醒 —— 不做事前自检。
+
+## 路由执行契约（点火时要跑，按顺序）
+
+读完本文件后，不允许只回复“已读/已理解”。点火四步照下面跑（每一步都是**动作**，不是确认）：
 
 1. `NOW`：跑平台原生 router（Windows `scripts/master-route.ps1`；Linux/macOS/Kali `scripts/master-route.sh`），从 `config/routing.json` 定 PRIMARY；疑难再读 `routing.md` 三轴附录。
 2. `NOW`：平台原生 `case-init` 落地当前分析项目的 `work/<case>/scope.md` —— 记录目标、网络档、产出物（本包不设目标授权门；产物一律落调用者项目，见 `../RULES_zh.md`）。本地离线样本使用 `offline-sample` preset + explicit sample。

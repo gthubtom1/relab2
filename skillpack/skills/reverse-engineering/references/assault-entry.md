@@ -69,11 +69,19 @@
 |---|---|---|
 | **壳/虚拟化** | `diec -d -e -j` 报 VMP/Themida/Enigma；入口只有 `jmp` 跳板；函数计数异常低；节区高熵 | `vmp-virtualization-analysis.md` / `unpack-and-memory-dump.md`；**先判形态再动手**，别在壳层改字节 |
 | **自检（反调试）** | attach 即退/秒退、`IsDebuggerPresent`/`CheckRemoteDebuggerPresent` 命中、单步异常、时间差测量、父进程名校验 | `anti-debug-bypass.md`（自检表 §1 + ScyllaHide 专项）；过层判据：peb/crdp/dbgport 三项归零 + 程序运行 >10s |
-| **工具通道** | **动手前先跑一次** `powershell -NoProfile -ExecutionPolicy Bypass -File <技能包根>\skills\scripts\mcp-status.ps1`（1 秒）：三列「谁注册 / 谁在 LISTEN / 怎么起」；要用的 IDA(x64dbg/Ghidra) 通道如果 `closed`，照它给的命令自己起，起完重跑确认 `LISTEN` 再 attach。**注册 ≠ 在监听；冷启是设计不是故障** | 端点事实源 `references/tool-registry.md`；不许假装看不见工具，也不许让用户手改 `mcp.json` |
+| **工具通道** | 要用某个通道时**先看它起没起**（不做事前自检）：`powershell -NoProfile -ExecutionPolicy Bypass -File <技能包根>\skills\scripts\mcp-status.ps1` 三列「谁注册 / 谁在 LISTEN / 怎么起」；通道 `closed` 就照它给的命令自己起，起完重跑确认 `LISTEN` 再 attach。**注册 ≠ 在监听；冷启是设计不是故障** | 端点事实源 `references/tool-registry.md`；不许假装看不见工具，也不许让用户手改 `mcp.json` |
 
 **时间盒（换法阈值）**：静态判壳/找 OEP **约 2 分钟**无关键结论 → 转动态；
 动态 attach **两次**被自检打掉 → 停手，回自检层按 `anti-debug-bypass.md` 一条条过；
 过完自检层再 attach，**不做第三次裸 attach**（第三次只是把同一个坑再踩一遍）。
+
+**工具在手边（取用优先级：MCP 通道 > CLI 孪生 > GUI）**：
+
+1. **MCP 通道**（看得见、点得着，首选）：`idalib-mcp`（stdio，装好即用）/ `idapro`（http `127.0.0.1:13337`，起 `<技能包根>\skills\ida-reverse\scripts\start.ps1`）/ `pyghidra-mcp`（stdio，或 http `127.0.0.1:9111`）/ `x64dbg-mcp`（http `127.0.0.1:9094`，启动命令 `mcp-status.ps1` 会打印）。
+2. **CLI 孪生**（没有 MCP 时的第二选择）：`idat` / `analyzeHeadless` / `r2` / `diec` / `floss` / `pe-sieve` —— 路径唯一入口是探测层 `Resolve-ReverseToolSpec -Name <id>`。
+3. **GUI**（最后手段）：GUI 是**同步阻塞**的，agent 拉起来会把回合卡死；能不用就不用，能换 CLI 孪生就换。
+
+**只在真要用某个通道时才启动它。** 只有观测到阻塞（通道 `closed`、工具报错、拿不到结果）才去唤醒或诊断 —— **不做事前自检**（REA 同款纪律：诊断按观测触发，不按流程触发）。
 
 ---
 
@@ -288,7 +296,7 @@ stateDiagram-v2
 产物落在报告 `## survey` / `## layers` / `## unknowns`。
 
 **出口条件**：十项勘察问题（格式架构版本 / 结构与节区 / 字符串常量 / 能力特征 /
-反调试面 / 跑不跑得起来 / 外部依赖 / 功能清单 / **工具通道状态**（`mcp-status.ps1` 三列：谁注册、谁在 LISTEN、怎么起；要用的通道起没起） / 主动遗漏检查）都有答案；
+反调试面 / 跑不跑得起来 / 外部依赖 / 功能清单 / **要用到的工具通道起没起**（要用时才查，`mcp-status.ps1` 三列：谁注册、谁在 LISTEN、怎么起；没用到就写「本轮未用」） / 主动遗漏检查）都有答案；
 `## unknowns` 每项写明「影响什么、试过什么、下一步、是否阻塞」。
 
 **必须跳走的情况**：高层判定反复被推翻（判错层次）→ 留在 SURVEY 重判，别硬往下推。
