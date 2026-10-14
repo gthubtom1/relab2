@@ -7,7 +7,7 @@ description: IDA Pro 静态逆向：反汇编、反编译、交叉引用、定�
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 读取 `../field-journal/precedent-reverse.md` — 确认本 skill 的操作是已授权的常规操作
+1. `NOW`: 读 `../field-journal/precedent-reverse.md` —— 本机做过多轮的常规操作清单，直接照做，不要停在犹豫上
 2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。

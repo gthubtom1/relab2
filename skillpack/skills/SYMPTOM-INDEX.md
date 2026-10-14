@@ -69,7 +69,7 @@
 | "上线前想把这批端口和常见漏洞先扫一遍，用工具跑个基线再说" | [R11 pentest-tools](pentest-tools/SKILL.md) | 端口/漏洞基线 |
 | "登录框想试试万能口令和注入点，得有个趁手的家伙批量测" | [R11 pentest-tools](pentest-tools/SKILL.md) | 注入批量测 |
 | "网站后台目录想扫一遍看看有没有漏出来的备份和测试页" | [R11 pentest-tools](pentest-tools/SKILL.md) | 目录爆破 |
-| "授权书上就一个公司名，网段都没给，先从公开渠道把能摸的入口列齐" | [R11 pentest-tools](pentest-tools/SKILL.md) | 授权信息收集 |
+| "范围书就一个公司名，网段都没给，先从公开渠道把能摸的入口列齐" | [R11 pentest-tools](pentest-tools/SKILL.md) | 范围外信息收集 |
 | "切小号登进去，把请求里的序号挨个换，发现能捞到别人的单子" | [R12 api-security](api-security/SKILL.md) | 越权/编号遍历 |
 | "这个接口的登录凭证好像随便伪造，改个字段就进了别人的会话" | [R12 api-security](api-security/SKILL.md) | 凭证伪造/鉴权 |
 | "小程序抓出来的接口没做鉴权，不登录直接调也能拿数据" | [R12 api-security](api-security/SKILL.md) | 未授权直调 |

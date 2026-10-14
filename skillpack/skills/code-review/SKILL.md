@@ -39,12 +39,21 @@ description: 逐行评审 diff：判断改动是否提升 code health、是否�
 - 若改动引入的是**安全**缺陷（鉴权缺失、注入、密钥硬编码、依赖问题） → 转 `../code-audit/SKILL.md`，不在本技能里做安全结论。
 - 若作者**反复不接受同一个技术事实** → 记录分歧与两侧判据，升级给决策者，不无限循环。
 
+**可测判据（下结论前必须过得去的四条）**
+
+- 每条意见都能指到具体 `file:line`，并写清它对**下一个改这段代码的人**的代价（多花多久、会漏改哪一处、回滚会不会连带）；指不到行的意见不写。
+- 结论只有三种：approve / 要求修改 / 要求拆分；每个阻塞项都要归到 Design / Functionality / Complexity / Tests / 自包含 之一，"我觉得"不构成阻塞。
+- 测试永远绿的改动（只加 snapshot、没有断言、断言不随坏代码变红）按"这次没带测试"处理，不看它显示几个 pass。
+- `git diff --stat` **>400 行**或文件数 **>10** 时逐行审的产出不可信 → 直接要求拆分，不逐行走个过场。
+
 ## When NOT to use（近邻负例）
 
 - 要验证**自己刚做的改动**对不对（跑测试、对照行为）→ 用 `../verify-done/SKILL.md`
 - 要审的是**安全面**（注入 / 鉴权 / 密钥 / 依赖）→ 用 `../code-audit/SKILL.md`
 - 审的是**交付形态**（PR 描述、验证证据、CI 状态）而非代码本身 → 用 `../pr-ship/SKILL.md`
 - 要审的是 case 证据包而非代码 → 用 `../case-review/SKILL.md`
+- 要确认的是"测试到底有没有真的失败过"（红绿证据），而不是评审这份 diff → 用 `../write-tests/SKILL.md`
+- 这份 diff 自己就是从一份说不清的需求里长出来的（验收点写不出）→ 先 `../req-clarify/SKILL.md`，评审只会把歧义固化
 
 ## When to Pivot
 
@@ -52,10 +61,30 @@ description: 逐行评审 diff：判断改动是否提升 code health、是否�
 
 | 触发证据 | 换到 |
 |---|---|
-| 改动触及鉴权 / 注入 / 密钥 / 加密面 | `../code-audit/SKILL.md` |
-| 评审通过，要把它交付成 PR | `../pr-ship/SKILL.md` |
-| 改动触及 build / test / 接口 / 发布文档 | `../docs-changelog/SKILL.md` |
-| 我需要确认自己实现的行为是否正确 | `../verify-done/SKILL.md` |
+| `git diff --stat` 显示改动 **>400 行**或文件数 **>10**，作者一句话说不清这次在做什么 | 拒审并要求拆分；拆法见 `../implement-feature/SKILL.md` |
+| diff 里出现与标题无关的重构（改名 / 移动 / 重排格式占了 diff 一半以上） | 要求先把纯重构拆成独立 CL 再回来审行为变更 |
+| diff 命中注入 / 鉴权 / 密钥 / 反序列化面（新增 `eval(`、拼 SQL、硬编码 token） | `../code-audit/SKILL.md` |
+| CI 报绿，但同一条命令本地跑出来**零输出 + rc=0**（假绿特征） | 先按 `../field-journal/2026-10-13_windowsapps-python3-stub-false-green.md` 的口径判，再决定信不信；验证归 `../verify-done/SKILL.md` |
+| 改动动了 build / test / 接口 / 发布行为，diff 里**没有**对应的文档改动 | `../docs-changelog/SKILL.md` |
+| 同一技术事实来回**两轮**，作者仍未给出新证据 | 记录两侧判据，升级给决策者，停止往返 |
+| 待审的是我自己刚写完的那份改动 | `../verify-done/SKILL.md` |
+| 待审的是交付形态（PR 描述 / 验证证据 / CI 状态），代码本身没毛病 | `../pr-ship/SKILL.md` |
+| 改动碰的是崩溃路径或协议帧，光读 diff 判不了真假 | 先用 `cdb -z <dump>` / `tshark -i <iface> -f "tcp port <p>"` 复跑一次再判；要读懂没源码的 native 件 → `../reverse-engineering/SKILL.md` |
+
+## 真实用例（本仓已发生，照着踩过的坑问）
+
+- `../field-journal/2026-10-13_windowsapps-python3-stub-false-green.md` —— 本机 `python3` 是 0 字节的 App Execution Alias：rc=0、零输出，**205 条回归用例整体假绿**。审一份"CI 全绿"的 diff 前先问：绿的是哪条命令、它跑的是真解释器吗。
+- `../field-journal/2026-08-14_windows-powershell-native-exit-code-pr-review.md` —— 引导脚本 PR 里 `git rev-parse ... | Select-Object -First 1` 之后读 `$LASTEXITCODE` 得到 `-1`，合法 checkout 被 fail-closed 分支误拒。审 PowerShell 改动先看退出码是在管道**前**还是**后**取的。
+
+## 工具链（本机实测入口）
+
+| 工具 | 本机怎么调 | 接给谁 |
+|---|---|---|
+| `git diff` / `git diff --stat` / `git log -p --follow <file>` | `git` 在本机 PATH 上（`Get-Command git` 有结果，本机实测） | 先量规模与历史：`--stat` 超阈值直接转上面的拆分分支；`log -p` 看这行以前为什么这么写 |
+| `curl` | 系统自带的 `curl.exe`（本机 `command -v curl` 有结果；仓里 `scripts/bootstrap-reverse.sh` 也用它下载） | 改动涉及 HTTP 面时，改动前后各打一次同一请求，比状态码与响应体，而不是只读 diff 想象 |
+| `cdb` | 探测层现查：`. ../scripts/lib/Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name 'cdb'`（TOOLS.md §2 登记的 WinDbg 控制台版） | 作者声称修了崩溃 → `cdb -z <dump>` 看栈帧是否与其描述一致 |
+| `tshark` | TOOLS.md §4 登记（GUI `Wireshark` 的 CLI 孪生，禁止拉 GUI）；本机没装时走探测层确认后再按 TOOLS.md 取 | 协议 / 握手面改动，抓一次 loopback 对比帧 |
+| 探测层通则 | `. ../scripts/lib/Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>`，读 `Available` / `Command` / `Via` | 上表任何一条用前先定位，拿到 `Command` 就用完整路径调用；单条 `Get-Command` 返回空 ≠ 本机缺该工具 |
 
 ## 定义完成
 

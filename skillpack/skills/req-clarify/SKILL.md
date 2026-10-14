@@ -23,6 +23,8 @@ description: 把模糊需求收敛成可判定的验收标准（Given-When-Then�
 - 需求已定，要的是「从哪切第一刀、怎么端到端跑通」 → 用 `../design-slice/SKILL.md`
 - 需求清楚的小改动，要的是动手写代码 → 用 `../implement-feature/SKILL.md`
 - 要的是给已有功能补测试/验收脚本 → 用 `../write-tests/SKILL.md`
+- 要审的是已写好的 SPEC/交付文档本身 → 用 `../code-review/SKILL.md` / `../case-review/SKILL.md`
+- 只是要把模糊原话记下来留档（不准备开工） → 用 `../field-journal/` 的日报，不要套 SPEC 流程
 - 前置条件型：用户无法回答且无旁证（无原型、无既有系统、无对端文档）→ 停下说明缺口，不要用「先做出来再确认」蒙混
 
 ## When to Pivot
@@ -32,10 +34,23 @@ description: 把模糊需求收敛成可判定的验收标准（Given-When-Then�
 | 触发证据 | 换到 |
 |---|---|
 | 验收标准已成文，且每条可判定 | `../design-slice/SKILL.md`（要切片）或 `../implement-feature/SKILL.md`（小改动） |
-| 用户说「你定就行」但代价不可逆（数据迁移/对外接口/收费） | 停下，让用户对 SPEC 里标 `speculative` 的条目逐条回声确认 |
+| 同一问题问了两遍、用户都回「你定就行」，而代价不可逆（数据迁移/对外接口/收费） | 不再追问第三遍：按**保守默认**写进 SPEC，逐条标 `speculative`，并在回复里点名等确认 |
+| 15 分钟内写不出 3 条验收（happy + 负例 + 边界）且澄清不出原因 | 判定「需求未定」：退回并列出缺口清单（缺什么信息、谁能给），不许开工 |
 | 发现真正的分歧不在需求而在实现方案 | `../design-slice/SKILL.md` |
 | 澄清过程中发现现有系统行为未知，才是真正的不确定点 | `../code-audit/SKILL.md`（读源码拿事实） |
-| SPEC 写完要写成正式文档交付 | `../docs-generator/SKILL.md` |
+| SPEC 写到第 2 页还没收口（背景/取舍越写越长） | 砍背景、留判据：验收标准 + out-of-scope + 一条端到端验证，其余移进附录 |
+| SPEC 要写成正式文档交付 | `../docs-generator/SKILL.md` |
+
+## 真实用例（本仓做过的）
+
+- `../field-journal/2026-08-01_nextjs-cdk-contract-faithful-local-reconstruction.md` —— 契约复刻：验收点写成「与原实现的输入输出逐项一致」，而不是「看起来一样」。
+- `../field-journal/2026-09-03_issue-pr-security-boundary-integration.md` —— 边界先写清（哪些不做），再谈实现。
+
+## 落地载体
+
+- SPEC/验收标准落盘：`work/<case>/spec.md` 或 issue 正文（能 diff、能引用行号）
+- 版本锚点：`git add spec.md && git commit`（后续实现对照的是这个版本）
+- 交接：实现方拿 SPEC 在新会话里开跑，避免「自己写卷子自己判卷」
 
 ## 定义完成
 

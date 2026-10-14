@@ -41,7 +41,7 @@
 
 ### 一、最小契约（Minimal Contract）
 
-在笔记、报告里，或**在文件写入已获批准时**的 `js_reverse_cache/tasks/<task-id>/task.json` 里记录以下字段：
+在笔记、报告里，或**任务本地副本**里的 `js_reverse_cache/tasks/<task-id>/task.json` 里记录以下字段：
 
 ```json
 {

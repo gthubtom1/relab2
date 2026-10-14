@@ -22,7 +22,7 @@
 
 1. **先有 intake mode（接入模式）判定**：`live-target` / `artifact-only` / `continuation` 三选一。模板里的字段按这个前提填写，`artifact-only` 不要凭空写浏览器证据。参见 `./provider-work-order.md`。
 2. **先有可写的证据包**：至少一个证据包目录与它的 SHA-256，否则 `Evidence package path and SHA-256` 这一行只能写「无」。
-3. **授权边界已确认**：`Implementation Brief` 模板里的权限字段只有在 `./provider-work-order.md` 的授权闸门通过后才有意义。模板本身不构成授权。
+3. **外联边界已记录**：`Implementation Brief` 里的权限字段只有在 `./provider-work-order.md` 的写入闸门通过后才生效 —— 模板本身不是记录。
 4. **若本任务产出了独立证据目录 `evidence/E-xxx.md`**：每条证据必须满足 `../../../field-journal/_template.md` 中「契约对齐（review_case.py）」一节列出的字段契约（`severity` / `status` / `repro_command` / `content_hash` + `artifact_path` / `linked_workitem`），否则 `--strict` 校验会 FAIL。详见本文「判据」段。
 
 ## 步骤（Working method）

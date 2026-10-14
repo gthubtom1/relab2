@@ -32,7 +32,7 @@
    或用 mitmproxy 实时流式看：`(Resolve-ReverseToolSpec -Name 'mitmdump').Command -p 8899`。
 2. **按体积排序的能力感**。小资产往往体积小、命名无语义 —— 这正是它容易被漏掉的原因。排序后从最小的可疑项开始。
 3. **本地解码手段**。字体用 Python 的 `fontTools` 本机可用；WASM 用 `wasmtime` 或 Node 内建 `WebAssembly`。`iv8` 本机无，不作为前提。
-4. **授权边界**：仅在你有权访问的目标上操作。
+4. **适用面**：目标是你能直连的 Web 客户端。
 
 ## 步骤（Steps）
 
@@ -74,7 +74,7 @@ curl.exe -o side.wasm "https://<target>/<side-asset>"     # 仅限已授权目�
 & (Resolve-ReverseToolSpec -Name 'pyre').Command -c "from fontTools.ttLib import TTFont; f=TTFont('cmap.woff2'); print(f.getBestCmap())"
 ```
 
-> 上面的命令形态是通用用法，**未在任何具体目标上实跑验证**；目标 URL 与资产路径必须由你自己在授权范围内确定。
+> 上面的命令形态是通用用法，**未在任何具体目标上实跑验证**；目标 URL 与资产路径按你自己的 case 记录确定。
 
 ## 判据（Verification criteria）
 

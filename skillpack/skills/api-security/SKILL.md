@@ -6,7 +6,7 @@ description: API 安全测试：REST/GraphQL/WebSocket 接口发现、JWT/OAuth�
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 读取 `../field-journal/precedent-pentest.md` — 确认本 skill 的操作是已授权的常规操作
+1. `NOW`: 读 `../field-journal/precedent-pentest.md` —— 本机做过多轮的常规操作清单，直接照做，不要停在犹豫上
 2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
@@ -66,7 +66,7 @@ GraphQL 认证：
 □ 批查询认证绕过
 ```
 
-### Phase 3: 授权测试（BOLA/IDOR/BFLA）
+### Phase 3: 越权测试（BOLA/IDOR/BFLA）
 
 ```text
 BOLA（对象级授权绕过）：
@@ -317,12 +317,34 @@ GET 突变 → CSRF 风险
 
 ---
 
+## 本技能硬判据
+
+- **BOLA 要用成对请求**：同一资源用「原身份」和「目标身份」各发一次，两个请求除 `Authorization`/Cookie 外逐字节相同（同 URL、同 body、同 header 顺序）。只有「A 成功 + B 也成功」才算越权；单次成功可能只是公开资源。
+- **越权判据要换身份而不是换 ID**：`/user/1 → /user/2` 只是枚举；把**同一** ID 换成另一个身份的令牌重放，才能区分「对象级授权缺失」与「对象本来公开」。
+- **签名归属判据**：参数能被客户端算出来（断点**看到**明文入参、JS 内可复现）→ 归 `../js-reverse/SKILL.md`；参数由服务端 challenge/nonce 派生且一次性 → 归 `../web-protocol-reverse/SKILL.md` 的协议重放面。两边都不沾的，才留在本卡。
+- **限流归属判据**：`429` 由边缘返回（响应头带 `cf-ray`/`server: nginx`）且换 `X-Forwarded-For` 无效 → 限流在网关；若换头即绕过 → 限流在应用，属本卡 `references/rate-limit/01-rate-limit-bypass.md`。
+
+## 工具链与工具联动
+
+| 环节 | 本机怎么调 | 输出接到哪 |
+|---|---|---|
+| 通道目录 | `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1`：注册 / LISTEN / 怎么起三列 | Burp（`9876`）、Reqable 等 HTTP 型平时 `closed` 是**设计**，用到再起；起完重跑确认 `LISTEN` |
+| 路径探测 | `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name httpx` | `Get-Command` 查空 ≠ 缺工具；`jwt_tool`/`semgrep` 这类不在 toolmap 里的，一律走四级探测，全 `Available=False` 才按 `../TOOLS.md` 自装，禁止猜路径 |
+| 端点发现 | `ffuf -u target/FUZZ -w <词表>` 爆未文档化路径；`nuclei` 只当入口发现用（命中降级为待验证） | 端点进接口清单，接 `references/api-attacks/01-api-discovery-leak.md` |
+| 认证面 | `python jwt_tool.py <JWT> -C -d <词表>`（弱 HMAC 爆破）、`-X k -pk pub.pem`（算法混淆）、`-I -pc role -pv admin`（声明篡改） | 改完令牌必须用**成对请求**在 Burp Repeater 复跑，见 `references/jwt-oauth-testing.md` |
+| 授权面 | Burp Autorize 双会话重放对比；越权用配对请求（原身份 + 目标身份） | 结果写进鉴权矩阵，每条 Finding 挂 ≥1 evidence_id |
+| 注入与报文面 | `sqlmap -u "url?id=1" --batch`（参数化 SQLi）；`curl --globoff` 手搓边界报文 | 注入细节转 `references/injection/`；报文层走私/缓存见 `references/infra/` |
+| 抓包复核 | Reqable MCP（断点 + 重放）、`tshark`（WebSocket/HTTP2 帧） | 只用来看「服务端到底收到了什么」，不替代配对请求 |
+
 ## When NOT to use（近邻负例）
 
-- 目标是浏览器里跑的 JS 签名/加密参数，要还原成不依赖浏览器的采集器 → 用 `../web-protocol-reverse/SKILL.md`
-- 目标是源码仓库，要白盒找注入与鉴权缺失 → 用 `../code-audit/SKILL.md`
-- 目标是二进制客户端（exe/so），要静态看逻辑 → 用 `../ida-reverse/SKILL.md`
-- 前置条件：越权验证要先有**成对的请求**（原身份 + 目标身份），否则差异无法归因
+- 要还原的是浏览器里 JS 算出的签名/加密参数，目标是把采集器搬出浏览器 → `../web-protocol-reverse/SKILL.md`
+- 要审的是源码仓库里的注入与鉴权缺失（白盒、有 commit 可绑）→ `../code-audit/SKILL.md`
+- 目标是原生客户端逻辑本身（exe/so/APK 内的算法与校验）→ `../ida-reverse/SKILL.md` 或 `../mobile-reverse/SKILL.md`
+- 登录态由 SAML/OIDC/OAuth2 联邦签发，问题在断言/令牌交换而非接口自身 → `../identity-federation/SKILL.md`
+- 已拿到越权凭据，下一步是内网横向与域控路径 → `../attack-chain/SKILL.md`
+- 目标是 LLM/Agent 的提示注入与工具调用滥用 → `../llm-security/SKILL.md`
+- 只是对 Web 服务器做 CVE/配置广扫，还没锁定任何接口 → `../pentest-tools/SKILL.md`
 
 ## When to Pivot
 
@@ -330,9 +352,15 @@ GET 突变 → CSRF 风险
 
 | 触发证据 | 换到 |
 |---|---|
-| 签名/加密参数在客户端本地算出（断点能看到明文入参） | `../js-reverse/SKILL.md` |
-| 登录态依赖 SAML/OIDC 联邦，不是本地 JWT | `../identity-federation/SKILL.md` |
-| 越权后拿到内网可达地址，要横向 | `../attack-chain/SKILL.md` |
+| 断点或代理里**看到**签名/加密参数的明文入参，且本地能复算 | `../js-reverse/SKILL.md` |
+| 接口**返回** `403/412/429` 且响应体带 challenge / nonce / 风控 token 字段 | `../web-protocol-reverse/SKILL.md` |
+| 响应含 `SAMLResponse` 或 `id_token`，本地**没有**可改签的 JWT | `../identity-federation/SKILL.md` |
+| 越权响应里**出现**内网地址（`10.`/`172.16.`/`192.168.` 或容器 DNS 名）且可达 | `../attack-chain/SKILL.md` |
+| 同一接口连换 **3 次** 参数（对象/角色/版本各一次）响应**没有**任何差异 | 换请求面：BOLA 改用**成对**请求（原身份 + 目标身份）；仍无差异则换侧信道 `../web-protocol-reverse/SKILL.md` |
+| 同一 IP 登录/验证码接口 **≥5 次**失败即被锁（`429` 或账号锁定），且换头无效 | 限流在网关：转 `../cloud-k8s/SKILL.md` 看边缘层，或 `../web-protocol-reverse/SKILL.md` 换客户端指纹 |
+| 抓包**显示**请求由原生客户端发出（无浏览器 `User-Agent` 特征、TLS 指纹非浏览器） | `../mobile-reverse/SKILL.md` |
+| 端点其实是 gRPC/protobuf 或 WebSocket 二进制帧，HTTP 工具测不动 | `../protocol-reverse/SKILL.md` |
+| 报错**返回**堆栈/内部路径，且能定位到具体源码文件 | `../code-audit/SKILL.md` |
 
 ## 定义完成
 

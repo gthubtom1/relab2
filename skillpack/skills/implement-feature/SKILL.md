@@ -18,12 +18,20 @@ description: 小步实现功能：一次只解决一件事，复用仓库既有 
 - 若写到一半发现改不动的原因其实是需求没定清 → 换 `../req-clarify/SKILL.md`；是边界没切好 → 换 `../design-slice/SKILL.md`；不要边猜边写。
 - 若改动开始牵动无关模块 / 需要大范围改签名 → 说明切片切错了，回 `../design-slice/SKILL.md` 重切，不要靠 shim 兼容层硬推。
 
+**可测判据（提交前必须过得去的三条）**
+
+- 这次 diff 能用一句话说清（"加 X"或"改 Y 的行为"）；说不清就是还没切好，先回 `../design-slice/SKILL.md`。
+- build / typecheck / lint 要贴**原始输出**（命令 + 末尾几行），"我本地跑过"不算证据；跑不了就写清是哪一项跑不了、为什么。
+- 新增依赖必须写进 PR 描述，并跑一次 `git diff` 确认锁文件漂移是**有意**带进来的，不是顺手夹带的。
+
 ## When NOT to use（近邻负例）
 
 - 要修的是既有代码的缺陷、行为不变只求正确 → 用 `../fix-bug/SKILL.md`
 - 只是一次性验证技术可行性、写完就扔 → 用 `../spike/SKILL.md`
 - 需求或验收标准还没定 → 用 `../req-clarify/SKILL.md`
 - 边界与接口契约还没定 → 用 `../design-slice/SKILL.md`
+- 要证明"这个需求真的做完了"，而不是把它写出来 → 用 `../verify-done/SKILL.md`
+- 要改的是既有第三方依赖的行为，而不是自家代码 → 用 `../supply-chain-security/SKILL.md`
 - 前置条件型：仓库当前构建就是红的（非本次改动引起）→ 先记录基线失败，再决定是否继续
 
 ## When to Pivot
@@ -32,11 +40,31 @@ description: 小步实现功能：一次只解决一件事，复用仓库既有 
 
 | 触发证据 | 换到 |
 |---|---|
-| 发现改动要跨 3+ 模块 / 超 1000 行 | `../design-slice/SKILL.md` |
-| 发现需求本身有歧义、验收标准写不出 | `../req-clarify/SKILL.md` |
-| 实际是在修缺陷而非加功能 | `../fix-bug/SKILL.md` |
-| 需要给新代码补测试脚手架 | `../write-tests/SKILL.md` |
-| 连续两次尝试都没让构建变绿且说不通 | 停下，报告原始报错，不要继续盲改 |
+| `git diff --stat` 显示这次要跨 **3 个以上模块**（>5 个文件）或 diff 已经 **>1000 行** | 回 `../design-slice/SKILL.md` 重切，不硬写 |
+| 需求验收写不出（说不出"什么输出算做完"） | `../req-clarify/SKILL.md` |
+| 连续**两次**构建 / 测试不绿，且报错读不通 | 停下，把原始报错原样贴出来，不继续盲改 |
+| 发现动的是一处既有缺陷，而不是在加功能 | `../fix-bug/SKILL.md` |
+| 提交前 `../tests/run-ci-gates.py` 报非零，但说不清是哪道门红的 | 先分清假绿 / 环境 / 真红（假绿的坑见 journal）再决定继续，不许放宽既有检查过关 |
+| 新增依赖后锁文件出现**没有**在 PR 描述里写明的版本漂移 | `../supply-chain-security/SKILL.md` |
+| 新代码要补测试脚手架（仓库里还没有能跑这类测试的基建） | `../write-tests/SKILL.md` |
+| 接口签名已被别处调用，改它开始牵动无关模块 | 回 `../design-slice/SKILL.md` 重切，不靠 shim 兼容层硬推 |
+
+## 真实用例（本仓已发生，照着踩过的坑问）
+
+- `../field-journal/2026-08-08_pr-value-triage-and-safe-integration.md` —— 集成别人的改动前，先按"文档 / 执行代码"分层，再看冲突面与改动规模：大型 PR 看着高价值，但主线已演进时只能先 rebase 再专项测试。这一刀该不该现在合，本卡与 `../pr-ship/SKILL.md` 一起判。
+- `../field-journal/2026-10-13_windowsapps-python3-stub-false-green.md` —— 构建脚本里写 `python3` 时，本机拿到的是 0 字节 stub：rc=0、零输出。绿色可能什么都没跑，别拿它当"构建过了"。
+
+## 工具链（本机实测入口）
+
+| 工具 | 本机怎么调 | 接给谁 |
+|---|---|---|
+| `git diff --stat` / `git status --short` / `git log -p -- <file>` | `git` 在本机 PATH 上（`Get-Command git` 有结果，本机实测） | 先量这次的文件面与历史写法；超阈值转上面的切片分支 |
+| `python`（不是 `python3`） | 本机实测在 PATH 上；`python3` 是 stub | 跑仓库门 `../tests/run-ci-gates.py`（门清单在 `../tests/ci-gates.json`）、`../tests/verify-project-requirements.py` |
+| CI 日志 | `.github/workflows/ci.yml`（路由回归 + 结构一致性 + 供应链 pin + 冒烟） | 本地过不了、CI 却绿（或反过来）时，逐 job 对齐再下结论 |
+| `curl` | 系统自带 `curl.exe`（本机 `command -v curl` 有结果） | 新接口冒烟：`curl -sS -o /dev/null -w "%{http_code}" <url>` |
+| `tshark` | TOOLS.md §4 登记（GUI `Wireshark` 的 CLI 孪生，禁止拉 GUI） | 新链路跑起来后抓一次帧，确认真的发出去/收回来，而不是看着代码像通 |
+| `cdb` | `Resolve-ReverseToolSpec -Name 'cdb'` 现查（TOOLS.md §2 的 WinDbg 控制台版） | 新代码在 Windows 上崩在 native 层时看栈 |
+| 探测层通则 | `. ../scripts/lib/Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>` | 上表路径先复核再调用（拿到 `Command` 就用它的完整路径，别依赖 cwd） |
 
 ## 定义完成
 

@@ -24,6 +24,7 @@ description: 给 agent 一个自己可跑、返回 pass/fail 的 check，并用�
 - 要写的是测试本身（测行为不测实现） → 用 `../write-tests/SKILL.md`
 - 要审的是别人的代码质量或安全，不是自己的需求达成 → 用 `../code-review/SKILL.md`
 - 要修的是已知 bug 的根因 → 用 `../fix-bug/SKILL.md`
+- 连需求条目都还没成文（没有可对照的清单） → 先 `../req-clarify/SKILL.md`
 - 要把结论沉淀成正式交付文档 → 用 `../docs-generator/SKILL.md`
 
 ## When to Pivot
@@ -33,9 +34,23 @@ description: 给 agent 一个自己可跑、返回 pass/fail 的 check，并用�
 | 触发证据 | 换到 |
 |---|---|
 | check 需要端到端跑浏览器/GUI 才有意义 | `../browser-automation/SKILL.md` |
+| 同一条 check 两次运行结果不一致（flaky：时序/时钟/随机） | 先固定时钟、种子与并发度再判；**不许**把「重跑到绿」当通过 |
+| 需求条目超过 10 条、逐条核对超过约 15 分钟 | 先按影响面排序，优先核对「漏了会出事」的那几条，其余列未覆盖项 |
+| check 覆盖不到需求里的某一条（没有对应断言） | 给它单独立一个手工 check（写清观察点与 pass/fail 判据），不允许「其余同理」 |
 | 验证对象是安全性质（越权/注入/绕过） | `../code-audit/SKILL.md` |
 | 验证必须跑在容器/K8s/云环境 | `../cloud-k8s/SKILL.md` |
 | 结论要变成可交付报告 | `../docs-generator/SKILL.md` |
+
+## 真实用例（本仓做过的）
+
+- `../field-journal/2026-10-13_windowsapps-python3-stub-false-green.md` —— **假绿**：门是绿的，但绿的是被 WindowsApps 的 python3 占位程序吃掉的空跑。绿 ≠ 验过。
+- `../field-journal/2026-08-17_tool-index-r2-fallback-powershell-pwsh-host-fix.md` —— 无外部目标时用「等价 Evidence」（可复现命令落盘）代替 case 目录证据。
+
+## 落地载体
+
+- check 命令 + 退出码：`pytest -q`、`python skillpack/skills/tests/run-ci-gates.py`、`npm test`
+- 快照型 check：端口 `Test-ReverseTcpPort`、进程存活、日志命中某行、截图前后 diff
+- 独立复核：用 `task` 起一个 fresh-context 子代理（不看你的推理过程），只给它 diff 与需求原文
 
 ## 定义完成
 

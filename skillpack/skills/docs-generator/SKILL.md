@@ -86,6 +86,27 @@ For writing style, tone, and voice guidance, follow the in-repo rules in `refere
 
 图表以 Mermaid 代码块形式嵌入报告 markdown 中，确保可在 GitHub/GitLab 直接渲染。
 
+## 本技能硬判据（报告可交的阈值）
+
+- **每条技术结论必须挂在 Evidence 上**：能指到 case 里的 E-ID 或命令原文才算数。指不到 → 退回 `observed` / `unknown`，并写清**缺的是什么**（缺哪台机器的回显、哪份样本、哪个版本号），不许留在结论句里当事实。
+- **产生证据的工具必须点名**：报告里每张图、每个关键结论都要写清由哪个工具产出（见下表工具列）。工具名要能被探测层解析到；解析不到就写实际用的替代工具与版本，而不是笼统写「用某工具分析」。
+- **模板 flavor 与素材必须对得上**：素材里有样本行为/IOC 才用 `malware`，有团伙与多阶段链才用 `apt`，否则 `flavor = null`。对不上的典型症状是报告里**出现空的 IOC 表、空的 ATT&CK 映射**——这时换模板，不硬套。
+- **链接与引用**：仓库内相对路径跑 `verify-doc-links.py`（断链必须为 0）；外部 URL 用 `curl -sI` 看状态码，4xx/5xx 不许留在「参考」里。
+- **数字要能回溯**：Executive Summary 里每个数字都要能在 Findings 里找到来源行；找不到的数字删掉或改写。
+- **交接前**：`review_case.py --verify-hashes --strict` error = 0，报告才叫可交。
+
+## 工具链与工具联动
+
+| 环节 | 本机怎么调 | 输出接到哪 |
+|---|---|---|
+| 模板与 flavor | `references/security-report-templates.md` 按任务类型选；`references/vendor-report-rules.md` 定 `malware` / `apt` / `flavor = null` | flavor 与素材对不上 → 换模板，见上节第三条 |
+| 证据链 | `../ops/evidence-finding-path.md` 的 Evidence → Finding → Path 契约 | 每条结论挂 E-ID；挂不上的退回 `unknown` |
+| 交接前审查 | `python skillpack\skills\case-review\scripts\review_case.py <case> --verify-hashes --strict` | error 计数必须为 0 |
+| 工具点名 | 逆向类 `Ghidra` / `IDA` / `radare2` / `rabin2` / `diec`；移动类 `jadx` / `apktool` / `frida`；固件类 `binwalk`；网络类 `nmap` / `nuclei` / `sqlmap` / `curl` / `Burp`；流量类 `tshark` / `Wireshark`；样本类 `yara`；口令类 `hashcat` | 报告里写清哪段结论/哪张图由哪个工具产出 |
+| 链接与引用 | `python skillpack\skills\scripts\verify-doc-links.py`；外部 URL 用 `curl -sI` 看状态码 | 断链或 4xx/5xx → 修或删，不留死链 |
+| 图表渲染 | 图源先本地渲一次再嵌：Mermaid 走 `mmdc`，DOT 走 `dot -Tsvg`（`../diagram-generator/scripts/render_diagram.py` 会按扩展名分派） | 没渲过的图源不许贴进交付文档；渲染器探测不到就只交图源并写明 |
+| 路径探测 / 通道 | `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name mmdc`；通道状态 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` | `Get-Command` 查空 ≠ 缺工具（四级探测第 2 级而已） |
+
 ---
 
 ## Core Principles
@@ -195,7 +216,10 @@ For README, API endpoint, and file organization templates, see [references/templ
 
 - 要画的是图不是文 → 用 `../diagram-generator/SKILL.md`
 - 要审 case 完整性而不是写文档 → 用 `../case-review/SKILL.md`
-- 要写的是代码注释/README 之外的代码 → 用 `../code-audit/SKILL.md`
+- 技术证据还没采到（case 里没有 Evidence）就想要报告 → 用 `../ops/evidence-finding-path.md`
+- 要的是执行而不是文档（打靶、利用编排、漏洞验证） → 用 `../pentest-tools/SKILL.md`
+- 要出的是 changelog / 提交说明，不是安全报告 → 用 `../docs-changelog/SKILL.md`
+- 要写的是代码里的注释或代码本身 → 用 `../code-audit/SKILL.md`
 - 前置条件：报告里的技术结论必须来自 case 的 Evidence，不许自创
 
 ## When to Pivot
@@ -204,17 +228,24 @@ For README, API endpoint, and file organization templates, see [references/templ
 
 | 触发证据 | 换到 |
 |---|---|
-| 报告里需要图，先画图 | `../diagram-generator/SKILL.md` |
-| 报告要交出去，先审 case | `../case-review/SKILL.md` |
-| 需要补技术证据 | `../ops/evidence-finding-path.md` |
+| 报告里要插图（调用关系、攻击路径、请求时序），图还没有 | `../diagram-generator/SKILL.md` |
+| 要交出去之前，`review_case.py --strict` 报 **≥1 条** error | `../case-review/SKILL.md` |
+| 有结论指不到 Evidence（哪怕只有 **1 条**） | `../ops/evidence-finding-path.md` |
+| 模板 flavor 与素材对不上（没有样本行为却套 `malware`，IOC 表只能填占位） | 换模板：`references/security-report-templates.md` + `references/vendor-report-rules.md`；不硬套 |
+| 素材是抓包/内存/磁盘镜像，报告要写复现命令 | `../digital-forensics/SKILL.md` |
+| 报告要覆盖的攻击链超出 case 已证实范围 | `../case-review/SKILL.md`（先判缺口，再决定补证据还是缩叙述） |
+| 目标平台是 APK / iOS，报告要补技术证据 | `../mobile-reverse/SKILL.md` |
+| 报告的图在 GitHub/GitLab 渲染**两次**都报语法错 | 回 `../diagram-generator/SKILL.md` 本地渲一次再贴，或降级为文本表 |
 
 ## 定义完成
 
 本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
 
-- 文档落盘路径存在，含 Scope / Evidence / Findings / ≥1 Path
-- 每条结论可追到 Evidence ID
-- Executive Summary 面向非技术读者，无术语堆砌
+- 文档落盘路径存在，含 Scope / Evidence / Findings / **≥1 条** Path
+- 每条结论可追到 Evidence ID；无来源结论数为 **0**
+- `verify-doc-links.py` 断链为 0；外部 URL 无 4xx/5xx
+- Executive Summary 面向非技术读者，无术语堆砌，且其中每个数字都能在 Findings 找到来源
+- 报告里嵌入的图都本地渲染过一次（或明确标注「仅提供图源」）
 
 ## 输出契约
 
@@ -229,5 +260,6 @@ NEXT:       <继续 | 换技能 | 停止（附成本判据）>
 
 词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
 
-- `confirmed`：报告中每条技术主张都能在 Evidence 里找到对应
-- `low`：报告中出现无法追溯的结论
+- `confirmed`：报告中每条技术主张都能在 Evidence 里找到对应，且该 case 已过 `--strict` 审查
+- `medium`：结论有 Evidence 支撑，但报告尚未过 case-review strict，或部分图表只交了图源
+- `low`：报告中出现无法追溯的结论（**≥1 条**即降到这一档）

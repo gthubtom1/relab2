@@ -1,18 +1,18 @@
 ---
 name: identity-federation
-description: 联邦身份与 SSO 授权测试：SAML 断言篡改、OIDC/OAuth2 错配、redirect_uri/state/PKCE 缺陷、token 混淆。用于：测 SSO、SAML 签名、IdP/SP 元数据。
+description: 联邦身份与 SSO 鉴权测试：SAML 断言篡改、OIDC/OAuth2 错配、redirect_uri/state/PKCE 缺陷、token 混淆。用于：测 SSO、SAML 签名、IdP/SP 元数据。
 ---
 
 # Identity Federation (SAML / OIDC / OAuth)
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 读取 precedent-pentest；SSO 测试账号与 IdP/SP 范围入 scope
+1. `NOW`: 读 `../field-journal/precedent-pentest.md`；SSO 链路从一份公开元数据（`/.well-known/openid-configuration`）开始
 2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
-3. `NOW`: 禁止锁定真实用户账户的暴力尝试
+3. `NOW`: 口令尝试只打自建测试账号；对真实用户账户做锁定/爆破会把 SSO 链路整条打瘫（自伤）
 4. `NEXT`: 抓包工具与文档（元数据 URL）
 5. `ACT`: 协议流映射 → 常见错配 → 验证
 
@@ -36,12 +36,19 @@ description: 联邦身份与 SSO 授权测试：SAML 断言篡改、OIDC/OAuth2 
 
 ## 工具链
 
-| 工具 | 用途 |
-|------|------|
-| Burp + SAML Raider 等 | 断言编辑（授权） |
-| jwt_tool | JWT 段 |
-| 浏览器 DevTools | 重定向链 |
-| IdP 管理日志 | 审计 |
+| 工具 | 干什么 | 真实调用口径 |
+|------|--------|--------------|
+| `Burp`（+ SAML Raider / OAuth 插件） | 断言编辑、重放、重定向链 | 抓 `SAMLResponse` 后改 `NameID`/`AttributeStatement` 再重放，看 SP 是否新建会话 |
+| `curl` | 拉公开元数据做基线 | `curl -s https://<idp>/.well-known/openid-configuration` 与 SAML metadata 各存一份 |
+| `jwt_tool` | JWT/OIDC token 段 | `jwt_tool <jwt> -T` 试 alg 混淆与 `kid` 注入，先试再改 |
+| `hashcat` | 对称签名密钥/弱 sig 爆破 | `hashcat -m 16500 <jwt> <wl>`；HS256 命中即证明可自签 |
+| `ffuf` | IdP / SP 端点枚举 | 对 issuer 下枚举 `/saml/`、`/oauth/authorize`、`/adfs/ls` |
+| `mitmdump` | 脚本化批量改重定向参数 | `mitmdump -s redirect_mutate.py` 跑 `redirect_uri`/`state` 变体 |
+| `reqable` | 桌面端 SSO 客户端的 HTTP 抓包 | 客户端无浏览器 DevTools 时用它取证 |
+| `nmap` | IdP 端点与端口存活 | 只做可达性确认，不做口令爆破 |
+
+探测层（唯一路径入口）：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name Burp`。
+`Get-Command` 查空 ≠ 缺工具（四级递进：env → PATH → `_map.json` → 工具根扫描）。
 
 ## 参考
 
@@ -82,8 +89,10 @@ description: 联邦身份与 SSO 授权测试：SAML 断言篡改、OIDC/OAuth2 
 
 - 目标是本地 JWT 校验，不涉及 IdP 联邦 → 用 `../api-security/SKILL.md`
 - 目标是 Windows 域内 Kerberos/NTLM（不是 Web SSO） → 用 `../windows-ad/SKILL.md`
-- 目标是 OAuth 客户端本身而非 IdP 配置 → 用 `../code-audit/SKILL.md`
-- 前置条件：先取一份**公开元数据**（`/.well-known/openid-configuration` 等）作为基线，再谈差异
+- 目标是 OAuth 客户端源码里的逻辑缺陷 → 用 `../code-audit/SKILL.md`
+- 目标是 SSO 之后业务应用的越权（IDOR/BOLA） → 用 `../api-security/SKILL.md`
+- 目标是云厂商控制台联合登录到云资源面 → 用 `../cloud-k8s/SKILL.md`
+- 目标是邮件客户端/OAuth 应用同意钓鱼 → 用 `../email-security/SKILL.md`
 
 ## When to Pivot
 
@@ -91,9 +100,13 @@ description: 联邦身份与 SSO 授权测试：SAML 断言篡改、OIDC/OAuth2 
 
 | 触发证据 | 换到 |
 |---|---|
-| 发现 assertion 可被篡改/重放 | `../api-security/SKILL.md` |
-| 发现签名证书可控（自签被接受） | `../attack-chain/SKILL.md` |
-| SAML 断言里带高权角色，要评估下游影响 | `../api-security/SKILL.md` |
+| 改 `NameID`/属性后重放，SP 返回新会话且断言签名校验被跳过（响应 302 带 `Set-Cookie`） | `../api-security/SKILL.md` 评估拿到会话后的权限面 |
+| 自签或未知 CA 的证书被 SP 接受（元数据 `SigningCertificate` 与实测签名公钥对不上） | `../attack-chain/SKILL.md` 构造伪造断言链 |
+| 断言 `AttributeStatement` 里带 `admin`/高权角色，SP 直接映射成高权会话 | 评估下游 API 面，转 `../api-security/SKILL.md` |
+| IdP 元数据里发现多租户共用 issuer，且 `audience` 未严格绑定 | 逐租户验证断言串用，跨租户能进则转 `../attack-chain/SKILL.md` |
+| `redirect_uri` 通配 / `state` 未绑定 / PKCE 缺失，连续两次（间隔 >1 分钟）重放都能返回 code | 授权码劫持面转 `../api-security/SKILL.md` |
+| JWT 用 `alg:none` 或弱 HS256，且 `hashcat -m 16500` 在 5 分钟内命中密钥 | `../api-security/SKILL.md` 的 JWT 段 |
+| 抓到的报文里没有标准 SAML/OIDC 字段（加密或私有二进制 SSO 协议） | `../protocol-reverse/SKILL.md` 做字段还原 |
 
 ## 定义完成
 
@@ -117,4 +130,5 @@ NEXT:       <继续 | 换技能 | 停止（附成本判据）>
 词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
 
 - `confirmed`：构造的 assertion 被 SP 接受且有会话建立实测
+- 硬判据：SSO 每一跳都要写清信任假设（谁签、谁验、绑没绑 audience）；缺任一端实测报文的跨跳结论只能记 `low`
 - `low`：仅从元数据里看到签名算法为 none/弱算法

@@ -268,7 +268,9 @@ if ($vendorRulesText -match '(?m)逆向工程报告\s*\|\s*默认\s*`malware`') 
 } else {
     Ok 'vendor rules keep generic reverse engineering flavor-neutral'
 }
-if ($vendorRulesText -match '先确认 scope 并保全' -and $vendorRulesText -match '不得在证据保全前直接删除文件') {
+# ★ 2026-10-14：这条锁原先要求字样「先确认 scope 并保全」—— 那半句是请求许可式措辞，
+#   已在排毒里清掉。锁的**意图**是「证据保全先于破坏性动作」，改绑意图（保全 + 明文禁止）。
+if ($vendorRulesText -match '保全' -and $vendorRulesText -match '不得在证据保全前直接删除文件') {
     Ok 'malware remediation preserves evidence before destructive actions'
 } else {
     Bad 'malware remediation does not require evidence preservation before destructive actions'

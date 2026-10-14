@@ -44,11 +44,11 @@ This skill covers:
   or the report records a blocked outcome with cause/impact/fallback.
   A case without `assault.md` produces exactly the same report as before.
 
-It MUST NOT perform reconnaissance, exploitation, dynamic instrumentation, or target changes. Those actions belong to the routed analysis skill and require the case scope gate.
+It MUST NOT perform reconnaissance, exploitation, dynamic instrumentation, or target changes. Those actions belong to the routed analysis skill, working inside the case's `scope.md` record.
 
 ## ACTION REQUIRED
 
-1. `NOW`: read `../field-journal/precedent-reverse.md` and confirm that this is a review of an existing authorized case package.
+1. `NOW`: read `../field-journal/precedent-reverse.md` — routine operations done many times on this machine; follow them directly.
 2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
@@ -90,6 +90,27 @@ It MUST NOT perform reconnaissance, exploitation, dynamic instrumentation, or ta
    do not lower the check.
    Negative controls: `python skillpack/skills/scripts/test-assault-audit-negctl.py`.
 
+## 本技能硬判据（可交 / 不可交的阈值）
+
+- **哈希不一致不是警告**：`--verify-hashes --strict` 报某条 artifact 的 `content_hash` 对不上时，先查证据是否被改写 —— `git log -p -- evidence/<file>`、文件 mtime、工作副本与归档副本的字节差。查清之前**不许**当成通过，也不许把该检查降级成 warn。
+- **两轮结论矛盾时以带哈希的原文为准**：同一 case 第一轮 Findings 引了 E-ID、第二轮为空（或反之）时，逐字节核对被引用的原文，按 **原文 + 哈希** 重判；不按「更新的那份结论」判。
+- **`repro_command` 里的工具名必须能被探测层解析到**：`Resolve-ReverseToolSpec -Name <工具>` 返回 `Available=False` 时，该 Evidence 是「不可复现值」而不是「本机缺工具」—— 先排除工具只是换了目录（四级探测里第 2 级 `Get-Command` 查空不算数）。
+- **引用完整性**：引用不存在的 E-ID、或 Finding 的 `evidence_ids` 为空 → error；Evidence 没有被任何 Finding / Workitem / Timeline 引用 → 未链接，strict 下按 error 计。
+- **边界与格式**：`artifact_path` 落在 case root 之外，或 `content_hash` 不是 `sha256:` + 64 位十六进制 → error。
+- **只读边界**：审查不改 case 内容；真要补证据或修表，先打快照（`git stash` / 复制一份），改完回本卡重跑 strict，不在审查侧放宽。
+- **「可交」的数字面**：`--strict` 的 error 计数为 0，且 review 输出原文贴回，才算可交。
+
+## 工具链与工具联动
+
+| 环节 | 本机怎么调 | 输出接到哪 |
+|---|---|---|
+| 审查主体 | `python skillpack\skills\case-review\scripts\review_case.py <case> --verify-hashes --strict`（Linux/macOS/Kali 用 `python3`） | 输出原样贴回；error>0 → 不可交 |
+| 哈希固定 | `sha256sum evidence\<file>`（或 PowerShell `Get-FileHash -Algorithm SHA256`），与记录里的 `content_hash` 逐字符比 | 不一致 → 先查改写来源，见上节第一条 |
+| 改动溯源 | `git log -p -- evidence/<file>`、`git diff --stat work/<case>` | 判「证据是否被改写」的唯一凭据 |
+| 证据产生工具 | 逆向类应点名 `IDA` / `Ghidra` / `rabin2` / `radare2` / `x64dbg`；移动类 `jadx` / `apktool` / `frida`；固件类 `binwalk`；网络类 `nmap` / `nuclei` / `sqlmap` / `curl` / `Burp`；流量类 `tshark` / `Wireshark`；样本类 `yara`；口令类 `hashcat` | 用探测层解析工具名；解析不到 → 该记录不可复现，回产生它的卡重跑 |
+| 路径探测 / 通道 | `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name tshark`；通道状态 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` | `Get-Command` 查空 ≠ 缺工具；HTTP 型 MCP 平时 `closed` 是设计 |
+| 报告链接口径 | `python skillpack\skills\scripts\verify-doc-links.py`（报告里出现的仓库内相对路径） | 断链数不为 0 → 交 `../docs-generator/SKILL.md` 之前必须先修 |
+
 ## Tool dependencies
 
 | Tool | Required | Purpose | Auto-bootstrap |
@@ -115,7 +136,7 @@ Confirm that `../pentest-tools/templates/scope.md`, `../../examples/ctf-demo/tim
 
 ## 建议下一步（选一个编号）
 
-1. 修复 scope.md 中的授权、范围或 network_profile 字段
+1. 修复 scope.md 里的目标、范围或 network_profile 字段
 2. 继续检查 Evidence 记录的可复现命令和来源
 3. 导出当前 review 结果并附到阶段性报告
 4. 换 JSON 输出接入 CI 或其他审查工具
@@ -229,6 +250,9 @@ This skill has no third-party dependency. If Python 3 is unavailable, the only a
 - 要新建一个 case（不是审已完成的） → 用 `../ops/scope-contract.md`
 - 要写报告正文 → 用 `../docs-generator/SKILL.md`
 - 要画图 → 用 `../diagram-generator/SKILL.md`
+- 审的是源码/PR 而不是 case 包 → 用 `../code-review/SKILL.md`
+- 发现证据链断裂，要补证据 → 用 `../ops/evidence-finding-path.md`
+- 证据来自内存镜像/磁盘/流量，要重建时间线 → 用 `../digital-forensics/SKILL.md`
 - 本技能是**只读**审查：不修 case 内容，只报缺陷
 
 ## When to Pivot
@@ -237,17 +261,24 @@ This skill has no third-party dependency. If Python 3 is unavailable, the only a
 
 | 触发证据 | 换到 |
 |---|---|
-| 发现证据链断裂，要补证据 | `../ops/evidence-finding-path.md` |
-| 发现 scope 缺失，要补授权 | `../ops/scope-contract.md` |
-| 审查通过，要出报告 | `../docs-generator/SKILL.md` |
+| `review_case.py --verify-hashes --strict` 报某条 artifact **哈希不一致** | 先判证据是否被改写（`git log -- evidence/`、mtime）；确认改写后回产生它的分析卡重出证据：`../ops/evidence-finding-path.md`（**不许**把 mismatch 降级为 warn 放行） |
+| 同一 case **两轮**审查结论矛盾（Findings 的 E-ID 一轮有一条、一轮为空） | 以带哈希的原文为准重判；仍矛盾 → 判「不可交」并把缺口清单落盘 |
+| scope.md 缺 `network_profile` / target 字段，或 `timeline` 为空 | `../ops/scope-contract.md` |
+| Findings 有 **≥2 条**没有 `evidence_ids`，或引用了不存在的 E-ID | `../ops/evidence-finding-path.md`（在产生侧补绑定，不是在审查侧放宽） |
+| `repro_command` 为空且 `notes` 没写离线限制 | 回产生该证据的卡重跑一遍命令：抓包类 `../digital-forensics/SKILL.md`，二进制类 `../reverse-engineering/SKILL.md` |
+| 审的是源码/PR，根本没有 `work/<case>/` 目录 | `../code-review/SKILL.md` |
+| 审查通过，要出正式报告 | `../docs-generator/SKILL.md` |
+| 报告里要放攻击链图或时间线图 | `../diagram-generator/SKILL.md` |
+| `rebuild.md` / `update.md` 的表格与磁盘记录对不上（表格声称一致、记录里 stdout 字节不同） | 先按 `../ops/rebuild-gates.md` 修表或产记录，再回本卡重跑 strict |
 
 ## 定义完成
 
 本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
 
 - 审查报告落盘：每条缺陷 → case 里的具体文件与行
-- `review_case.py --verify-hashes --strict` 的原始输出贴回
-- 给出「可交 / 不可交」的明确判定与缺口清单
+- `review_case.py --verify-hashes --strict` 的原始输出贴回，error 计数为 0 才叫「可交」
+- 给出「可交 / 不可交」的明确判定与缺口清单（缺哪条证据、该由哪张卡补）
+- 判「不可交」时写清哪个检查项是硬失败，以及已排除哪些「只是工具没装」的可能
 
 ## 输出契约
 
@@ -262,5 +293,6 @@ NEXT:       <继续 | 换技能 | 停止（附成本判据）>
 
 词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
 
-- `confirmed`：哈希与证据链全部核对过，且审查结论有具体行号支撑
-- `low`：仅通读了报告文本，未跑哈希校验
+- `confirmed`：哈希与证据链全部核对过（strict error = 0），且审查结论有具体行号支撑
+- `medium`：结构检查通过，但未跑 `--verify-hashes`（case 里没有 `artifact_path` 或未联网取原文）
+- `low`：仅通读了报告文本，未跑哈希校验，或结论建立在表格自己的声称上

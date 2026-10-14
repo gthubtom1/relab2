@@ -175,7 +175,7 @@ Must conclude:
 - `../triage/forward-testing-playbook.md` —— 前向测试执行契约（`scope=smoke` / `scope=full`、身份分离、响应文件约束）
 - `./report-templates.md` —— 执行本套件时该产出哪些报告、用什么模板
 - `./experience-card-schema.md` —— 一次成功跑完全套件后可沉淀什么
-- `./provider-work-order.md` —— 授权边界与 `allowedPaths`
+- `./provider-work-order.md` —— 外联边界与 `allowedPaths`
 - `./project-artifact-contract.md` —— 产物目录与缓存范围
 - `../triage/startup-triage-playbook.md` —— 被最多用例引用的启动闸门手册
 - `../principles/anti-patterns-playbook.md` —— 「临时捷径」类 lure 应转入的反模式库

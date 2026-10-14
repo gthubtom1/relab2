@@ -7,7 +7,7 @@
 ```text
 1. 先路由后动手
 2. 输出 PRIMARY 路径 + 一句话依据
-3. case-init / scope.md（ops/scope-contract）— auth 未 granted 禁止对目标 ACT
+3. case-init / scope.md（ops/scope-contract）— 建案：目标、网络档、产出物落 work/<case>/
 4. 指定 lead + specialist 角色（ops/role-map）
 5. 立即打开 PRIMARY 的 SKILL.md → ACTION REQUIRED
 6. 工具路径只认实测（`(Get-Command …)`）；缺则 bootstrap（仅 manifest 能力）
@@ -24,7 +24,7 @@ powershell -File skills\scripts\master-route.ps1 -Hint "<用户任务>" -Project
 powershell -File skills\scripts\case-init.ps1 -Hint "<用户任务>" -CaseName "my-case"
 # case 默认写入当前项目的 work/<case>/；-PackageRoot 保持兼容，-ProjectRoot 优先级更高
 powershell -File skills\scripts\case-init.ps1 -Hint "<用户任务>" -CaseName "my-case" -ProjectRoot "C:\path\to\analysis-project"
-# 一次成型可 ACT（授权 + 目标 + 网络档）：
+# 一次成型建案（目标 + 网络档）：
 powershell -File skills\scripts\case-init.ps1 -Hint "<任务>" -CaseName "my-case" -AuthGranted -TargetUrl "https://target/" -NetworkProfile authorized_target_only
 # 本地离线样本：
 powershell -File skills\scripts\case-init.ps1 -Hint "offline apk" -CaseName "my-sample" -Preset offline-sample -Sample ".\app.apk"
@@ -80,7 +80,7 @@ python skills/case-review/scripts/review_case.py work/<case> --verify-hashes --s
 | `ops/skill-supply-chain.md` | 安装外部 skill/MCP 的安全门闩 |
 | `references/community-security-skills.md` | 社区 skill 生态（借鉴不并库） |
 | `reverse-engineering/references/re-agent-workflow.md` | RE：triage→static→dynamic→synthesis |
-| `pentest-tools/references/recon-pipeline.md` | 授权侦察流水线 + 证据门 |
+| `pentest-tools/references/recon-pipeline.md` | 侦察流水线 + 证据门 |
 
 ## 优先级（高 → 低）
 

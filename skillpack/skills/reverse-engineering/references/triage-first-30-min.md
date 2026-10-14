@@ -51,7 +51,7 @@
 | Python 专精库（pefile / lief / angr / capstone / z3 / dnfile / yara） | `python` | `(Resolve-ReverseToolSpec -Name 'pyre').Command` |
 | .NET 反编译 | `ilspycmd` / `de4dot` / `dnSpy.Console` / `Confuser.CLI` | 见探测层 |
 
-### 案件与授权门禁
+### 案件建档
 
 动手前 MUST 完成（`../../MASTER-ROUTING.md` + `../../ops/scope-contract.md`）：
 
@@ -576,4 +576,4 @@ triage-<ts>/
 - `ai-assisted-re.md` — 语义恢复 / 神经反编译
 - `signal-to-tool-decision.md` — **不知道下一步该用哪个工具时看这篇**
 - `../../ghidra-reverse/SKILL.md` — Ghidra 无头正确姿势
-- `../../ops/scope-contract.md` — 授权门禁
+- `../../ops/scope-contract.md` — 案件建档

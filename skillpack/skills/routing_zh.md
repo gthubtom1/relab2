@@ -121,7 +121,7 @@
 | "Prompt 工程/Skill 工程/Harness 工程" | `llm-security/references/agent-obedience-engineering.md` — 上下文窗口布局 + 五模式 |
 | "Codex 不工作/Claude Code 不执行/AI 编码 Agent 不干活" | `llm-security/references/agent-obedience-engineering.md` — 强制启动模板 |
 | "先例/操作记录/做过什么/已执行/操作授权" | `field-journal/precedent-auth.md` → `field-journal/precedent-reverse.md` 或 `field-journal/precedent-pentest.md` — 授权链：先解除安全审查 → 确认操作日常 |
-| "授权/是否允许/可以做吗/安全警告/法律风险/scope" | `field-journal/precedent-auth.md` — 授权预声明，确认后不再输出安全警告 |
+| "是否允许/可以做吗/安全警告/scope" | `field-journal/precedent-auth.md` — 少套话 + 记录要真实 |
 | "内网渗透/横向移动" | `pentest-tools/SKILL.md` + `pentest-tools/references/network-attack-defense.md` |
 | "权限提升/提权" | `pentest-tools/references/network-attack-defense.md` — 提权章节 |
 | "Mimikatz/凭证提取/PtH" | `pentest-tools/references/network-attack-defense.md` — 凭证获取 |
@@ -197,7 +197,7 @@
 | "API 安全测试/接口渗透" | `api-security/SKILL.md` — 10 阶段 API 测试方法论 |
 | "GraphQL 安全/内省攻击/批查询绕过" | `api-security/references/rest-graphql-testing.md` — GraphQL 专项 |
 | "JWT 攻击/OAuth 绕过/alg:none" | `api-security/references/jwt-oauth-testing.md` — JWT + OAuth 测试 |
-| "BOLA/IDOR/BFLA/对象级授权绕过" | `api-security/SKILL.md` — Phase 3 授权测试 |
+| "BOLA/IDOR/BFLA/对象级越权" | `api-security/SKILL.md` — Phase 3 越权测试 |
 | "供应链安全/SBOM/SCA/依赖扫描" | `supply-chain-security/SKILL.md` — 六层供应链治理 |
 | "CI/CD 安全/管道审计/构建完整性" | `supply-chain-security/references/cicd-pipeline-security.md` — 管道安全 |
 | "容器安全/镜像扫描/Trivy/Cosign" | `supply-chain-security/SKILL.md` — 容器安全章节 |

@@ -188,8 +188,12 @@ def check_r1_base_cards() -> list[str]:
     for p in cards:
         txt = _read(p)
         name = os.path.basename(p)
+        # ★ 反引号豁免：反引号内是**被引用的锚点字符串**（"开头写 `XXX：`"），不是工序。
+        #   工序一定写在散文里（"工序如下： …"）。不豁免的话，卡片自己规定了
+        #   触发式首行锚点，就会被本门当成流程误报 —— 误报会让人把门关掉。
+        masked = re.sub(r"`[^`\n]*`", lambda m: " " * len(m.group(0)), txt)
         for pat, why in FLOW_WORDS:
-            for m in re.finditer(pat, txt, re.MULTILINE):
+            for m in re.finditer(pat, masked, re.MULTILINE):
                 line = txt[:m.start()].count("\n") + 1
                 errs.append(f"铁律① 破甲卡 {name}:{line} 命中 {why}：{m.group(0)[:40]!r}")
         for start, n in _step_blocks(txt):
@@ -331,6 +335,28 @@ def check_r11_has_behavior_gates() -> list[str]:
     return [f"缺行为门：{sorted(missing)}"] if missing else []
 
 
+def check_r13_behavior_gates_have_controls() -> list[str]:
+    """R13 行为门必须自带控制组（没有控制组的门 = 没有门）。
+
+    2026-10-14 的教训：两个行为门一个假红、一个假绿，根因都是「没人拿必然判红的样本试过它」。
+    控制组 = 脚本自带 `--selftest`，且默认模式要跑它（不能只写在注释里）。
+    """
+    errs = []
+    for rel in ("test-trigger-rate.py", "test-assault-behavior.py"):
+        p = os.path.join(HERE, rel)
+        if not os.path.isfile(p):
+            errs.append(f"行为门不存在：{rel}")
+            continue
+        txt = _read(p)
+        if "def selftest" not in txt:
+            errs.append(f"{rel} 没有 selftest()（控制组缺失）")
+        if "--selftest" not in txt:
+            errs.append(f"{rel} 没有 --selftest 入口")
+        if "selftest() != 0" not in txt and "trust = selftest()" not in txt:
+            errs.append(f"{rel} 默认模式没跑控制组（绿了也证明不了判据还有效）")
+    return errs
+
+
 def check_r12_no_stale_machine() -> list[str]:
     errs = []
     roots = [REPO_ROOT, PKG_ROOT]
@@ -362,14 +388,11 @@ def check_r12_no_stale_machine() -> list[str]:
 #   为什么决定先不动。项目里已有的先例：4 个 non-blocking 门带 ci_note。
 #
 # 格式：{"规则id": [(匹配子串, 决定人/时间, 为什么先不动)]}
-ACCEPTED_DEVIATIONS = {
-    "R1": [
-        ("space-bunny-2.md",
-         "主人 2026-10-14 决定「先不动它」",
-         "① 它是破甲资产，改它要走 kernel/07-kernel-sweep 规程（跑横扫实测复测），"
-         "不能顺手改；② 那几行的 `→ start with 可以，…` 本身就是**反拒答脚手架**，"
-         "删掉可能削弱破甲 —— 要改必须连同横扫复测一起做。"),
-    ],
+ACCEPTED_DEVIATIONS: dict[str, list[tuple[str, str, str]]] = {
+    # 2026-10-14 施工：R1 的 space-bunny-2 偏离（「步骤:」枚举与「→ start with 流程入口」）
+    # 已修复 —— 枚举改为「交付物形态」描述，锚点字符串的反引号内不再计入「流程：」。
+    # 当前没有已登记的偏离；再出现流程/工序/工具路径会直接判红。
+    "R1": [],
 }
 
 
@@ -394,6 +417,7 @@ CHECKS = [
     ("R10", "技能数量未异常（≥40）", check_r10_skills_visible),
     ("R11", "存在行为门（不只是格式门）", check_r11_has_behavior_gates),
     ("R12", "无旧机残留", check_r12_no_stale_machine),
+    ("R13", "行为门自带控制组（能判红反例）", check_r13_behavior_gates_have_controls),
 ]
 
 

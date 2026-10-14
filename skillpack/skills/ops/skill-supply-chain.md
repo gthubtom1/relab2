@@ -47,7 +47,7 @@
 |------|------|------|
 | `bootstrap-reverse.ps1 -Capability X` | X ∈ bootstrap-manifest.json | 任意新 name 而不改 manifest |
 | 注册 MCP | 用户确认 + 写入后实测探活 | 静默写入全局 MCP 指向未知 URL |
-| 跑社区 Python 一键 pentest | 授权 lab + 读源码后 | 直接生产目标 + 未知脚本 |
+| 跑社区 Python 一键 pentest | 读源码后，在 lab/靶场跑 | 直接对未知脚本无读源码就生产目标 |
 
 ## 5. 本包作者/贡献者
 
@@ -68,4 +68,4 @@ Get-ChildItem -Recurse -Include *.ps1,*.sh,*.py,*.js | Select-Object FullName
 
 - 身份：`IDENTITY.md`  
 - 外部目录：`../references/community-security-skills.md`  
-- 授权：`scope-contract.md` + `../field-journal/precedent-auth.md`  
+- 建档：`scope-contract.md` + `../field-journal/precedent-auth.md`  

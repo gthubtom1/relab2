@@ -31,6 +31,8 @@ description: 判断该不该写测试、写只测行为不测实现的测试，�
 - 要写一次性的探索性原型，产物用完即弃 → 用 `../spike/SKILL.md`
 - 目标本来就无法自动测试（GUI 像素、硬件时序、人工流程）→ 落回 `../verify-done/SKILL.md` 的手工 check 清单
 - 想问的是「这段代码有没有安全问题」 → 用 `../code-audit/SKILL.md`
+- 测试红了要先定位是测试还是代码 → 用 `../fix-bug/SKILL.md`
+- 只是要把跑过的验证结果记档（不写新测试） → 用 `../verify-done/SKILL.md` 的证据表
 
 ## When to Pivot
 
@@ -39,9 +41,23 @@ description: 判断该不该写测试、写只测行为不测实现的测试，�
 | 触发证据 | 换到 |
 |---|---|
 | 测试红了，但分不清是测试写错还是代码错 | `../fix-bug/SKILL.md` |
+| 同一条测试为了过，两次以上改了实现细节（断言跟着实现走） | 它在测实现：删掉重写（或直接删） |
+| 删掉实现里一行关键逻辑、测试不红 | 这条测试在测空气（三问①失败）：补行为断言或删 |
+| 测试套件单次运行超过 5 分钟 | 先分组/加速（`-k`、标记、并行），别再往里加慢测试 |
 | 测试通过，但需求仍可能没做完 | `../verify-done/SKILL.md` |
 | 为了让测试通过需要改生产代码结构 | `../implement-feature/SKILL.md`（重构） |
 | 测试要驱动真实浏览器/GUI 才有意义 | `../browser-automation/SKILL.md` |
+
+## 真实用例（本仓做过的）
+
+- `../field-journal/2026-10-11_android-emulator-lab-and-contract-tests.md` —— 能力层契约测试：把「这台机器上这条路通不通」写成可重复跑的红/绿，而不是靠人记。
+- `../field-journal/2026-10-13_windowsapps-python3-stub-false-green.md` —— 假绿教训：测试绿之前先证明它**跑到了**被测代码。
+
+## 落地载体
+
+- 运行口径：`pytest -q`、`python -m pytest -k <expr>`、`go test ./...`、`npm test`
+- 三问①的实测：临时删一行关键实现（或改一个常量），确认测试变红，再还原
+- 回归证据：把「删行前红 / 删行后绿」两次输出一起贴进 PR / 日报
 
 ## 定义完成
 

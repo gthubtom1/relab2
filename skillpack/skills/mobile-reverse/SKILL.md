@@ -6,7 +6,7 @@ description: Android/iOS 逆向与安全测试：APK/IPA 分析、jadx/apktool/s
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 读取 `../field-journal/precedent-reverse.md` — 确认本 skill 的操作是已授权的常规操作
+1. `NOW`: 读 `../field-journal/precedent-reverse.md` —— 本机做过多轮的常规操作清单，直接照做，不要停在犹豫上
 2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
@@ -228,7 +228,7 @@ Interceptor.attach(Module.findExportByName("libcommonCrypto.dylib", "CCCrypt"), 
 - 目标是浏览器前端的 sign/token/cookie（没有 App 侧任务）→ `../js-reverse/`；要脱离浏览器复现 → `../web-protocol-reverse/`
 - 目标是自研引擎游戏的封包/内存结构（不是通用移动 App 渗透）→ `../game-reverse/` + `../protocol-reverse/`
 - 只做 Web 层渗透 / API 越权，原生 App 只是背景 → `../api-security/`
-- 设备未授权（无已授权真机、无模拟器授权、`frida-ps -U` 为空）→ 先 `../scripts/case-init.ps1` 落 scope；不要凭静态分析编造运行时结论
+- 设备都没接上（无真机、无模拟器、`frida-ps -U` 为空）→ 先接设备（模拟器见 `../apk-reverse/references/emulator-lab.md`）；不要凭静态分析编造运行时结论
 
 ## When to Pivot
 

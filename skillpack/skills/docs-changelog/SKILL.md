@@ -25,6 +25,8 @@ description: 让代码改动与 README、文档、changelog 保持同步，避�
 - 要写一份完整报告 / 渗透测试报告 / writeup → 用 `../docs-generator/SKILL.md`
 - 要画图表（流程图 / 架构图 / 时序图）→ 用 `../diagram-generator/SKILL.md`
 - 要审 case 包完整性（证据链、哈希）→ 用 `../case-review/SKILL.md`
+- 文档要跟着 PR 一起交付的编排问题 → 用 `../pr-ship/SKILL.md`
+- 只是给新功能写一段使用说明（无既有文档可同步） → 用 `../docs-generator/SKILL.md` 起一节，不要套同步流程
 - 前置条件：代码改动本身尚未定稿 → 先 `../code-review/SKILL.md` 或 `../verify-done/SKILL.md`，别同步一份还会变的说明
 
 ## When to Pivot
@@ -36,8 +38,22 @@ description: 让代码改动与 README、文档、changelog 保持同步，避�
 | 文档需要结构化的图表才能说清 | `../diagram-generator/SKILL.md` |
 | 用户要的其实是一份完整交付文档 | `../docs-generator/SKILL.md` |
 | 发现文档里的接口说明与实现矛盾，怀疑是 bug | `../code-audit/SKILL.md` |
+| 同一份文档有 ≥2 处与代码对不上 | 先整体校正一遍再谈本次改动（边改边补只会叠错） |
 | 改动还没定稿就急着写文档 | `../code-review/SKILL.md` |
+| `grep` 旧功能名在新文档里仍有命中（历史 changelog 除外） | 孤儿说明未清完：先删干净，再交 |
+| 单文件文档超过约 400 行且读者要跳读 | 拆分或砍掉次要段落（长文档会被整体跳过） |
 | 发布链 / 依赖清单文档与 SBOM 不符 | `../supply-chain-security/SKILL.md` |
+
+## 真实用例（本仓做过的）
+
+- `skillpack/CHANGELOG.md` —— 本仓自己的 changelog 口径：写可感知变化（门禁/结构/行为），不写「重命名 X」。
+- `../field-journal/2026-08-08_client-neutral-structured-routing-pr-integration.md` —— 文档口径与实现口径对齐（矩阵文件标题-正文口径），对不上就是缺陷。
+
+## 落地载体
+
+- `grep`/`rg` 扫孤儿说明与旧名字（只在历史 changelog 里命中才算干净）
+- `git log --follow <file>` 看某段说明是哪次改动留下的（决定删还是改弃用）
+- 链接检查用本仓门禁口径：`python skillpack/skills/scripts/verify-doc-links.py`
 
 ## 定义完成
 

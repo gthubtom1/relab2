@@ -11,8 +11,8 @@ description: 邮件安全与钓鱼分析：Received 链、SPF/DKIM/DMARC 校验�
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
-2. `NOW`: 确认授权（分析样本邮件 / 租户配置评审）
-3. `NOW`: 不向真实用户二次投递恶意样本
+2. `NOW`: 先分清两条路 —— 分析样本邮件 / 租户配置评审
+3. `NOW`: 样本只在自建测试邮箱里重放（投给真实用户会污染分析面与收件人）
 4. `ACT`: 头认证 → 内容/URL → 附件沙箱 → 租户控制面建议
 
 ## 适用场景
@@ -21,7 +21,7 @@ description: 邮件安全与钓鱼分析：Received 链、SPF/DKIM/DMARC 校验�
 - SPF/DKIM/DMARC 配置评估
 - BEC 商务邮件欺诈模式
 - OAuth 应用钓鱼 / 邮箱令牌滥用（联合 llm/cloud 身份）
-- 安全意识演练设计（授权）
+- 安全意识演练设计
 
 ## 工作流
 
@@ -35,12 +35,18 @@ description: 邮件安全与钓鱼分析：Received 链、SPF/DKIM/DMARC 校验�
 
 ## 工具链
 
-| 工具 | 用途 |
-|------|------|
-| 邮件客户端「查看源」 | 头 |
-| dig/nslookup | SPF/DMARC 记录 |
-| urlscan / 沙箱 | 链接与附件 |
-| 租户管理中心 | 策略 |
+| 工具 | 干什么 | 真实调用口径 |
+|------|--------|--------------|
+| 邮件客户端「查看源」/ `curl` | 取完整原始头 | 对存盘的 `.eml` 做头解析；`curl` 只用于拉取邮件里 URL 的静态响应 |
+| `nmap` | 收件/发件 MTA 端口与 banner | `nmap -p 25,587,465 --script smtp-commands <mta>` |
+| `tshark` | SMTP 会话抓包与头字段提取 | `tshark -r mail.pcap -Y smtp -T fields -e smtp.req.parameter` |
+| `yara` | 附件（宏/OLE）静态规则与 IOC 匹配 | 先对附件过一遍宏/OLE 规则，命中再交 `../malware-analysis/SKILL.md` |
+| `sigma` | IOC 可检测化（网关/终端规则） | 把发件域、URL、附件哈希写成 sigma 规则交 `../threat-hunting/SKILL.md` |
+| `Burp` | 邮件里链接指向的自家应用取证 | 只读重放跳转链，不主动打点 |
+| `mitmdump` | 链接落地页/重定向链脚本化记录 | `mitmdump -w mail_urls.flow` |
+
+探测层（唯一路径入口）：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name tshark`。
+`Get-Command` 查空 ≠ 缺工具（四级递进：env → PATH → `_map.json` → 工具根扫描）。
 
 ## 参考
 
@@ -50,7 +56,7 @@ description: 邮件安全与钓鱼分析：Received 链、SPF/DKIM/DMARC 校验�
 ## 路由上下文
 
 **上游**: MASTER R36  
-**MUST NOT**: 未授权对第三方域群发测试钓鱼
+**提醒**: 测试邮件优先打自己的自建 MX 与测试账号；对外群发会进对方反垃圾/威胁情报系统，污染自己的 IOC 归因
 
 ## 任务完成自检
 
@@ -76,10 +82,12 @@ description: 邮件安全与钓鱼分析：Received 链、SPF/DKIM/DMARC 校验�
 
 ## When NOT to use（近邻负例）
 
-- 目标是邮件网关的 Web 界面 → 用 `../pentest-tools/SKILL.md`
-- 要分析的是恶意附件本身 → 用 `../malware-analysis/SKILL.md`
-- 要查的是邮件服务器主机层 → 用 `../windows-ad/SKILL.md`
-- 前置条件：验证发件路径用**受控邮箱**（自建或自己的别名），便于反复试且不打扰他人
+- 目标是邮件网关/OWA 的 Web 界面漏洞 → 用 `../pentest-tools/SKILL.md`
+- 要分析的是恶意附件本体（免杀、行为、家族） → 用 `../malware-analysis/SKILL.md`
+- 目标是邮件服务器主机的 OS/域层问题 → 用 `../windows-ad/SKILL.md`
+- 目标是钓鱼背后的攻击者基础设施与归因 → 用 `../threat-intelligence/SKILL.md`
+- 目标是邮箱账号被盗后的云身份/令牌滥用 → 用 `../identity-federation/SKILL.md`
+- 目标是把 IOC 变成 SIEM/EDR 检测规则 → 用 `../threat-hunting/SKILL.md`
 
 ## When to Pivot
 
@@ -87,9 +95,13 @@ description: 邮件安全与钓鱼分析：Received 链、SPF/DKIM/DMARC 校验�
 
 | 触发证据 | 换到 |
 |---|---|
-| 附件是宏文档/脚本，要静态+动态分析 | `../malware-analysis/SKILL.md` |
-| 发现可伪造发件域，要评估下游可利用面 | `../attack-chain/SKILL.md` |
-| 发现链接指向自家应用，要审该应用 | `../api-security/SKILL.md` |
+| 附件是真宏文档/脚本（`olevba`/`yara` 命中 >2 条 `AutoOpen`/`WScript.Shell` 规则） | `../malware-analysis/SKILL.md` |
+| 发件域 SPF 为 `~all` 或缺失、DKIM 无签名，发信实测返回 250 并落到目标收件箱 | 评估伪造链后转 `../attack-chain/SKILL.md` |
+| 邮件里的 URL 落到自家域名/应用，且带跟踪参数指向内部接口 | `../api-security/SKILL.md` |
+| `Received` 链里出现 X/Twitter/Telegram 等平台中转，或线索指向外部平台账号 | `../threat-intelligence/SKILL.md` |
+| 同一发件人 30 分钟内两次投递，第二次 `Authentication-Results` 返回 `pass`（配置在改） | 重取样本头做差集；差异指向内部 MTA 配置则转 `../pentest-tools/SKILL.md` |
+| 邮箱 OAuth 应用同意被滥用（恶意 app 拿到 `Mail.Read`） | `../identity-federation/SKILL.md` |
+| 需要把 IOC 落成网关/EDR 规则 | `../threat-hunting/SKILL.md` |
 
 ## 定义完成
 
@@ -113,4 +125,5 @@ NEXT:       <继续 | 换技能 | 停止（附成本判据）>
 词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
 
 - `confirmed`：伪造邮件实际投递到目标收件箱（有 Received 链佐证）
+- 硬判据：SPF/DKIM/DMARC 结论必须落到具体 `v=spf1`/`p=`/`_dmarc` TXT 的实测解析结果；只凭"看上去配了"一律记 `low`
 - `low`：仅解析 DNS 记录推断可以伪造

@@ -53,7 +53,7 @@
 - 说明**最小的可接受的无浏览器交付形态**是什么；
 - 区分「现在就是 browser-free（无浏览器）」与「目标是 runtime-free（无运行时）」 —— 当你正在考虑内嵌宿主时，这两件事不是一回事；
 - 如果**下一步动作会扩大运行时、patch 面积或传输 profile**，**先读** `../triage/escalation-ladder-playbook.md`；
-- 在实现一个**含糊的、或者会扩大授权边界的** `compact-replay` / `collector` 之前，记录 `../contract/provider-work-order.md` 里的条件式实施纲要（conditional implementation brief）；但**不要**把这套纲要强加给有界的 `evidence`、`local-proof`，或明确声明不写盘的分析任务。
+- 在实现一个**含糊的、或者会扩大外联面的** `compact-replay` / `collector` 之前，记录 `../contract/provider-work-order.md` 里的条件式实施纲要（conditional implementation brief）；但**不要**把这套纲要强加给有界的 `evidence`、`local-proof`，或明确声明不写盘的分析任务。
 
 ### 浏览器交接检查点（Browser handoff checkpoints）
 

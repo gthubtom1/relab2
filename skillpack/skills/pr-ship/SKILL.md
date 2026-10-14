@@ -23,6 +23,8 @@ description: 用最小、可审的 PR 交付改动，并附作者自己的验证
 - 要写的是变更说明文档 / release notes 正文 → 用 `../docs-generator/SKILL.md`
 - 要审的是 case 证据包 → 用 `../case-review/SKILL.md`
 - 要评审的是代码本身的设计与正确性 → 用 `../code-review/SKILL.md`
+- 改动还是一团草稿、连自己都说不清改了什么 → 先 `../fix-bug/SKILL.md` / `../implement-feature/SKILL.md` 收口
+- 只是本地提交留档（不进 PR 流程） → 直接 `git commit`，不要套 PR 流程
 - 前置条件：改动尚未自审 / 未跑通 → 先 `../verify-done/SKILL.md`
 
 ## When to Pivot
@@ -32,10 +34,24 @@ description: 用最小、可审的 PR 交付改动，并附作者自己的验证
 | 触发证据 | 换到 |
 |---|---|
 | 改动未自审、不确定是否真的工作 | `../verify-done/SKILL.md` |
+| `git diff --stat` 显示 >400 行或混入无关重构 | 先拆 PR（reviewer 会按「无法一次高效审」直接拒） |
+| CI 两次失败原因不同（一次构建、一次测试） | 先判是不是 flaky / 环境问题，别重跑到绿了当交差 |
+| 描述里有一句「我验证过」但说不出命令或截图 | 回 `../verify-done/SKILL.md` 把 check 跑出来再交 |
 | 改动需要同步 README / changelog | `../docs-changelog/SKILL.md` |
 | PR 描述要引用的图（架构 / 流程）还没画 | `../diagram-generator/SKILL.md` |
 | CI 在构建 / 依赖链上失败且原因不明 | `../supply-chain-security/SKILL.md` |
 | 交付后要补一份正式说明报告 | `../docs-generator/SKILL.md` |
+
+## 真实用例（本仓做过的）
+
+- `../field-journal/2026-08-08_pr-value-triage-and-safe-integration.md` —— 大 PR 只取有价值的部分（授权门禁与 Bash parity），其余剔除：交付是取舍，不是照单全收。
+- `../field-journal/2026-08-14_windows-powershell-native-exit-code-pr-review.md` —— 退出码这类"看不见的行为"要在描述里写清证据，否则 reviewer 只能靠猜。
+
+## 落地载体
+
+- `gh pr create` / `gh pr view --json statusCheckRollup`（本机 `gh` 已登录，Git 推送走 SSH）
+- `git diff --stat` 先看规模；`git log -p` 看是否夹带无关提交
+- CI 结论：`.github/workflows/` 的运行记录（贴最近一次 run 的结论，而不是"应该是绿的"）
 
 ## 定义完成
 

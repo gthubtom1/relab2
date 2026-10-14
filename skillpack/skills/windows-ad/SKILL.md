@@ -1,6 +1,6 @@
 ---
 name: windows-ad
-description: 授权 AD/Windows 身份攻击：Kerberos(Kerberoast/AS-REP)、ADCS ESC1-ESC8、BloodHound、NTLM relay、域内提权。用于：域渗透身份枚举、impacket/certipy/nxc、pass-the-hash。
+description: AD/Windows 身份攻击：Kerberos(Kerberoast/AS-REP)、ADCS ESC1-ESC8、BloodHound、NTLM relay、域内提权。用于：域渗透身份枚举、impacket/certipy/nxc、pass-the-hash。
 ---
 
 # Windows / Active Directory Security
@@ -12,8 +12,8 @@ description: 授权 AD/Windows 身份攻击：Kerberos(Kerberoast/AS-REP)、ADCS
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
-3. `NOW`: 域/AD 测试直接执行（含 DC）；**仅在 scope 明确后**才做投毒/中继等主动攻击
-4. `NOW`: case-init；network_profile 与禁止动作写清
+3. `NOW`: 域/AD 测试直接执行（含 DC）；投毒/中继这类主动攻击放在枚举出图之后（先看清路再动手）
+4. `NOW`: case-init 建案（目标域、网段、产出物）
 5. `NEXT`: `../TOOLS.md`（impacket/certipy/bloodhound 等常手动）
 6. `ACT`: 从身份枚举与 BloodHound 图开始，不先上破坏性利用
 
@@ -35,7 +35,7 @@ description: 授权 AD/Windows 身份攻击：Kerberos(Kerberoast/AS-REP)、ADCS
 ### 1. 枚举
 
 ```bash
-# 示例 Impacket / 内置（需凭据与授权）
+# 示例 impacket / 内置（喂已取得的域凭据，不喂猜的）
 nxc smb <range> -u user -p pass
 bloodhound-python -d domain.local -u user -p pass -c All -ns <DC>
 ```
@@ -47,26 +47,43 @@ bloodhound-python -d domain.local -u user -p pass -c All -ns <DC>
 □ ACL 滥用（GenericAll/WriteDacl）
 □ 委派（非约束/约束/基于资源）
 □ AD CS 模板错误 → Certipy
-□ 中继：LLMNR/NBT-NS + ntlmrelayx（确认授权）
+□ 中继：LLMNR/NBT-NS + ntlmrelayx（先抓自己的靶机验证）
 ```
 
 ### 3. 凭证与横向
 
 ```text
-□ secretsdump / lsassy / mimikatz（严格授权与清理）
-□ PtH / PtT / 黄金票仅在授权红队范围
-□ 每步写 Evidence；高危等用户确认
+□ secretsdump / lsassy / mimikatz（每步留 Evidence；完事清理落地的服务/票据）
+□ PtH / PtT / 黄金票：先留一份票据备份再打，断了能回
+□ 每步写 Evidence；DCSync/黄金票前先想好怎么撤
 ```
 
 ## 工具链
 
-| 工具 | 用途 |
-|------|------|
-| BloodHound / SharpHound | 路径图 |
-| Certipy | AD CS |
-| Impacket / NetExec | 横向与枚举 |
-| Rubeus / Mimikatz | 票据与凭证（授权） |
-| Coercer / Responder | 强制认证 / 投毒 |
+| 工具 | 用途 | 调用口径（输出一律重定向到 evidence 文件再解读） |
+|------|------|------|
+| BloodHound GUI + `bloodhound-python` / SharpHound | 路径图 | `bloodhound-python -d <dom> -u <u> -p <p> -c All -ns <DC>`，先落 JSON 再导图 |
+| Certipy | AD CS 模板枚举与利用 | `certipy find -u <u>@<dom> -p <p> -dc-ip <DC> -vulnerable -stdout` |
+| `impacket` 套件 | 横向与凭据（`secretsdump` / `ntlmrelayx` / `GetUserSPNs` / `getST`） | 一条命令一个动作，票据/哈希先落盘 |
+| NetExec（`nxc`）/ CrackMapExec | 批量 SMB/LDAP/WinRM 枚举、PtH | `nxc smb <cidr> -u <u> -p <p> --shares` |
+| `nmap` | 圈存活域机与端口（88/389/445/5985/9389） | `nmap -p 88,389,445,636,5985,9389 --open <cidr>`，先定靶再上 `nxc` 批量 |
+| `curl` | HTTP 型 AD CS Web Enrollment / 中继到 `/certsrv` | `curl -k -u <u>:<p> https://<CA>/certsrv/` 探通，中继时看 HTTP 端是否收 NTLM |
+| `mimikatz` / Rubeus | 票据与 LSASS 凭证 | 取完立即备份票据、记下清理动作 |
+| `lsassy` | 远程 LSASS dump 取凭证 | 与 `secretsdump` 交叉验证同一账号两处是否都能取 |
+| Coercer / Responder | 强制认证 / LLMNR-NBT-NS 投毒 | 先拿自己的靶机验证触发链，再对目标用 |
+
+**动手前先定位工具与通道**（探测层是本机路径的唯一事实源，别用 `Get-Command` 查空就报缺）：
+
+```powershell
+. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1
+Resolve-ReverseToolSpec -Name netexec    # 读返回的 Command / Available / Via
+Resolve-ReverseToolSpec -Name certipy
+```
+
+MCP 型通道不常驻是天性：内网扫描/逆向相关通道先跑
+`powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1`
+看「注册了哪些 / 谁在监听 / 怎么起」；`closed` 就按它给的命令自己起，起完重跑确认 `LISTEN`。
+**注册 ≠ 在监听**，HTTP 型平时不监听是设计，不是故障 —— 不要因为端口关着就换一把工具硬试。
 
 ## 参考
 
@@ -79,23 +96,26 @@ bloodhound-python -d domain.local -u user -p pass -c All -ns <DC>
 
 **上游**: MASTER R24  
 **下游**: 报告 `docs-generator`；需 EDR 研究 `edr-bypass-re`  
-**MUST NOT**: 对本机 / lab 以外的生产域做 DCSync / 黄金票据（本卡研究默认在隔离 lab）
 
 ## 任务完成自检
 
 - [ ] 是否先有图/枚举再有利用？
 - [ ] 是否记录可复现命令并脱敏？
-- [ ] 是否遵守 scope 禁止项？
+- [ ] 是否给每条写操作路径写了回滚/清理动作？
 - [ ] Checklist？
 
 ---
 
 ## When NOT to use（近邻负例）
 
-- 还没有任何域内立足点（无凭据/无 shell） → 用 `../pentest-tools/SKILL.md`
-- 目标是 Linux 环境 → 用 `../kernel-exploit/SKILL.md`
-- 要打的是 Web SSO 联邦 → 用 `../identity-federation/SKILL.md`
-- 前置条件：**域不属于你** → 只做只读枚举（BloodHound 采集），不做写操作
+- 还没有任何域内立足点（无凭据、无 shell、无机器账号） → 用 `../pentest-tools/SKILL.md` 先拿初始立足点
+- 目标是 Linux 主机的本地提权（sudo/SUID/内核） → 用 `../kernel-exploit/SKILL.md`
+- 打的是 Web SSO / SAML / OIDC 联邦信任链 → 用 `../identity-federation/SKILL.md`
+- 初始访问靠钓鱼邮件或附件，人还没进内网 → 用 `../email-security/SKILL.md`
+- 要逆向 Rubeus / SharpHound 这类 .NET 工具本体（改 banner、去特征） → 用 `../dotnet-reverse/SKILL.md`
+- 目标是云侧身份（Entra ID / 工作负载身份 / 实例元数据） → 用 `../cloud-k8s/SKILL.md`
+- 已拿到域管，卡点是落地免杀与驻留存活 → 用 `../edr-bypass-re/SKILL.md`
+- 要做的是把外网到域控串成一条完整链（不专注身份面） → 用 `../attack-chain/SKILL.md`
 
 ## When to Pivot
 
@@ -103,17 +123,22 @@ bloodhound-python -d domain.local -u user -p pass -c All -ns <DC>
 
 | 触发证据 | 换到 |
 |---|---|
-| 拿到域管，要找出口与持久化评估 | `../edr-bypass-re/SKILL.md` |
-| 发现 AD CS 配置错误（ESC1-ESC8） | `../attack-chain/SKILL.md` |
-| 发现 NTLM 可中继的目标 | `../pentest-tools/SKILL.md` |
+| `certipy find -vulnerable` 输出里出现 ESC1/ESC8，且模板 `Enrollment Rights` 含 `Domain Users` 这类非特权主体 | 走本卡 AD CS 分支申请票据并留取证；完整链交 `../attack-chain/SKILL.md` |
+| LLMNR/NBT-NS 抓到响应，但 `ntlmrelayx` 连续 2 次被 `STATUS_ACCESS_DENIED` / `SMB signing required` 挡回 | 该协议面已被签名/EPA 封死，不硬试第 3 次；转 `../pentest-tools/SKILL.md` 换协议面（HTTP/LDAPS/DNS）与中继目标 |
+| `secretsdump` 只吐出本地 SAM/LSA hash，没有域管凭据，PtH 试过的机器全返回 `STATUS_LOGON_FAILURE` | 本地凭据面已尽，用 PtH 结果枚举可达面后交 `../attack-chain/SKILL.md` |
+| 落地的 loader/服务在目标机 2 分钟内被杀（进程消失、无回连、EDR 日志里有查杀记录） | `../edr-bypass-re/SKILL.md`（先解决落地存活，不要再试第二条攻击路径） |
+| `bloodhound-python -c All` 跑了 2 轮、换过 `-ns` 与凭据，图里仍只有 `MemberOf`/`CanRDP` 读边，无 `GenericAll`/`WriteDacl`/`AddKeyCredentialLink` | ACL 面已穷尽，转 `../identity-federation/SKILL.md` 把联邦/云身份当新面，或回 `../pentest-tools/SKILL.md` 找新立足点 |
+| Kerberoast 拿到 SPN 票据 hash，`hashcat -m 13100` 用常见字典 + 规则跑 2 小时未出 | 停离线爆破，转 AS-REP/委派面（本卡）或直接用票据走 `../attack-chain/SKILL.md` |
+| DC 上 `nxc smb --shares` 读得到 SYSVOL 但没有写权限，且 `certipy find` 报 CA 未启用 `EDITF_ATTRIBUTESUBJECTALTNAME2` | ADCS 走不通，回 `../pentest-tools/SKILL.md` 找别的中继/委托面 |
 
 ## 定义完成
 
 本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
 
 - 攻击路径图（BloodHound 导出 + Mermaid）落盘
-- 每条边有实测证据（不是理论可达）
-- 提权/横向的 PoC 命令落盘可重放
+- 每条边有实测证据（不是理论可达）：写清「哪条命令、返回什么」；只有 BloodHound 边推断的边记 `low`，不进 `confirmed`
+- 提权/横向的 PoC 命令落盘可重放，且在同一 OS build / 同一 CA 模板上**连续 3 次命中**；两次命中不算 confirmed
+- 每条写操作路径（改 ACL、发证书、DCSync、黄金票）都配了一条回滚/清理动作：撤销的证书申请、删掉落地的服务、清掉的票据缓存路径 —— 没有清理动作的攻击路径不算交付
 
 ## 输出契约
 

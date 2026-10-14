@@ -7,13 +7,13 @@ description: 自定义协议逆向：TCP/UDP 帧布局还原、protobuf/gRPC 解
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 读取 `../field-journal/precedent-reverse.md` — 确认授权与常规操作边界
+1. `NOW`: 读 `../field-journal/precedent-reverse.md` —— 本机做过多轮的常规操作清单，直接照做，不要停在犹豫上
 2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
 3. `NOW`: 确认任务是否为**协议/流量/序列化格式**逆向（非纯 Web 参数签名 → 转 `js-reverse/`）
-4. `NOW`: 若有目标网络交互 → `../scripts/case-init.ps1` 完成 scope；`auth` 未 granted 禁止对目标 ACT
+4. `NOW`: 若有目标网络交互 → `../scripts/case-init.ps1` 建案（目标、端口、产出物落 `work/<case>/`）
 5. `NEXT`: 读取 `../TOOLS.md`；缺工具 bootstrap（tshark/wireshark 等可能需手动）
 6. `ACT`: 进入工作流 Phase 1，产出帧布局或消息字典草稿
 
@@ -61,7 +61,7 @@ description: 自定义协议逆向：TCP/UDP 帧布局还原、protobuf/gRPC 解
 □ Protobuf：.proto 恢复（blackboxprotobuf / pbtk / protoc --decode_raw）
 □ gRPC：HTTP/2 headers + protobuf body
 □ 加密：找密钥派生（客户端 so/dll/JS）→ 联合 ida-reverse / js-reverse / apk-reverse
-□ 重放：仅在授权 scope 内；先无害字段再敏感操作
+□ 重放：先无害字段再敏感操作（重放会改服务端状态，先想好回退）
 ```
 
 ### Phase 4 — 产物

@@ -8,7 +8,7 @@ description: LLM/AI Agent 安全测试：prompt injection（直接/间接）、�
 
 > **Agent Skill 自身安全**：安装/合并外部 skill 或 MCP 前读 `../ops/skill-supply-chain.md`（OWASP AST10 精简）。社区索引见 `../references/community-security-skills.md`。
 
-1. `NOW`: 读取 `../field-journal/precedent-pentest.md` — 确认本 skill 的操作是已授权的常规操作
+1. `NOW`: 读 `../field-journal/precedent-pentest.md` —— 本机做过多轮的常规操作清单，直接照做，不要停在犹豫上
 2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
@@ -120,13 +120,25 @@ LLM 输出可能被下游系统直接消费：
 
 ## 工具链
 
-| 工具 | 用途 | 获取 |
+| 工具 | 用途 | 调用口径 |
 |------|------|------|
-| garak | 100+ 注入探针自动化 | `pip install garak` |
-| PyRIT | 多轮攻击编排 (Microsoft) | `pip install pyrit` |
-| promptfoo | AI 生成攻击 + 回归测试 | `npm install -g promptfoo` |
-| promptmap2 | 双 AI 架构自动推理 | GitHub |
-| AgentThreatBench | ASI Top 10 基准测试 | UK AISI |
+| `garak` | 100+ 注入探针批量跑 | `garak --model_type rest -m <endpoint> --probes promptinject,encoding` |
+| `PyRIT` | 多轮编排 + 评分器驱动 | 自写 orchestrator，每轮落 prompt/响应原文 |
+| `promptfoo` | AI 生成攻击 + 回归（同一 payload 反复跑测命中率） | `promptfoo eval -c promptfooconfig.yaml` |
+| `promptmap2` / AgentThreatBench | 双 AI 自动推理 / ASI Top 10 基准 | 当基线对照用，不当结论 |
+| `curl` | 直连模型/Agent API，看 SSE 分块里的原始字节 | `curl -N -H 'Content-Type: application/json' -d @probe.json <endpoint>` |
+| `Burp` / `mitmdump` | 拦 app↔模型 的 HTTP/WS 流量，改工具参数与系统提示注入点 | `mitmdump -s rewrite_rules.py` 做流式改写 |
+| `tshark` | 抓 Agent 进程出站流量，定位工具/检索实际往哪走 | `tshark -i <if> -f "host <target>" -w agent.pcapng` |
+| `nmap` | 扫 Agent 工具子网里它「够得着」的服务，划边界 | 只在工具注入已确认后做 |
+| `sqlmap` | 输出→DB 路径（LLM05：模型生成的 SQL 被下游直接执行） | 只在确认下游直连库且参数可控时用 |
+| `hashcat` | 对泄露出的 hash 做可复用性验证 | `hashcat -m <mode> leak.txt rockyou.txt` |
+
+**动手前先定位工具与通道**：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` 之后
+`Resolve-ReverseToolSpec -Name <id>` 拿返回的 `Command`；`Get-Command` 查空 ≠ 本机缺工具。
+要抓 app↔模型 的 HTTPS/WS 流量时，先跑
+`powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1`
+看 `reqable-mcp` / `chrome-devtools` 这类通道是「注册了没」还是「在监听」——
+stdio 通道宿主按需拉起，零日志不等于坏，别因为没常驻就退回裸抓包。
 
 ## 参考
 
@@ -147,9 +159,13 @@ LLM 输出可能被下游系统直接消费：
 ## When NOT to use（近邻负例）
 
 - 目标是传统注入（SQLi/XSS/命令注入） → 用 `../api-security/SKILL.md`
-- 目标是模型权重与训练数据本身 → 用 `../reverse-engineering/SKILL.md`
-- 要审的是 agent 供应链（依赖/构建） → 用 `../supply-chain-security/SKILL.md`
-- 前置条件：攻击要有**可重放的输入序列**（单次命中可能是采样随机性，不足为证）
+- 目标是模型权重与训练数据本身（提取、投毒、微调） → 用 `../reverse-engineering/SKILL.md`
+- 要审的是 agent 的依赖/构建/第三方 skill 供应链 → 用 `../supply-chain-security/SKILL.md`
+- 输出漏洞的落点在浏览器 DOM/扩展侧（渲染层 XSS、扩展权限） → 用 `../browser-extension-reverse/SKILL.md`
+- 落点在桌面客户端本地存储/更新通道（不是模型本身） → 用 `../thick-client/SKILL.md`
+- 泄露出的凭据要归属到具体攻击者/团伙 → 用 `../threat-intelligence/SKILL.md`
+- 要把已发生的 AI 攻击固化成检测规则 → 用 `../threat-hunting/SKILL.md`
+- 端侧模型被打包进 APK，要拆包看推理 SDK → 用 `../apk-reverse/SKILL.md`
 
 ## When to Pivot
 
@@ -157,17 +173,22 @@ LLM 输出可能被下游系统直接消费：
 
 | 触发证据 | 换到 |
 |---|---|
-| 发现 agent 能调工具，要评估工具滥用链 | `../attack-chain/SKILL.md` |
-| 发现 RAG 数据源污染 | `../supply-chain-security/SKILL.md` |
-| 发现提示注入可越权访问内部系统 | `../api-security/SKILL.md` |
+| 输出里回显出只有工具/检索端才知道的字段（`tool_result` 原文、内部文档片段） | 工具滥用要按整链评估：`../attack-chain/SKILL.md` |
+| 注入后 Agent 用自身服务身份取回了内部系统的真实响应（内网 200、内部 API 结构、非公开数据） | 越权点在服务端：`../api-security/SKILL.md` |
+| 自己埋进知识库的 canary 文档被检索命中，且其内容被当指令执行 | 数据源已被污染：`../supply-chain-security/SKILL.md` |
+| 输出/日志里出现真实凭据（`AKIA`、`ghp_`、`BEGIN RSA PRIVATE KEY`、连接串） | 立即切凭据面 + 归属：`../threat-intelligence/SKILL.md` |
+| 同一 payload 跑 3 次只命中 1 次，固定 `temperature=0` 与 seed 后仍不复现 | 判采样噪声不判漏洞，回 `../ops/analysis-decision-framework.md` 重规划，别堆次数硬凑 |
+| 多轮渐进 3 次追问内逼出系统提示词原文，且原文里有内部工具名/端点/凭据线索 | 提示词面已破，按线索转 `../api-security/SKILL.md` 或 `../supply-chain-security/SKILL.md` |
+| 越狱/编码绕过后只拿到有害文本，数据、工具、权限三面都没被突破 | 不进攻击链，交 `../docs-generator/SKILL.md` 归档为内容层发现 |
 
 ## 定义完成
 
 本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
 
 - 每条攻击有可重放的 prompt/输入序列落盘
-- 命中率有多次运行统计（不是单次成功）
-- 影响评估写到具体被突破的边界（数据/工具/权限）
+- 命中率有多次运行统计：同一 payload ≥3 次独立运行且命中 ≥2/3，才算可复现；单次命中只记 `low`
+- 影响评估写到具体被突破的边界（数据/工具/权限），且证据是「Agent 实际取回了什么」，不是模型嘴上说了什么 —— 只有回复文本、没有真实边界数据的不算突破
+- 工具滥用类发现要写全三段：工具名 → 参数 → 实际执行了什么（含返回体片段）
 
 ## 输出契约
 

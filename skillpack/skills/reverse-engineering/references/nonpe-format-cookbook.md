@@ -88,14 +88,14 @@
 | **AM** | 静态 IAT 缺 DLL、运行时才用 | **See A–T 补丁 R**（Delay-Load / E-delay-import），此处不双写长文 | E-delay-import | P0 指针 |
 | **AN** | 需还原导出函数参数与调用约定 | 交叉引用 + 动态看寄存器/栈；标注 stdcall/fastcall 等 | E-dll-export-abi | P1 |
 | **AO** | 疑 DLL 劫持/侧加载 | 查应用目录同名 DLL、搜索路径、KnownDLLs；合法程序+异常 DLL 组合 | E-dll-sideload | P1 |
-| **AP** | 无文件映射/反射加载线索 | 内存特征、加载器行为、无路径模块；授权环境取证 | E-dll-reflective | P1 |
+| **AP** | 无文件映射/反射加载线索 | 内存特征、加载器行为、无路径模块；内存取证 | E-dll-reflective | P1 |
 | **AQ** | 仅因导出名「不像恶意」降风险 | **禁止**只凭导出名判安全；结合段权限、入口、字符串、动态行为 | E-dll-export-priority | P1 |
 
 DLL/SYS 硬门仍：E-imports + E-exports（见 re-agent-workflow）。
 
 ## 7. Android 格机 / 持久化（AR AS AT）→ apk-reverse
 
-> **仅授权样本、镜像或测试设备。** 动作是检测、提取 IOC 与持久化路径，不是实施破坏。
+> **样本、镜像或测试设备上的动作是检测**：提取 IOC 与持久化路径，先落盘保全。
 
 | ID | 触发 | 动作（摘要） | Evidence | 优先 |
 |----|------|--------------|----------|------|

@@ -40,7 +40,7 @@
    - `node` 可用 —— 对「只需要 `document.cookie` 赋值」的 bootstrap（引导）脚本，通常够用。
    - `iv8` **本机无**（社区运行时，PyPI 上不存在该发行版）。若你手上已有该运行时，`../crypto/iv8-runtime-cheatsheet.md` 的 API 形态可参考，但**该文档的形态未在本机验证**。
    - 需要真实 DOM/定时器语义时走 `playwright`（本机可用），但它属于「重活」，只在轻量宿主证明不够时才升级。
-4. **明确授权边界**。本文是协议逆向方法论；只在你有权访问的目标上做。涉及验证码/风控的部分见 `challenge-state-envelope-playbook.md`，那里的定位是「理解并建模服务端挑战」，不是绕过。
+4. **适用面**：目标是你能直连的 Web 客户端。涉及验证码/风控的部分见 `challenge-state-envelope-playbook.md`，那里的定位是「理解并建模服务端挑战」，不是绕过。
 
 ## 步骤（Working method）
 

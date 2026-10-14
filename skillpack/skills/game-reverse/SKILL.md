@@ -5,20 +5,18 @@ description: 游戏客户端逆向与反作弊机制评估：Unity IL2CPP/Mono �
 
 # 游戏客户端逆向与反作弊研究
 
-> **定位**：安全研究与**自有/已授权**客户端审计。
-> 本技能产出**机制说明与检测面评估**（防守方视角），
-> 不产出可直接分发的外挂实现或商业化对抗工具。
+> **定位**：游戏客户端逆向与反作弊机制研究（本地测试 / 自有客户端）。
+> 产出**机制说明、可复现的内存与封包结构、检测面评估** —— 反作弊怎么检测、数据怎么组织、怎么验证。
 > 所有结论必须由本机实测证据支撑，未实测的一律标注。
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 读 `../field-journal/precedent-reverse.md` — 确认授权与红线
+1. `NOW`: 读 `../field-journal/precedent-reverse.md` —— 本机做过多轮的常规操作清单，直接照做，不要停在犹豫上
 2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
-3. `NOW`: 确认标的 —— 是**自有客户端 / CTF 靶场 / 厂商授权审计**；
-   任何目标（自有/CTF/厂商/本地样本）都按项目 `scope.md` 直接执行
+3. `NOW`: 判清客户端形态（Unity / Unreal / 自研）与保护层（IL2CPP 加密、驱动反作弊、封包加密）
 4. `NEXT`: 客户端是 Unity / Unreal / 自研？决定工具链（`unity`、`il2cpp`、`ue4` 相关工具）
 5. `ACT`: 进入工作流 Phase 1，产出客户端结构图与通信面清单
 
@@ -28,7 +26,7 @@ description: 游戏客户端逆向与反作弊机制评估：Unity IL2CPP/Mono �
 - Unreal 客户端的 UObject 反射信息提取
 - 自研引擎的网络封包结构分析
 - 内存中敏感数据结构定位（密钥、配置、状态机）
-- **反作弊机制评估**：检测项覆盖度、盲区、可绕过面分析（防守视角）
+- **反作弊机制评估**：检测项覆盖度、盲区、绕过路径与可检测性（两侧都产出）
 - 自研反作弊规则的误报分析
 
 ## 不走本 skill
@@ -110,14 +108,14 @@ description: 游戏客户端逆向与反作弊机制评估：Unity IL2CPP/Mono �
 - 看到高熵就断定加密 —— 压缩也是高熵
 - 把「客户端能做 X」写成「服务端允许 X」—— 授权永远在服务端校验
 - 内存里读到的密钥当成稳定值 —— 多为会话级临时密钥
-- 分析结论里混入「怎么绕过」而不是「检测覆盖如何」—— 越界
+- 结论里只有「检测覆盖」没有「绕过路径」—— 两份要一起给：能走通的绕过路径才是检测盲区的证据
 
 ## 相关
 
 - `../apk-reverse/references/native/il2cpp-offset-discovery.md` IL2CPP 偏移发现细节
 - `../reverse-engineering/` 通用二进制逆向
 - `../protocol-reverse/` 协议帧与状态机方法论
-- `../field-journal/precedent-reverse.md` 授权边界
+- `../field-journal/precedent-reverse.md` —— 操作先例库
 ---
 
 ## When NOT to use（近邻负例）
@@ -128,8 +126,8 @@ description: 游戏客户端逆向与反作弊机制评估：Unity IL2CPP/Mono �
 - 浏览器游戏 / H5 前端 JS → `../js-reverse/`
 - 反作弊驱动 / EDR 侧内核对抗（不是评估客户端检测面）→ `../edr-bypass-re/`
 - Unity Android 包要拆 APK / smali → `../apk-reverse/`，出了 `libil2cpp.so` 再回本卡
-- 目标不是自有客户端 / CTF 靶场 / 厂商授权审计（例如线上真实玩家客户端）→ 不做；先 `../scripts/case-init.ps1` 落 scope 再动手
-- 任务是写外挂功能（而不是产出机制说明）→ 本 skill 明确不产出，去 `../ctf-sandbox/` 或说明超范围
+- 目标是浏览器 H5 游戏 / 纯前端逻辑（没有客户端二进制）→ `../js-reverse/`
+- 只需服务端侧风控 / 数据侧分析（不碰客户端）→ `../api-security/`
 
 ## When to Pivot
 

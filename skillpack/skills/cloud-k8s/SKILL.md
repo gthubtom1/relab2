@@ -7,15 +7,15 @@ description: 云/容器/K8s 安全评估：元数据 SSRF、IAM 越权、公开�
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 读取 `../field-journal/precedent-pentest.md` — 云/K8s 测试按 `scope.md` 直接执行
+1. `NOW`: 读 `../field-journal/precedent-pentest.md` —— 本机做过多轮的常规操作清单，直接照做，不要停在犹豫上
 2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
-3. `NOW`: case-init + scope；明确账号边界、禁止破坏性操作
+3. `NOW`: case-init 建案（目标账号/cluster、产出物落 `work/<case>/`）
 4. `NOW`: 确认是云元数据/容器/K8s/IAM，而非普通 Web 扫（后者 `pentest-tools/`）
 5. `NEXT`: `../TOOLS.md`；kubectl/aws/gcloud 等多为手动安装
-6. `ACT`: 从「身份与暴露面」开始，禁止默认全网扫描
+6. `ACT`: 从「身份与暴露面」开始——先确认当前凭据是谁、能到哪，比一上来全网扫信噪比高得多
 
 ## 适用场景
 
@@ -32,13 +32,13 @@ description: 云/容器/K8s 安全评估：元数据 SSRF、IAM 越权、公开�
 ```text
 □ 当前身份：云 AK/SK、K8s SA、节点 SSH？
 □ 范围：单账号 / 单 cluster / 单 namespace
-□ 网络档：authorized_target_only
+□ 网络档：默认只读枚举；会改配置/建资源的动作先落快照与回滚点
 ```
 
 ### Phase 2 — 云控制面
 
 ```bash
-# 示例（按厂商替换；MUST 在授权账号内）
+# 示例（按厂商替换；先看清当前凭据指向哪个账号）
 aws sts get-caller-identity
 aws s3 ls
 # Azure / GCP 对应 identity 命令
@@ -76,13 +76,22 @@ kubectl get clusterrolebindings
 
 ## 工具链
 
-| 工具 | 用途 | 自举 |
-|------|------|------|
-| kubectl | 集群交互 | 手动 |
-| trivy | 镜像/IaC | bootstrap `trivy` 若可用 |
-| kube-bench / kubeaudit | CIS/配置 | 手动 |
-| pacu / scoutsuite | 云审计（授权） | 手动 |
-| nuclei | 已知云漏洞模板 | bootstrap nmap/nuclei 生态 |
+| 工具 | 干什么 | 真实调用口径 |
+|------|--------|--------------|
+| `kubectl` | 集群对象与权限枚举 | `kubectl auth can-i --list`、`kubectl get pods,secrets,svc -A -o json`；SA token 在 `/var/run/secrets/kubernetes.io/serviceaccount/` |
+| `trivy` | 镜像/IaC/K8s 已知 CVE | `trivy image --severity HIGH,CRITICAL <img>`；结果只作入口线索，命中后要能在镜像里指出对应文件 |
+| `Syft` | 镜像 SBOM（比 trivy 更全的包清单） | `syft <img> -o json`，与 trivy 报告对账，找出 trivy 漏报的包 |
+| `aws` / `gcloud` / `az` | 控制面身份与授权 | `aws sts get-caller-identity`、`gcloud auth list` —— 先落盘"当前主体是谁"再谈能到哪 |
+| `curl` | IMDS / SSRF 探针 | `curl -s -m 2 http://169.254.169.254/latest/meta-data/iam/security-credentials/`；HTTP 200 且回显临时凭据 ⇒ IMDSv1 可达（强制 v2 会 401） |
+| `nmap` / `masscan` | 暴露的 6443 / 10250 / 2379 | `nmap -p 6443,10250,2379 --open <cidr>`；2379 匿名可列 key 即 etcd 裸奔 |
+| `nuclei` | dashboard / 组件暴露模板 | `nuclei -u <k8s-dashboard-url> -t http/exposures/`；模板命中 ≠ 已利用 |
+| `ffuf` | dashboard / API 路由枚举 | 只有 200 且 `Content-Type: application/json` 才算真暴露面 |
+
+探测层（唯一路径入口）：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name kubectl`。
+`Get-Command kubectl` 返回空 ≠ 本机没装（PATH 快照会过期）。
+容器里带的是 stripped 原生二进制（sidecar/agent/Operator）时，静态分析走 `idapro` / `pyghidra` MCP：
+动手前 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1`
+看"注册了哪些 / 谁在监听 / 怎么起"三列——HTTP 型平时 `closed` 是设计，要用的按它给的命令起，起完重跑确认 `LISTEN`。
 
 ## 参考
 
@@ -93,12 +102,11 @@ kubectl get clusterrolebindings
 ## 路由上下文
 
 **上游**: MASTER R23  
-**下游**: 拿到节点 shell → `attack-chain` / `windows-ad`；镜像漏洞 → supply-chain  
-**MUST NOT**: 未授权扫公有云其他租户
+**下游**: 拿到节点 shell → `attack-chain` / `windows-ad`；镜像漏洞 → supply-chain
 
 ## 任务完成自检
 
-- [ ] 是否限定在授权账号/cluster？
+- [ ] 结论是否绑定到具体账号/cluster 与凭据来源？
 - [ ] 发现是否含复现与影响？
 - [ ] 是否避免破坏性操作？
 - [ ] 报告 / journal？
@@ -128,10 +136,12 @@ kubectl get clusterrolebindings
 
 ## When NOT to use（近邻负例）
 
-- 目标是自建机房的物理机/虚拟机，不涉及云元数据与容器 → 用 `../pentest-tools/SKILL.md`
-- 目标只是应用层接口 → 用 `../api-security/SKILL.md`
-- 要审的是构建流水线而非运行时集群 → 用 `../supply-chain-security/SKILL.md`
-- 前置条件：**云账号不属于你** → 只做只读枚举与配置取证，不做资源变更
+- 目标是自建机房的裸机/虚拟机，不涉及云元数据、容器编排或托管 IAM → 用 `../pentest-tools/SKILL.md`
+- 目标只是一个应用层 HTTP 接口，SSRF 之外没有云身份面 → 用 `../api-security/SKILL.md`
+- 要审的是构建流水线/制品来源，而非运行时集群 → 用 `../supply-chain-security/SKILL.md`
+- 逃逸已拿到宿主 root，接下来是内网横向与域控 → 用 `../attack-chain/SKILL.md`
+- 目标只是跑在 K8s 上的应用代码缺陷（非 RBAC/配置/逃逸面） → 用 `../code-audit/SKILL.md`
+- 集群里的托管数据库问题是弱口令/权限过大，而非集群本身 → 用 `../database-security/SKILL.md`
 
 ## When to Pivot
 
@@ -139,9 +149,13 @@ kubectl get clusterrolebindings
 
 | 触发证据 | 换到 |
 |---|---|
-| 拿到云凭据，要评估能到哪些服务 | `../attack-chain/SKILL.md` |
-| 容器内发现宿主机挂载/特权，要逃逸验证 | `../kernel-exploit/SKILL.md` |
-| 发现 CI runner 可被投毒 | `../supply-chain-security/SKILL.md` |
+| `aws sts get-caller-identity`（或 `gcloud auth list`）返回的账号/项目与预期不符，说明手上凭据不是你以为的那条 | 先顺凭据来源链（CI 变量 / 实例角色 / 共享 key）查清它从哪来，链上有横向再转 `../attack-chain/SKILL.md` |
+| `curl -m 2` 打 IMDS 直接回显 IAM 临时凭据（IMDSv1 可达，未强制 v2 token） | 评估该角色可扮演链后转 `../attack-chain/SKILL.md` |
+| 容器内 `capsh --print` 出现 `cap_sys_admin`，或 `mount` 显示 hostPath / runc 卷可写 | `../kernel-exploit/SKILL.md` 做逃逸面验证 |
+| CI runner 的 pipeline 变量或未保护分支可被本命名空间内的 SA 写入 | `../supply-chain-security/SKILL.md` |
+| `kubectl auth can-i --list` 连续两次（间隔 >2 分钟）对同一 verb 都返回 `Forbidden`，且期间 RBAC 对象未变 | 别硬试（会刷审计告警）；换 SA（`kubectl get sa -A`）或换 namespace 面，或转 `../attack-chain/SKILL.md` 找别的入口 |
+| `trivy image` 报出容器内 stripped 原生二进制的缺陷，且该二进制有私有 RWX 段 | 走 `idapro` / `pyghidra` MCP 静态，或转 `../reverse-engineering/SKILL.md` |
+| 暴露的 2379(etcd) / 10250(kubelet)，`nmap` 显示匿名可读（etcd v3 未鉴权，5 分钟内可枚举出 >100 个 key） | 用匿名面拉 pod/secret 清单，横向转 `../attack-chain/SKILL.md` |
 
 ## 定义完成
 
@@ -165,4 +179,5 @@ NEXT:       <继续 | 换技能 | 停止（附成本判据）>
 词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
 
 - `confirmed`：权限提升链每一跳都有 API 返回实测（不是策略文档推断）
+- 硬判据：`sts get-caller-identity` 的主体与你预期不符时，凭据来源链没落盘之前，任何"可扮演到 X"的结论只能记 `low`
 - `low`：仅凭 IAM policy JSON 静态推断可达，未实际调用

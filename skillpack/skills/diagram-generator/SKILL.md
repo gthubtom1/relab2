@@ -63,6 +63,26 @@ Use Mermaid unless another language is clearly better.
 - For business-process diagrams, distinguish happy path, decision points, failures, retries, and manual steps when present.
 - For diagrams created from uncertain text, include an `Assumptions` section after the code.
 
+## 本技能硬判据（图能不能用）
+
+- **节点/边必须来自真实数据源，且点名产生它的工具**：调用图来自 `Ghidra` / `IDA` 导出的函数表，或 `radare2` / `rabin2` 的符号输出（节点数与源文件行数对得上才算 `confirmed`）；拓扑图来自 `nmap` 的服务表或 `tshark` 的会话表；固件分区图来自 `binwalk` 的输出；运行时序列图来自 `frida` 的 trace；利用链图里的偏移/地址来自 `pwntools` / `gdb` 的实际输出。对不上 → 图上标 `unknown`，宁缺不编。
+- **先本地渲染、再贴进交付文档**：Mermaid 走 `mmdc -i x.mmd -o x.svg`，DOT 走 `dot -Tsvg`，PlantUML 要 JDK + 植物/UML jar。同一张图**两次**渲染都报语法错 → 换等价写法（别用新版才支持的语法），仍不行就降级成保守模板或纯文本表。没渲染通过的源码不许贴进交付物。
+- **节点 ≥30 个或边接近全连** → 换 Graphviz（`rankdir` / `cluster` / `splines`）；Mermaid 在这个密度下糊成一团，这不是审美问题，是读不出来。
+- **脱敏**：图里出现真实目标信息（IP、域名、主机名、token、用户名）→ 一律换 `{target}` / `{host}` 占位，交付前用 IP 正则 `grep` 一遍；节点 ID 只用 ASCII 语义名。
+- **图与正文同版本**：图里每条边都应在正文找到对应结论；正文改了图没改就是过期图，重画而不是留着。
+
+## 工具链与工具联动
+
+| 环节 | 本机怎么调 | 输出接到哪 |
+|---|---|---|
+| 渲染器探测 | `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name mmdc` / `-Name dot`；通道状态 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` | 探测不到就只交图源并写明；别声称「已渲染」 |
+| 调用图数据源 | `Ghidra`（`analyzeHeadless` 批量导函数表）、`IDA`（`idat`）、`radare2`、`rabin2`（符号/导入表） | 节点数必须与导出文件行数对得上 |
+| 拓扑 / 流量图数据源 | `nmap -sV` 的服务表、`tshark` / `Wireshark` 的会话与协议分层 | 手画 IP 一律不允许 |
+| 固件 / 分区图数据源 | `binwalk` 的提取结果 | 分区偏移写进图注 |
+| 运行时序列图数据源 | `frida` 的 trace / hook 日志 | 消息顺序照日志排，不按想象排 |
+| 利用链图数据源 | `pwntools` 的 exp 脚本、`gdb` 里的偏移与寄存器 | 偏移/地址逐字对上脚本 |
+| 渲染与嵌入 | 本卡 `scripts/render_diagram.py`（按扩展名分派）；成品交给 `../docs-generator/SKILL.md` 嵌进报告 | 嵌入前先在目标渲染器渲一次 |
+
 ## Mermaid generation rules
 
 Consult `references/diagram-patterns.md` for compact templates.
@@ -198,7 +218,9 @@ For English user requests, respond in English. For Chinese user requests, respon
 
 - 要写的是大段文字文档 → 用 `../docs-generator/SKILL.md`
 - 要审 case 完整性 → 用 `../case-review/SKILL.md`
-- 要画的图超出 Mermaid/PlantUML 表达能力（复杂拓扑/3D） → 用 `../docs-generator/SKILL.md`
+- 需要位图/截图/浏览器渲染才能表达（复杂拓扑、3D、真实页面标注） → 用 `../browser-automation/SKILL.md`
+- 要画调用图但还没反编译、手上没有函数表 → 用 `../reverse-engineering/SKILL.md`
+- 要画扫描出来的网络拓扑，但还没做过扫描 → 用 `../pentest-tools/SKILL.md`
 - 图必须来自真实结构，不许为好看编造节点
 
 ## When to Pivot
@@ -207,17 +229,24 @@ For English user requests, respond in English. For Chinese user requests, respon
 
 | 触发证据 | 换到 |
 |---|---|
-| 图里需要嵌入文档正文 | `../docs-generator/SKILL.md` |
-| 图表达不了（需要位图/截图） | `../browser-automation/SKILL.md` |
-| 需要审图所依据的 case | `../case-review/SKILL.md` |
+| 图要嵌进文档或报告正文 | `../docs-generator/SKILL.md` |
+| 图表达不了，需要位图/截图（画布标注、真实页面） | `../browser-automation/SKILL.md` |
+| 图的节点来源可疑，要核它依据的 case 与哈希 | `../case-review/SKILL.md` |
+| 同一张图**两次**渲染失败且报的是同一条语法 | 降级：换成保守模板（`references/diagram-patterns.md`）或纯文本表（本卡） |
+| 节点数 **≥30** 或边接近全连，Mermaid 已经看不清 | 换 Graphviz DOT（本卡 Graphviz rules） |
+| 要画调用图，但手上没有函数表/符号输出 | 回 `../reverse-engineering/SKILL.md` 采数据后再画 |
+| 拓扑图的数据来自端口扫描或流量，且还没采 | `../pentest-tools/SKILL.md` |
+| 时间线图的数据来自内存/磁盘取证 | `../digital-forensics/SKILL.md` |
+| 图里含真实目标信息且要对外交付 | 先脱敏（本卡判据）再走报告口径 `../docs-generator/SKILL.md` |
 
 ## 定义完成
 
 本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
 
-- 图源文件（.mmd/.puml）落盘，可再编辑
-- 在目标渲染器上能正确渲染（无语法错误）
-- 图中每个节点/边可追溯到实际代码或案例事实
+- 图源文件（.mmd / .dot / .puml）落盘，可再编辑
+- 在目标渲染器上**渲染通过一次**（输出文件存在且非零字节），或在交付物里明确标注「仅提供图源」
+- 图中每个节点/边可追溯到实际代码或案例事实，并写明来源工具与文件
+- 对外交付版跑过脱敏检查：IP/域名/token 正则 `grep` 无命中
 
 ## 输出契约
 
@@ -232,5 +261,6 @@ NEXT:       <继续 | 换技能 | 停止（附成本判据）>
 
 词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
 
-- `confirmed`：图渲染通过且节点数与实际结构核对一致
-- `low`：仅凭文字描述想象出结构图
+- `confirmed`：图渲染通过，且节点数与实际结构（函数表/会话表/binwalk 输出）核对一致
+- `medium`：图渲染通过，但部分节点来自二手描述，未核行数
+- `low`：仅凭文字描述想象出结构图，没有任何数据源

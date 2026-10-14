@@ -11,7 +11,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 读完本文件后，不允许只回复“已读/已理解”。必须按顺序执行：
 
 1. `NOW`：跑平台原生 router（Windows `scripts/master-route.ps1`；Linux/macOS/Kali `scripts/master-route.sh`），从 `config/routing.json` 定 PRIMARY；疑难再读 `routing.md` 三轴附录。
-2. `NOW`：平台原生 `case-init` 落地当前分析项目的 `work/<case>/scope.md`（本包未落地）；**auth 未 granted 禁止对目标 ACT**。本地离线样本使用 `offline-sample` preset + explicit sample；Force 不得绕过硬门。
+2. `NOW`：平台原生 `case-init` 落地当前分析项目的 `work/<case>/scope.md` —— 记录目标、网络档、产出物（本包不设目标授权门；产物一律落调用者项目，见 `../RULES_zh.md`）。本地离线样本使用 `offline-sample` preset + explicit sample。
 3. `ACT`：立即打开 PRIMARY `SKILL.md` 执行 ACTION REQUIRED。
 4. `NEXT`：工具路径**当场探测本机** —— 唯一入口是探测层。先按仓内相对路径 dot-source `..\scripts\lib\Bootstrap.ps1`（即 `<技能包根>\skills\scripts\lib\Bootstrap.ps1`），然后 `Resolve-ReverseToolSpec -Name <工具id>`（`env → PATH → 别名表 → 工具根递归` 四级递进，返回 `Available`/`Command`/`Via`，调用前自动自愈 PATH 与 `DOTNET_ROOT`）。
    **当前部署在 `C:\relab2`（工具根 `D:\Tools`），但这不是约定**（2026-10-10 修正）：2026-10-10 全项目审查给 30 个入口脚本去掉了硬编码 `C:\relab2\...`，全部改成按 `$PSScriptRoot` 逐级上溯定位；`relab2-root.ps1` 也会在多个常见位置里找仓根。**所以换机可以 clone 到任何位置，命令里不要写死路径。**
@@ -215,7 +215,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 | **社区 skill 对照** | `references/community-security-skills.md` | 外部安全 skill 索引与借鉴规则（禁止盲装） |
 | **Skill 供应链** | `ops/skill-supply-chain.md` | 外部 skill/MCP 安装门闩（AST10 精简） |
 | **RE 阶段门闩** | `reverse-engineering/references/re-agent-workflow.md` | triage→static→dynamic→synthesis |
-| **授权侦察管线** | `pentest-tools/references/recon-pipeline.md` | scope 门 + 命中≠验证 |
+| **侦察管线** | `pentest-tools/references/recon-pipeline.md` | 流水线 + 证据门（命中≠验证） |
 | **协议逆向** | `protocol-reverse/` | 自定义二进制协议 / Protobuf / gRPC / PCAP 帧布局 |
 | **Ghidra 逆向** | `ghidra-reverse/` | 开源反编译、headless、Ghidra MCP（无 IDA 时主入口） |
 | **Binary Ninja 逆向** | `binary-ninja-reverse/` | HLIL/MLIL/LLIL、Python API，以及可选的社区 MCP/localhost HTTP 集成 |
@@ -226,7 +226,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 | **威胁情报 / OSINT** | `threat-intelligence/` | 公开来源 IOC 补充、活动关联、独立核验与情报交接 |
 | **威胁狩猎** | `threat-hunting/` | 假说驱动狩猎、Sigma 检测工程、蓝队验证 |
 | **OT / ICS 工控** | `ot-ics/` | Purdue 分区、PLC/SCADA、被动优先评估 |
-| **Wi-Fi / 无线** | `wifi-wireless/` | 授权无线评估、握手/PMKID、实验室规则 |
+| **Wi-Fi / 无线** | `wifi-wireless/` | 无线评估、握手/PMKID、先收后发纪律 |
 | **浏览器扩展逆向** | `browser-extension-reverse/` | Chrome/Firefox 扩展、MV3 worker、权限面 |
 | **macOS / Mach-O** | `macos-reverse/` | 签名、ObjC/Swift、LaunchAgent、macOS 样本 |
 | **厚客户端** | `thick-client/` | 桌面 C/S、本地存储、IPC、更新通道 |
@@ -235,7 +235,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 | **数据库安全** | `database-security/` | MySQL/PG/MSSQL/Mongo/Redis 暴露与配置 |
 | **邮件安全** | `email-security/` | 钓鱼拆解、SPF/DKIM/DMARC、BEC |
 | **联邦身份** | `identity-federation/` | SAML/OIDC/OAuth SSO 流与错配 |
-| **RF / SDR** | `radio-sdr/` | 授权射频研究、默认只收 |
+| **RF / SDR** | `radio-sdr/` | 射频研究、先收后发 |
 
 ## 统一入口
 
@@ -249,7 +249,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 社区适配层只在 `R46`–`R49` 或 canonical 专项 wrapper 已选中后按需读取：
 `skills/community/registry.json` 是 provenance/maturity/risk 目录，
 `python skills/scripts/community-route.py --hint "..." --json` 只做只读二级初筛，
-不会替代主路由、scope 或授权门。
+不会替代主路由、case 建档或 PRIMARY 技能。
 
 ## 工作思路
 
@@ -334,7 +334,7 @@ bash <package-root>/kali/scripts/bootstrap-reverse.sh 工具名 --start-services
 
 | 读序 | 文件 | 何时读 |
 |------|------|--------|
-| **#1** | `ops/scope-contract.md` + `case-init.ps1` | 可执行授权门。`field-journal/precedent-auth.md` 不写 granted |
+| **#1** | `ops/scope-contract.md` + `case-init.ps1` | case 建档（目标/网络档/产出物）。`field-journal/precedent-auth.md` 不写 granted |
 | **#2** | `field-journal/precedent-reverse.md` 或 `field-journal/precedent-pentest.md` | 按需 — AI 犹豫时才加载 |
 
 **#1 前置，#2 懒加载。**

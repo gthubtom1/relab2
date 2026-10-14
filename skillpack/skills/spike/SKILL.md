@@ -25,6 +25,8 @@ description: 跑一次性原型验证可行性或比较方案，产出 go/no-go 
 - 已经确定要做、只是要把它实现好 → 用 `../implement-feature/SKILL.md`
 - 要为已确定的行为写正式测试 → 用 `../write-tests/SKILL.md`
 - 要评审别人的改动 → 用 `../code-review/SKILL.md`
+- 只是查资料/读文档就能回答的问题（不需要写代码验证） → 直接查，不要开原型
+- 结论已经清楚、只需要落地执行 → 用 `../implement-feature/SKILL.md`（spike 不产出可合并代码）
 - 前置条件：原型代码必须放得**可整目录丢弃**（临时分支 / 临时目录），不与主线纠缠
 
 ## When to Pivot
@@ -35,9 +37,24 @@ description: 跑一次性原型验证可行性或比较方案，产出 go/no-go 
 |---|---|
 | 结论是 go，且范围已定 | `../implement-feature/SKILL.md` |
 | 结论是 go，需要先补测试策略 | `../write-tests/SKILL.md` |
+| 时间盒用完（默认 2 小时，用户指定则以指定为准）结论仍未收敛 | 停手：写出已知/未知 + 有限度建议（或升级换技能），不许无限延长 |
+| 两个方案在同一维度上 3 次测量差异 < 10% | 判打平，给出「打破平局的那一个实验」，不要凭喜好钦定 |
+| 原型代码超过 200 行还没收敛 | 先把问题切小（是问题太大，不是原型不够全） |
+| 探索中发现问题本身变了（真问题是性能/数据模型/根本换路） | 记 `decision_delta` 后换技能，不顺着旧假设继续 |
 | 结论要交给别人评审 / 交付 | `../code-review/SKILL.md` 或 `../pr-ship/SKILL.md` |
 | 结论要以正式文档形式留存 | `../docs-generator/SKILL.md` |
 | 探索暴露的是安全或依赖链问题 | `../code-audit/SKILL.md` / `../supply-chain-security/SKILL.md` |
+
+## 真实用例（本仓做过的）
+
+- `../field-journal/2026-10-11_android-emulator-lab-and-contract-tests.md` —— 先跑「能力层契约测试」再谈集成：原型只回答「这台机器上这条路通不通」。
+- `../field-journal/2026-08-01_nextjs-cdk-contract-faithful-local-reconstruction.md` —— 探索结论落成「可复刻契约」，而不是一堆一次性脚本。
+
+## 落地载体
+
+- 结论文档：`work/<spike>/spike.md`（比较维度表 + 推荐 + 证据）
+- 原型隔离：临时分支或 `git worktree`/临时目录，**结束即丢**（文档里标 `throwaway`）
+- 证据：命令 + 原始输出落盘（数字/日志/失败复现），不写「跑过了」
 
 ## 定义完成
 

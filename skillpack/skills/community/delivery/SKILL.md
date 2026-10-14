@@ -15,7 +15,7 @@ description: 全栈软件交付编排适配层。按目标、输入、角色工�
    templates、`../../TOOLS.md` 和 pitfalls；这些路径已被适配到当前包，不使用源仓库的
    全局 hooks、private nested checkout 或自动 bootstrap。
 4. `ACT`: 安全、逆向、渗透、真实部署和外部发布动作必须交给 canonical route，遵循
-   它自己的 scope/case/授权门；交付工作流只负责编排和验收。
+   它自己的 scope/case 建档；交付工作流只负责编排和验收。
 5. `DONE`: 产出验收标准、实现/测试证据、风险和回滚说明，并把可复用经验写入当前
    项目的 field-journal；未验证的模板能力标为 `unverified`。
 

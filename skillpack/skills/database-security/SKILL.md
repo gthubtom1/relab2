@@ -7,12 +7,12 @@ description: 数据库安全评估：0.0.0.0 绑定、弱口令、权限过大�
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 读取 precedent-pentest；**生产库禁止破坏性语句** unless 明确允许
+1. `NOW`: 读 `../field-journal/precedent-pentest.md` —— 常规操作清单，直接照做；生产库先只读，写/删前打快照
 2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
-3. `NOW`: scope 写清实例、账号权限、是否允许写/删
+3. `NOW`: 记录实例与账号权限（只读还是可写）；写/删前先打快照、记原值
 4. `NEXT`: 客户端工具路径
 5. `ACT`: 暴露面 → 认证 → 授权 → 配置 → 利用链验证（安全）
 
@@ -21,7 +21,7 @@ description: 数据库安全评估：0.0.0.0 绑定、弱口令、权限过大�
 - 数据库未授权/弱口令/错误绑定 0.0.0.0
 - 权限过大、危险功能（xp_cmdshell、COPY PROGRAM、UDF）
 - 横向：从应用账号到 DBA
-- NoSQL 注入与 Redis 写文件等（授权环境）
+- NoSQL 注入与 Redis 写文件等
 
 ## 工作流
 
@@ -36,12 +36,19 @@ description: 数据库安全评估：0.0.0.0 绑定、弱口令、权限过大�
 
 ## 工具链
 
-| 工具 | 用途 |
-|------|------|
-| 官方 CLI | 连接与枚举 |
-| sqlmap | 注入验证（授权） |
-| nuclei | 已知暴露模板 |
-| 云 RDS 控制台审计 | 配置 |
+| 工具 | 干什么 | 真实调用口径 |
+|------|--------|--------------|
+| 官方 CLI（`mysql`/`psql`/`redis-cli`/`mongosh`） | 连接与权限枚举 | `SHOW GRANTS FOR CURRENT_USER();`、`SELECT @@secure_file_priv, @@plugin_dir;`、`psql \du+` |
+| `sqlmap` | 注入验证（仅对已确认参数） | `sqlmap -u <url> --batch --risk 2 --level 3`；先手工确认注入类型再交给它，别一上来全量跑 |
+| `nmap` | 端口与库指纹 | `nmap -p 3306,5432,6379,27017,1433 -sV <host>` |
+| `nuclei` | 已知暴露/未授权模板 | `nuclei -u <host> -t network/`；模板命中只作入口线索，不作定论 |
+| `hashcat` | 弱口令与哈希复现 | `hashcat -m 1731 <hash> <wl>`（MSSQL）、`-m 3200`（bcrypt）；命中即拿到口令等价物 |
+| `impacket` | MSSQL 认证/中继 | `mssqlclient.py` 确认可登录后再谈权限边界 |
+| `curl` | REST/管理 API（ES、CouchDB、ClickHouse HTTP 口） | `curl -s http://<host>:9200/_cat/indices` |
+| `Burp` | 经应用接口到达库的注入面 | 与 `../api-security/SKILL.md` 共用同一代理与请求记录 |
+
+探测层（唯一路径入口）：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name sqlmap`。
+`Get-Command sqlmap` 返回空 ≠ 本机没装（PATH 快照会过期）。云托管库一律先看实例的公开端点与控制面，再看引擎。
 
 ## 参考
 
@@ -55,7 +62,7 @@ description: 数据库安全评估：0.0.0.0 绑定、弱口令、权限过大�
 
 ## 任务完成自检
 
-- [ ] 是否避免未授权写删？
+- [ ] 写/删操作是否都留有原值或快照回退？
 - [ ] 是否区分配置问题与可利用链？
 - [ ] Checklist？
 ## 改编参考索引（open-reverselab `kb/ctf-website`）
@@ -86,10 +93,12 @@ description: 数据库安全评估：0.0.0.0 绑定、弱口令、权限过大�
 
 ## When NOT to use（近邻负例）
 
-- 目标是应用层注入点，尚未接触数据库直连 → 用 `../api-security/SKILL.md`
-- 目标是数据库里的数据本身（取证/恢复） → 用 `../digital-forensics/SKILL.md`
-- 目标是 DB 服务器的操作系统层 → 用 `../pentest-tools/SKILL.md`
-- 前置条件：生产库默认只读；要写先备好**回滚方案**（改前取快照 / 记录原值）
+- 目标是应用层注入点，尚未接触数据库直连或库凭据 → 用 `../api-security/SKILL.md`
+- 目标是库内数据本身的取证/恢复/时间线 → 用 `../digital-forensics/SKILL.md`
+- 目标是数据库所在主机的 OS 提权与横向 → 用 `../attack-chain/SKILL.md`
+- 库是云托管（RDS/Cloud SQL/Atlas）而问题在云侧权限或网络策略 → 用 `../cloud-k8s/SKILL.md`
+- Redis/Memcached 写文件之后的容器逃逸面 → 用 `../cloud-k8s/SKILL.md`
+- 目标是缓存/消息中间件的协议缺陷（非存储引擎配置） → 用 `../protocol-reverse/SKILL.md`
 
 ## When to Pivot
 
@@ -97,9 +106,14 @@ description: 数据库安全评估：0.0.0.0 绑定、弱口令、权限过大�
 
 | 触发证据 | 换到 |
 |---|---|
-| 确认弱口令可登录，要评估权限边界 | `../windows-ad/SKILL.md` |
-| Redis/Memcached 可写文件或 SSRF 可达 | `../cloud-k8s/SKILL.md` |
-| 库里发现高价值数据，要评估外泄路径 | `../attack-chain/SKILL.md` |
+| 弱口令可登录，且 `SHOW GRANTS` / `\du` 返回的输出里含 `FILE`/`SUPER`/`pg_execute_server_program` | 评估 UDF 或写文件到 OS 层的路径后转 `../attack-chain/SKILL.md` |
+| MySQL `SELECT @@secure_file_priv` 返回空串、`@@plugin_dir` 可写（<1 秒的廉价查询即可确认） | 写 UDF / 落文件面转 `../attack-chain/SKILL.md` |
+| Redis `config set dir/dbfilename` 写文件后 `SAVE` 返回 OK，且目标路径出现新文件 | 云托管型转 `../cloud-k8s/SKILL.md`（元数据/实例角色），自建型转 `../attack-chain/SKILL.md` |
+| MSSQL `xp_cmdshell` 或 `COPY ... PROGRAM` 在 <2 秒内返回命令回显 | `../attack-chain/SKILL.md` 做 OS 层横向 |
+| 数据面发现高价值数据（PII/密钥/备份），但外泄路径未落盘 | 先定证据链（`../case-review/SKILL.md`），外泄可行性转 `../attack-chain/SKILL.md` |
+| 注入点位于 Web 参数、库凭据尚未到手 | `../api-security/SKILL.md` |
+| 同一账号间隔 >5 分钟两次 `SHOW GRANTS` 返回的输出逐字不变，却仍被拒访问目标表 | 是对象级 ACL 而非角色缺失；换表/换 schema 面，别继续猜权限 |
+| 库暴露公网且 `nmap -sV` 报出的服务版本已 4 年以上未更新 | 先按版本查已知未授权/提权 CVE，必要时转 `../patch-diff-exploit/SKILL.md` |
 
 ## 定义完成
 
@@ -123,4 +137,5 @@ NEXT:       <继续 | 换技能 | 停止（附成本判据）>
 词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
 
 - `confirmed`：权限过高结论有实际 SQL 执行证据（如能读他人 schema）
+- 硬判据：任何"某账号能读/写某对象"的结论必须附实际 SQL 执行输出；只有配置文件或 `SHOW GRANTS` 列表、拿不出一次真实查询结果的，一律记 `low`
 - `low`：仅凭端口开放推断存在弱口令

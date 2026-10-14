@@ -249,6 +249,8 @@ npm run doctor:network
 - 要做的是还原站点签名/加密算法（不是驱动界面） → 用 `../web-protocol-reverse/SKILL.md`
 - 目标没有 UI，只有 API → 用 `../api-security/SKILL.md`
 - 要逆向的是扩展代码本身 → 用 `../browser-extension-reverse/SKILL.md`
+- 只是取静态 HTML（无登录、无 JS 渲染）→ 用 `curl`/`requests` 直接取；要成体系抓站/复现协议再进 `../web-protocol-reverse/SKILL.md`
+- 目标是移动端 App 界面（adb/frida 能看到进程）→ 用 `../mobile-reverse/SKILL.md`
 - 前置条件：脚本要能在**干净会话**里重复跑通（依赖手动状态的脚本不算资产）
 
 ## When to Pivot
@@ -257,9 +259,31 @@ npm run doctor:network
 
 | 触发证据 | 换到 |
 |---|---|
-| 页面里的参数是本地算的，要还原算法 | `../js-reverse/SKILL.md` |
-| 需要抓包分析接口 | `../web-protocol-reverse/SKILL.md` |
-| 操作的是 Windows 原生 GUI（非浏览器） | `../reverse-engineering/SKILL.md` |
+| `snapshot -i` 里目标控件不在无障碍树（canvas/WebGL/自定义渲染），点击坐标点不准 | 转桌面 CUA 面（本卡 Part 2）或从运行时取状态 `../js-reverse/SKILL.md` |
+| 页面能开但请求被 403/412/429 打回，或响应里的 sign/challenge 是 JS 现场算的 | `../web-protocol-reverse/SKILL.md` |
+| 同一操作连续 2 次 `wait --load networkidle` 后 DOM 仍在变（轮询/长连接渲染） | 改用元素条件等待（`wait @e1`）；仍抖 → 抓包面 `../web-protocol-reverse/` |
+| 驱动页面的是浏览器扩展注入的脚本（页面本体干净） | `../browser-extension-reverse/SKILL.md` |
+| 需要的其实是调试协议（CDP 断点 / Hook / 篡改运行时），不是点选填表 | `jshook` 通道（见工具链表）/ `../js-reverse/SKILL.md` |
+| 操作对象是 Windows 原生 GUI（IDA/x64dbg/Wireshark）且只能走界面 | 本卡 Part 2（OpenReverse UIA/CUA）；**能走 CLI/MCP 就不要动 GUI** |
+| Playwright 冷启动两次都起不来浏览器（缺内核） | 先 `npx playwright install chromium`（一次性）再复跑，不要改脚本绕 |
+| `adb devices` / `frida-ps -U` 能看到目标，那是移动端不是浏览器 | `../mobile-reverse/SKILL.md` / `../apk-reverse/SKILL.md` |
+
+## 工具链与通道（真调用口径）
+
+| 能力 | 通道 | 怎么起 |
+|---|---|---|
+| 浏览器点选/填表/截图/断言 | `agent-browser` CLI（本卡 Part 1）或 `playwright-mcp`（stdio npx） | CLI 直接调；MCP 由宿主按会话拉起，首次 `npx playwright install chromium` |
+| DOM/网络/性能/CDP 断点 | `chrome-devtools`（stdio npx） | 宿主拉起；断点场景与 `jshook` 二选一，不要同时挂两个匿名浏览器 |
+| Hook / 深度调试 | `jshook`（stdio npx，按 domain 激活） | 宿主拉起 |
+| 改包/落流 | `reqable-mcp`（stdio，需 Reqable 桌面端）或 `mitmdump` | 见 `../web-protocol-reverse/references/triage/tool-playbook.md` |
+| 本地 HTTP 分析器 | `anything-analyzer`（local-http `http://localhost:23816/mcp`） | 需手动起服务（`pnpm dev`） |
+| 桌面 GUI 自动化 | OpenReverse（手动 clone + npm，见下文自举段） | 手动装；先 UIA，控件非标再 CUA |
+| **通道状态自检** | `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` | 三列「谁注册 / 谁在 LISTEN / 怎么起」 |
+
+**注册 ≠ 在监听**：stdio 型由宿主按会话拉起；HTTP 型冷启是设计不是故障。工具路径唯一入口是探测层
+`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>`；
+`Get-Command` 查空 ≠ 缺工具。**动 GUI 前先问一句：有没有 CLI/MCP 孪生？**（GUI 是同步阻塞的，
+命令不返回模型就不会有下一个 token。）
 
 ## 定义完成
 
@@ -267,7 +291,13 @@ npm run doctor:network
 
 - 脚本落盘 + 可重复运行（同一输入同一结果）
 - 关键步骤有截图或 DOM 快照留档
-- 失败路径也有记录（哪一步不可自动化、为什么）
+- 失败路径也有记录（哪一步不可自动化、为什么、替代动作是什么）
+
+硬判据：
+
+- 脚本里出现**固定睡眠**（`wait 5000` 一类）→ 最多 `medium`：固定睡眠是 flake 的主要来源，改成元素条件/网络条件等待
+- `confirmed` 的门槛是**冷启动算一次**：≥3 次完整跑通里至少一次是干净会话（无残留 cookie/profile）
+- 证据要能指出「这一步靠什么稳定下来」（元素 ref、网络 idle、还是显式条件），说不出来就是靠运气
 
 ## 输出契约
 
@@ -282,5 +312,5 @@ NEXT:       <继续 | 换技能 | 停止（附成本判据）>
 
 词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
 
-- `confirmed`：流程在干净会话中 ≥3 次完整跑通
-- `low`：单次跑通，依赖了当时的手动状态
+- `confirmed`：流程在干净会话中 ≥3 次完整跑通（含一次冷启动），且无固定睡眠
+- `low`：单次跑通，依赖了当时的手动状态；或脚本靠 `wait <ms>` 硬撑

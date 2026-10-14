@@ -1269,7 +1269,7 @@
       "skill": "go-rust-reverse/SKILL.md",
       "keywords": [
         {
-          "must": "(?<![a-z0-9_])golang(?![a-z0-9_])|(?<![a-z0-9_])rustc(?![a-z0-9_])|go.?binary|go.?二进|go.?语言|go.?程序|stripped.?go|gore.?sym|go.?malware|rust.?binary|go.?逆向|rust.?逆向"
+          "must": "(?<![a-z0-9_])golang(?![a-z0-9_])|(?<![a-z0-9_])rustc(?![a-z0-9_])|go.?binary|go.?二进|go.?语言|go.?程序|stripped.?go|gore.?sym|go.?malware|rust.?binary|go.?逆向|rust.?逆向|goroutine"
         },
         {
           "must": "go.?编译|rust.?编译|符号.{0,6}(剥|剥离)|剥.{0,4}符号|函数都认不出来|go.?写的|rust.?写的|pclntab|panic.{0,6}字符串|go.?后门",
@@ -1384,7 +1384,7 @@
       "skill": "radio-sdr/SKILL.md",
       "keywords": [
         {
-          "must": "(?<![a-z0-9_])sdr(?![a-z0-9_])|hackrf|rtl-?sdr|gnu.?radio|(?<![a-z0-9_])urh(?![a-z0-9_])|射频|软件.?无线电|蓝牙|bluetooth|(?<![a-z0-9_])ble(?![a-z0-9_])",
+          "must": "(?<![a-z0-9_])sdr(?![a-z0-9_])|hackrf|rtl-?sdr|gnu.?radio|(?<![a-z0-9_])urh(?![a-z0-9_])|射频|软件.?无线电|蓝牙|bluetooth|(?<![a-z0-9_])ble(?![a-z0-9_])|门禁卡|门卡|读卡器|(?<![a-z0-9_])nfc(?![a-z0-9_])|(?<![a-z0-9_])rfid(?![a-z0-9_])|短距离无线",
           "note": "蓝牙/BLE 归射频研究"
         },
         {
@@ -1419,7 +1419,7 @@
           "note": "case SKILL.md 证据链可追溯性/结论证据支撑审查；约束案件审查语境"
         },
         {
-          "must": "交接前.{0,6}补|时间线.{0,6}断点|证据之间对不上",
+          "must": "交接前.{0,6}补|时间线.{0,6}(断点|对不上)|证据之间对不上|结论.{0,8}对不上|(再|重新)对一遍.{0,10}(交|交付)",
           "mustAll": [
             "交接|时间线|断点|证据|补"
           ],

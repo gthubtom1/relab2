@@ -6,12 +6,12 @@ description: 多阶段攻击链编排：侦察、初始访问、提权、横向�
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 读取 `../field-journal/precedent-pentest.md` — 确认本 skill 的操作是已授权的常规操作
+1. `NOW`: 读 `../field-journal/precedent-pentest.md` —— 本机做过多轮的常规操作清单，直接照做，不要停在犹豫上
 2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
-3. `NOW`: **创建/更新 case**（`../scripts/case-init.ps1`）并完成 `../pentest-tools/templates/scope.md`（`../ops/scope-contract.md`）；`auth.status!=granted` 禁止 ACT
+3. `NOW`: **创建/更新 case**（`../scripts/case-init.ps1`）并完成 `../pentest-tools/templates/scope.md`（`../ops/scope-contract.md`）——目标、网络档、产出物落 `work/<case>/`
 4. `NOW`: 以 **lead** 角色规划阶段（`../ops/role-map.md`），写入 specialist_roles
 5. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
 6. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
@@ -235,7 +235,7 @@ nuclei -l alive.txt -severity critical,high -tags cve,sqli,rce -o vulns.txt
 
 **OAuth 钓鱼**（2025 新趋势）：
 - 构造恶意 OAuth 应用请求权限
-- 用户授权后获取邮箱/文件访问权限
+- 拿到邮箱/文件访问权限（凭据或会话）
 - 无需密码，绕过 MFA
 
 ### 2.4 近源渗透（Physical Access）
@@ -688,12 +688,35 @@ touch -t 202301010000 /path/to/file
 
 ---
 
+## 本技能硬判据
+
+- **每跳要有回程与凭据来源**：任何一跳（横向/提权）成立的最低证据是「新执行上下文有回显（目标机上 `whoami`/`hostname` 的原始输出）+ 这一跳用的凭据记清来源（哪个 dump、哪份文件、哪台机）」。缺任一条，该跳记为未证实，不许在它上面再叠一跳。
+- **不能从终点反推**：链尾拿到域管，不等于中间每一跳都成立；中间跳只要依赖推断，整条链的 confidence 就是 `low`（见下方置信度词表），报告里要标出未证实节点。
+- **凭据复用要看目标策略**：同一 hash 从 A 打 B 成功、从 B 打 C 失败，先查目标主机的登录类型限制/会话策略，再判凭据是否失效 —— 否则会误杀一条本来可用的边。
+- **诱饵判据**：枚举回来的主机名/共享名带 `honeypot`/`decoy`/`trap` 词根，或登录成功但立即被踢，先标疑似诱饵，别把它当横向跳板。
+
+## 工具链与工具联动
+
+| 环节 | 本机怎么调 | 输出接到哪 |
+|---|---|---|
+| 路径探测 / 通道 | `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name httpx`；通道状态 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` | `Get-Command` 查空 ≠ 缺工具；HTTP 型 MCP 平时 `closed` 是设计 |
+| 凭据获取 | `impacket-secretsdump`（远程注册表/LSA）、`mimikatz`（内存 dump）；拿到 NTLM hash 后用 `hashcat` 判是否弱口令 | 每条凭据写清来源主机与采集方式；PtH/PtT 表见 §4.2 |
+| AD 路径 | `bloodhound`（SharpHound / `bloodhound-python` 采集）出最短路径与 ACL 边 | BH 的「可达」只是假设：边要实测成功、或明确标未证实，否则进不了 Path |
+| 横向执行 | `nxc`（crackmapexec）/ `impacket` 的 `psexec`、`wmiexec`、`smbexec` 子命令，经 `proxychains` 走隧道 | 新 shell 有回显才打下一跳（回程判据） |
+| AD CS | `Certipy` 找 ESC1–ESC8 模板误配 | 签发到证书 → 转 `../windows-ad/SKILL.md` 完成域内利用 |
+| 边界指纹 | `nmap -sV` / `nuclei` 定版本 | 版本落进受影响区间才转 `../patch-diff-exploit/SKILL.md`，别只凭 banner 下结论 |
+| 侦察回流 | 收敛不出新主机时回 `references/recon/`（`version-fingerprinting.md`、`cloudflare-bypass.md`） | 回流结论要写成新的候选入口，而不是重复原动作 |
+
 ## When NOT to use（近邻负例）
 
-- 只有一个孤立漏洞点，还没拿到任何立足点 → 用 `../pentest-tools/SKILL.md`
-- 已拿到域内凭据，只需域内提权与横向 → 用 `../windows-ad/SKILL.md`
-- 目标只在云上（容器/K8s/元数据） → 用 `../cloud-k8s/SKILL.md`
-- 前置条件：先跑 `case-init` 落 `scope.md`（目标 + network_profile），**后续所有证据都挂到它上面**
+- 只有一个孤立漏洞点、还没拿到任何立足点 → `../pentest-tools/SKILL.md`
+- 已拿到域内凭据，只要域内提权与横向的详细手法 → `../windows-ad/SKILL.md`
+- 目标全在云上（容器 / K8s / 元数据 / IAM），不涉及企业域 → `../cloud-k8s/SKILL.md`
+- 内网没有域，只有单机 Linux/Windows，要打本地提权/内核漏洞 → `../kernel-exploit/SKILL.md`
+- 卡点是载荷被 EDR 拦下，要免杀与投递 → `../edr-bypass-re/SKILL.md`
+- 要审代码里的注入/鉴权缺陷而不做利用编排 → `../code-audit/SKILL.md`
+- 手上只有单个二进制样本要逆向 → `../reverse-engineering/SKILL.md`
+- 已有 PoC 思路但要自己从补丁差里挖触发条件 → `../patch-diff-exploit/SKILL.md`
 
 ## When to Pivot
 
@@ -701,9 +724,16 @@ touch -t 202301010000 /path/to/file
 
 | 触发证据 | 换到 |
 |---|---|
-| 拿到初始 shell，要枚举本机与域 | `../windows-ad/SKILL.md` |
-| 拿到域控，要找数据出口与持久化评估 | `../edr-bypass-re/SKILL.md` |
-| 发现云凭据，要评估容器逃逸 | `../cloud-k8s/SKILL.md` |
+| 初始 shell 落地（`whoami` 有原始回显），要枚举本机与域 | `../windows-ad/SKILL.md`（枚举域与本机，本卡只做编排） |
+| 拿到域管（DCSync 成功 / `ntds.dit` 已导出），要评估数据出口与持久化 | `../edr-bypass-re/SKILL.md` |
+| 环境变量或元数据里**出现**云凭据（`AWS_*`/`AZURE_*`，或 `169.254.169.254` 可读） | `../cloud-k8s/SKILL.md` |
+| 同一条横向边连续**两次**失败（SMB 被拒 / 登录超时），且**没有**新的凭据来源 | 回流侦察面（Loopback to Discovery）：`../pentest-tools/SKILL.md` |
+| 枚举**显示**内网无域（`nltest /dsgetdc:` 失败、只有 WORKGROUP），要本机提权 | `../kernel-exploit/SKILL.md` |
+| 落地主机装了 EDR，载荷一落地即被隔离，日志**显示**已检测 | `../edr-bypass-re/SKILL.md` |
+| 边界设备/VPN 版本命中公开 CVE 且落在受影响区间 | `../patch-diff-exploit/SKILL.md` |
+| C2 域名/证书被威胁情报标记，首次连接即被重置 | 换基础设施面：`../edr-bypass-re/SKILL.md` |
+| 链中某一跳只有推断、**没有**独立成功证据 | 回流该跳：`../ops/analysis-decision-framework.md`，或换对应域的卡重做该跳 |
+| 抓包/日志 **≥500 行**仍未收敛出可用凭据或新主机 | 停横向，回流侦察（`../pentest-tools/SKILL.md`） |
 
 ## 定义完成
 

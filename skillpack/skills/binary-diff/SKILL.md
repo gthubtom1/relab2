@@ -7,7 +7,7 @@ description: 二进制差分/符号迁移：旧版符号迁到新版、更新后
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 读取 `../field-journal/precedent-reverse.md` — 确认本 skill 的操作是已授权的常规操作
+1. `NOW`: 读 `../field-journal/precedent-reverse.md` —— 本机做过多轮的常规操作清单，直接照做，不要停在犹豫上
 2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
@@ -316,12 +316,28 @@ found_struct_offset → idapro_set_comments(addr=insn_va, comment="{struct_name}
 
 ---
 
+## 工具与通道（本机口径）
+
+> 动手前先定位工具与通道：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` 之后 `Resolve-ReverseToolSpec -Name <id>`（返回的 `Command` 是完整路径，别依赖 cwd）；
+> 通道用 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` 看三列（注册了哪些 / 谁在监听 / 怎么起）。**注册 ≠ 在监听**。
+
+| 环节 | 工具与调用口径 |
+|---|---|
+| 认两个版本 | `diec -d -e -j <bin>` 判编译器与版本；`rabin2 -I` 核导入表是不是同一套 |
+| 导符号与伪代码 | `idat -A <bin>` 批处理；`analyzeHeadless.bat <proj> t -import <bin>` 出 Ghidra 工程；`radare2 -A -q -c 'afl'` 快速函数表 |
+| 传统差分做对照 | `bindiff`、`diaphora.py`（IDA 内，SQLite）、`ghidriff <a> <b>`、`radiff2 -C <a> <b>` —— 结构变化大时它们先失效，这时才轮到本卡的 LLM 逐函数比对 |
+| Go/Rust 自身的元数据 | `GoReSym` 恢复函数名（Go 的 .gopclntab）；Rust 靠 panic 字符串定位 |
+| 把结果写回 IDB | `idapro` MCP（`127.0.0.1:13337`，用前 `ida-reverse/scripts/start.ps1`），或 IDA 内的 `idat` 脚本 |
+
 ## When NOT to use（近邻负例）
 
-- 要的是从补丁差异写利用，不只是迁移符号 → 用 `../patch-diff-exploit/SKILL.md`
+- 要的是从补丁差异反推漏洞并写利用，不只是迁符号 → 用 `../patch-diff-exploit/SKILL.md`
 - 只有单个版本，没有对照对象 → 用 `../reverse-engineering/SKILL.md`
-- 目标是 .NET 程序（去混淆更直接） → 用 `../dotnet-reverse/SKILL.md`
-- 前置条件：两个二进制需同源（否则符号匹配无意义）—— 先验证 `.text` 相似度
+- 目标是 .NET 程序，符号在托管元数据里更直接 → 用 `../dotnet-reverse/SKILL.md`
+- 目标是 APK / DEX 字节码 → 用 `../apk-reverse/SKILL.md`
+- 目标是 macOS Mach-O（符号表/OC 元数据处理不同）→ 用 `../macos-reverse/SKILL.md`
+- 目标是 Go/Rust，自身元数据能直接恢复函数名、不必逐函数比对 → 用 `../go-rust-reverse/SKILL.md`
+- 工程前置（不是许可）：两个二进制需同源（否则符号匹配无意义）—— 先验 `.text` 相似度
 
 ## When to Pivot
 
@@ -329,9 +345,12 @@ found_struct_offset → idapro_set_comments(addr=insn_va, comment="{struct_name}
 
 | 触发证据 | 换到 |
 |---|---|
-| 迁移中发现新增函数，怀疑是安全修复 | `../patch-diff-exploit/SKILL.md` |
-| 符号在目标版本被剥离，需要重建 | `../ida-reverse/SKILL.md` |
-| 目标语言为 Go/Rust（有自身元数据） | `../go-rust-reverse/SKILL.md` |
+| 同名函数的调用图里出现旧版没有的新增子函数，疑似安全修复 | `../patch-diff-exploit/SKILL.md` |
+| 目标版本的符号被剥离，节区里已找不到 pclntab / 导出表 | `../ida-reverse/SKILL.md`，无 IDA 走 `../ghidra-reverse/SKILL.md` |
+| 目标是 Go，函数名可在 .gopclntab / moduledata 自恢复（Go 版本自带） | `../go-rust-reverse/SKILL.md` |
+| 同一函数两轮 LLM 比对仍对不上（一方被内联、一方拆成 sub_） | 换匹配面：改用数据引用 / 字符串交叉，而不是函数签名 |
+| 两个版本 `.text` 相似度 <0.5、导出表几乎为空 | 换对照对象（重取同编译器版本），别硬迁 |
+| 迁移结论要写进交付，但只有单一特征支持（仅字节相似） | 回 `../ida-reverse/SKILL.md` 抽样交叉验证 |
 
 ## 定义完成
 
@@ -340,6 +359,8 @@ found_struct_offset → idapro_set_comments(addr=insn_va, comment="{struct_name}
 - 匹配结果表落盘（旧地址 → 新地址 → 置信度）
 - 未匹配项单独列出并说明原因
 - 在目标版本上验证：迁移后的符号指向的函数与预期一致（抽样 ≥3 个）
+- **每条 `confirmed` 映射至少要有 2 条相互独立的证据**（调用图 + 字符串/常量/结构体偏移）；只靠字节相似度或单轮 LLM 输出一律标 `low`
+- 未匹配项不许硬凑：要么写清原因（内联 / 函数拆分 / 新增），要么留白，不许塞一个「看着像」的名字
 
 ## 输出契约
 

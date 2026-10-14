@@ -31,7 +31,7 @@ query { __schema { types { fields { type { fields { type { fields { name } } } }
 query { __typename @skip(if: false) @include(if: true) ... }
 ```
 
-### 授权测试
+### 越权测试
 
 ```graphql
 # GET 突变（CSRF）

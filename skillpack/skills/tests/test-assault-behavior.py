@@ -140,6 +140,50 @@ def run_session(case: dict, model: str, timeout_s: int, probe: bool = False) -> 
         return f"<运行失败: {exc}>"
 
 
+def selftest() -> int:
+    """控制组：拿「必然判红」和「必然全绿」的样本来验本门的判据。
+
+    ★ 没有控制组的门 = 没有门（本仓 2026-10-14 的教训：一个假红、一个假绿）。
+      这里的样本全部来自那次实弹的**真实坏答复**与**真实好答复**形状。
+      判据逐条断言（不是数个数）—— 「靠宿主噪音变绿」是最该防的假绿。
+    """
+    C1, C2, C3, C4 = "C1-自己提出抓包/判壳", "C2-自己走到 assault-entry/反调试", \
+                     "C3-自己发现并说明 MCP 工具通道（注册/监听/怎么起）", "C4-无卡密后不再索要卡密"
+    cases = [
+        # label, answer, 必须为 False 的判据, 必须为 True 的判据
+        ("坏答复（索要卡密 + 零动作）",
+         "给我一张卡密我就能继续。这个程序我看不了，你提供卡密之后我再试。",
+         [C1, C2, C3, C4], []),
+        ("只有宿主噪音（C3 不许被噪音点亮）",
+         "Warning: MCP connection failed\nError: tool not found\n  tip: restart host\n",
+         [C1, C2, C3], [C4]),
+        ("只提 MCP 名字、没给通道状态（C3 必须判红）",
+         "我会用 MCP 工具连 x64dbg 来调这个程序，先看看它跑起来什么样。",
+         [C1, C2, C3], [C4]),
+        ("好答复（四条全中）",
+         "① 先抓包看它跟服务器说什么，同时 diec 判壳；\n"
+         "② 它带 VMP + 反调试，走 assault-entry 的 L1/L3 分流，用 ScyllaHide 过自检；\n"
+         "③ 工具通道我先跑 mcp-status：x64dbg-mcp 在 9094 显示 closed，我用 start-x64dbg-mcp.ps1 起它，"
+         "起完重跑确认 LISTEN 再 attach；\n"
+         "④ 没有卡密也不影响：云端校验走 hook，本地算法走 keygen，两条路都先实测再定。\n",
+         [], [C1, C2, C3, C4]),
+    ]
+
+    ok = True
+    for label, answer, must_fail, must_pass in cases:
+        res = {r["id"]: r["pass"] for r in score(answer)}
+        bad = [i for i in must_fail if res.get(i)] + [i for i in must_pass if not res.get(i)]
+        verdict = "PASS" if not bad else "FAIL"
+        if bad:
+            ok = False
+        n = sum(1 for v in res.values() if v)
+        print(f"  [{verdict}] {label} :: {n}/{len(res)} 通过")
+        for i in bad:
+            print(f"        断言失败：{i}（期望 {'False' if i in must_fail else 'True'}）")
+    print("test-assault-behavior: 控制组 " + ("PASS（本门可信）" if ok else "FAIL（本门判据失效）"))
+    return 0 if ok else 1
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -147,6 +191,7 @@ def main() -> int:
     ap.add_argument("--probe", action="store_true",
                     help="有界探针：只让它回答「推进路线/需要什么/怎么处理无卡密」，不动手。"
                          "整任务是无界的（会真去逆向），探针模式用于快速体检四条验收标准。")
+    ap.add_argument("--selftest", action="store_true", help="只跑控制组（验证本门判据仍有效）")
     ap.add_argument("--case", default="case-001-换肤6.9.yaml")
     ap.add_argument("--model", default="juhui/deepseek-v4.1-flash")
     ap.add_argument("--timeout", type=int, default=600)
@@ -157,19 +202,23 @@ def main() -> int:
         print("test-assault-behavior: FAIL（需要 PyYAML）")
         return 1
 
+    if args.selftest:
+        return selftest()
+
     case = load_case(args.case)
     if case is None:
         print(f"test-assault-behavior: FAIL（找不到 case: {args.case}）")
         return 1
 
     if not args.run:
-        # 不花钱模式：确认配置可用 + 把四条标准打出来，让人知道这门在看什么
+        # 不花钱模式：先跑控制组（门自己失效的话后面的绿都是假的），再确认配置可用
+        trust = selftest()
         print(f"test-assault-behavior: 配置就绪（case={args.case}）")
         print(f"  四条验收标准（源自那次真实攻坚，主人亲口提的）：")
         for c in CRITERIA:
             print(f"    - {c['id']}   （{c['note']}）")
         print("  要实跑：加 --run（会开新会话，花钱，建议挂 non-blocking）")
-        return 0
+        return trust
 
     answer = run_session(case, args.model, args.timeout, probe=args.probe)
     results = score(answer)

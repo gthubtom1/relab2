@@ -30,7 +30,7 @@
      ```powershell
      & (Resolve-ReverseToolSpec -Name 'mitmdump').Command --listen-port 8899 --save-stream-file flow.mitm
      ```
-4. **授权边界已记录**（见 `../contract/provider-work-order.md`）。本文会触发真实外联，必须先有 egress 授权。
+4. **外联边界先记录**（见 `../contract/provider-work-order.md`）。本文会触发真实外联 —— 先定端口、目标与速率。
 
 ## 步骤（Working method）
 

@@ -1,7 +1,7 @@
 # Web 协议恢复（Spider King）
 
 > **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License，https://github.com/aoyunyang/spider-king-skill）的 `README.md`。保留原仓库 MIT 版权声明；本 README 为中文改写，并按本技能包（`C:\relab2\skillpack`）的落地情况做了**实情校正**。
-> **什么时候用**：需要在已授权环境里，把「看起来只能靠浏览器跑」的 Web 目标，还原成可复现、可维护的协议链路或采集器时，先读本 README 建立预期，再进 `SKILL.md`。
+> **什么时候用**：把「看起来只能靠浏览器跑」的 Web 目标，还原成可复现、可维护的协议链路或采集器时，先读本 README 建立预期，再进 `SKILL.md`。
 
 ---
 

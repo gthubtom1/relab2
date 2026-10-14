@@ -5,7 +5,7 @@ description: 漏洞点到可用 exploit 的利用链：栈溢出、堆/tcache、
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: 读取 `../field-journal/precedent-reverse.md` — 确认本 skill 的操作是已授权的常规操作
+1. `NOW`: 读 `../field-journal/precedent-reverse.md` —— 本机做过多轮的常规操作清单，直接照做，不要停在犹豫上
 2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
@@ -123,23 +123,32 @@ Step 6: 远程稳定化
 
 ### 工具依赖
 
-| 工具 | 用途 | 安装方式 |
+| 工具 | 用途 | 本机调用口径 |
 |------|------|---------|
-| pwntools | exploit 编写框架 | `pip install pwntools` |
-| GEF | gdb 增强（推荐内核 + 用户态） | `git clone https://github.com/bata24/gef` (fork 维护活跃) |
-| pwndbg | gdb 增强（堆调试体验最好） | `git clone https://github.com/pwndbg/pwndbg && ./setup.sh` |
-| ROPgadget | gadget 搜索 | `pip install ropgadget` |
-| Ropper | gadget 搜索（备选，支持架构多） | `pip install ropper` |
-| one_gadget | libc magic gadget 查找 | `gem install one_gadget`（需 ruby） |
-| libc-database | libc 指纹反查 | `git clone https://github.com/niklasb/libc-database && ./get` |
-| qemu-system-x86_64 | 内核题调试 | `apt install qemu-system-x86` |
-| binwalk / cpio | initramfs 拆包 | `apt install binwalk cpio` |
-| patchelf | 切换 libc 版本 | `apt install patchelf` |
+| `pwntools` | exploit 编写、ELF/ROP 计算、远程交互 | `context.binary = ELF('./vuln')`；`p = remote(host, port)` |
+| `gdb` + pwndbg / GEF | 断点、寄存器、堆/栈视图 | `gdb -q ./vuln -ex 'b *main+0x40'`；堆题靠 `bins` / `vis_heap_chunks` |
+| `checksec` | 一次看全 NX/Canary/PIE/RELRO/Fortify | `checksec --file=./vuln --output=json` |
+| ROPgadget / ropper | gadget 搜索（ropper 支持的架构更多） | `ROPgadget --binary ./libc.so.6 --only "pop\|ret" --depth 5` |
+| one_gadget | libc magic gadget | `one_gadget ./libc.so.6`，逐个核约束寄存器是否可满足 |
+| patchelf | 把本地 libc/ld 切到目标版本 | `patchelf --set-interpreter ./ld.so ./vuln` |
+| libc-database | 用 leak 地址反查 libc 版本 | `./find puts <低 12 位>`，命中才写进报告 |
+| seccomp-tools | dump 沙箱规则，决定要不要改 ORW | `seccomp-tools dump ./vuln` |
+| `radare2` | 秒级看段/导入/反汇编（不想付 IDA 冷启） | `radare2 -A ./vuln` 后 `afl` / `pdf @ sym.vuln` |
+| `Ghidra`（`analyzeHeadless`）/ `idat` | 反编译 vuln 函数，静态定偏移与参数寄存器 | `analyzeHeadless <proj> <name> -import ./vuln` |
+| `qemu` + `binwalk`/cpio | 内核题起环境、拆 initramfs | `qemu-system-x86_64 -kernel bzImage -initrd initramfs.cpio.gz -append "console=ttyS0 nokaslr"` |
+| `frida` | 带壳/反调试、gdb 附不上时的非侵入观测 | `frida -f ./vuln -l hook.js`，只读寄存器与参数 |
 
-### Bootstrap 检查脚本（计划模板：须先披露副作用并获用户显式批准后才执行）
+**写 exploit 前先把通道看清**：静态看偏移用 `..\ida-reverse\scripts\start.ps1` 起 `idapro`（`127.0.0.1:13337`），
+或直接吃 `pyghidra-mcp`；先跑
+`powershell -NoProfile -ExecutionPolicy Bypass -Command "& 'skillpack\skills\scripts\mcp-status.ps1'"`
+确认是「注册了没」还是「在监听」—— 调试器/反编译器通道是 cold start，`closed` 是常态，
+按它给的命令起了再重探 `LISTEN`。工具本体路径走 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` +
+`Resolve-ReverseToolSpec -Name <id>`，`Get-Command` 查空 ≠ 缺工具。
+
+### Bootstrap 检查脚本（缺什么补什么；先看脚本要往哪写）
 
 ```bash
-# 获批准后检查 + 安装核心工具
+# 幂等检查 + 补齐核心工具（装本机用户环境，不动系统解释器）
 for t in pwntools ropgadget ropper; do
   pip show $t >/dev/null 2>&1 || pip install $t
 done
@@ -154,7 +163,8 @@ command -v one_gadget >/dev/null || gem install one_gadget
 
 ### 同一工具自动安装失败 2 次后
 
-停止重试，输出结构化手动安装步骤（pip 源 / gem 源 / git 国内镜像 / apt 源）让用户确认。
+停止重试，转为打印结构化手动安装步骤（pip 源 / gem 源 / git 国内镜像 / apt 源），
+并记下是哪一条、装了什么版本、失败输出原文 —— 下一步据此换源或改走预编译包，而不是原地再来第 3 次。
 
 ## 路由上下文
 
@@ -195,9 +205,13 @@ command -v one_gadget >/dev/null || gem install one_gadget
 ## When NOT to use（近邻负例）
 
 - 还没定位到漏洞点（只是拿到一个陌生二进制） → 用 `../reverse-engineering/SKILL.md`
-- 目标是内核态提权/逃逸 → 用 `../kernel-exploit/SKILL.md`
+- 目标是内核态提权/容器逃逸 → 用 `../kernel-exploit/SKILL.md`
 - 有 CVE 但没有 PoC，要从前后的补丁差异反推 → 用 `../patch-diff-exploit/SKILL.md`
-- 前置条件：利用要在**可重启的目标**上验证（崩溃是常态，目标不可重启会中断迭代）
+- 目标是 Windows 用户态二进制（要 x64dbg 的断点/插件模型） → 用 `../x64dbg-reverse/SKILL.md`
+- 是 CTF 综合题要整场调度（crypto/misc/web 也在同一题里） → 用 `../ctf-sandbox/SKILL.md`
+- 壳/反调试挡住，问题是「这是哪种保护」而不是「怎么利用」 → 用 `../reverse-engineering/references/assault-entry.md`
+- 拿到 shell 之后要横向/持久化，不再是内存破坏 → 用 `../attack-chain/SKILL.md`
+- 注入点在 Web 请求参数上（命令注入而非内存破坏） → 用 `../api-security/SKILL.md`
 
 ## When to Pivot
 
@@ -205,17 +219,22 @@ command -v one_gadget >/dev/null || gem install one_gadget
 
 | 触发证据 | 换到 |
 |---|---|
-| 利用被缓解机制挡住（SMEP/SMAP/KASLR/KPTI） | `../reverse-engineering/references/assault-entry.md` |
-| 目标是内核对象 | `../kernel-exploit/SKILL.md` |
-| 目标带壳/反调试，动态都进不去 | `../reverse-engineering/references/assault-entry.md` |
+| 缓解挡住且原语不成立（SMEP/SMAP 下写用户态指针进 vtable 直接 fault、KASLR 无任何泄露面） | 先重判层次，不再堆 gadget：`../reverse-engineering/references/assault-entry.md` |
+| 目标是内核对象（kmalloc slab / `tty_struct` / `msg_msg` / `pipe_buffer` 覆盖） | `../kernel-exploit/SKILL.md` |
+| 带壳/反调试，`gdb` attach 连续 3 次被踢（ptrace 拒绝、进程自杀、断点被清） | `../reverse-engineering/references/assault-entry.md` |
+| heap 原语连试 3 个思路（tcache poisoning / unsorted bin leak / FSOP）仍不收敛 | 换利用面（ROP→JOP/数据面）；先把 decision_delta 写进时间线再决定走哪条 |
+| 远程 libc 与本地不一致（leak 出的 `puts` 低 12 位在 libc-database 查无命中，换 2 个候选版本仍对不上） | 从远端 dump `libc.so.6`，交 `../binary-diff/SKILL.md` 核对符号与偏移 |
+| 本地 20 次稳、远程 3 次里挂 1 次，抓包看是 `recvuntil` 没锚定导致串包 | 这是 I/O 不是利用问题：先修锚点（本卡）；修完仍随机崩再回头怀疑地址面 |
+| `seccomp-tools dump` 显示只允许 `read/write/open`（无 execve） | 不提权，改 ORW 读 flag（本卡 `references/heap-pwn.md`）；若目标是逃出容器沙箱 → `../cloud-k8s/SKILL.md` |
 
 ## 定义完成
 
 本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
 
-- PoC 脚本落盘，在目标上 **≥3 轮稳定命中**（shell/flag/目标回连）
-- 利用链每跳的偏移/地址写进报告，可复现
-- 缓解绕过有单独说明（绕了什么、怎么绕的）
+- PoC 脚本落盘，在**目标同版本环境**上 **≥3 轮稳定命中**（ASLR 开、shell/flag/目标回连）；单次命中只记 `low`
+- 环境指纹写进报告：libc build-id、kernel `uname -r`、qemu 启动参数（`+smep +smap` 与否）；跨环境跑不稳时必须声明是哪一项对不上
+- 利用链每跳的偏移/地址/寄存器约束写进报告，可复现
+- 缓解绕过有单独说明（绕了什么、怎么绕的）；换过利用面（ROP→JOP/数据面）的把 decision_delta 一并落盘
 
 ## 输出契约
 

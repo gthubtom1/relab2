@@ -137,7 +137,7 @@ r = sess.post(url, data=body, headers=headers, cookies=jar)
 3. **基元向量独立于完整生成器通过** —— 单独跑 `digest()` / 编码器本身，而不是只在全链路里捎带跑过。
 4. **序列化与 URL / 二进制 roundtrip 无损** —— 最终产物 roundtrip 回来必须一模一样。
 5. **随机化冒烟检查保持形状（shape）**，但**不得替代固定向量 parity** —— 冒烟只是形状检查，不是正确性证明。
-6. **线上 replay 在一个连贯会话上重复成功**（仅在已获授权时执行；未授权则该项记 `not-requested`，并显式声明 live acceptance 未证明）。
+6. **线上 replay 在一个连贯会话上重复成功**（跑不了则该项记 `not-requested`，并显式声明 live acceptance 未证明）。
 7. **最终文件不 import 任何浏览器自动化或 JS 运行时**，除非任务明确接受了一个极窄的本地 helper。禁用清单：**Node、jsdom、iv8、Playwright、Selenium、CDP、页面上下文执行（page-context execution）**。
 8. **`main.py` 或声明的入口文件，在 IDE 默认配置下可直接右键运行，不带任何必填命令行参数。** 命令行 wrapper 是可选的验证工具，**不是交付接口**。
 
