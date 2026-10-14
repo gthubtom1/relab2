@@ -90,8 +90,8 @@ kubectl get clusterrolebindings
 探测层（唯一路径入口）：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name kubectl`。
 `Get-Command kubectl` 返回空 ≠ 本机没装（PATH 快照会过期）。
 容器里带的是 stripped 原生二进制（sidecar/agent/Operator）时，静态分析走 `idapro` / `pyghidra` MCP：
-动手前 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1`
-看"注册了哪些 / 谁在监听 / 怎么起"三列——HTTP 型平时 `closed` 是设计，要用的按它给的命令起，起完重跑确认 `LISTEN`。
+**要用到哪个通道时才**跑 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1`
+看"注册了哪些 / 谁在监听 / 怎么起"三列——HTTP 型平时 `closed` 是设计，要用的按它给的命令起，起完重跑确认 `LISTEN`（不做事前自检）。
 
 ## 参考
 

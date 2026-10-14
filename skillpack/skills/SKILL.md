@@ -65,6 +65,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 1. **工具路径只认本机实测值**，且**必须走探测层四级递进**（`Resolve-ReverseToolSpec`，见 ACTION REQUIRED 第 4 条）—— 单条 `Get-Command <id>` 返回空**不构成「缺工具」**，PATH 快照过期时它会对所有工具返回空（2026-10-08 实测）；装法查 `TOOLS.md`。`运行模式=GUI` 的工具**禁止经 bash 执行**，必须换成 CLI 孪生（例：`die.exe`→`diec`、`x64dbg.exe`→控制台 headless、`Wireshark.exe`→`tshark`、`ida.exe`→`idat`）或该工具的 MCP 通道；注意 PATH 里 GUI 版常与 CLI 版并存，探测可能返回 GUI，**用前先确认 `Command` 的文件名是 CLI 孪生**。找不到 CLI 孪生时（如 PE-bear、jeb-pro、scylla），该工具只能由人在桌面侧操作，MUST NOT 由 agent 拉起。
 2. **`TOOLS.md` 是装法说明书（机器无关），不是路径索引**：它只说「干什么用 / 哪个 skill 要 / 装法 / 许可」，**不含本机路径，也没有生成器 —— 直接手改**。本项目不维护任何工具状态文件：工具定位是运行时探测，所以不存在「索引过期」的问题，也不存在刷新步骤。
 3. **首次使用某工具前先跑该行「验证命令」列**，确认路径与版本，再进入实际调用。不得凭目录名猜可执行文件名（`die`/`diec`、`Wireshark`/`tshark` 就是同名不同物的现成教训）。
+4. **大结果不进上下文**：工具输出超过约 50 KB（或 >500 行）时，先落盘再读 —— 重定向到 `work/<case>/raw/<name>.txt`（或工具自带的 `-o/--json > file`），然后用 `read` 分页取需要的段。**不要把整块 JSON / 全量扫描日志 / 反汇编全量 dump 灌进上下文**：上下文被灌满的下一站就是「忘了最初的目标」。先看摘要行（头尾 + 计数），再按需下钻。
 
 ### GitHub 访问（硬门）
 

@@ -26,7 +26,7 @@ description: CTF/AWD 靶场入口：case-init 门禁 + sidecar orchestrator 选�
 
 - `scripts/master-route.ps1 -Hint "<用户原话>" -OutDir <临时目录>` —— 点火 + 立案，产出 `route-scope.md`；里面的 PRIMARY 是**入口**，不是路线，候选全集与下一步也在同一份里。
 - `scripts/community-route.py --hint "<原话>"` —— 只在 master-route 已选定 wrapper **之后**，收窄该 wrapper 里的改编参考；weak / ambiguous 一律返回 `needs_review`，它**不会**把社区原始技能当作可调用路径返回。
-- `scripts/mcp-status.ps1` —— 动手前的通道目录（三列：注册了哪些 / 谁在监听 / 怎么起）。HTTP 型通道平时 `closed` **是设计不是故障**；要用的通道自己起，起完重跑确认 `LISTEN`。
+- `scripts/mcp-status.ps1` —— 通道目录（三列：注册了哪些 / 谁在监听 / 怎么起），**要用某个通道时再看**。HTTP 型通道平时 `closed` **是设计不是故障**；要用的通道自己起，起完重跑确认 `LISTEN`。
 
 工具路径一律现场探测，不猜：
 

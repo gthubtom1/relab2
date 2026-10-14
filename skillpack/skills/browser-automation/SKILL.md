@@ -278,7 +278,7 @@ npm run doctor:network
 | 改包/落流 | `reqable-mcp`（stdio，需 Reqable 桌面端）或 `mitmdump` | 见 `../web-protocol-reverse/references/triage/tool-playbook.md` |
 | 本地 HTTP 分析器 | `anything-analyzer`（local-http `http://localhost:23816/mcp`） | 需手动起服务（`pnpm dev`） |
 | 桌面 GUI 自动化 | OpenReverse（手动 clone + npm，见下文自举段） | 手动装；先 UIA，控件非标再 CUA |
-| **通道状态自检** | `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` | 三列「谁注册 / 谁在 LISTEN / 怎么起」 |
+| **通道目录** | `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` | 三列「谁注册 / 谁在 LISTEN / 怎么起」；**要用某个通道时再看**（不做事前自检） |
 
 **注册 ≠ 在监听**：stdio 型由宿主按会话拉起；HTTP 型冷启是设计不是故障。工具路径唯一入口是探测层
 `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>`；
