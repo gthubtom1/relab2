@@ -10,26 +10,24 @@ if not os.path.exists(full_mcp) and os.path.exists(active_mcp):
     shutil.copy(active_mcp, full_mcp)
 
 if profile == 'daily':
-    with open(full_mcp, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    daily = {
-        "$schema": data.get("$schema"),
-        "mcpServers": {
-            "pyghidra-mcp": data.get("mcpServers", {}).get("pyghidra-mcp")
-        }
-    }
-    with open(active_mcp, 'w', encoding='utf-8') as f:
-        json.dump(daily, f, indent=4, ensure_ascii=False)
-    print(">>> 已切换为 [日常轻量模式 (daily)]")
-    print("    - 活跃 MCP: pyghidra-mcp (20 个工具)")
-    print("    - 卸载 MCP: ida-pro-mcp, idapro, x64dbg-automate-mcp, angr-mcp")
-    print("    - 释放上下文空间: ~25,000 Tokens / 轮")
+    # ★ 2026-10-15 改：daily 原来只留 pyghidra-mcp，会把 idapro / x64dbg-mcp / angr-mcp
+    #   从活跃配置里**删掉** —— 于是模型手上又只剩一条通道，回到"拿着枪不会用"。
+    #   现在 idapro / x64dbg-mcp 走 stdio 懒启动代理（mcp-lazy-http.py）：
+    #   工具常驻可见，后端只在**真被调用**时才拉起，不再有"冷启失败 / 弹窗"的代价，
+    #   所以 daily 与 full 合并，两者都表示"全部登记"。
+    shutil.copy(full_mcp, active_mcp)
+    with open(active_mcp, 'r', encoding='utf-8') as f:
+        n = len(json.load(f).get("mcpServers", {}))
+    print(">>> [全部登记] daily 与 full 已合并（懒启动代理上线后不再需要切来切去）")
+    print(f"    - 活跃 MCP: {n} 个（工具常驻可见；IDA/x64dbg 后端只在被调用时自动拉起）")
     print("    - 提示: 重新打开或新建 agent 会话后生效。")
 
 elif profile == 'full':
     shutil.copy(full_mcp, active_mcp)
+    with open(active_mcp, 'r', encoding='utf-8') as f:
+        n = len(json.load(f).get("mcpServers", {}))
     print(">>> 已切换为 [全量逆向攻坚模式 (full)]")
-    print("    - 活跃 MCP: 全部 5 个逆向服务器 (140+ 个工具)")
+    print(f"    - 活跃 MCP: {n} 个")
     print("    - 提示: 重新打开或新建 agent 会话后生效。")
 
 else:
