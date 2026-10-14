@@ -1,6 +1,6 @@
-﻿---
+---
 name: dotnet-reverse
-description: .NET/C# 托管程序逆向：dnSpy/ILSpy 反编译、de4dot 脱 ConfuserEx 混淆、IL patch 改判断。用于：C# 能反编译吗、ConfuserEx 怎么脱、dnSpy 怎么改判断。不要用于：native PE→ida-reverse；APK→apk-reverse；JS→js-reverse；带壳→reverse-engineering。
+description: .NET/C# 托管程序逆向：dnSpy/ILSpy 反编译、de4dot 脱 ConfuserEx 混淆、IL patch 改判断。用于：C# 能反编译吗、ConfuserEx 怎么脱、dnSpy 怎么改判断。
 license: MIT
 compatibility: Requires a filesystem-based code agent or CLI with shell access, Windows host preferred (dnSpyEx 是 Windows GUI)；Linux/macOS 可用 ILSpy/de4dot CLI + mono/dotnet runtime。
 allowed-tools: Bash Read Write Edit Glob Grep Task WebFetch WebSearch

@@ -175,6 +175,7 @@ jobs:
           python3 -VV
           pwd
           test -f skillpack/skills/tests/ci-gates.json
+          test -f skillpack/skills/scripts/check-prompt-budget.py
           test -f skillpack/skills/scripts/verify-routing-signals.py
           test -f skillpack/skills/scripts/test-routing-signals.py
           test -f skillpack/skills/scripts/test-community-decoys.py

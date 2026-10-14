@@ -95,3 +95,6 @@ IDAHook.log
 
 # 生成物缓存（社区 bundle 门禁要求排除）
 .candidates/
+
+# 机器状态：junction 登记表（register-skills.ps1 自动写；换机后跑 -Doctor 体检）
+skillpack/skills/junction-manifest.json

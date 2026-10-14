@@ -1,6 +1,6 @@
-﻿---
+---
 name: web-protocol-reverse
-description: 敌意 Web 客户端还原成不依赖浏览器的采集器：sign/token/cookie、challenge、WebSocket/GraphQL/protobuf、WebAssembly。用于：403/412/429、HAR 离线复现、可重放采集器。不要用于：APK→apk-reverse；小程序→mobile-reverse；JS→js-reverse。
+description: 敌意 Web 客户端还原成不依赖浏览器的采集器：sign/token/cookie、challenge、WebSocket/GraphQL/protobuf、WebAssembly。用于：403/412/429、HAR 离线复现、可重放采集器。
 ---
 
 # Web 协议恢复（Spider King）

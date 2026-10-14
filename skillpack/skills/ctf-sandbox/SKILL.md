@@ -1,6 +1,6 @@
-﻿---
+---
 name: ctf-sandbox
-description: CTF/AWD 靶场入口：case-init 门禁 + sidecar orchestrator 选竞赛子技能。用于：打 CTF、AWD、比赛切题、靶场题、pwn 怎么做、环境跑起来。不要用于：题型已明确（pwn→pwn-chain；APK→apk-reverse）；真实外网→attack-chain。
+description: CTF/AWD 靶场入口：case-init 门禁 + sidecar orchestrator 选竞赛子技能。用于：打 CTF、AWD、比赛切题、靶场题、pwn 怎么做、环境跑起来。
 ---
 
 # CTF sandbox entry (sidecar, not a second router)

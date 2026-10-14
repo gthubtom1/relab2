@@ -1,6 +1,6 @@
-﻿---
+---
 name: ot-ics
-description: OT/ICS 工控安全评估：Purdue 分区、PLC/RTU/SCADA 暴露面、Modbus/DNP3/S7/EtherNet/IP 识别、被动优先只读。用于：评估工控环境、镜像流量解析协议。不要用于：内网渗透→pentest-tools；固件解包→firmware-pentest；协议还原→protocol-reverse。
+description: OT/ICS 工控安全评估：Purdue 分区、PLC/RTU/SCADA 暴露面、Modbus/DNP3/S7/EtherNet/IP 识别、被动优先只读。用于：评估工控环境、镜像流量解析协议。
 ---
 
 # OT / ICS Security

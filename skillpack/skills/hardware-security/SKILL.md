@@ -1,6 +1,6 @@
-﻿---
+---
 name: hardware-security
-description: 硬件/嵌入式接口安全：UART/JTAG/SWD 调试口发现、root shell 获取、拆机提取 SPI/NOR Flash。用于：UART 口在哪、JTAG 能连上吗、Flash 怎么 dump。不要用于：固件解包与仿真→firmware-pentest；固件内二进制→ida-reverse；工控协议→ot-ics。
+description: 硬件/嵌入式接口安全：UART/JTAG/SWD 调试口发现、root shell 获取、拆机提取 SPI/NOR Flash。用于：UART 口在哪、JTAG 能连上吗、Flash 怎么 dump。
 ---
 
 # Hardware / Embedded Interface Security

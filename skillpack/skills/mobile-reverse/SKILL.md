@@ -1,6 +1,6 @@
-﻿---
+---
 name: mobile-reverse
-description: Android/iOS 逆向与安全测试：APK/IPA 分析、jadx/apktool/smali、Frida/objection 插桩、SSL pinning 与 root/越狱绕过、OWASP MASTG。用于：分析 APK/IPA、绕证书校验与加固。不要用于：原生 PE/ELF→ida-reverse；网页 JS→js-reverse；macOS→macos-reverse。
+description: Android/iOS 逆向与安全测试：APK/IPA 分析、jadx/apktool/smali、Frida/objection 插桩、SSL pinning 与 root/越狱绕过、OWASP MASTG。用于：分析 APK/IPA、绕证书校验与加固。
 ---
 # Mobile Reverse Engineering
 

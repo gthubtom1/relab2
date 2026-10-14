@@ -1,6 +1,6 @@
-﻿---
+---
 name: go-rust-reverse
-description: Go/Rust 二进制逆向：go.buildid、pclntab 与 GoReSym 恢复函数名、Rust panic 字符串。用于：Go 马函数名全没了、Rust panic 字符串怎么定位、pclntab 怎么恢复。不要用于：普通 C/C++→ida-reverse；APK→apk-reverse；.NET→dotnet-reverse。
+description: Go/Rust 二进制逆向：go.buildid、pclntab 与 GoReSym 恢复函数名、Rust panic 字符串。用于：Go 马函数名全没了、Rust panic 字符串怎么定位、pclntab 怎么恢复。
 ---
 
 # Go / Rust Binary Reverse Engineering

@@ -1,6 +1,6 @@
-﻿---
+---
 name: thick-client
-description: 桌面厚客户端测试：信任边界、凭证存储、IPC/命名管道、流量与更新校验。用于：Electron/Qt/WinForms/WPF、%APPDATA% 硬编码密钥、DLL 劫持、更新器降级。不要用于：Web/API→code-audit；APK→apk-reverse；内网横向→attack-chain。
+description: 桌面厚客户端测试：信任边界、凭证存储、IPC/命名管道、流量与更新校验。用于：Electron/Qt/WinForms/WPF、%APPDATA% 硬编码密钥、DLL 劫持、更新器降级。
 ---
 
 # Thick Client Security Testing

@@ -1,6 +1,6 @@
-﻿---
+---
 name: browser-automation
-description: 浏览器/桌面 GUI 自动化：Playwright/agent-browser 点击/填表/截图/登录；OpenReverse 操作 Windows GUI。用于：填表、爬页面、登录截图、提交 payload。不要用于：签名/CDP→js-reverse；抓包→web-protocol-reverse；扩展→browser-extension-reverse。
+description: 浏览器/桌面 GUI 自动化：Playwright/agent-browser 点击/填表/截图/登录；OpenReverse 操作 Windows GUI。用于：填表、爬页面、登录截图、提交 payload。
 ---
 
 # 自动化操作 (Desktop & Browser Automation)

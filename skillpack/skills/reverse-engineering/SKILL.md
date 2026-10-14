@@ -1,6 +1,6 @@
-﻿---
+---
 name: reverse-engineering
-description: 通用逆向方法论：triage→static→dynamic，判壳/混淆/虚拟化、custom VM、anti-debug。用于：搞不清样本怎么跑、加固挡路、调试器一用就退。不要用于：写 exploit→pwn-chain；IDA→ida-reverse；APK→apk-reverse；.NET→dotnet-reverse。
+description: 通用逆向方法论：triage→static→dynamic，判壳/混淆/虚拟化、custom VM、anti-debug。用于：搞不清样本怎么跑、加固挡路、调试器一用就退。
 license: MIT
 compatibility: Requires a filesystem-based code agent or CLI with shell access, Python 3, and internet access for tool installation.
 allowed-tools: Bash Read Write Edit Glob Grep Task WebFetch WebSearch

@@ -1,6 +1,6 @@
-﻿---
+---
 name: radio-sdr
-description: 授权 RF/SDR 信号研究：调制识别、GNU Radio/URH/Inspectrum 解调、屏蔽室重放。用于：非 Wi-Fi 射频（RTL-SDR/HackRF IQ）、ADS-B/遥控/传感器协议。不要用于：Wi-Fi→wifi-wireless；固件→firmware-pentest；软件逆向→reverse-engineering。
+description: 授权 RF/SDR 信号研究：调制识别、GNU Radio/URH/Inspectrum 解调、屏蔽室重放。用于：非 Wi-Fi 射频（RTL-SDR/HackRF IQ）、ADS-B/遥控/传感器协议。
 ---
 
 # RF / SDR Security Research

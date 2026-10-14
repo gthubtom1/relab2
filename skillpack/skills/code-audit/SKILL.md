@@ -1,6 +1,6 @@
-﻿---
+---
 name: code-audit
-description: 白盒源码审计：PR/差分审查、Semgrep/CodeQL/Bandit/gosec SAST、注入点、鉴权缺失。用于：审代码注入、PR 合前过安全、IDOR/多租户。不要用于：无源码二进制→reverse-engineering；依赖/CI→supply-chain-security；接口越权→api-security。
+description: 白盒源码审计：PR/差分审查、Semgrep/CodeQL/Bandit/gosec SAST、注入点、鉴权缺失。用于：审代码注入、PR 合前过安全、IDOR/多租户。
 ---
 
 # Source Code Security Audit

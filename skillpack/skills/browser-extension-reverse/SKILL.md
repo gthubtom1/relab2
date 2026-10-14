@@ -1,6 +1,6 @@
-﻿---
+---
 name: browser-extension-reverse
-description: 浏览器扩展逆向：crx/xpi 解包、manifest 权限、service_worker、content script、流量与 IOC。用于：插件是否偷数据、后台干了什么、权限给多了。不要用于：网页 JS→js-reverse；自动化→browser-automation；网页协议→web-protocol-reverse。
+description: 浏览器扩展逆向：crx/xpi 解包、manifest 权限、service_worker、content script、流量与 IOC。用于：插件是否偷数据、后台干了什么、权限给多了。
 ---
 
 # Browser Extension Reverse Engineering

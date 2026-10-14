@@ -1,6 +1,6 @@
-﻿---
+---
 name: ghidra-reverse
-description: Ghidra 逆向：反编译、交叉引用、analyzeHeadless 批量反编译、PyGhidra 脚本。用于：没 IDA 想用免费工具、用 Ghidra 帮我反编译、批量 headless 怎么跑。不要用于：已有 IDA 深挖→ida-reverse；CLI 侦察→radare2；符号迁移→binary-diff。
+description: Ghidra 逆向：反编译、交叉引用、analyzeHeadless 批量反编译、PyGhidra 脚本。用于：没 IDA 想用免费工具、用 Ghidra 帮我反编译、批量 headless 怎么跑。
 ---
 
 # Ghidra Reverse Engineering

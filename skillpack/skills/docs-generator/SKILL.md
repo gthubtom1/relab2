@@ -1,6 +1,6 @@
-﻿---
+---
 name: docs-generator
-description: 把逆向/渗透/CTF 结论写成技术文档并落盘（渗透测试报告、CTF writeup、README、API 文档）。用于：帮我写份渗透测试报告、出个 writeup、补个 README。不要用于：只要图表→diagram-generator；审报告证据链→case-review。
+description: 把逆向/渗透/CTF 结论写成技术文档并落盘（渗透测试报告、CTF writeup、README、API 文档）。用于：帮我写份渗透测试报告、出个 writeup、补个 README。
 ---
 
 # Technical Documentation

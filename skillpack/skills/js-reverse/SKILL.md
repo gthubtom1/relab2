@@ -1,6 +1,6 @@
-﻿---
+---
 name: js-reverse
-description: 前端 JS 逆向：定位签名/加密参数与风控字段、Hook 采样、本地补 Node 环境（js-reverse_*、CDP、jshookmcp）。用于：还原 sign/token、追踪 XHR/Fetch/WebSocket。不要用于：exe/so→ida-reverse；APK/iOS→mobile-reverse；HAR 重放→web-protocol-reverse。
+description: 前端 JS 逆向：定位签名/加密参数与风控字段、Hook 采样、本地补 Node 环境（js-reverse_*、CDP、jshookmcp）。用于：还原 sign/token、追踪 XHR/Fetch/WebSocket。
 ---
 
 # MCP 前端 JS 逆向作业规范

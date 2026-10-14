@@ -1,6 +1,6 @@
-﻿---
+---
 name: api-security
-description: API 安全测试：REST/GraphQL/WebSocket 接口发现、JWT/OAuth、BOLA/IDOR/BFLA 越权。用于：接口越权、JWT 弱密钥、GraphQL 内省。不要用于：JS 签名→web-protocol-reverse；前端→js-reverse；扩展→browser-extension-reverse；多阶段→attack-chain。
+description: API 安全测试：REST/GraphQL/WebSocket 接口发现、JWT/OAuth、BOLA/IDOR/BFLA 越权。用于：接口越权、JWT 弱密钥、GraphQL 内省。
 ---
 # API 安全测试
 

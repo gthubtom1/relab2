@@ -1,6 +1,6 @@
-﻿---
+---
 name: threat-hunting
-description: 威胁狩猎与检测工程：SIEM/EDR 假说查询、Sysmon 事件关联、Sigma/YARA 规则。用于：找 LOTL 横向、IOC 落地检测规则、验证规则。不要用于：样本分析→malware-analysis；取证→digital-forensics；情报收集→threat-intelligence。
+description: 威胁狩猎与检测工程：SIEM/EDR 假说查询、Sysmon 事件关联、Sigma/YARA 规则。用于：找 LOTL 横向、IOC 落地检测规则、验证规则。
 ---
 
 # Threat Hunting & Detection Engineering

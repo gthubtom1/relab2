@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0",
   "subject": "skills/tests/ci-gates.json",
-  "subject_digest": "sha256:1dcc6289d4cb5b987402d0ca8533a237455f057f2e9f0ca34819a735667a7f0a",
-  "gates_total": 25,
+  "subject_digest": "sha256:0050cdae76fe70921248d8ac00776c0c36c856929f8a19b937e05c80d3d5a0d6",
+  "gates_total": 26,
   "gate_ids": [
     "verify-spec-structure",
     "audit-discovery-surface",
@@ -28,7 +28,8 @@
     "verify-routing-coherence",
     "verify-evolution",
     "test-experience-card",
-    "test-emulator-lab"
+    "test-emulator-lab",
+    "check-prompt-budget"
   ],
   "note": [
     "Digest lock for the CI gate manifest. verify-gate-wiring.py fails when the",

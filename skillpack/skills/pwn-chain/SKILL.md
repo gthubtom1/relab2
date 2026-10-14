@@ -1,6 +1,6 @@
-﻿---
+---
 name: pwn-chain
-description: 漏洞点到可用 exploit 的利用链：栈溢出、堆/tcache、ROP/ret2libc、kernel pwn、pwntools。用于：CTF pwn 远程打不通、已知漏洞点写 exploit、绕 SMEP/SMAP/KASLR。不要用于：判壳→reverse-engineering；静态分析→ida-reverse；APK→apk-reverse。
+description: 漏洞点到可用 exploit 的利用链：栈溢出、堆/tcache、ROP/ret2libc、kernel pwn、pwntools。用于：CTF pwn 远程打不通、已知漏洞点写 exploit、绕 SMEP/SMAP/KASLR。
 ---
 
 ## ACTION REQUIRED（读完后立刻执行）

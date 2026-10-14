@@ -1,6 +1,6 @@
-﻿---
+---
 name: diagram-generator
-description: 把笔记或代码画成 Mermaid/PlantUML 文本图（流程图、时序图、架构图、ER 图）。用于：帮我画个流程图、时序图怎么画、Mermaid 架构图。不要用于：报告/writeup→docs-generator；二进制逆向→ida-reverse。
+description: 把笔记或代码画成 Mermaid/PlantUML 文本图（流程图、时序图、架构图、ER 图）。用于：帮我画个流程图、时序图怎么画、Mermaid 架构图。
 ---
 
 # Diagram Generator

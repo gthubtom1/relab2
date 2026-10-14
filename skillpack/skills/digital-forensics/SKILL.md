@@ -1,6 +1,6 @@
-﻿---
+---
 name: digital-forensics
-description: 数字取证与应急响应（IR）：内存转储 Volatility、E01 磁盘时间线、PCAP 溯源、IOC 提炼。用于：看 mem.dmp、电脑中招怎么溯源、PCAP 有啥异常。不要用于：样本本体→malware-analysis；主动扫描→pentest-tools；协议还原→protocol-reverse。
+description: 数字取证与应急响应（IR）：内存转储 Volatility、E01 磁盘时间线、PCAP 溯源、IOC 提炼。用于：看 mem.dmp、电脑中招怎么溯源、PCAP 有啥异常。
 ---
 
 # Digital Forensics & IR Artifacts

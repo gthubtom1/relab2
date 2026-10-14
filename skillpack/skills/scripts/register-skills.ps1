@@ -37,6 +37,7 @@ param(
     [string] $ProjectRoot = '',
     [switch] $WhatIf,
     [switch] $Revert,
+    [switch] $Doctor,
     [switch] $Json
 )
 
@@ -87,36 +88,45 @@ foreach ($d in $skillDirs) {
 }
 
 # ---------------- 2. 目标目录表 ----------------
-# detect: 该智能体的"家目录"存在才算装了它
 $H = $env:USERPROFILE
+# --- 各家注册文件的位置（找不到就跳过）---
+# detect 是"数组"：任一存在就算这家装了。只认目录会漏掉"只有配置文件"的装法
+# （实测本机 Claude Code 就只留了 ~\.claude.json，没有 ~\.claude 目录 —— 旧写法把它整个跳过）。
+$claudeDirs = New-Object System.Collections.Generic.List[string]
+if ($env:CLAUDE_CONFIG_DIR) { [void]$claudeDirs.Add($env:CLAUDE_CONFIG_DIR) }
+[void]$claudeDirs.Add((Join-Path $H '.claude'))
+$codexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $H '.codex' }
 $agentTable = @(
     # 用户级通用（不需要任何配置就能被读到的两组约定）
-    @{ agent = 'universal(Cline形态)'; path = (Join-Path $H '.agents\skills');      detect = $null },
-    @{ agent = 'universal(vendor形态)'; path = (Join-Path $H '.config\agents\skills'); detect = $null },
+    @{ agent = 'universal(Cline形态)'; path = (Join-Path $H '.agents\skills');      detect = @() },
+    @{ agent = 'universal(vendor形态)'; path = (Join-Path $H '.config\agents\skills'); detect = @() },
     # 各家私有（仅当已装）
-    @{ agent = 'Claude Code'; path = (Join-Path $H '.claude\skills');    detect = (Join-Path $H '.claude') },
-    @{ agent = 'Codex';       path = (Join-Path $H '.codex\skills');     detect = (Join-Path $H '.codex') },
-    @{ agent = 'Cursor';      path = (Join-Path $H '.cursor\skills');    detect = (Join-Path $H '.cursor') },
-    @{ agent = 'Gemini CLI';  path = (Join-Path $H '.gemini\skills');    detect = (Join-Path $H '.gemini') },
-    @{ agent = 'GitHub Copilot'; path = (Join-Path $H '.copilot\skills'); detect = (Join-Path $H '.copilot') },
-    @{ agent = 'Pi';          path = (Join-Path $H '.pi\agent\skills');  detect = (Join-Path $H '.pi\agent') },
-    @{ agent = 'Roo Code';    path = (Join-Path $H '.roo\skills');       detect = (Join-Path $H '.roo') },
-    @{ agent = 'OpenHands';   path = (Join-Path $H '.openhands\skills'); detect = (Join-Path $H '.openhands') },
-    @{ agent = 'Windsurf';    path = (Join-Path $H '.codeium\windsurf\skills'); detect = (Join-Path $H '.codeium\windsurf') },
-    @{ agent = 'Goose';       path = (Join-Path $H '.config\goose\skills'); detect = (Join-Path $H '.config\goose') },
-    @{ agent = 'Continue';    path = (Join-Path $H '.continue\skills');  detect = (Join-Path $H '.continue') },
-    @{ agent = 'Crush';       path = (Join-Path $H '.config\crush\skills'); detect = (Join-Path $H '.config\crush') },
-    @{ agent = 'Droid';       path = (Join-Path $H '.factory\skills');   detect = (Join-Path $H '.factory') },
-    @{ agent = 'Qwen Code';   path = (Join-Path $H '.qwen\skills');      detect = (Join-Path $H '.qwen') },
-    @{ agent = 'Trae';        path = (Join-Path $H '.trae\skills');      detect = (Join-Path $H '.trae') },
-    @{ agent = 'Kiro CLI';    path = (Join-Path $H '.kiro\skills');      detect = (Join-Path $H '.kiro') },
-    @{ agent = 'Zencoder';    path = (Join-Path $H '.zencoder\skills');  detect = (Join-Path $H '.zencoder') }
+    @{ agent = 'Claude Code'; path = (Join-Path $claudeDirs[0] 'skills'); detect = @($claudeDirs + (Join-Path $H '.claude.json')) },
+    @{ agent = 'Codex';       path = (Join-Path $codexHome 'skills');     detect = @($codexHome, (Join-Path $H '.codex\config.toml')) },
+    @{ agent = 'Cursor';      path = (Join-Path $H '.cursor\skills');    detect = @((Join-Path $H '.cursor')) },
+    @{ agent = 'Gemini CLI';  path = (Join-Path $H '.gemini\skills');    detect = @((Join-Path $H '.gemini')) },
+    @{ agent = 'GitHub Copilot'; path = (Join-Path $H '.copilot\skills'); detect = @((Join-Path $H '.copilot')) },
+    @{ agent = 'Pi';          path = (Join-Path $H '.pi\agent\skills');  detect = @((Join-Path $H '.pi\agent')) },
+    @{ agent = 'Roo Code';    path = (Join-Path $H '.roo\skills');       detect = @((Join-Path $H '.roo')) },
+    @{ agent = 'OpenHands';   path = (Join-Path $H '.openhands\skills'); detect = @((Join-Path $H '.openhands')) },
+    @{ agent = 'Windsurf';    path = (Join-Path $H '.codeium\windsurf\skills'); detect = @((Join-Path $H '.codeium\windsurf')) },
+    @{ agent = 'Goose';       path = (Join-Path $H '.config\goose\skills'); detect = @((Join-Path $H '.config\goose')) },
+    @{ agent = 'Continue';    path = (Join-Path $H '.continue\skills');  detect = @((Join-Path $H '.continue')) },
+    @{ agent = 'Crush';       path = (Join-Path $H '.config\crush\skills'); detect = @((Join-Path $H '.config\crush')) },
+    @{ agent = 'Droid';       path = (Join-Path $H '.factory\skills');   detect = @((Join-Path $H '.factory')) },
+    @{ agent = 'Qwen Code';   path = (Join-Path $H '.qwen\skills');      detect = @((Join-Path $H '.qwen')) },
+    @{ agent = 'Trae';        path = (Join-Path $H '.trae\skills');      detect = @((Join-Path $H '.trae')) },
+    @{ agent = 'Kiro CLI';    path = (Join-Path $H '.kiro\skills');      detect = @((Join-Path $H '.kiro')) },
+    @{ agent = 'Zencoder';    path = (Join-Path $H '.zencoder\skills');  detect = @((Join-Path $H '.zencoder')) }
 )
 
 $targets = New-Object System.Collections.Generic.List[object]
 foreach ($a in $agentTable) {
     $installed = $true
-    if ($a.detect) { $installed = Test-Path -LiteralPath $a.detect }
+    if (@($a.detect).Count -gt 0) {
+        $installed = $false
+        foreach ($d in $a.detect) { if ($d -and (Test-Path -LiteralPath $d)) { $installed = $true; break } }
+    }
     $targets.Add([pscustomobject]@{ agent = $a.agent; path = $a.path; installed = $installed; scope = 'user' })
 }
 if ($ProjectRoot) {
@@ -134,6 +144,57 @@ function Get-LinkTarget {
 
 $norm = { param($p) ($p -replace '/', '\').TrimEnd('\').ToLowerInvariant() }
 $mine = & $norm $skills
+$manifestPath = Join-Path $skills 'junction-manifest.json'
+
+# ---------------- 2.5 -Doctor：查悬空 / 错指 / 未登记 ----------------
+# 为什么需要：junction 是**环境副作用**，仓库里看不见它。换盘、clone 到别处之后，
+# 那些联接会静默失效（指向一个不存在的旧路径），而宿主只是"不再列出技能"。
+# 所以：建过就落盘留档；启动时能一条命令查出悬空。
+if ($Doctor) {
+    $rows = New-Object System.Collections.Generic.List[object]
+    $recorded = @()
+    if (Test-Path -LiteralPath $manifestPath) {
+        try {
+            $mf = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            $recorded = @($mf.entries)
+        } catch { Write-Host ("WARN: 清单解析失败 {0}" -f $manifestPath) -ForegroundColor Yellow }
+    }
+    foreach ($e in $recorded) {
+        $st = 'OK'
+        if (-not (Test-Path -LiteralPath $e.path)) { $st = 'DANGLING(路径不存在)' }
+        else {
+            $t = Get-LinkTarget -p $e.path
+            if (-not $t) { $st = 'NOT_A_LINK(被实体目录顶替)' }
+            elseif ((& $norm $t) -ne $mine) { $st = ('MISMATCH(指向 {0})' -f $t) }
+        }
+        $rows.Add([pscustomobject]@{ agent = $e.agent; path = $e.path; state = $st })
+    }
+    foreach ($t in $targets) {
+        if (-not $t.installed) { continue }
+        if (-not (Test-Path -LiteralPath $t.path)) { continue }
+        $tgt = Get-LinkTarget -p $t.path
+        if (-not $tgt) { continue }
+        if ((& $norm $tgt) -ne $mine) { continue }
+        $hit = $false
+        foreach ($e in $recorded) { if ((& $norm $e.path) -eq (& $norm $t.path)) { $hit = $true } }
+        if (-not $hit) { $rows.Add([pscustomobject]@{ agent = $t.agent; path = $t.path; state = 'UNRECORDED(指向本包但清单里没有)' }) }
+    }
+    $dangling = @($rows | Where-Object { $_.state -ne 'OK' })
+    if ($Json) {
+        [pscustomobject]@{ manifest = $manifestPath; entries = @($rows); problems = $dangling.Count } | ConvertTo-Json -Depth 5
+    } else {
+        Write-Host ''
+        Write-Host ('=== junction 体检（清单：{0}）===' -f $manifestPath) -ForegroundColor Cyan
+        if ($rows.Count -eq 0) { Write-Host '清单为空 / 本机没有任何指向本包的联接。' -ForegroundColor Yellow }
+        foreach ($r in $rows) {
+            $c = if ($r.state -eq 'OK') { 'DarkGray' } else { 'Red' }
+            Write-Host (('{0,-20} {1,-58} {2}' -f $r.agent, $r.path, $r.state)) -ForegroundColor $c
+        }
+        if ($dangling.Count -gt 0) { Write-Host ("\n{0} 处有问题 —— 跑一次不带参数的 register-skills.ps1 重挂。" -f $dangling.Count) -ForegroundColor Red }
+        else { Write-Host '全部正常。' -ForegroundColor Green }
+    }
+    exit 0
+}
 
 # ---------------- 3. 执行 ----------------
 $report = New-Object System.Collections.Generic.List[object]
@@ -176,6 +237,32 @@ foreach ($t in $targets) {
         New-Item -ItemType Junction -Path $t.path -Target $skills | Out-Null
     }
     $report.Add([pscustomobject]@{ agent = $t.agent; path = $t.path; action = 'linked'; ok = $true })
+}
+
+# ---------------- 3.5 落 manifest（junction 是环境副作用，必须留档）----------------
+# 这是机器状态，不是仓库事实：文件写在技能包里，但被 .gitignore 排除，
+# 免得把"A 机挂在哪"当成配置提交、换机后互相打架。审计入口是 -Doctor。
+if (-not $WhatIf -and -not $Revert) {
+    $entries = @()
+    foreach ($t in $targets) {
+        if (-not $t.installed) { continue }
+        if (-not (Test-Path -LiteralPath $t.path)) { continue }
+        $tgt = Get-LinkTarget -p $t.path
+        if (-not $tgt) { continue }
+        if ((& $norm $tgt) -ne $mine) { continue }
+        $entries += [pscustomobject]@{ agent = $t.agent; scope = $t.scope; path = $t.path; target = $skills }
+    }
+    $mf = [pscustomobject]@{
+        schemaVersion = '1.0'
+        subject       = 'skills/scripts/register-skills.ps1'
+        note          = '机器状态（非仓库事实，已 gitignore）。换机后跑 register-skills.ps1 -Doctor 可查出悬空/错指/未登记的联接。'
+        generatedAt   = (Get-Date -Format 'o')
+        skillsRoot    = $skills
+        entries       = $entries
+    }
+    $utf8 = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText($manifestPath, ($mf | ConvertTo-Json -Depth 6), $utf8)
+    Write-Host ("manifest: {0}（{1} 条联接）" -f $manifestPath, @($entries).Count)
 }
 
 $result = New-Object System.Collections.Specialized.OrderedDictionary

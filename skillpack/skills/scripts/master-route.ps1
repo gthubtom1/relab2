@@ -300,7 +300,7 @@ $candText = if ($uniq.Count -gt 0) { (($uniq | ForEach-Object { "{0}({1})" -f $_
 [void]$sb.AppendLine('- **PRIMARY 是入口，不是路线。** 它回答"这件事属于哪个域"，不回答"整条路怎么走"。')
 [void]$sb.AppendLine('- **方向定一次，"技能"必须随时换。** 出现任一条就回技能目录重选：①拿到决定性新证据（判出壳/语言/协议/服务端依赖）②工具或环境报错且说不通 ③静态与动态结论矛盾 ④同一假设连续两次没有新证据 ⑤任务进入新域（开发项目里突然要逆向/渗透/抓包）。')
 [void]$sb.AppendLine('- 换完在时间线记一行：`换技能：<旧> → <新>，因为 <信号>`。')
-[void]$sb.AppendLine('- 技能正文按需读：`read skill://<name>`（宿主已注册本包 46 个技能，name+description 常驻）。')
+[void]$sb.AppendLine('- 技能正文按需读：`read skill://<name>`（宿主已注册本包全部技能，name+description 常驻）。')
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('## Notes')
 if ($notes.Count -eq 0) { [void]$sb.AppendLine('- (none)') }

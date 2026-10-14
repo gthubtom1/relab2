@@ -1,6 +1,6 @@
-﻿---
+---
 name: windows-ad
-description: 授权 AD/Windows 身份攻击：Kerberos(Kerberoast/AS-REP)、ADCS ESC1-ESC8、BloodHound、NTLM relay、域内提权。用于：域渗透身份枚举、impacket/certipy/nxc、pass-the-hash。不要用于：全链→attack-chain；客户端→thick-client；Web 越权→api-security。
+description: 授权 AD/Windows 身份攻击：Kerberos(Kerberoast/AS-REP)、ADCS ESC1-ESC8、BloodHound、NTLM relay、域内提权。用于：域渗透身份枚举、impacket/certipy/nxc、pass-the-hash。
 ---
 
 # Windows / Active Directory Security

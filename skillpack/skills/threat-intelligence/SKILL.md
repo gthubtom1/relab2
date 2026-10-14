@@ -1,6 +1,6 @@
-﻿---
+---
 name: threat-intelligence
-description: 授权 OSINT 与威胁情报：公开来源 IOC 富化、campaign 与威胁组织画像、仿冒诈骗线索、Xquik 公开 X/Twitter 检索。用于：IOC 归属、情报包准备。不要用于：私有数据收集、样本分析→malware-analysis、落地规则→threat-hunting。
+description: 授权 OSINT 与威胁情报：公开来源 IOC 富化、campaign 与威胁组织画像、仿冒诈骗线索、Xquik 公开 X/Twitter 检索。用于：IOC 归属、情报包准备。
 ---
 
 # Threat Intelligence & Public-Source OSINT

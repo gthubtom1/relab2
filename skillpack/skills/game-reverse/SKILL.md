@@ -1,6 +1,6 @@
-﻿---
+---
 name: game-reverse
-description: 游戏客户端逆向与反作弊机制评估：Unity IL2CPP/Mono 元数据恢复、Unreal UObject 反射、封包协议。用于：客户端逆向、IL2CPP 符号恢复、封包与内存结构分析。不要用于：APK→apk-reverse；浏览器 JS→js-reverse；内核对抗→edr-bypass-re。
+description: 游戏客户端逆向与反作弊机制评估：Unity IL2CPP/Mono 元数据恢复、Unreal UObject 反射、封包协议。用于：客户端逆向、IL2CPP 符号恢复、封包与内存结构分析。
 ---
 
 # 游戏客户端逆向与反作弊研究

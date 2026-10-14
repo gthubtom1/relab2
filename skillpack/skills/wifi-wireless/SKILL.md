@@ -1,6 +1,6 @@
-﻿---
+---
 name: wifi-wireless
-description: 授权 Wi-Fi 安全评估：监听模式、WPA/WPA2 握手/PMKID、aircrack/hashcat 口令评估、流氓 AP 检测。用于：airmon-ng/airodump-ng 抓包、802.11 管理帧。不要用于：非 Wi-Fi RF→radio-sdr；网卡固件→hardware-security；域渗透→windows-ad。
+description: 授权 Wi-Fi 安全评估：监听模式、WPA/WPA2 握手/PMKID、aircrack/hashcat 口令评估、流氓 AP 检测。用于：airmon-ng/airodump-ng 抓包、802.11 管理帧。
 ---
 
 # Wi-Fi / Wireless Security

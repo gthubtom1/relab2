@@ -246,6 +246,15 @@
       "executes_vendor_code": false,
       "runtime": "powershell",
       "why": "模拟器能力层的契约测试：厂商端口表、厂商名解析、原生退出码如实传出（注入假 exe 覆盖 0/1/3/255），以及一组反例证明判据真的会红。不需要装任何模拟器。"
+    },
+    {
+      "id": "check-prompt-budget",
+      "script": "skills/scripts/check-prompt-budget.py",
+      "args": [],
+      "blocking_exits": [1, 20],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "常驻/固定注入文本的预算与形状。① 每个技能的 name+description 会被宿主预载进系统提示（每轮付费），也是模型选择技能的唯一信号：exit 1 = 形状坏（多行/超长/缺 用于：/残留旧的'务必使用此技能'抢触发话术），exit 20 = 总量越过常驻预算。② route-scope.md 的固定注入段必须两侧（.ps1/.sh）渲染一致且不超过预算。没有这道门，下一轮会静默把常驻成本推上去，而且没人拦得住。"
     }
   ]
 }

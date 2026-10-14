@@ -1,6 +1,6 @@
-﻿---
+---
 name: database-security
-description: 数据库安全评估：0.0.0.0 绑定、弱口令、权限过大、危险功能（xp_cmdshell/UDF）、NoSQL 注入。用于：库是否暴露、被脱库、Redis 写文件提权。不要用于：源码注入→code-audit；云 RDS/K8s→cloud-k8s；OS 命令横向→attack-chain。
+description: 数据库安全评估：0.0.0.0 绑定、弱口令、权限过大、危险功能（xp_cmdshell/UDF）、NoSQL 注入。用于：库是否暴露、被脱库、Redis 写文件提权。
 ---
 
 # Database Security Assessment

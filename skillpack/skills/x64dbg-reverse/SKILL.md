@@ -1,6 +1,6 @@
 ---
 name: x64dbg-reverse
-description: x64dbg 动态调试与 MCP 自动化：断点、单步、内存读写、反汇编、穿越反调试。用于：挂调试器即退出、抓运行期明文、下断校验点、改内存。不要用于：静态反编译→ida-reverse；写 exploit→pwn-chain；未判壳→reverse-engineering。
+description: x64dbg 动态调试与 MCP 自动化：断点、单步、内存读写、反汇编、穿越反调试。用于：挂调试器即退出、抓运行期明文、下断校验点、改内存。
 ---
 
 # x64dbg 动态调试技能

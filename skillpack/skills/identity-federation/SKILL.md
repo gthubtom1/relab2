@@ -1,6 +1,6 @@
-﻿---
+---
 name: identity-federation
-description: 联邦身份与 SSO 授权测试：SAML 断言篡改、OIDC/OAuth2 错配、redirect_uri/state/PKCE 缺陷、token 混淆。用于：测 SSO、SAML 签名、IdP/SP 元数据。不要用于：JWT/API→api-security；AD 域→windows-ad；云 IdP→cloud-k8s。
+description: 联邦身份与 SSO 授权测试：SAML 断言篡改、OIDC/OAuth2 错配、redirect_uri/state/PKCE 缺陷、token 混淆。用于：测 SSO、SAML 签名、IdP/SP 元数据。
 ---
 
 # Identity Federation (SAML / OIDC / OAuth)

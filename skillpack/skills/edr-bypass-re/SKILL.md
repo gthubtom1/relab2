@@ -1,6 +1,6 @@
-﻿---
+---
 name: edr-bypass-re
-description: 已授权红队 EDR 绕过：unhook、direct syscall、AMSI/ETW 绕过、反射加载 implant。用于：Defender 老杀我马、unhook 过 EDR、AMSI/ETW 怎么处理。不要用于：全链路打域控→attack-chain；木马免杀→malware-analysis；内网 AD 提权→windows-ad。
+description: 已授权红队 EDR 绕过：unhook、direct syscall、AMSI/ETW 绕过、反射加载 implant。用于：Defender 老杀我马、unhook 过 EDR、AMSI/ETW 怎么处理。
 ---
 
 ## ACTION REQUIRED（读完后立刻执行）

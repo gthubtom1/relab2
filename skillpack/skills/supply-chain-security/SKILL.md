@@ -1,6 +1,6 @@
-﻿---
+---
 name: supply-chain-security
-description: 供应链安全评估：SBOM、SCA 依赖漏洞与可达性、CI/CD 管道审计、容器镜像。用于：审依赖许可、查组件 CVE、测 GitHub Actions 信任边界。不要用于：应用渗透→pentest-tools；样本逆向→reverse-engineering；云 K8s→cloud-k8s。
+description: 供应链安全评估：SBOM、SCA 依赖漏洞与可达性、CI/CD 管道审计、容器镜像。用于：审依赖许可、查组件 CVE、测 GitHub Actions 信任边界。
 ---
 # Supply Chain Security Testing
 

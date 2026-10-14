@@ -1,6 +1,6 @@
-﻿---
+---
 name: radare2
-description: radare2/r2 命令行二进制分析：反汇编、交叉引用、strings/imports、patch、r2pipe/rabin2/rasm2/radiff2。用于：r2 CLI 分析 exe/dll/so/elf/apk/dex/wasm、定位函数。不要用于：GUI 伪代码→ida-reverse；APK→apk-reverse；JS→js-reverse。
+description: radare2/r2 命令行二进制分析：反汇编、交叉引用、strings/imports、patch、r2pipe/rabin2/rasm2/radiff2。用于：r2 CLI 分析 exe/dll/so/elf/apk/dex/wasm、定位函数。
 ---
 
 # radare2

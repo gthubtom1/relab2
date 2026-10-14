@@ -1,6 +1,6 @@
-﻿---
+---
 name: llm-security
-description: LLM/AI Agent 安全测试：prompt injection（直接/间接）、越狱与编码绕过、工具滥用越权、记忆投毒。用于：测 ChatBot/RAG、红队 Agent 工具调用、garak/PyRIT。不要用于：Web/API→api-security；样本分析→malware-analysis；模型逆向→ida-reverse。
+description: LLM/AI Agent 安全测试：prompt injection（直接/间接）、越狱与编码绕过、工具滥用越权、记忆投毒。用于：测 ChatBot/RAG、红队 Agent 工具调用、garak/PyRIT。
 ---
 # LLM / AI 安全测试
 

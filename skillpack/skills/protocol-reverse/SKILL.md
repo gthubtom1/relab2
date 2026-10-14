@@ -1,6 +1,6 @@
-﻿---
+---
 name: protocol-reverse
-description: 自定义协议逆向：TCP/UDP 帧布局还原、protobuf/gRPC 解码、WebSocket/MQTT 分析、PCAP 还原状态机。用于：有 PCAP 要还协议、未知 protobuf 恢复。不要用于：HTTP 签名→js-reverse；Web token 重放→web-protocol-reverse；固件协议栈→firmware-pentest。
+description: 自定义协议逆向：TCP/UDP 帧布局还原、protobuf/gRPC 解码、WebSocket/MQTT 分析、PCAP 还原状态机。用于：有 PCAP 要还协议、未知 protobuf 恢复。
 ---
 
 # Protocol Reverse Engineering

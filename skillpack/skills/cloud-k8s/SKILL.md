@@ -1,6 +1,6 @@
-﻿---
+---
 name: cloud-k8s
-description: 云/容器/K8s 安全评估：元数据 SSRF、IAM 越权、公开桶、容器逃逸、K8s RBAC。用于：云元数据 SSRF、容器逃逸、集群 RBAC。不要用于：Web/漏扫→pentest-tools；镜像管道→supply-chain-security；数据库→database-security；横向→attack-chain。
+description: 云/容器/K8s 安全评估：元数据 SSRF、IAM 越权、公开桶、容器逃逸、K8s RBAC。用于：云元数据 SSRF、容器逃逸、集群 RBAC。
 ---
 
 # Cloud / Container / Kubernetes Security

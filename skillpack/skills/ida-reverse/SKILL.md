@@ -1,6 +1,6 @@
-﻿---
+---
 name: ida-reverse
-description: IDA Pro 静态逆向：反汇编、反编译、交叉引用、定位校验与密码逻辑。用于：看 exe/dll、反汇编 so/elf、找注册算法、样本静态分析。不要用于：APK→apk-reverse；.NET→dotnet-reverse；带壳/反调试→先 reverse-engineering。
+description: IDA Pro 静态逆向：反汇编、反编译、交叉引用、定位校验与密码逻辑。用于：看 exe/dll、反汇编 so/elf、找注册算法、样本静态分析。
 ---
 
 # IDA Pro 逆向分析技能

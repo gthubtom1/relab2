@@ -1,6 +1,6 @@
-﻿---
+---
 name: case-review
-description: case 包只读审查：scope 就绪度、Evidence 链可追溯、artifact SHA-256、rebuild/update 表核对。用于：交报告前审 case、证据链全不全、复核哈希。不要用于：渗透/逆向→pentest-tools/ida-reverse；写报告→docs-generator；样本→malware-analysis。
+description: case 包只读审查：scope 就绪度、Evidence 链可追溯、artifact SHA-256、rebuild/update 表核对。用于：交报告前审 case、证据链全不全、复核哈希。
 ---
 
 # Evidence Graph Review
