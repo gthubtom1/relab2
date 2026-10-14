@@ -46,8 +46,12 @@ CRITERIA = [
         "note": "当时是主人 22:31/22:44 提醒才做",
     },
     {
-        "id": "C3-自己发现并说明 x64dbg MCP 通道",
-        "any": [r"x64dbg", r"9094", r"9095", r"mcp-status", r"工具通道", r"MCP", r"注册.*≠.*监听", r"在监听"],
+        "id": "C3-自己发现并说明 MCP 工具通道（注册/监听/怎么起）",
+        # ★ 收紧理由：判据原写 x64dbg|MCP 等宽泛词，结果"只是拿 x64dbg 当工具用"也算过。
+        #   真正要考的是它有没有**主动浮现工具通道状态**（注册了哪些 / 谁在监听 / 怎么起）。
+        "any": [r"9094", r"9095", r"mcp-status", r"工具通道", r"注册.{0,4}≠.{0,4}监听",
+                r"MCP.{0,12}(未起|没起|关闭|未监听|不在|未注册)", r"(起|开|拉).{0,6}MCP",
+                r"mcp\.json", r"tool-registry", r"在监听", r"未启动的工具"],
         "note": "当时是主人提醒「本机有反反调试工具」",
     },
     {
@@ -79,7 +83,30 @@ def load_case(name: str) -> dict | None:
         return yaml.safe_load(f)
 
 
+NOISE_PREFIXES = ("Warning:", "Working...", "Error:", "  tip:", "  error:",
+                  "Usage:", "Run `omp", "[omp]")
+
+
+def strip_host_noise(text: str) -> str:
+    """剥掉宿主自己打印的行（MCP 连接告警等），只留模型的回答。
+
+    ★ 为什么必须剥：`omp -p` 会把 MCP 连接失败写到 stderr，
+    而 C3 判据里有 `MCP` 这个词 —— 不剥的话，只要宿主照常打印告警，C3 就会**假阳性**。
+    一道靠宿主噪音就能变绿的门，比没有门更坏。
+    """
+    out = []
+    for line in text.splitlines():
+        s = line.strip()
+        if not s:
+            continue
+        if any(s.startswith(p) for p in NOISE_PREFIXES):
+            continue
+        out.append(line)
+    return "\n".join(out)
+
+
 def score(answer: str) -> list[dict]:
+    answer = strip_host_noise(answer)
     out = []
     for c in CRITERIA:
         if "forbid" in c:
@@ -93,10 +120,20 @@ def score(answer: str) -> list[dict]:
     return out
 
 
-def run_session(case: dict, model: str, timeout_s: int) -> str:
+PROBE_SUFFIX = (
+    "\n\n【只回答三段，不要动手】\n"
+    "① 你的推进路线（你打算怎么走、按什么顺序、什么时候换方法）\n"
+    "② 你需要我提供什么（不需要就写「不需要」）\n"
+    "③ 你怎么处理「我没有卡密」这件事\n"
+)
+
+
+def run_session(case: dict, model: str, timeout_s: int, probe: bool = False) -> str:
     prompt = str(case.get("task_verbatim", "")) + "\n\n【硬约束】" + str(case.get("constraint", ""))
+    if probe:
+        prompt += PROBE_SUFFIX
     try:
-        r = subprocess.run(["omp", "-p", "--no-session", "-m", model, prompt],
+        r = subprocess.run(["omp", "-p", "--no-session", "--model=" + model, prompt],
                            capture_output=True, text=True, timeout=timeout_s, cwd=find_repo_root())
         return (r.stdout or "") + "\n" + (r.stderr or "")
     except Exception as exc:  # noqa: BLE001
@@ -107,6 +144,9 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--run", action="store_true", help="开新会话实跑（花钱）")
+    ap.add_argument("--probe", action="store_true",
+                    help="有界探针：只让它回答「推进路线/需要什么/怎么处理无卡密」，不动手。"
+                         "整任务是无界的（会真去逆向），探针模式用于快速体检四条验收标准。")
     ap.add_argument("--case", default="case-001-换肤6.9.yaml")
     ap.add_argument("--model", default="juhui/deepseek-v4.1-flash")
     ap.add_argument("--timeout", type=int, default=600)
@@ -131,7 +171,7 @@ def main() -> int:
         print("  要实跑：加 --run（会开新会话，花钱，建议挂 non-blocking）")
         return 0
 
-    answer = run_session(case, args.model, args.timeout)
+    answer = run_session(case, args.model, args.timeout, probe=args.probe)
     results = score(answer)
     n_pass = sum(1 for r in results if r["pass"])
 

@@ -165,7 +165,7 @@ def run_eval(name: str, doc: dict, host_cmd: str, model: str) -> dict:
         for hint in (doc.get(key) or []):
             try:
                 out = subprocess.run(
-                    [host_cmd, "-p", "--no-session", "-m", model,
+                    [host_cmd, "-p", "--no-session", "--model=" + model,
                      prompt.replace("{list}", listing).replace("{hint}", hint)],
                     capture_output=True, text=True, timeout=180)
                 picked = (out.stdout or "").strip().splitlines()
@@ -226,6 +226,19 @@ def main() -> int:
                          ensure_ascii=False, indent=2))
     else:
         print(f"test-trigger-rate: eval sets={len(evals)} ran={len(results)}")
+        if results:
+            print("  ┌ 实测触发率（正例应 ≥0.5 / 负例应 <0.5）")
+            for r in results:
+                flag = ""
+                if r["pos_rate"] is not None and r["pos_rate"] < POS_THRESHOLD:
+                    flag += " ← 正例未达线"
+                if r["neg_rate"] is not None and r["neg_rate"] >= NEG_THRESHOLD:
+                    flag += " ← 负例抢触发"
+                print(f"  │ {r['skill']:<24} 正 {r['pos_hits']}/{r['pos_n']} = {r['pos_rate']}"
+                      f"   负 {r['neg_hits']}/{r['neg_n']} = {r['neg_rate']}{flag}")
+                if r["errors"]:
+                    print(f"  │   运行错误 {len(r['errors'])} 条（例：{r['errors'][0][:60]}）")
+            print("  └ 注：样本小则只是抽样，不是全量结论。全量去掉 --limit。")
         if errs:
             print(f"  FAIL（{len(errs)} 条）")
             for e in errs:
