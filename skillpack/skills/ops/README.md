@@ -11,6 +11,7 @@ Z3r0 启发、**本包形态**实现：
 | [timeline-workitem.md](timeline-workitem.md) | 时间线与覆盖 |
 | [sandbox-profile.md](sandbox-profile.md) | 工具对照 |
 | [skill-supply-chain.md](skill-supply-chain.md) | Agent Skill/MCP 供应链安全（AST10 精简） |
+| [kb-consult-contract.md](kb-consult-contract.md) | **什么时候回读知识库**（八类触发信号；它不是“开局读一次”，是反复回读） |
 | [case-review/](../case-review/) | Evidence 图完整性审查与报告交接 |
 
 相关 references（非孤儿，从本 hub / MASTER / SKILL 可达）：

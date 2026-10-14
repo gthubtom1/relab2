@@ -32,8 +32,10 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 - 现象 → **进了技能之后该读哪一篇技术文档**：`field-journal/KB-INDEX.md`
   （206 篇改编自外部知识库 `LING71671/open-reverselab` 的技术正文；来源与改编规则见同目录 `KB-SOURCES.md`）
 
-`master-route` 报 low / R0、或任务中途换域（开发里突然要逆向/渗透/抓包）时，**先读前一张**；
-已经在某个技能里、要挑具体文档时，**读后一张**。这两张表不改任何路由逻辑，只补"关键词永远差一个字"的近失。
+**这不是"开局读一次"的东西** —— 它和技能一样，是**反复回读**的：这一篇不对，就按现象换下一篇。
+**什么时候必须回去查**（八类信号：迷茫 / 换完技能 / 结论矛盾 / 文档和本机对不上 …）见
+[`ops/kb-consult-contract.md`](ops/kb-consult-contract.md) —— 那是唯一事实源，别在这儿另立一套。
+这两张表不改任何路由逻辑，只补"关键词永远差一个字"的近失。
 
 **工具在手边（取用优先级：MCP 通道 > CLI 孪生 > GUI）**：
 `idalib-mcp`（stdio，装好即用）/ `idapro`（http `127.0.0.1:13337`，起 `<技能包根>\skills\ida-reverse\scripts\start.ps1`）/

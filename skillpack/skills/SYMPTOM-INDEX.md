@@ -17,6 +17,9 @@
 >
 > 链接只指向各技能已存在的 `SKILL.md`；进去之后一切以该 `SKILL.md` 为准。
 >
+> **什么时候该回读本表**（八类触发信号：迷茫 / 换完技能 / 结论矛盾 / 文档和本机对不上 …）见
+> [`ops/kb-consult-contract.md`](ops/kb-consult-contract.md) —— 它不是“开局读一次”，是**反复回读**。
+>
 > **进了技能之后还有第二跳**：这张表只回答「进哪个技能」，不回答「读该技能的哪一篇技术文档」。
 > 已经知道在 `reverse-engineering/`（或 `api-security/`、`ctf-sandbox/` …）里了，
 > 接下来按症状找具体文档 → **[`field-journal/KB-INDEX.md`](field-journal/KB-INDEX.md)**（技术文档的症状索引，篇数以 KB-INDEX 的合计为准）。
