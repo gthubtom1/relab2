@@ -1,0 +1,47 @@
+=== CI gate run (manifest: skills/tests/ci-gates.json, gates: 32) ===
+python : C:\Users\Administrator\AppData\Local\Programs\Python\Python314\python.exe
+shell  : C:\Program Files\PowerShell\7\pwsh.EXE
+[PASS]   verify-spec-structure          exit 0
+[PASS]   audit-discovery-surface        exit 0
+[WARN]   verify-triage-lock             exit 10 is registered non-blocking for this gate
+         NEEDS_REVIEW verify-triage-lock: 1 item(s)
+[PASS]   verify-community-banner        exit 0
+[WARN]   verify-source-attestation      exit 10 is registered non-blocking for this gate
+         NEEDS_REVIEW verify-source-attestation: 5 item(s)
+[WARN]   verify-community-bundle        exit 10 is registered non-blocking for this gate
+         NEEDS_REVIEW verify-community-bundle: 1 item(s)
+[WARN]   verify-canonical-base-lock     exit 10 is registered non-blocking for this gate
+         NEEDS_REVIEW verify-canonical-base-lock: 2 item(s)
+[PASS]   verify-routing-signals         exit 0
+[PASS]   test-routing-signals           exit 0
+[PASS]   test-contract-v2               exit 0
+[PASS]   test-community-route           exit 0
+[PASS]   test-route-ranking             exit 0
+[PASS]   test-community-decoys          exit 0
+[PASS]   test-frontmatter-parsing       exit 0
+[PASS]   verify-gate-wiring             exit 0
+[PASS]   validate-integration           exit 0
+[PASS]   verify-doc-links               exit 0
+[PASS]   verify-repository-security     exit 0
+[PASS]   verify-release-gate            exit 0
+[SKIP]   test-adapt-community           ../upstream snapshot absent (C:/relab2/upstream is not a directory); test-adapt-community needs the read-only upstream clones for one check and would fail environmentally without them
+[PASS]   test-routing                   exit 0
+[PASS]   verify-routing-coherence       exit 0
+[PASS]   verify-evolution               exit 0
+[PASS]   test-experience-card           exit 0
+[PASS]   test-emulator-lab              exit 0
+[PASS]   check-prompt-budget            exit 0
+[PASS]   verify-evidence-gate           exit 0
+[PASS]   run-regression                 exit 0
+[PASS]   test-routing-e2e               exit 0
+[PASS]   test-trigger-rate              exit 0
+[PASS]   test-assault-behavior          exit 0
+[PASS]   verify-project-requirements    exit 0
+=== summary ===
+total=32 ok=27 non_blocking=4 skipped=1 blocked=0 failed=0
+NON-BLOCKING verify-triage-lock: exit 10 is registered non-blocking for this gate -- registered on purpose, see the manifest's ci_note
+NON-BLOCKING verify-source-attestation: exit 10 is registered non-blocking for this gate -- registered on purpose, see the manifest's ci_note
+NON-BLOCKING verify-community-bundle: exit 10 is registered non-blocking for this gate -- registered on purpose, see the manifest's ci_note
+NON-BLOCKING verify-canonical-base-lock: exit 10 is registered non-blocking for this gate -- registered on purpose, see the manifest's ci_note
+SKIPPED test-adapt-community: ../upstream snapshot absent (C:/relab2/upstream is not a directory); test-adapt-community needs the read-only upstream clones for one check and would fail environmentally without them
+PASS run-ci-gates: every gate is ok, a registered non-blocking item, or a loud skip
