@@ -69,7 +69,7 @@ description: 敌意 Web 客户端还原成不依赖浏览器的采集器：sign/
 这些条款不接受"先试试再说"：
 
 1. **先判后开工具**：任何新任务在动手前必须走完本文的 Auto Judge Card 与 `references/observe/mcp-routing-playbook.md`，先定 intake / 要不要浏览器 / 用哪个基线主机 / 是否需要 `js-reverse`。不允许"先打开再解释"。
-2. **live-target 的双角色硬顺序**：每个 fresh 的 web `live-target`，在声称"这个线上目标已经看懂"之前，必须按顺序拿到两份证据：`fingerprint-baseline` → `debugger-trace`。★ **本机默认工具面是 `playwright`（`launch(channel="msedge")`），不是 `chrome-devtools`** —— 本机没有任何浏览器类 MCP（见「来源声明」实测记录）。只有当指纹压力（fingerprint pressure）被证明时，基线主机才允许升级到更强的 managed profile；`debugger-trace` 只有在真实存在 debug attach 面、且经过一次实际 handoff 之后才用 debugger。APK / 原生 App / 小程序主任务直接 out-of-scope，不许编造双浏览器证据当仪式。
+2. **live-target 的双份证据**：每个 fresh 的 web `live-target`，在声称"这个线上目标已经看懂"之前，**两份证据都要有**：`fingerprint-baseline` 与 `debugger-trace`。**实践顺序通常是 fingerprint 先（trace 依赖它给出的基线）**，但如果证据显示应当先 trace，就先 trace —— 顺序由依赖关系定，不由本条定。★ **本机默认工具面是 `playwright`（`launch(channel="msedge")`），不是 `chrome-devtools`** —— 本机没有任何浏览器类 MCP（见「来源声明」实测记录）。只有当指纹压力（fingerprint pressure）被证明时，基线主机才允许升级到更强的 managed profile；`debugger-trace` 只有在真实存在 debug attach 面、且经过一次实际 handoff 之后才用 debugger。APK / 原生 App / 小程序主任务直接 out-of-scope，不许编造双浏览器证据当仪式。
 3. **浏览器取证必须 target-serial（串行）**：同一时刻最多一个工具族处于 `TARGET_ACTIVE`，绝不允许两个浏览器族在同一个并行工具批次里打同一个目标。handoff 门禁见 `references/triage/tool-playbook.md`。易失且不可重放的状态用 `RETAINED_EXCEPTION` 保留，不要为了清理把它毁掉。
 4. **交付必须是 browser-free 的 Python 运行路径**：凡是 `compact-replay` / `collector` 交付，不得把浏览器自动化、Playwright、Selenium、CDP 驱动页面、页面上下文里的 fetch、浏览器 profile、人工浏览器状态当作最终重放路径或兜底。
 5. **Python 优先**：HTTP、编排、解析、重试、持久化、输出一律用纯 Python。

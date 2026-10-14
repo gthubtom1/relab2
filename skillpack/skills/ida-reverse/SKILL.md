@@ -246,9 +246,15 @@ ERR:open_timeout_600s
 - `idapro_server_health()` — 服务器健康检查
 - `idapro_server_warmup()` — 预热子系统（字符串缓存、Hex-Rays 等）
 
-## 逆向分析完整工作流
+## 接口用法（**依赖关系，不是任务流程**）
 
-### Step 1: 启动服务器
+> ★ **这不是"先做什么再做什么"的任务顺序。** 任务顺序由**当前证据**决定（见本技能顶部
+> ACTION REQUIRED：拿到新证据就换方法）。下面只是这套 MCP 接口的**依赖关系**：
+> 服务没起就没法开文件；文件没开就没法概览。仅此而已。
+>
+> 一个目标该不该走这条路、什么时候该换到别的技能 —— 由证据说话，不由本节说话。
+
+### 服务端：启动 IDA MCP 服务
 
 **路径 A — Headless idalib（需要有效 license）**
 ```
@@ -266,7 +272,7 @@ powershell -File "scripts/start-gui.ps1" -Path "C:\目标.exe"
 
 通用对接步骤见 `LOCAL-SETUP.md`。
 
-### Step 2: 打开文件
+### 客户端：打开样本
 
 Headless：
 ```
@@ -278,7 +284,7 @@ powershell -File "scripts/open.ps1" -Path "C:\目标.exe" -TimeoutSeconds 600
 
 GUI 模式：在 IDA 里直接 Open 样本即可，无需 open.ps1。
 
-### Step 3: 全局概览（含导入表硬门）
+### 全局概览（含导入表硬门）
 ```
 idapro_survey_binary(detail_level="minimal")
 ```
@@ -294,7 +300,7 @@ idapro_survey_binary(detail_level="minimal")
 
 **硬门禁**：未将 imports 视图/分类摘要（或合法等价锚点）写入 Evidence 前，MUST NOT 进入 Step 4 深挖结论，MUST NOT 声称 survey 完成。导入表为空或查询失败时仍 MUST 记录失败现象。加壳 IAT 修复失败时 MUST 记 `E-iat-repair-fail` 并转动态调试抓 API，禁止静态死磕。用户要求重做导入表/IAT 检查时 MUST 重做被点名步骤（阻塞时可行性门闩：说明+确认；强制则标 quality=unreadable），禁止改换无关步骤。
 
-### Step 4: 深入关键函数
+### 深入关键函数
 ```
 idapro_analyze_function(addr="关键函数名")
 ```

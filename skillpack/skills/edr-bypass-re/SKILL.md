@@ -73,9 +73,13 @@ AMSI 扫描               ◄──►   AmsiScanBuffer patch (mov eax,0x8007005
 - **顺序很重要** — 先 ETW patch → 再 AMSI patch → 再 unhook；顺序错了 EDR 先收到 unhook 告警
 - **现代 EDR 已经把 ETW + kernel callback 当主战场**，单纯用户态 unhook 早已不够
 
-## 工作流
+## 判据与手法（**不是任务流程**）
 
-### Step 1：识别目标主机的 EDR
+> ★ **下面四节的编号只是分组，不是执行顺序。** 真实动手时按**当前证据**选一条做，
+> 拿到新证据就换（见 `../ops/skill-pivot-contract.md`）。固化顺序会让模型在本不该
+> 走这一步的时候硬走 —— 那正是本项目要避免的。
+
+### 识别目标主机的 EDR
 
 ```powershell
 # 列出常见 EDR / AV 驱动
@@ -91,7 +95,7 @@ fltmc filters
 
 EDR 指纹表见 `references/hook-survey.md` 顶部。
 
-### Step 2：从 EDR DLL 提 hook 表
+### 从 EDR DLL 提 hook 表
 
 1. attach 到一个被注入 EDR 用户态组件的进程（任何已落地进程）
 2. 在 windbg 中 dump 当前 `ntdll.dll` 的 `.text` 段
@@ -106,7 +110,7 @@ pe-sieve64.exe /pid 1234 /shellc 3 /modules 3 /dir hooks_dump
 
 详细方法见 `references/hook-survey.md`。
 
-### Step 3：选绕过技术组合
+### 选绕过技术组合（按 hook 表与检测面选，不是按顺序）
 
 | 防御点 | 推荐绕法 |
 |--------|---------|
@@ -116,7 +120,7 @@ pe-sieve64.exe /pid 1234 /shellc 3 /modules 3 /dir hooks_dump
 | kernel callback | call stack spoof + 走 legit gadget |
 | Sysmon ProcessCreate | PPID spoof + unbacked memory |
 
-### Step 4：在 implant 中实现
+### 在 implant 中实现
 
 代码骨架见 `references/unhook-techniques.md` 与 `references/telemetry-blinding.md`。
 
