@@ -173,6 +173,43 @@ function Invoke-Doctor {
     }
     else { Add-Result '破甲卡' 'WARN' '未找到 kernel\04-console\cards\base' }
 
+    # 7b ★ 装机卡 vs 仓库卡的漂移（2026-10-15 审计实测：宿主 PERSONALITY.md 比仓库卡旧 6 行，
+    #    而这件事**没有任何门禁在看** —— 于是"仓库修好了、机器上还是旧的"能一直藏着。）
+    $hostAgentDir = Join-Path $env:USERPROFILE '.omp\agent'
+    $cardDirs = @((Join-Path $RepoRoot 'kernel\04-console\cards\base'),
+                  (Join-Path $RepoRoot 'kernel\04-console\cards\guest'))
+    $drift = 0
+    foreach ($hf in @('PERSONALITY.md', 'RULES.md')) {
+        $hp = Join-Path $hostAgentDir $hf
+        if (-not (Test-Path -LiteralPath $hp)) { continue }
+        $hLines = @(Get-Content -LiteralPath $hp -Encoding UTF8) -replace "`r$", ''
+        $bestName = $null; $bestDiff = [int]::MaxValue
+        foreach ($cd in $cardDirs) {
+            if (-not (Test-Path -LiteralPath $cd)) { continue }
+            foreach ($cf in @(Get-ChildItem -LiteralPath $cd -Filter *.md -ErrorAction SilentlyContinue)) {
+                $cLines = @(Get-Content -LiteralPath $cf.FullName -Encoding UTF8) -replace "`r$", ''
+                $cmp = Compare-Object $hLines $cLines
+                $n = if ($cmp) { @($cmp).Count } else { 0 }
+                if ($n -lt $bestDiff) { $bestDiff = $n; $bestName = $cf.Name }
+            }
+        }
+        if ($null -ne $bestName) {
+            if ($bestDiff -eq 0) {
+                Write-Host ("      · {0} ↔ {1} 一致" -f $hf, $bestName) -ForegroundColor DarkGray
+            }
+            else {
+                $drift++
+                Write-Host ("      · {0} ↔ {1} **差 {2} 行** —— 机器上跑的还是旧卡，开工作台重新载入" -f $hf, $bestName, $bestDiff) -ForegroundColor Yellow
+            }
+        }
+    }
+    if ($drift -gt 0) {
+        Add-Result '装机卡漂移' 'WARN' "$drift 个宿主入口文件与仓库卡不一致（工作台重新载入即可）"
+    }
+    else {
+        Add-Result '装机卡漂移' 'OK' '宿主入口文件与仓库卡逐行一致'
+    }
+
     # 8 要求门（自带控制组）
     $req = Join-Path $RepoRoot 'skillpack\skills\tests\verify-project-requirements.py'
     if (Test-Path -LiteralPath $req) {

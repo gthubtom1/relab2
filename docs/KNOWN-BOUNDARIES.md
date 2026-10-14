@@ -213,8 +213,8 @@ tail -5 "$TEMP/out.log"
 | 1 | **行为门在 CI 里从不带 `--run`** —— 只跑结构检查，模型行为一次没验 | `--run` 全仓 0 命中；`test-trigger-rate`/`test-assault-behavior` 在 CI 只打印"配置就绪" | **已显式暴露**：两个门现在都会打印一大段「本次只做了结构检查，模型行为一次都没验」。**接线本身仍未做**（要真调模型＝花钱+慢） |
 | 2 | **路由主门原本没有任何反例** —— 最该被证伪的「这句话该路由到哪」最没保护 | 审计独立复算 | **部分已修**：主门 `scripts/test-routing.ps1` 已加**默认必跑的前置控制组** —— 先拿「期望值故意写成不存在的路由 id」的用例跑一遍，必须判红，否则整门 exit 1；然后**照旧跑全量 227 条真基准**（控制组不参与、不干扰）。其余三道（`verify-routing-signals` / `test-routing-signals` / `test-route-ranking`）**仍是纯断言、无负控** |
 | 3 | **路由基准 227 条里 223 条（98.24%）的问句就是被测关键词拼的** —— 自己出题自己考 | 审计独立复算 | **未做**。要换成真实语料（主人自己的原话就是现成语料，见 `lcs-core/01`） |
-| 4 | **固件战场工具层是空的** | `binwalk`（pip 包缺 `binwalk.core`，死壳已删）、`unblob` 都没装；`qemu-system`/`openocd` 也没有 | **未做**。binwalk v3 是 Rust，本机无 cargo；unblob 偏 Linux |
+| 4 | **固件战场工具层是空的** | `binwalk`（pip 包缺 `binwalk.core`，死壳已删）、`unblob` 都没装；`qemu-system`/`openocd` 也没有 | **试过了，本机做不了**：装了 Rust 1.99 后 `cargo install binwalk` 失败 —— ①MSVC 工具链缺 `link.exe`（PATH 里的 `link` 是 Git 自带的 GNU coreutils）；②改走 `stable-x86_64-pc-windows-gnu` 时 **rustup 解包 OOM**（`memory allocation of 16777216 bytes failed`，这台 VM 内存不够）。半装的工具链已卸干净、默认已回 MSVC。**要补这一块，需要**：给 VM 加内存 + 装 MSVC Build Tools（或换台机器）。
 | 5 | 换机「一条命令」目前代劳 **6/10 步** | `relab2.ps1 setup` 已串：仓根/环境变量/技能挂载/MCP 注册；余：卡片载入、凭据、清旧状态、登 gh | **部分**。卡片载入要走 `kernel/04-console` 工作台（会写宿主的入口文件，不宜自动化） |
 | 6 | 文档 vs 代码体量比 **4.64 : 1** | 审计实测：md 23.71MB/2339 个 vs 代码 5.11MB/354 个 | **部分**：本轮把 10 项历史文档归档进 `_归档-禁读-历史文档/`，并写了禁读口令 |
-| 7 | 宿主 `PERSONALITY.md` 与仓库 `cards/base/space-bunny-2.md` 已漂移若干行，**没有门禁比对** | 审计实测 | **未做**。要加一个「装载的卡 vs 仓库的卡」一致性门 |
+| 7 | 宿主装机卡与仓库卡漂移，**此前没有门禁比对** | 审计实测 | **已修**：实测 `~/.omp/agent/PERSONALITY.md` 比仓库卡**旧 6 行**（还带着已删的 `步骤: 1)…5)` 工序）——也就是「仓库修好了、机器上跑的还是旧的」。已把宿主文件同步到与仓库卡**逐行一致**（留了 `.bak-carddrift-*` 备份），并在 `relab2.ps1 doctor` 加了**装机卡漂移检查**（逐行比对 `PERSONALITY.md`/`RULES.md` 与 `cards/base|guest/*.md`，不一致就 WARN）。现 doctor 报「宿主入口文件与仓库卡逐行一致」|
 | 8 | `x64dbg` 的探测结果指向 `headless.exe`，而项目自己的规则说「不得拉起 GUI / headless 也不等于能交互」 | 审计实测（`START-HERE.md:187-189`） | **未做**。要么改别名指向能用的那个，要么在卡里写清它的用途边界 |
