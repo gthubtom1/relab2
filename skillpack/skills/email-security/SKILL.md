@@ -71,3 +71,46 @@ description: 邮件安全与钓鱼分析：Received 链、SPF/DKIM/DMARC 校验�
 ### `references/` — 根目录
 
 
+
+---
+
+## When NOT to use（近邻负例）
+
+- 目标是邮件网关的 Web 界面 → 用 `../pentest-tools/SKILL.md`
+- 要分析的是恶意附件本身 → 用 `../malware-analysis/SKILL.md`
+- 要查的是邮件服务器主机层 → 用 `../windows-ad/SKILL.md`
+- 前置条件：**涉及真实收件人** → 不发送任何测试邮件，只在受控邮箱内验证
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 附件是宏文档/脚本，要静态+动态分析 | `../malware-analysis/SKILL.md` |
+| 发现可伪造发件域，要评估下游可利用面 | `../attack-chain/SKILL.md` |
+| 发现链接指向自家应用，要审该应用 | `../api-security/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- SPF/DKIM/DMARC 实测记录落盘（含原始 Received 头）
+- 每条结论附一份原始邮件（脱敏后）
+- 可利用性判定给出发送路径（能到达哪个 MTA）
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：伪造邮件实际投递到目标收件箱（有 Received 链佐证）
+- `low`：仅解析 DNS 记录推断可以伪造

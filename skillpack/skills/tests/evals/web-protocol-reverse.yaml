@@ -1,0 +1,23 @@
+skill: web-protocol-reverse
+positive:
+  - 这个站 412 拦截，要还原成不依赖浏览器的采集器
+  - 用 HAR 离线复现请求签名
+  - cookie 是怎么来的，要溯源
+  - jsvmp 的字节码解释器怎么还原
+  - 把请求签名移植成纯 python
+  - 那个 a_bogus 参数怎么生成
+  - 分页和路由切换的状态怎么跟着走
+  - 这是个有状态流、端到端加密的 WebSocket，怎么复刻
+  - challenge 和验证挑战怎么过
+  - 反爬对抗，要重写成可重放的采集器
+negative:
+  - 只是要定位前端 JS 里那段 signature 生成函数在哪、调了谁  # → js-reverse
+  - 自定义 TCP/UDP 协议、protobuf 帧布局还原  # → protocol-reverse
+  - 以 apk 和原生 App 为主任务  # → apk-reverse
+  - PE/ELF/DLL/SO 二进制逆向  # → ida-reverse
+  - 用 playwright 做标准 UI 自动化，不要求协议可复现  # → browser-automation
+  - 只做浏览器抓包取证，不做协议还原  # → digital-forensics
+  - 先用 nmap 扫端口做一轮常规漏扫  # → pentest-tools
+  - 目标是游戏客户端的封包通用规则  # → game-reverse
+  - 要在 App 上绕 SSL pinning  # → mobile-reverse
+  - 只要读懂一大段 webpack 混淆的 JS 是怎么写的  # → js-reverse

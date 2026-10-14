@@ -168,3 +168,46 @@ P-TI-001: 可复现查询和验证路径
 - [ ] 是否由独立来源核验高影响结论？
 - [ ] 是否避免未批准的私密读取、写操作、监控与批量任务？
 - [ ] 是否完成 Evidence→Finding→Path 交接？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 要落地检测规则到 SIEM → 用 `../threat-hunting/SKILL.md`
+- 要分析样本本体 → 用 `../malware-analysis/SKILL.md`
+- 目标是内部威胁（不是外部情报） → 用 `../digital-forensics/SKILL.md`
+- 前置条件：**只使用公开来源**；不收集非公开个人数据
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 获得 IOC，要在日志里找落地 | `../threat-hunting/SKILL.md` |
+| 需要样本层面确认 | `../malware-analysis/SKILL.md` |
+| 发现仿冒站点，要评估其技术面 | `../web-protocol-reverse/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 情报包落盘，每条 IOC 附来源 URL 与采集时间
+- 归属结论标注置信度，并写明「不足以支撑结论的部分」
+- 可复用：给出查询语/jq 表达式，第三方可复现
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：多源交叉且时间线自洽（≥2 个独立来源指向同一活动）
+- `low`：单一来源，或时间线存在无法解释的冲突未解决

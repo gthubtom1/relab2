@@ -141,3 +141,46 @@ LLM 输出可能被下游系统直接消费：
 - [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `../TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 目标是传统注入（SQLi/XSS/命令注入） → 用 `../api-security/SKILL.md`
+- 目标是模型权重与训练数据本身 → 用 `../reverse-engineering/SKILL.md`
+- 要审的是 agent 供应链（依赖/构建） → 用 `../supply-chain-security/SKILL.md`
+- 前置条件：**目标模型/服务属于第三方** → 只做授权范围内的红队与文档对照
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 发现 agent 能调工具，要评估工具滥用链 | `../attack-chain/SKILL.md` |
+| 发现 RAG 数据源污染 | `../supply-chain-security/SKILL.md` |
+| 发现提示注入可越权访问内部系统 | `../api-security/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 每条攻击有可重放的 prompt/输入序列落盘
+- 命中率有多次运行统计（不是单次成功）
+- 影响评估写到具体被突破的边界（数据/工具/权限）
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：同一 payload 在 ≥3 次独立运行中稳定触发
+- `low`：单次触发，可能是采样随机性

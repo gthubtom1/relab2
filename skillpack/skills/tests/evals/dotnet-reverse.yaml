@@ -1,0 +1,23 @@
+skill: dotnet-reverse
+positive:
+  - 用 dnSpy 反编译这个 C# 程序
+  - 这个是 ConfuserEx 混淆过的，de4dot 怎么脱
+  - IL patch 把那个判断改掉
+  - 看看这个 .NET 程序的注册逻辑
+  - 字符串全搅乱了，怎么还原
+  - 托管的 dll 反编译出来全是乱码
+  - 微软那套托管代码，符号对不上
+  - C# 写的，能直接看源码吗
+  - 用 ILSpy 看这个 dotnet 程序
+  - 混淆过的名字连不起来，怎么理
+negative:
+  - 纯 native 的 exe，没有 CLR 头也没有 metadata 流  # → ida-reverse
+  - 这是 IL2CPP 编译的 Unity 游戏  # → game-reverse
+  - NativeAOT 产物没有 CLR 头，得按 native 逆向的路子来  # → reverse-engineering
+  - apk 里的 Xamarin 托管 dll，要先把包取出来  # → apk-reverse
+  - 只是 apk 的 Java 层，非托管  # → mobile-reverse
+  - 要做跨版本的符号迁移，把旧版函数名搬到新版  # → binary-diff
+  - 要画调用链和攻击路径图  # → diagram-generator
+  - 这个 .NET 程序加了商业保护器，要做出可用的成品  # → reverse-engineering（assault-entry 入口）
+  - 目标是原生 dll，不是托管的  # → ida-reverse
+  - 要抓这个桌面程序的网络包，还原它的自定义协议帧布局  # → protocol-reverse

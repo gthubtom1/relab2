@@ -1,0 +1,23 @@
+skill: game-reverse
+positive:
+  - Unity IL2CPP 的 global-metadata.dat 怎么恢复符号
+  - Mono 元数据里的类结构怎么还原
+  - Unreal 的 UObject 反射怎么读
+  - 游戏客户端的内存结构分析
+  - 游戏封包协议怎么还原
+  - 反作弊机制是怎么检测的，想研究一下
+  - 手游加速器改内存被判外挂
+  - 游戏逆向，找人物属性和血量
+  - 用 frida 挂游戏客户端看内存
+  - 自研引擎的封包和内存结构
+negative:
+  - 普通 Windows PE 逆向，跟游戏无关  # → reverse-engineering（assault-entry 入口）
+  - 是 apk 游戏，Java 层为主，要拆 apk  # → apk-reverse
+  - 封包只是普通 TCP/UDP 二进制协议，要通用帧还原  # → protocol-reverse
+  - 浏览器 H5 游戏的前端 JS，得去 webpack 里找  # → js-reverse
+  - 反作弊驱动和内核对抗，不是评估客户端检测面  # → edr-bypass-re
+  - Unity Android 包要先拆 apk 和 smali  # → apk-reverse
+  - 这个只有在 CTF 靶场里才允许做，要能直接用的外挂功能  # → ctf-sandbox
+  - mac 上的原生游戏客户端  # → macos-reverse
+  - .NET 写的游戏登录器和启动器  # → dotnet-reverse
+  - 游戏服务器的接口越权测试  # → api-security

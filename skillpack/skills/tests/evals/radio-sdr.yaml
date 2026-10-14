@@ -1,0 +1,23 @@
+skill: radio-sdr
+positive:
+  - 用 RTL-SDR 收一下这个 433MHz 信号
+  - 车钥匙信号能不能录下来重放
+  - ADS-B 的数据怎么解
+  - 无人机的图传信号分析
+  - 用 GNU Radio 做调制识别
+  - URH 能不能解这个遥控信号
+  - 蓝牙 BLE 广播包怎么抓
+  - 断断续续的信号帮我解出来看看
+  - 对讲机频段有哪些活动
+  - 屏蔽室里的重放可行性评估
+negative:
+  - 目标是 Wi-Fi，抓一下握手包  # → wifi-wireless
+  - 网卡固件里的无线配置，用 binwalk 解一下  # → firmware-pentest
+  - 蓝牙以外的普通网络协议，从 PCAP 还原  # → protocol-reverse
+  - 门禁的 UART 调试口怎么找  # → hardware-security
+  - 这个设备的无线芯片手册要看，先读 flash  # → hardware-security
+  - 无线摄像头的 Web 管理界面，用 nmap 扫一下  # → pentest-tools
+  - Wi-Fi 门户认证绕过怎么做  # → wifi-wireless
+  - 移动 App 的蓝牙配对协议要 reverse  # → apk-reverse
+  - 无人机的固件提取，用 binwalk  # → firmware-pentest
+  - Wi-Fi 握手包离线用 hashcat 跑密码  # → wifi-wireless

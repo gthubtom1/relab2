@@ -1,0 +1,23 @@
+skill: apk-reverse
+positive:
+  - 用 jadx 反编译这个 apk 看逻辑
+  - apktool 解包改 smali 再重打包
+  - 这个 apk 装不上，装上就闪退
+  - 帮我看看它连的服务器是哪台
+  - 去广告，把那个 SDK 去掉
+  - root 检测在哪，怎么绕过
+  - Frida hook 这个加密函数
+  - 抓不到包，证书校验怎么绕
+  - 看下它申请的四大组件和危险权限
+  - 这个 app 加了壳，怎么脱
+negative:
+  - 目标是 iOS 的 ipa，要分析 Mach-O  # → mobile-reverse
+  - apk 里的 so，Java 层只是 JNI 包装，逻辑在 native  # → ida-reverse
+  - 一个普通 Windows exe，和安卓没有关系  # → reverse-engineering（assault-entry 入口）
+  - 只是想看某条 HTTP 请求的 sign/token 怎么在浏览器外复现  # → web-protocol-reverse
+  - 目标其实是 Unity 的 libil2cpp.so  # → game-reverse
+  - 设备还没授权，先用 nmap 把资产和端口清点一遍  # → pentest-tools
+  - 要同时覆盖 Android 和 iOS 双端  # → mobile-reverse
+  - 目标是一个 Electron 桌面客户端  # → thick-client
+  - 要还原 App 里 WebView 加载的 JS 签名  # → js-reverse
+  - 只是抓包看它跟服务器通信的帧，确认下是不是 protobuf  # → protocol-reverse

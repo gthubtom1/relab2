@@ -1,0 +1,23 @@
+skill: digital-forensics
+positive:
+  - 帮我看看这个 mem.dmp 里有什么
+  - 电脑中招了，怎么溯源
+  - 这个 PCAP 有啥异常
+  - 把主机日志捋成时间线
+  - 用 Volatility 分析内存镜像
+  - 磁盘镜像 E01 帮我做时间线
+  - 半夜异常外连，帮我查查
+  - Prefetch 和 Shimcache 里有什么
+  - 应急响应，先保全证据哈希
+  - 浏览器历史帮我提一下
+negative:
+  - 要分析样本本身的行为与能力，先放 sandbox  # → malware-analysis
+  - 要做的是主动检测规则，写成 Sigma  # → threat-hunting
+  - 外部 OSINT 情报收集  # → threat-intelligence
+  - 这个是应用层 SQL 注入，还没拿到主机  # → pentest-tools
+  - 从内存里提取的凭据要往域内横向，用 impacket  # → windows-ad
+  - PCAP 里的工业协议要用 wireshark 还原  # → protocol-reverse
+  - 磁盘镜像里的固件和引导区，用 binwalk 分析  # → hardware-security
+  - 这个日志里的攻击行为要写成 Sigma 规则  # → threat-hunting
+  - 攻击链要完整复盘每一步  # → attack-chain
+  - 镜像里翻出来的可执行文件要 reverse  # → reverse-engineering

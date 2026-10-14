@@ -241,3 +241,46 @@ npm run doctor:network
 - [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `../TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 要做的是还原站点签名/加密算法（不是驱动界面） → 用 `../web-protocol-reverse/SKILL.md`
+- 目标没有 UI，只有 API → 用 `../api-security/SKILL.md`
+- 要逆向的是扩展代码本身 → 用 `../browser-extension-reverse/SKILL.md`
+- 前置条件：自动化操作第三方站点前确认其 ToS 与授权；不用于绕过反爬风控的规避性用途
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 页面里的参数是本地算的，要还原算法 | `../js-reverse/SKILL.md` |
+| 需要抓包分析接口 | `../web-protocol-reverse/SKILL.md` |
+| 操作的是 Windows 原生 GUI（非浏览器） | `../reverse-engineering/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 脚本落盘 + 可重复运行（同一输入同一结果）
+- 关键步骤有截图或 DOM 快照留档
+- 失败路径也有记录（哪一步不可自动化、为什么）
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：流程在干净会话中 ≥3 次完整跑通
+- `low`：单次跑通，依赖了当时的手动状态

@@ -313,3 +313,46 @@ found_struct_offset → idapro_set_comments(addr=insn_va, comment="{struct_name}
 - [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `../TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 要的是从补丁差异写利用，不只是迁移符号 → 用 `../patch-diff-exploit/SKILL.md`
+- 只有单个版本，没有对照对象 → 用 `../reverse-engineering/SKILL.md`
+- 目标是 .NET 程序（去混淆更直接） → 用 `../dotnet-reverse/SKILL.md`
+- 前置条件：两个二进制需同源（否则符号匹配无意义）—— 先验证 `.text` 相似度
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 迁移中发现新增函数，怀疑是安全修复 | `../patch-diff-exploit/SKILL.md` |
+| 符号在目标版本被剥离，需要重建 | `../ida-reverse/SKILL.md` |
+| 目标语言为 Go/Rust（有自身元数据） | `../go-rust-reverse/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 匹配结果表落盘（旧地址 → 新地址 → 置信度）
+- 未匹配项单独列出并说明原因
+- 在目标版本上验证：迁移后的符号指向的函数与预期一致（抽样 ≥3 个）
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：匹配有多特征交叉（调用图 + 字符串 + 常量），且抽样验证通过
+- `low`：仅凭字节相似度匹配

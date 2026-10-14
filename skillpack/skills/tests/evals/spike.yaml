@@ -1,0 +1,22 @@
+skill: spike
+
+positive:
+  - 先试试 sqlite 还是 postgres，做个原型
+  - 验证一下这个方案行不行，先跑跑看
+  - 技术选型，比较两个方案的优劣
+  - 帮我做个原型验证可行性，代码用完就删
+  - poc 一下这个思路，看能不能跑通
+  - 探一下路，看看哪条技术路线走得通
+  - 哪个方案更合适，先跑个最小验证再定
+  - 这个技术路线可行吗，一次性验证下
+
+negative:
+  - 方案已经定了，帮我实现这个功能    # → implement-feature
+  - 方案已定，给这个行为写正式测试    # → write-tests
+  - 帮我审别人的改动能不能合    # → code-review
+  - 帮我看看数据库有没有弱口令    # → database-security
+  - 这个需求还没定清，先帮我把验收标准定了    # → req-clarify
+  - 先做哪部分还没定，帮我把原型里跑通的那条链路定成正式切片    # → design-slice
+  - 帮我查第三方组件有没有漏洞    # → supply-chain-security
+  - 这个 exe 加了壳脱不掉，帮我做出能用的成品    # → assault-entry（R54）
+  - 帮我修这个 bug 先    # → fix-bug

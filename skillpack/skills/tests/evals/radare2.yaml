@@ -1,0 +1,23 @@
+skill: radare2
+positive:
+  - 手头只有终端，用 r2 分析这个 exe
+  - rabin2 看下这个 so 的导入表和段
+  - rasm2 把这几条指令汇编出来
+  - 用 radiff2 对比两个版本的差异
+  - 写个 r2pipe 脚本批量跑一遍
+  - 纯命令行环境，帮我反汇编这段代码
+  - r2 里怎么调试这个函数
+  - 不想开图形界面，字符界面里分析二进制
+  - 用 r2 找这个函数被谁调了
+  - 用自带的工具链拆开这个 dll 看看
+negative:
+  - 想要 IDA 那种质量的伪代码和图形界面反编译窗口  # → ida-reverse
+  - 需要跨 HLIL 和 MLIL 两层做数据流分析  # → binary-ninja-reverse
+  - 这个 so 的 iS 里全是 rwx 节，反汇编出来是壳跳板，脱壳还想要成品  # → reverse-engineering（assault-entry 入口）
+  - IAT 修复失败，想挂 x64dbg 动态抓 API  # → x64dbg-reverse
+  - 目标其实是 .NET 的 ECMA 元数据  # → dotnet-reverse
+  - 目标是 apk，要解 manifest 和 smali  # → apk-reverse
+  - 逻辑在浏览器里，要还原 webpack 打包的 sign  # → js-reverse
+  - 旧版的函数名要迁到新版，偏移全变了  # → binary-diff
+  - 只是 CTF 起环境跑通要 flag  # → ctf-sandbox
+  - 这个是固件，binwalk 解一下文件系统  # → firmware-pentest

@@ -325,6 +325,48 @@ Interceptor.attach(sit, {
 **单轮命中/未命中都不能定论**（bp 可能恰好被页翻吞掉）。运行时地址一律 **base + RVA 复核**，
 差一位会得出完全相反的结论（本机实测：少进一位 → 误判「全局全程 NULL」）。
 
+### 9. ★ 特殊形态：启动方式 / 父进程检查（「只有双击能跑」）
+
+> **2026-10-14 补。来源：一次真实受保护目标攻坚（换肤 6.9），用一整夜换来的。**
+> 这一条此前全仓**零覆盖**，而它是那次的头号杀手 —— 它一票否决了后面所有调试手段。
+
+**症状（可观察）**：
+- `CreateProcess` / `cmd start` / 批处理 / 服务 / 计划任务拉起 → 程序**秒退**（~150ms，常见 `0xC0000409` fastfail 或干脆静默退出）
+- **`explorer.exe "<exe>"`（= 双击）→ 正常存活、有窗口、功能正常**
+- 用调试器 attach 上去 → 同样秒退
+
+**机制**：程序在**启动早期一次性**比对「自己是被谁拉起来的」。两种常见实现：
+1. `GetShellWindow()` + `GetWindowThreadProcessId()` 拿 explorer PID，再 `NtQueryInformationProcess(ProcessBasicInformation)` 读 `InheritedFromUniqueProcessId` 比对；
+2. `CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS)` + `Process32Next` 建进程表，比父进程名是否 `explorer.exe`。
+不一致即判定「被调试/被自动化」→ 走自毁路径。
+
+**★★ 关键认知：绕过的是「时机」，不是「检查」本身。**
+这类检查发生在**启动早期且只做一次**。所以最通用、最省事的手法不是去 patch 它，而是
+**让检查正常通过，之后再做想做的事**：
+
+| 手法 | 做法 | 代价 / 注意 |
+|---|---|---|
+| **① 先正常启动，再 attach**（首选） | 双击（或 `explorer.exe "<exe>"`）让它起来 → 检查已通过 → **这时**再挂调试器 | 最省事、最不易被识别。检查在早期，attach 时它已经过了 |
+| **② patch 比较分支** | 找到那个比对分支（`jne being_debugged` 之类），翻一个字节 | 需要先能定位；且可能被完整性校验发现 |
+| **③ hook 伪报父进程** | hook `ntdll!NtQuerySystemInformation`（处理 `SystemProcessInformation` 等类时改进程名）或 `ntdll!NtQueryInformationProcess`，让父进程看起来是 explorer | Check Point 官方缓解措施；改动面小 |
+| **④ PPID spoofing** | 用 `PROC_THREAD_ATTRIBUTE_PARENT_PROCESS` 让新进程「认」explorer 为父 | MITRE ATT&CK **T1134.004**；需要自己写启动器 |
+| **⑤ ScyllaHide profile** | 部分 profile 内置父进程检查绕过 | 不是所有版本都有，先查 profile 列表 |
+
+**★ 反效果警告：IFEO 会帮倒忙。**
+`Image File Execution Options` 让 OS 把调试器**插在命令行最前面**（`debugger.exe target.exe`），
+于是被调试进程的父进程是**调试器**、不是 explorer —— **恰好触发父进程检查**。
+（这也是为什么「用 IFEO 挂调试器」对这类样本经常直接失败。
+但 IFEO 有一个真实用途：让 **explorer 自己**拉起时自动进调试器，此时父进程仍是 shell ——
+前提是**父进程链没被改动**，用前先确认这一点，用完必须删键。）
+
+**判据（怎么确认是不是这一类）**：
+- 同一个 exe，`explorer.exe "<exe>"` 起能活、其它方式起必死 → **基本可判定**
+- 交叉验证：`r2 -qc 'ii' <file>` 里出现 `K32GetModuleFileNameExW` / `GetModuleFileNameEx` / `Process32Next` 这类「查进程名」的导入
+- 若 attach 也死 → 说明它还检测调试器（那是 §3 的检测面），**两件事要分开治**：先用①让启动通过，再处理调试器检测
+
+**注意区分**：`CreateProcess(SUSPENDED)` + `ResumeThread` 也算「非 shell 父进程」，同样会被判。
+不要因为「我是挂起后 resume 的、很干净」就以为能过。
+
 ## 判据
 
 反调试被成功绕过，必须**同时**满足：

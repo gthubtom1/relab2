@@ -1,0 +1,23 @@
+skill: database-security
+positive:
+  - 这台 MySQL 直接暴露在公网，密码还是默认的
+  - 数据库是 0.0.0.0 绑定，谁能连得上
+  - 帮我看看这个库的账号权限是不是过大
+  - Redis 没设密码，能不能写文件提权
+  - MSSQL 能不能用 xp_cmdshell 执行系统命令
+  - 这个 MySQL 账号有没有 UDF 提权可能
+  - 帮我评估一下这个库会不会被脱库
+  - 这个 MongoDB 没开认证能直接读
+  - 这个 SQL 注入能不能一路拖库
+  - 库里账号的 grantee 帮我列一下
+negative:
+  - 注入点在应用层，还没到数据库直连  # → api-security
+  - 要把库里的数据恢复出来做取证时间线  # → digital-forensics
+  - 要从服务器操作系统层入手，先 nmap 扫一下  # → pentest-tools
+  - 先试试用 sqlite 还是 postgres 起个原型  # → spike
+  - 从库里发现的凭据要往域里横向，用 impacket 试  # → windows-ad
+  - Redis 能写文件，配合云上 k8s 元数据 SSRF 打穿  # → cloud-k8s
+  - 库里那些高价值数据，评估一下多阶段外泄路径  # → attack-chain
+  - 帮我审下这段代码里的 SQL 拼接  # → code-audit
+  - 抓包看这个库的 protocol 怎么走的  # → protocol-reverse
+  - 数据库服务器上跑的那个 exe 客户端要逆一下  # → ida-reverse

@@ -238,3 +238,54 @@ powershell -File "<skill-root>\scripts\bootstrap-reverse.ps1" -Capability @('any
 ### `references/` — 根目录
 
 
+
+---
+
+## When NOT to use（近邻负例）
+
+- 目标是 PE/ELF/APK/`.so`/WebAssembly 模块里的签名逻辑（无浏览器页面）→ `../ida-reverse/`、`../radare2/`、`../reverse-engineering/`
+- 目标是 APK 内的 JS 桥 / WebView / Flutter/Dart 产物 → `../apk-reverse/`、`../reverse-engineering/languages-platforms.md`
+- 任务要的是 **browser-free 可重放采集器**（已定位到变异点、要脱离浏览器复现）→ `../web-protocol-reverse/SKILL.md`（Observe→Capture→Rebuild 之后交棒）
+- 目标是自定义二进制协议 / protobuf / PCAP 帧布局 → `../protocol-reverse/SKILL.md`
+- 目标是浏览器扩展（crx/xpi、service_worker、manifest 权限）→ `../browser-extension-reverse/SKILL.md`
+- 只是要 UI 自动化点选/填报，不要求协议可复现 → `../browser-automation/`
+- 补环境撞上自研 VMP 而现成工具不覆盖 → 仍在本 skill，读 `references/rs-vmp-env-stub.md` 的"何时不该用"，不要退回猜环境
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 变异点已定位，需求变成"脱离浏览器稳定重放/采集" | `../web-protocol-reverse/SKILL.md` |
+| 签名逻辑不在页面 JS 里（WASM 导出、native、service_worker 之外） | `../ida-reverse/` / `../reverse-engineering/references/assault-entry.md` |
+| 目标协议是二进制帧 / protobuf / WebSocket 私有格式的字段还原 | `../protocol-reverse/SKILL.md` |
+| 页面由浏览器扩展注入脚本驱动 | `../browser-extension-reverse/SKILL.md` |
+| APK WebView 承载同一套签名 | `../apk-reverse/SKILL.md` |
+| 服务端 challenge/TDC 需要专用家族工具 | `../web-protocol-reverse/SKILL.md`（次级运行时帮助） |
+
+## 定义完成
+
+本技能产出算"完成"的**外部可观测**条件（不许写形容词）：
+
+- 采集器/复现脚本落盘（如 `js_reverse_cache/tasks/<task-id>/…` 下的 `replay.js` / `main.py`），一条固定命令可重跑
+- 在 **HAR 或真实抓包** 的至少 3 条同型请求上复现出与 wire 字节一致的 sign/token（比对脚本也落盘；不一致写"受限 + 具体原因"）
+- 每个补环境补丁对应一条页面观测证据（`window/document/navigator/crypto` 的实测值），无空想补丁
+- `## 相关` 上游证据齐备：initiator 栈、可疑脚本 URL、断点命中位置各一条可引用记录
+- 已交付 Tree 中的三态之一：Observe/Capture/Rebuild 任一阶段产出，而不是"看完源码"的口头结论
+
+## 输出契约
+
+```
+FACT:       <观察，带来源（命令 / 文件:行 / Evidence ID）>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>  （状态见 ../ops/binary-model.md）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：本地复现输出与 **wire 实际出站字节**逐字节一致（≥3 条样本），且固定输入助手跑通；或 Hook 采样到同一次调用里参数与返回值自洽
+- `low`：仅静态读 JS 推断算法（同名函数/命名像摘要库都不算证据）；或本地跑通但从未与真实请求比对（长度对、值全错的典型假阳性）

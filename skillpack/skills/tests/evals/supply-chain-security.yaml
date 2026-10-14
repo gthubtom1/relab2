@@ -1,0 +1,23 @@
+skill: supply-chain-security
+positive:
+  - 帮我出一份 SBOM，看看依赖版本
+  - 这个开源组件有没有爆过 CVE
+  - 用 trivy 扫一下这个镜像
+  - 依赖里有没有偷偷混进来的可疑包
+  - GitHub Actions 的信任边界帮我审一下
+  - 构建产物跟源码对不上，怎么核
+  - 拉外网镜像有没有风险
+  - 用 gitleaks 看流水线里有没有泄漏密钥
+  - 第三方组件的许可证合规帮我过一遍
+  - 这次升级的依赖能不能真打到
+negative:
+  - 要审的是自家代码里的硬编码密钥和业务逻辑  # → code-audit
+  - 要打的是运行时 k8s 集群和容器  # → cloud-k8s
+  - 单个二进制样本，用 Ghidra reverse 一下  # → reverse-engineering
+  - 发现 postinstall 脚本，要放 sandbox 看行为  # → malware-analysis
+  - 构建产物与源码不一致，做一次 binary diff  # → binary-diff
+  - CI 里的凭据被偷了，要评估多阶段横向  # → attack-chain
+  - 更新器签名校验可绕过，属于厚客户端的问题  # → thick-client
+  - 容器镜像里的漏洞，先看云上的权限边界  # → cloud-k8s
+  - 这个依赖包里的脚本看着像恶意的 exe 投放  # → malware-analysis
+  - 第三方 SDK 里的接口鉴权要审  # → api-security

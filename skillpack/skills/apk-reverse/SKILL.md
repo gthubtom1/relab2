@@ -431,3 +431,59 @@ frida -U -f com.example.app -l hook.js
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？
 - [ ] 若命中隐藏图标/格机/持久化线索：是否按 U–AV cookbook 记录 E-android-* Evidence（授权范围内）？
+
+---
+
+## When NOT to use（近邻负例）
+
+- iOS IPA / Mach-O / .app bundle 分析（不需要 APK 链路）→ `../mobile-reverse/SKILL.md`（Android+iOS 统一方法论）或 `../macos-reverse/SKILL.md`
+- 目标是 APK 里的 `.so`，且 Java 层只是 JNI 包装、`System.loadLibrary` 后逻辑消失 → `../ida-reverse/` / `../radare2/`，不要继续死磕 Java 层
+- 目标是普通 Windows PE / ELF，与 Android 无关 → `../reverse-engineering/references/assault-entry.md`
+- `apktool d` 解不开（加固壳把 dex 加密了）→ `references/packer/` 链（`vmp-dex2c-detection.md` 先行），不要反复重跑 `apktool`
+- 只是想知道某条 HTTP 请求的 sign/token 怎么在浏览器外复现（无 APK 主体任务）→ `../web-protocol-reverse/SKILL.md`
+- 手头只有 `classes.dex` / smali、没有完整 APK → 仍是本 skill 范围，但**不要**用 `rebuild-sign-install.ps1` 声称"重打包完成"（无 APK 可重建）→ 停在 `apktool`+`jadx` 分析，成品形态改为"可安装 APK"不可达并在报告写明
+- 设备未授权（`adb devices` 为空、无 scope 授权）→ 先 `../scripts/case-init.ps1` 落 scope，动态 Hook / install 一律不做
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 关键逻辑确认在 `.so`（JNI 包装、签名/风控/证书校验在 native） | `../ida-reverse/`（长期深入）或 `../radare2/`（快速侦察） |
+| `apktool` 报 unsupported / 解出的 dex 是空壳，Java 层无业务代码 | `references/packer/vmp-dex2c-detection.md` → 确认形态后再 `vmp-dump-trace-recovery.md` |
+| 需求变成"iOS 也要一份"或目标其实是 IPA | `../mobile-reverse/SKILL.md` |
+| 目标是浏览器端协议、APK 只是其中一环 | `../web-protocol-reverse/SKILL.md` |
+| 重打包后功能不一致，根因在服务端校验/风控评分 | `../web-protocol-reverse/SKILL.md`（服务端依赖面） |
+| APK 本身被判定为恶意样本（隐藏图标、格机脚本、持久化路径） | `../malware-analysis/SKILL.md` + `../reverse-engineering/references/nonpe-format-cookbook.md` §7–8 |
+
+## 定义完成
+
+本技能产出算"完成"的**外部可观测**条件（不许写形容词）：
+
+- `<工作目录>/<包名>-rebuilt.apk` 真实存在（`rebuild-sign-install.ps1` 输出路径），且 `apksigner verify --print-certs` 返回 0
+- 同一 APK 可安装：`adb install -r <rebuilt.apk>` 退出码 0，`adb shell pm list packages | findstr <包名>` 命中
+- patch 逐条可对照：`diff -r apktool_out_orig/smali apktool_out/smali` 输出中每一处改动都对应报告里的一条 patch 意图，无未列出的差异
+- 功能对照：受改动影响的流程在原包与重打包包上各跑一次（日志/Hook 输出各一份），行为一致；不一致则写"受限 + 具体原因"
+- Frida Hook 结果落盘：Hook 脚本路径 + 运行日志（含捕获的参数/返回值样本），可复跑
+
+## 输出契约
+
+```
+FACT:       <观察，带来源（命令 / 文件:行 / Evidence ID）>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>  （状态见 ../ops/binary-model.md）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+APK 实例常用写法：
+- FACT: `E-apk-manifest` — `manifest-summary.ps1 -ManifestPath apktool_out/AndroidManifest.xml` 输出主入口 `com.example.app/.MainActivity`
+- HYPOTHESIS: "sign 在 `com.example.crypto.Signer.nativeSign()` 里计算，Java 层无实现" — confidence: medium，证据 `E-jadx-001`（jadx 输出只有 native 声明）
+- QUESTION: native 里是本地算法还是服务端下发？（决定是否需 `../web-protocol-reverse/SKILL.md`）
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：同一结论在 **jadx 反编译的 Java 层** 与 **smali 层** 各看到一次（或 Java + Frida 运行时 Hook 各一次），且两处指向同一类/方法
+- `low`：仅有 `jadx` 反编译结果、混淆或反编译失败导致 smali 未交叉核对；或只凭 `aapt dump badging` 的权限列表推断行为

@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.1
+#Requires -Version 5.1
 # reverse-skill PRIMARY router.
 # 规则单一事实源：skills/config/routing.json（勿在本脚本内硬编码路由表）。
 # CLI 兼容旧版：-Hint / -OutDir；输出 route-scope.md；退出码 0 成功 / 2 配置或技能缺失。
@@ -287,6 +287,10 @@ $secText = if ($sec.Count -gt 0) { ($sec -join ', ') } else { '(none)' }
 $candText = if ($uniq.Count -gt 0) { (($uniq | ForEach-Object { "{0}({1})" -f $_, $scores[$_] }) -join ', ') } else { '(none)' }
 [void]$sb.AppendLine(("- candidates: {0}" -f $candText))
 [void]$sb.AppendLine("- candidates_skills: {0}" -f $(if ($uniq.Count -gt 0) { (($uniq | ForEach-Object { "skills/{0}" -f $cfg.routes.$_.skill }) -join ', ') } else { '(none)' }))
+# ★ 起点候选（≤8）：仅在 PRIMARY=R0 / confidence=low / candidates 为空时使用。
+#   解决「一句模糊请求时模型手上什么都没有」。不是第二套路由，不参与打分。
+$entryTxt = if ($cfg.entry_menu -and $cfg.entry_menu.Count -gt 0) { (($cfg.entry_menu | ForEach-Object { "skills/{0}" -f $_.skill }) -join ', ') } else { '(none)' }
+[void]$sb.AppendLine(("- entry_menu: {0}" -f $entryTxt))
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('## MUST open next')
 [void]$sb.AppendLine('')
@@ -301,6 +305,7 @@ $candText = if ($uniq.Count -gt 0) { (($uniq | ForEach-Object { "{0}({1})" -f $_
 [void]$sb.AppendLine('- **方向定一次，"技能"必须随时换。** 出现任一条就回技能目录重选：①拿到决定性新证据（判出壳/语言/协议/服务端依赖）②工具或环境报错且说不通 ③静态与动态结论矛盾 ④同一假设连续两次没有新证据 ⑤任务进入新域（开发项目里突然要逆向/渗透/抓包）。')
 [void]$sb.AppendLine('- 换完在时间线记一行：`换技能：<旧> → <新>，因为 <信号>`。')
 [void]$sb.AppendLine('- 技能正文按需读：`read skill://<name>`（宿主已注册本包全部技能，name+description 常驻）。')
+[void]$sb.AppendLine('- **没有强命中时**（`primary: R0` / `confidence: low` / `candidates: (none)`）：看 `entry_menu` 的 ≤8 个起点，别空手开始。')
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('## Notes')
 if ($notes.Count -eq 0) { [void]$sb.AppendLine('- (none)') }

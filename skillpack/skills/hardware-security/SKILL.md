@@ -57,3 +57,46 @@ description: 硬件/嵌入式接口安全：UART/JTAG/SWD 调试口发现、root
 - [ ] 是否记录接口电平与引脚图？
 - [ ] 镜像是否哈希保全？
 - [ ] Checklist？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 目标只有固件文件，没有物理板子 → 用 `../firmware-pentest/SKILL.md`
+- 目标是软件层的调试接口（不是 JTAG/SWD/UART） → 用 `../x64dbg-reverse/SKILL.md`
+- 目标是无线射频信号 → 用 `../radio-sdr/SKILL.md`
+- 前置条件：**设备不是你的资产** → 先确认授权；物理接触可能不可逆
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 从 Flash 提取到固件镜像 | `../firmware-pentest/SKILL.md` |
+| 从串口拿到 shell，要分析系统内进程 | `../reverse-engineering/SKILL.md` |
+| 发现无线芯片，要分析射频协议 | `../radio-sdr/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 接口识别结果落盘（引脚 → 信号 → 波特率/时序实测值）
+- 提取的镜像/固件有 SHA-256 与落盘路径
+- 可重复：给出下一个人照着做能复现的接线与命令
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：接口用途有实测数据（示波器/逻辑分析仪抓到的波形或成功读写）
+- `low`：仅凭引脚排布猜测 UART TX/RX

@@ -1,0 +1,23 @@
+skill: edr-bypass-re
+positive:
+  - Defender 老杀我的马，怎么办
+  - 帮我 unhook 一下用户态 EDR
+  - AMSI 怎么绕过
+  - ETW patch 掉可行吗
+  - 直接系统调用能不能躲过 hook
+  - 载荷一落地就被隔离，帮我免杀
+  - 反射加载 implant 怎么做
+  - 看看 EDR 在哪一层 hook 了我的加载器
+  - C2 载荷怎么在目标主机上稳定执行
+  - 内存扫描老命中，怎么处理
+negative:
+  - 只是分析样本行为，放 sandbox 里跑跑，不涉及交付躲避  # → malware-analysis
+  - 目标是 Linux 主机上的内核提权  # → kernel-exploit
+  - 目标根本没有 EDR 和杀软驻守，直接扫就行  # → pentest-tools
+  - 载荷落地被静态查杀，要脱壳变形做出能用的 exe 成品  # → assault-entry
+  - 要分析 EDR 自身的用户态 hook 实现，上 x64dbg 单步  # → x64dbg-reverse
+  - 游戏反作弊检测要过，帮我看看  # → game-reverse
+  - 内存扫描命中，先把样本放 sandbox 分析本体  # → malware-analysis
+  - 多阶段红队从外网打到域控怎么编排  # → attack-chain
+  - 木马外联的流量包要做溯源  # → digital-forensics
+  - 免杀之后要落地持久化到域控，走域内横向  # → windows-ad

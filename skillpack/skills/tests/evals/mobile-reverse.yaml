@@ -1,0 +1,23 @@
+skill: mobile-reverse
+positive:
+  - 分析这个 IPA 看看有没有偷偷传数据
+  - 越狱检测在哪，怎么过
+  - SSL pinning 怎么绕，抓不到包
+  - 用 Frida 和 objection 插桩看看
+  - Android 和 iOS 双端对比下证书校验
+  - 这个 App 加了壳还绑了证书，怎么下手
+  - 真机调试怎么配，检测环境就闪退
+  - 从移动端角度看它后台收集了什么
+  - 用 MobSF 先过一遍这个 apk
+  - 手机上装上一点就闪退，看看为什么
+negative:
+  - 只是 Android 的 apk，要 apktool 重建和 smali patch  # → apk-reverse
+  - iOS ipa 的 Mach-O 和 codesign、TCC 深度分析  # → macos-reverse
+  - apk 里的 so，Java 只是 JNI 包装  # → ida-reverse
+  - 浏览器前端的 sign/token，没有 App 侧任务  # → js-reverse
+  - 自研引擎游戏客户端的封包和内存结构  # → game-reverse
+  - 只做 Web 层渗透和 API 越权，原生 App 只是背景  # → api-security
+  - 目标是在 mac 上跑的 app bundle 里的 dylib 和 launchagent  # → macos-reverse
+  - 把已经知道的家族规律写成检测规则  # → threat-hunting
+  - 需要用 playwright 自动化点一遍这个 App  # → browser-automation
+  - 目标是浏览器里装的扩展在偷数据，不是 App  # → browser-extension-reverse

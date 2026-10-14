@@ -82,3 +82,46 @@ description: 桌面厚客户端测试：信任边界、凭证存储、IPC/命名
 - [ ] 是否画出信任边界？
 - [ ] 本地+网络面是否都覆盖？
 - [ ] Checklist？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 目标是纯 Web 应用/API → 用 `../api-security/SKILL.md`
+- 目标是 Android/iOS 应用 → 用 `../apk-reverse/SKILL.md`
+- 目标是 Electron 渲染进程里的 JS 逻辑，不涉及本地能力 → 用 `../js-reverse/SKILL.md`
+- 前置条件：客户端属于第三方且无授权 → 只做本地配置与安全边界观察
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 更新器校验可降级/可替换 | `../supply-chain-security/SKILL.md` |
+| 本地存储发现可复用凭据，要打服务端 | `../api-security/SKILL.md` |
+| IPC/命名管道权限过宽，可被低权进程利用 | `../windows-ad/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 信任边界表落盘（进程/用户/文件/网络的每一处跨界）
+- 每处发现配最小复现命令或 PoC 脚本路径
+- 凭据存储位置与加密方式有实测结论（含「未加密」这一结论的证据）
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：客户端行为在两次以上干净环境复现，且与服务端交互抓包吻合
+- `low`：仅静态看到一个 API 名就推断信任关系

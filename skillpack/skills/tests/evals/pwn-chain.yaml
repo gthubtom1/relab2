@@ -1,0 +1,23 @@
+skill: pwn-chain
+positive:
+  - 这个二进制有栈溢出，帮我写 exploit
+  - 堆题，UAF 打到 tcache 怎么利用
+  - 本地通了远程打不通，帮我稳定化
+  - ret2libc 的 ROP 链怎么搭
+  - 用 pwntools 写这个利用脚本
+  - 格式化字符串漏洞能不能写任意地址
+  - 内核 pwn 的 ioctl bug 怎么提权
+  - 已知漏洞点，帮我从触发到拿 shell
+  - 绕 SMEP SMAP KASLR 怎么绕
+  - 这个程序输入超长就崩，是不是溢出
+negative:
+  - 只是拿到一个陌生二进制，要做 reverse 分析  # → reverse-engineering
+  - 目标是 kernel 内核态提权，要分析内核对象  # → kernel-exploit
+  - 有 CVE 但没有 PoC，要从补丁差分反推  # → patch-diff-exploit
+  - 这个 exe 加壳了，要脱壳做出能用的成品  # → assault-entry
+  - 目标是 CTF 靶场，要跑环境切题  # → ctf-sandbox
+  - 这个漏洞的根因要从 kernel 源码审计  # → kernel-exploit
+  - 利用被反调试挡住，动态都进不去  # → assault-entry
+  - 上线前帮我审下这个 C 代码的边界检查  # → code-audit
+  - 二进制里有反作弊检测，要绕过  # → edr-bypass-re
+  - 这个漏洞对应的内核补丁，帮我做 patch 差分  # → patch-diff-exploit

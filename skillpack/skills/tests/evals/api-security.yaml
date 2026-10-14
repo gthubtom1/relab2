@@ -1,0 +1,23 @@
+skill: api-security
+positive:
+  - 帮我看看这个接口能不能换成别人的 userid 拿数据
+  - 这个 API 的 JWT 是不是弱密钥，能不能伪造
+  - 这个 GraphQL 接口开没开内省，能不能批量拉数据
+  - 后台这个接口没做鉴权，换个普通账号再调一次试试
+  - 返回里带了个订单号，我挨个改能不能看别人的订单
+  - 这个 REST 接口有没有 BOLA，同一份数据换个人还能不能拿到
+  - 帮我测下这个 WebSocket 通道有没有越权
+  - 把请求里的 token 改一下就能调别人的信息吗
+  - 这个接口的限流能不能绕过
+  - 管理接口普通用户能不能调，权限校验漏没漏
+negative:
+  - 这套登录是 SAML 单点，帮我测断言能不能篡改  # → identity-federation
+  - 源码我拿得到，上线前帮我白盒审一下接口鉴权  # → code-audit
+  - 浏览器里 JS 算的签名参数，要还原成不依赖浏览器的采集器  # → web-protocol-reverse
+  - 这个 exe 客户端怎么调服务端的，帮我静态看下逻辑  # → ida-reverse
+  - 域里普通账号能不能一路提权到域管  # → windows-ad
+  - 云上这个 k8s 的 RBAC 是不是配错了  # → cloud-k8s
+  - 这个聊天软件是 Electron 的，本地 sqlite 里存的是明文  # → thick-client
+  - 帮我用 nmap 扫一下这个网段开了哪些端口  # → pentest-tools
+  - 拿这个域名先做信息收集和子域名枚举  # → pentest-tools
+  - 这个安卓 app 的接口怎么调，先脱壳看 smali  # → apk-reverse

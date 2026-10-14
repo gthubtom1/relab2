@@ -1,0 +1,23 @@
+skill: threat-intelligence
+positive:
+  - 这个域名有没有恶名，公开渠道查一下
+  - IOC 富化一下，看看归属哪个组织
+  - 这个钓鱼域名最早从哪发出来的
+  - 网上的截图帮我溯源一下
+  - 这条仿冒账号的线索追一下
+  - 用 OSINT 查这个 IP 的历史
+  - 这个 campaign 背后的组织怎么画像
+  - X 上的推文里有没有线索
+  - 给 threat-hunting 准备一份情报包
+  - 恶意软件家族的公开报告帮我汇总
+negative:
+  - 要落地检测规则到 SIEM  # → threat-hunting
+  - 要分析样本本体，放 sandbox 里跑  # → malware-analysis
+  - 内部威胁要做的是主机取证时间线  # → digital-forensics
+  - 这封钓鱼邮件的 SPF 和 DKIM 要分析  # → email-security
+  - 公开情报里提到的漏洞点要写 exploit  # → pwn-chain
+  - 攻击者画像要从内存 dump 反推  # → digital-forensics
+  - 这个 APT 用的 EDR 绕过手法要复现  # → edr-bypass-re
+  - 品牌营销的舆情分析，写份 report 就行  # → docs-generator
+  - 情报里提的云上 k8s 账号权限要不要看看  # → cloud-k8s
+  - 情报里给的哈希，对应的 exe 样本要逆一下  # → ida-reverse

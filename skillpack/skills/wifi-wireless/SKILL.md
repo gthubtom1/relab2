@@ -57,3 +57,46 @@ description: 授权 Wi-Fi 安全评估：监听模式、WPA/WPA2 握手/PMKID、
 - [ ] 是否严格锁定目标 BSSID？
 - [ ] 是否在报告中给出加固建议？
 - [ ] Checklist？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 目标是非 Wi-Fi 射频（遥控/ADS-B/传感器） → 用 `../radio-sdr/SKILL.md`
+- 目标是网卡的固件本身 → 用 `../firmware-pentest/SKILL.md`
+- 目标是域内主机 → 用 `../windows-ad/SKILL.md`
+- 前置条件：**监听本身也可能违法** → 只对自有/授权网络抓包与评估
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 抓到握手包，要离线评估口令强度 | `../pentest-tools/SKILL.md` |
+| 发现企业无线接入了内网，要横向 | `../windows-ad/SKILL.md` |
+| 需要分析网卡驱动/固件 | `../firmware-pentest/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 抓包文件落盘（cap/pcapng）+ 抓包参数记录（信道/带宽/时间）
+- 评估结果：握手/PMKID 是否捕获成功，口令评估是否得出结果
+- 给出可复现的抓包命令
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：口令评估成功复原口令，或用握手包验证了口令正确
+- `low`：仅捕获到流量，未形成可验证结论

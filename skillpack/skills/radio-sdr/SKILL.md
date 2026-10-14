@@ -53,3 +53,46 @@ description: 授权 RF/SDR 信号研究：调制识别、GNU Radio/URH/Inspectru
 
 - [ ] 是否默认只收并记录法规边界？
 - [ ] Checklist？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 目标是 Wi-Fi（802.11） → 用 `../wifi-wireless/SKILL.md`
+- 目标是固件里的无线配置 → 用 `../firmware-pentest/SKILL.md`
+- 目标是蓝牙以外的普通网络协议 → 用 `../protocol-reverse/SKILL.md`
+- 前置条件：**默认只收不发**；任何发射（重放/干扰）须在屏蔽室或书面授权下进行
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 识别出具体协议，需要还原报文结构 | `../protocol-reverse/SKILL.md` |
+| 信号来自某设备，需要看其固件 | `../firmware-pentest/SKILL.md` |
+| 目标是 Wi-Fi 握手 | `../wifi-wireless/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- IQ 采样或解调结果有落盘路径与参数（中心频率/带宽/采样率）
+- 调制识别有依据（星座图/频谱特征），不是猜
+- 可重放性评估写明「是否需要发射」以及是否已获授权
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：解调出的比特流有 CRC/结构校验通过（不是噪声里挑出来的）
+- `low`：仅凭频谱形状猜测调制方式

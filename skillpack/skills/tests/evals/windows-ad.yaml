@@ -1,0 +1,23 @@
+skill: windows-ad
+positive:
+  - 域里现在只有普通域账号，能不能提权
+  - 帮我跑一下 BloodHound 看攻击路径
+  - Kerberoast 能不能拿到服务账号的票据
+  - AS-REP roasting 有戏吗
+  - AD CS 的 ESC1 到 ESC8 帮我评估一下
+  - NTLM relay 能不能中继到域控
+  - 用 impacket 做 secretsdump 拉哈希
+  - certipy 打一下证书服务器
+  - SMB 签名没开，能不能中继
+  - 域管的黄金票据怎么打出来
+negative:
+  - 还没有任何域内立足点，先用 nmap 做信息收集  # → pentest-tools
+  - 目标是 Linux 服务器上的内核提权  # → kernel-exploit
+  - 要打的是 Web SSO 的 SAML 联邦  # → identity-federation
+  - 多阶段从外网到域控的整体编排  # → attack-chain
+  - 拿到域管之后要绕过 EDR 做持久化  # → edr-bypass-re
+  - 登录框的 SQL 注入先看看  # → pentest-tools
+  - 数据库弱口令，从应用账号到 DBA  # → database-security
+  - 客户端的命名管道权限过宽，能提权吗  # → thick-client
+  - 云上那个 k8s 的 RBAC 权限过大  # → cloud-k8s
+  - 这台域控的内存 dump 要提取凭据做取证  # → digital-forensics

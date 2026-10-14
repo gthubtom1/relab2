@@ -1,0 +1,23 @@
+skill: identity-federation
+positive:
+  - 这套 SSO 是 SAML 的，断言能不能篡改
+  - 登录跳转的 redirect_uri 有没有校验
+  - OIDC 的 state 和 nonce 缺失会怎样
+  - IdP 和 SP 的元数据帮我看看
+  - 第三方登录的令牌能不能重放
+  - 单点登录跳来跳去，最后被顶号了，帮我查
+  - OAuth2 授权码模式 PKCE 没上有没有问题
+  - issuer 多租户混淆能不能越权
+  - 帮我看下 SAML Response 的签名校验
+  - 一次登录到处能逛，票据是怎么传的
+negative:
+  - 本地 JWT 校验，帮我试试弱密钥  # → api-security
+  - 域里 Kerberos 的票据能不能拿去冒充  # → windows-ad
+  - OAuth 客户端自己的实现有缺陷，上线前帮我审一遍代码  # → code-audit
+  - 短信验证码登录的 API 有没有越权  # → api-security
+  - 邮箱里的 OAuth 应用钓鱼怎么分析  # → email-security
+  - 容器里跑的服务用 OIDC 跟云上换凭据  # → cloud-k8s
+  - 客户端本地存了 SSO token 明文  # → thick-client
+  - 内网多阶段打到域控怎么编排  # → attack-chain
+  - 移动端 App 里的第三方登录 SDK 要逆一下  # → apk-reverse
+  - 登录服务的内存 dump 要做取证  # → digital-forensics

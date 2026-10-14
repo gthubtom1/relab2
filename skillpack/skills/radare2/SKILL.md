@@ -472,3 +472,78 @@ radare2-skills 项目（radareorg/radare2-skills）提供了更完整的生态�
 - [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `../TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 点名要 Hex-Rays 质量伪代码 / 要 GUI 反编译窗口 / 要类型系统 → `../ida-reverse/SKILL.md`（IDA 不可用时 `../ghidra-reverse/SKILL.md`）
+- 需要跨两种 IL（HLIL/MLIL/LLIL）做数据流、SSA 值流 → `../binary-ninja-reverse/SKILL.md`
+- `diec` 报 VMP/Themida，或 `iS` 见 rwx 节、入口只有壳跳板 → `../reverse-engineering/references/assault-entry.md`，不要 `aaa` 死磕壳的代码
+- IAT 修复失败（已记 `E-iat-repair-fail`）→ `../x64dbg-reverse/SKILL.md` 动态抓 API
+- 要寄存器值、断点、改写运行期内存 → `../x64dbg-reverse/SKILL.md`
+- 目标实为 .NET（无传统 IAT，`iz` 只有 ECMA 元数据字样）→ `../dotnet-reverse/SKILL.md`
+- 目标是 APK/DEX，要解 manifest / smali / 抓 APP 协议 → `../apk-reverse/SKILL.md`
+- 逻辑实际在浏览器 JS/WASM → `../js-reverse/SKILL.md`
+- 需要跨版本符号迁移、同一函数新版偏移 → `../binary-diff/SKILL.md`
+- 只是 CTF 起环境跑通要 flag → `../ctf-sandbox/SKILL.md`，别把工具卡当整个流程
+- 前置条件缺：`rabin2 -v` 回显不是 rabin2 版本行、命令挂住 → 不要用 rabin2，改用本卡「先验再用」列出的 `radare2 -q -c "iI"` 等价写法；仍失败再按 `../TOOLS.md` 装
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| `diec` 报 VMP/Themida；或 `rabin2 -S` 见 rwx 节、`iE`/`ii` 导入稀疏而 strings 是壳字样 | `../reverse-engineering/references/assault-entry.md` |
+| `rabin2 -i` 导入表为空或仅 LoadLibrary/GetProcAddress（动态加载嫌疑） | `../x64dbg-reverse/SKILL.md` 下 API 断点 |
+| ImportREC/Scylla 修 IAT 失败（记 `E-iat-repair-fail`） | `../x64dbg-reverse/SKILL.md` |
+| 需要 Hex-Rays 级可读性才能继续（r2 `pdf` 读不出逻辑） | `../ida-reverse/SKILL.md`，IDA 不可用 → `../ghidra-reverse/SKILL.md` |
+| 静态读数与目标行为矛盾（信号 3） | 以动态证据仲裁 → `../x64dbg-reverse/SKILL.md` |
+| `aaa` 后同一函数两次重命名仍解释不通（信号 4） | `../ops/analysis-decision-framework.md` R2/R43 |
+| 目标实为 .NET / APK / JS | `../dotnet-reverse/SKILL.md` / `../apk-reverse/SKILL.md` / `../js-reverse/SKILL.md` |
+| 两版本二进制找同一函数 | `radiff2`（本卡）不够 → `../binary-diff/SKILL.md` |
+
+## 定义完成
+
+本技能产出算"完成"的**外部可观测**条件（不许写形容词）：
+
+- 侦察产物落盘：`scripts/recon.ps1 -TargetPath sample.exe`（可加 `-RunAnalysis`）的 stdout 重定向到文件，文件含 imports/strings 段且非空
+- 导入/导出表入证：`rabin2 -i sample.exe`、`rabin2 -E sample.exe`（DLL/SYS 必须）输出各自写入 `E-imports` / `E-exports`，含复现命令
+- patch 产物：`r2 -w` 会话前后各一份 `rahash2 -a sha256 sample.exe`，diff 字节清单落盘；原文件已备份（备份文件存在）
+- 可运行最小命令（自验通道仍通）：
+  - `r2 -v` / `rabin2 -v` → 版本行（rabin2 必须回显自己的）
+  - `r2 -A -q -c "afl;iz;ii;q" sample.exe` → 非空输出
+  - `r2 -q -c "iI; iS; iz" sample.exe` 等价逃生路径可用
+- 功能对照一致：关键结论（如某函数是校验函数）至少有 imports 锚点 + `axt` 引用链两条证据；只有 strings 命中一行时标 `low`
+
+## 输出契约
+
+```
+FACT:       <观察，带来源（命令 / 文件:行 / Evidence ID）>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>  （状态见 ../ops/binary-model.md）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+本技能填写示例：
+
+```
+FACT:       rabin2 -I：x64 PE，入口 0x140001A20（E-001）；rabin2 -i 见
+            CreateFileA/WinHttpConnect + "http://license.check/"（E-imports）
+HYPOTHESIS: H-003 网络校验在 sym.main 附近，URL 字符串在 .rdata 被两处引用
+            confidence: medium，evidence_ids: [E-imports, E-002]
+QUESTION:   aaa 是否漏了 malloc/new 分配的调用点（需 IDA xref 复核）
+NEXT:       继续（先 afl~main；仍读不出换到 ida-reverse）
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：r2 静态结论与第二种独立来源一致（IDA/Ghidra 反编译伪代码，或 x64dbg 断点寄存器值 ≥3 轮同值）
+- `high`：`pdf` 反汇编 + `axt` 引用链 + imports 分类三者在同一函数上重合
+- `low`：仅有 `iz~` strings 命中（无引用链、无调用者），或 `.sdb` 告警期间产生的导入表（本卡已注明该告警可不阻塞，但那一段输出不得当完整导入表用）
+- `low`：`aaaa`/`aaa` 在样本上超时或部分完成，函数表不完整时给出的一切结构断言
+- `contextual`：`r2 -w` patch 后的库地址与补丁前不同，地址只对该副本有效
+

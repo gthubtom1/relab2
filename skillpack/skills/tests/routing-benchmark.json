@@ -4,7 +4,9 @@
     "runner": "skills/scripts/test-routing.ps1",
     "generated": "2026-08-02",
     "quickNote": "quick=true 的用例是每个路由的最小回归集（smoke 快速模式使用）",
-    "R50_added": "2026-10-10 01:51:14"
+    "R50_added": "2026-10-10 01:51:14",
+    "R53_R54_added": "2026-10-14",
+    "dev_domain_added": "2026-10-14"
   },
   "cases": [
     {
@@ -1031,6 +1033,116 @@
     {
       "hint": "emulator apk install adb connect",
       "expect": "R1",
+      "quick": false
+    },
+    {
+      "hint": "x64dbg attach to the process and set a hardware breakpoint to read registers",
+      "expect": "R53",
+      "quick": true
+    },
+    {
+      "hint": "附加 x64dbg 下断点看寄存器和调用栈",
+      "expect": "R53",
+      "quick": false
+    },
+    {
+      "hint": "cdb attach 上去单步跟踪改内存",
+      "expect": "R53",
+      "quick": false
+    },
+    {
+      "hint": "这个 exe 带 VMP 壳，脱壳失败，要做出能正常使用的成品",
+      "expect": "R54",
+      "quick": true
+    },
+    {
+      "hint": "逆向 换肤程序点我下载6.9版本.exe 做出能正常使用的成品",
+      "expect": "R54",
+      "quick": false
+    },
+    {
+      "hint": "程序启动就 0xC0000409 fastfail 自杀",
+      "expect": "R54",
+      "quick": false
+    },
+    {
+      "hint": "这个 exe 一挂调试器就退出",
+      "expect": "R54",
+      "quick": false
+    },
+    {
+      "hint": "帮我做个网站功能",
+      "expect": "R57",
+      "quick": false
+    },
+    {
+      "hint": "写个用户登录接口的功能",
+      "expect": "R57",
+      "quick": false
+    },
+    {
+      "hint": "修个bug，页面白屏了",
+      "expect": "R59",
+      "quick": false
+    },
+    {
+      "hint": "给我这个改动写点单元测试",
+      "expect": "R58",
+      "quick": false
+    },
+    {
+      "hint": "帮我审下这段代码能不能合",
+      "expect": "R61",
+      "quick": false
+    },
+    {
+      "hint": "先试试用 sqlite 还是 postgres",
+      "expect": "R63",
+      "quick": false
+    },
+    {
+      "hint": "更新一下 readme 和 changelog",
+      "expect": "R64",
+      "quick": false
+    },
+    {
+      "hint": "这功能从哪开始做",
+      "expect": "R56",
+      "quick": false
+    },
+    {
+      "hint": "需求太模糊了帮我理一下",
+      "expect": "R55",
+      "quick": false
+    },
+    {
+      "hint": "帮我把这个改动提个PR",
+      "expect": "R62",
+      "quick": false
+    },
+    {
+      "hint": "这个数据库是不是被脱库了",
+      "expect": "R35",
+      "quick": false
+    },
+    {
+      "hint": "代码里有没有 IDOR",
+      "expect": "R12",
+      "quick": false
+    },
+    {
+      "hint": "这个算不算做完",
+      "expect": "R60",
+      "quick": false
+    },
+    {
+      "hint": "怎么验证我改对了",
+      "expect": "R60",
+      "quick": false
+    },
+    {
+      "hint": "帮我确认一下这个改动是不是真的修好了",
+      "expect": "R60",
       "quick": false
     }
   ]

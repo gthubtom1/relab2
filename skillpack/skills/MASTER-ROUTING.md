@@ -108,6 +108,7 @@ python skills/case-review/scripts/review_case.py work/<case> --verify-hashes --s
 | **R21** | 协议 / Protobuf / PCAP 协议 | `protocol-reverse/` |
 | **R22** | Ghidra / 开源反编译 | `ghidra-reverse/` |
 | **R45** | Binary Ninja / Binja / HLIL / MLIL / Binary Ninja MCP | `binary-ninja-reverse/` |
+| **R54** | 受保护目标攻坚入口（加壳/反调试/自校验/「要成品」）→ 四问分流 | `reverse-engineering/references/assault-entry.md` |
 | **R6** | IDA / 反编译 / 反汇编深挖 | `ida-reverse/` |
 | **R7** | radare2 / r2 | `radare2/` |
 | **R8** | 固件 / binwalk / IoT / EMBA | `firmware-pentest/` |
@@ -119,6 +120,7 @@ python skills/case-review/scripts/review_case.py work/<case> --verify-hashes --s
 | **R24** | Windows / AD / Kerberos / AD CS | `windows-ad/` |
 | **R37** | 联邦身份 SAML/OIDC | `identity-federation/` |
 | **R23** | 云 / 容器 / K8s | `cloud-k8s/` |
+| **R63** | 一次性原型 / 技术选型 / 先试试 | `spike/` |
 | **R35** | 数据库安全 | `database-security/` |
 | **R25** | 取证 / 内存转储 / 时间线 | `digital-forensics/` |
 | **R44** | OSINT / 威胁情报 / 公开 X IOC 补充 | `threat-intelligence/` |
@@ -126,18 +128,21 @@ python skills/case-review/scripts/review_case.py work/<case> --verify-hashes --s
 | **R29** | Wi-Fi / 无线渗透 | `wifi-wireless/` |
 | **R38** | RF / SDR 研究 | `radio-sdr/` |
 | **R32** | 厚客户端安全 | `thick-client/` |
+| **R61** | 代码评审 / 审 diff / 能不能合 | `code-review/` |
 | **R26** | 代码审计 / SAST / Semgrep | `code-audit/` |
 | **R27** | 威胁狩猎 / 检测工程 / 蓝队 | `threat-hunting/` |
 | **R10** | 攻击链 / 红队 / 横向 / 完整渗透 | `attack-chain/` |
 | **R46** | Web 专项注入 / 请求走私 / XXE / SSTI / 原型污染等 | `community/hack-hub/` |
 | **R11** | Nmap / Nuclei / SQLMap / SRC / 渗透工具 | `pentest-tools/` |
 | **R12** | API / GraphQL / BOLA / JWT 攻击 | `api-security/` |
+| **R62** | 交付 PR / 提 PR / 合并 | `pr-ship/` |
 | **R13** | SBOM / Trivy / 供应链 | `supply-chain-security/` |
 | **R14** | LLM / Prompt 注入 / Agent 安全 | `llm-security/` |
 | **R15** | bindiff / 符号迁移 / PDB | `binary-diff/` |
 | **R19** | 浏览器/桌面自动化 | `browser-automation/` |
 | **R40** | Case / Evidence 图审查 | `case-review/` |
 | **R47** | CTF 社区入口 / 头脑风暴 / 题解体验 | `community/ctf-hub/` |
+| **R64** | 文档与 changelog 同步 | `docs-changelog/` |
 | **R20** | 报告 / writeup | `docs-generator/` |
 | **R39** | 图表 / Mermaid / Graphviz / PlantUML / 架构图 | `diagram-generator/` |
 | **R48** | 全栈交付 / 工作流编排 / 交付验收 | `community/delivery/` |
@@ -145,8 +150,14 @@ python skills/case-review/scripts/review_case.py work/<case> --verify-hashes --s
 | **R50** | 浏览器端 JS 协议逆向 → 纯 Python 采集器 | `web-protocol-reverse/` |
 | **R51** | 游戏客户端逆向 / 反作弊机制评估 | `game-reverse/` |
 | **R52** | Linux 内核漏洞 / 利用链 / 缓解绕过 | `kernel-exploit/` |
+| **R53** | x64dbg / 动态调试 / 断点 / 寄存器 / 调用栈 | `x64dbg-reverse/` |
+| **R55** | 需求澄清 / 验收标准 / 写 spec | `req-clarify/` |
+| **R56** | 设计切片 / 从哪开始 / walking skeleton | `design-slice/` |
+| **R57** | 实现功能 / 写功能 / 加接口 | `implement-feature/` |
+| **R58** | 写测试 / 单测 / 回归测试 | `write-tests/` |
+| **R59** | 修 bug / 报错 / 崩溃 / 复现 | `fix-bug/` |
+| **R60** | 验证做完了 / 验收 / 怎么确认 | `verify-done/` |
 | **R0** | 通用逆向 / 反调试 / OLLVM / 未知二进制 | `reverse-engineering/` |
-
 未命中强关键词 → PRIMARY=`R0`，并提示打开 `routing.md`（歧义附录，不是第二套路由器）。
 主框架 `low` / R0 时，用同一句话另跑 `python skills/scripts/community-route.py --hint "<同一句话>"`
 查社区侧（R46–R49 的明细只在这里可见）。

@@ -1,0 +1,23 @@
+skill: protocol-reverse
+positive:
+  - 有 PCAP，要把这个自定义协议的帧布局还原
+  - 未知 protobuf 怎么恢复字段
+  - 这个 TCP 流怎么拆字段
+  - gRPC 的包怎么解码
+  - Wireshark 里写个 dissector
+  - 把抓到的流量还原成状态机
+  - 这个私有协议一包扣一包，看不懂
+  - MQTT 的报文结构分析
+  - 分片和心跳的规则怎么还原
+  - WebSocket 帧的字段布局
+negative:
+  - 只还原 HTTP 参数签名，sign 在页面 JS 里  # → js-reverse
+  - 要做 browser-free 采集器和风控 bypass  # → web-protocol-reverse
+  - 只是 TLS 证书链和固定证书的问题，想用 burp 看看  # → pentest-tools
+  - 固件内协议栈深挖，要先解包和仿真这块嵌入式设备  # → firmware-pentest
+  - 目标是 apk 里的序列化函数  # → apk-reverse
+  - 目标是游戏客户端封包的通用规则  # → game-reverse
+  - 已有 PCAP 但需求是数字取证，谁在什么时候发了什么  # → digital-forensics
+  - 目标是 EDR 通信协议对抗，要绕 syscall 免杀  # → edr-bypass-re
+  - 要把 PCAP 里的 C2 地址整理成 IOC  # → threat-intelligence
+  - 目标是 so 里的算法，帧结构已知，要反编译逆算法  # → ida-reverse

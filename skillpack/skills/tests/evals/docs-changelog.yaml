@@ -1,0 +1,21 @@
+skill: docs-changelog
+
+positive:
+  - 改了接口，帮我同步一下 README
+  - 补个 changelog，写这次变更
+  - 文档跟代码对不上了，帮我更新
+  - 加上变更记录，写成用户能感知的那种
+  - 文档过时了，把描述已删功能的孤儿说明清掉
+  - 同步文档，我改了配置项
+  - 我改了构建命令，对应的开发者文档要更新
+  - 补注释，写清楚 why 而不是复述代码
+
+negative:
+  - 帮我把这次的逆向结论写成文档交出去    # → docs-generator
+  - 出个 CTF writeup 顺便补个 README 正文    # → docs-generator
+  - 帮我画个时序图说明这个流程    # → diagram-generator
+  - 审一下这个 case 包的证据链完整不完整    # → case-review
+  - 帮我审下这个 diff 能不能合    # → code-review
+  - 这段代码有没有注入，帮我审计    # → code-audit
+  - 发布链的 SBOM 跟文档对不上，帮我查依赖    # → supply-chain-security
+  - 帮我把这个功能实现出来，文档先不管    # → implement-feature

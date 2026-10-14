@@ -1,0 +1,23 @@
+skill: x64dbg-reverse
+positive:
+  - 挂上调试器进程就退出，怎么破
+  - 用 x64dbg 在这个校验点下断点
+  - 单步跟一下这段解密代码
+  - 想抓运行期解密后的明文
+  - 改内存把那个判断跳过去
+  - attach 到这个进程上看调用栈
+  - 硬件断点怎么下在内存访问上
+  - 反反调试插件怎么配
+  - dump 出来这个模块看内存里的代码
+  - 用 x64dbg MCP 让模型自己调
+negative:
+  - 只要静态读代码、看反编译出的伪代码，不想跑起来  # → ida-reverse
+  - 结论要靠第二个反编译器交叉验证 HLIL  # → binary-ninja-reverse
+  - 目标是 apk，要改 smali 和 manifest  # → apk-reverse
+  - 逻辑其实在浏览器里，要 hook 前端 JS 的 sign  # → js-reverse
+  - 目标实为 .NET 托管程序，dnSpy 就够  # → dotnet-reverse
+  - 需要同时改启动参数还要多种 hook，跨桌面端，改用 Frida  # → reverse-engineering
+  - 先要判定这是哪种壳、怎么绕过反调试的逆向方法论  # → reverse-engineering
+  - 只是要从命令行秒看 strings  # → radare2
+  - 这个是固件里的二进制，binwalk 解包后再说  # → firmware-pentest
+  - 旧版偏移全变了，要迁移旧的函数名  # → binary-diff

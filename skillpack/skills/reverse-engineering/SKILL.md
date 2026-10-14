@@ -102,11 +102,23 @@ r2pm -ci r2ghidra   # Native Ghidra decompiler for radare2
 
 ## When to Pivot
 
-- Heap / ROP / kernel exploit after the binary is understood → `pwn-chain/`
-- Deleted files / PCAP / disk artifacts → `digital-forensics/`
-- Web app with a small client helper → `js-reverse/`
-- Real malware / C2 / packing → `malware-analysis/`
-- Multi-type CTF contest packaging → `ctf-sandbox/` (sidecar orchestrator)
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向（分流判据来自 `references/assault-entry.md` 四问：Q0 任务类 / Q1 目标类型 / Q2 保护层 L0–L4 / Q3 成品形态）：
+
+| 触发证据 | 换到 |
+|---|---|
+| Q1 判定目标类型已定且不是本卡的通用疑问（.NET / APK / IPA / 固件 / JS / WASM / Go / Rust） | 对应域技能：`../dotnet-reverse/SKILL.md`、`../apk-reverse/`、`../mobile-reverse/`、`../firmware-pentest/`、`../js-reverse/`、`../macos-reverse/`、`../go-rust-reverse/` |
+| 目标实为 .NET 托管（CLR 头非零 / mscoree 导入 / `#~` metadata 流） | `../dotnet-reverse/SKILL.md` |
+| `diec` 报 VMP / Themida / Enigma，或反编译只见 dispatch loop（Q2 = L1 壳层） | `references/assault-entry.md` → `references/vmp-virtualization-analysis.md` / `references/vmp-devirtualization-toolchain.md` |
+| 该目标只需单个函数反编译与类型恢复，且要走 Ghidra / BN / r2 专项工具面 | `../ghidra-reverse/`、`../binary-ninja-reverse/`、`../radare2/`、`../ida-reverse/` |
+| 二进制已看懂，下一步是 Heap / ROP / kernel exploit | `../pwn-chain/SKILL.md` |
+| 已拿到受控执行，目标是 sign / token / cookie / challenge 的可重放采集器（Q3 = 可运行复刻） | `../web-protocol-reverse/SKILL.md` |
+| 目标是自定义 TCP/UDP 帧、protobuf/gRPC、PCAP 状态机 | `../protocol-reverse/SKILL.md` |
+| 判定为真实恶意样本（C2 / 持久化 / 反分析组合） | `../malware-analysis/SKILL.md` |
+| 任务变成规则化检测工程（Sigma / YARA / SIEM）而非分析单个样本 | `../threat-hunting/SKILL.md` |
+| Deleted files / PCAP / disk / memory artifacts | `../digital-forensics/` |
+| Web app with a small client helper | `../js-reverse/` |
+| 需要跨版本符号迁移 / 缺 PB 推导偏移 | `../binary-diff/SKILL.md` |
+| Multi-type CTF contest packaging | `../ctf-sandbox/`（sidecar orchestrator） |
 
 ## Problem-Solving Workflow
 > **本节定位：triage 内部动作（不再作为主路径）。**
@@ -241,3 +253,52 @@ Use [field-notes.md](field-notes.md) after the first round of triage when you kn
 - [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？
+
+---
+
+## When NOT to use（近邻负例）
+
+- Q0 判 A（任务是写新功能 / 修 bug / 重构 / 部署 / 写文档，代码是我方写的）→ 走既有路由与技能，`references/assault-entry.md` 本卡一行不必再读
+- Q0 判 C（源码在手，要读懂 / 改它 / 复刻）→ `../code-audit/`，不要用二进制手段硬啃
+- Q1 已判定 .NET 托管（CLR 头 / mscoree / metadata 流）→ `../dotnet-reverse/SKILL.md`
+- Q1 已判定目标是 APK / IPA（有明确格式签名）→ `../apk-reverse/` / `../mobile-reverse/`
+- Q1 已判定固件镜像（binwalk 出 squashfs/uImage）→ `../firmware-pentest/`（OWASP FSTM）
+- 目标是浏览器前端的 sign/token/JS 逻辑 → `../js-reverse/`；要脱离浏览器复现 → `../web-protocol-reverse/`
+- 目标是自定义协议帧 / protobuf / PCAP 状态机 → `../protocol-reverse/`
+- 需求只是 Ghidra 无头批处理 / BN HLIL / r2 CLI 细节，通用方法论已清楚 → `../ghidra-reverse/`、`../binary-ninja-reverse/`、`../radare2/`
+- 需求是修漏洞 / 审自己写的代码（不是分析不是我方写的程序）→ `../code-audit/`，本卡不适用
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向表已在上方 `## When to Pivot` 段按 `references/assault-entry.md` 四问（Q0 任务类 / Q1 目标类型 / Q2 保护层 L0–L4 / Q3 成品形态）展开；补充两条域外出口：
+
+| 触发证据 | 换到 |
+|---|---|
+| 任务进入 OT/ICS 或无线/射频侧（PLC 协议、工控报文、SDR 频段） | `../ot-ics/`、`../radio-sdr/` |
+| Q0 判 A 或 C 被漏判，实际在正常开发流程里 | 回到 `../ops/analysis-decision-framework.md` R2 重规划，本卡立即退出 |
+
+## 定义完成
+
+本技能产出算"完成"的**外部可观测**条件（不许写形容词）：
+
+- `<case目录>/assault.md` 存在，且 §0 状态行可回答"现在到哪了、凭什么"；`## hypotheses` 每条 H-{nnn} 有 status 与 evidence_ids
+- `## diff_baseline`（Q3 = 复刻/补丁形态时）逐行有「原程序观察 → 新实现」对照，不是贴一堆结论
+- 三形态成品之一可执行：源码/可构建项目有构建命令；可运行复刻有最小运行命令；补丁原程序有 patch 前后文件与 diff
+- L2 判据（Q2）可复述：`r2 -qc 'ii'` 导入项数量与 `iS` 节区权限的实际输出已记录（过 L1 时）；反编译控制流可读
+- 动态判据跑过 ≥3 轮，或显式写"受限 + 具体原因"（如 anti-debug 未能绕过，记 E-negative-evidence）
+
+## 输出契约
+
+```
+FACT:       <观察，带来源（命令 / 文件:行 / Evidence ID）>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>  （状态见 ../ops/binary-model.md）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：脱壳后 `r2 -qc 'ii'` 导入项从个位数涨到几十上百（过 L1），**且** `r2 -qc 'iS'` 无 rwx 节；再配一条动态证据（ida/x64dbg 断点命中真实代码，≥3 轮）
+- `low`：仅 `diec` 输出壳名、未做节区/导入交叉验证；或仅凭单一反编译输出（反编译器会把 `__ftol()` 当返回值而藏起真实输入，属已知失真源）

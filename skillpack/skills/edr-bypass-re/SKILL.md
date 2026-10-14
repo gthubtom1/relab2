@@ -230,3 +230,46 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "&lt;SKILL_ROOT&gt;\skills\s
 - [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `../TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 只是要分析样本行为，不涉及交付躲避 → 用 `../malware-analysis/SKILL.md`
+- 目标是 Linux 主机 → 用 `../kernel-exploit/SKILL.md`
+- 目标根本没有 EDR/AV 驻守 → 用 `../pentest-tools/SKILL.md`
+- 前置条件：**必须是授权红队演练环境**；本技能只在受控环境交付
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 载荷落地后被静态查杀 | `../reverse-engineering/SKILL.md` |
+| 需要分析 EDR 自身的用户态 hook | `../x64dbg-reverse/SKILL.md` |
+| 发现内存扫描命中 | `../malware-analysis/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 载荷在目标环境 **≥3 轮**投放成功（不是一次偶然）
+- 记录具体绕过项（unhook/直接系统调用/AMSI/ETW）与对应证据
+- 检测侧对照：给出该载荷的检测规则（Sigma/YARA）并验证可触发
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：多轮投放稳定且检测侧规则能命中（攻防都有证据）
+- `low`：单轮成功，未确认是否为白名单放行

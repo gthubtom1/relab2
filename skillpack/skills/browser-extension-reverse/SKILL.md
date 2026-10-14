@@ -75,3 +75,54 @@ description: 浏览器扩展逆向：crx/xpi 解包、manifest 权限、service_
 - [ ] 是否列出权限面与入口脚本？
 - [ ] 是否还原关键数据流？
 - [ ] Checklist？
+---
+
+## When NOT to use（近邻负例）
+
+- 目标是普通网页 JS（无 crx/xpi、无 manifest）→ `../js-reverse/`
+- 目标是恶意网站本身（挂马、钓鱼页）而非浏览器扩展 → `../email-security/`（若来自邮件）、`../web-protocol-reverse/SKILL.md`
+- APK/Electron 桌面端才是目标（不是浏览器扩展运行时）→ `../apk-reverse/`、`../reverse-engineering/languages-platforms.md`
+- 需要的是 UI 自动化装/点扩展 → `../browser-automation/`
+- 目标是已入侵环境的取证（扩展只是其中一个 artifact）→ `../digital-forensics/`
+- 目标是签名/加密算法在扩展外部的服务端实现 → `../web-protocol-reverse/SKILL.md`
+- 目标是 Service Worker 之外的原生二进制（helper exe/node 可执行）→ `../reverse-engineering/`，本卡只分析解压出的脚本与 manifest
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 解压出重度混淆 JS（webpack bundle、JSVMP） | `../js-reverse/`（`references/ast-deobfuscation.md` 同类方法） |
+| 扩展逻辑走向 native（自带 node binary、helper 进程） | `../reverse-engineering/references/assault-entry.md` |
+| C2/数据外传面成主任务（域名/IP 落点、投递链） | `../malware-analysis/SKILL.md` + `../protocol-reverse/SKILL.md`（私有帧时） |
+| 供应链投毒 / 商店上架的恶意版本 | `../supply-chain-security/` |
+| 规则化检测（扩展家族 YARA） | `../threat-hunting/` |
+| 浏览器 CDP/jshookmcp 深度调试是唯一路径 | `../js-reverse/`（该卡持有 MCP 执行面） |
+
+## 定义完成
+
+本技能产出算"完成"的**外部可观测**条件（不许写形容词）：
+
+- 解压产物路径落盘（`manifest.json`、background/service_worker 入口、content_scripts 列表），`jq` 或等价命令输出附在报告
+- 权限面清单逐条列出且每条给一句判断依据：`permissions` + `host_permissions` + `optional_permissions` 中危险项（`<all_urls>`、`webRequest`、`debugger`、`nativeMessaging`、`cookies`、`tabs`）各命中哪个脚本
+- 数据流还原：至少一条 `source → 处理 → 出口` 链路（如表单输入 → content script → background fetch），每跳有文件:行 或运行时捕获
+- IOC 清单（域名/URL/存储 key/消息 type）每条带 Evidence ID 与来源（静态字符串或 DevTools/Frida 捕获）
+- 恶意结论有运行时或行为证据；仅静态可疑项显式标注 `推断`，不许写成"已确认窃取"
+- 若需 DevTools 附加 service worker：附一次实际捕获记录或写"运行时未验证"
+
+## 输出契约
+
+```
+FACT:       <观察，带来源（命令 / 文件:行 / Evidence ID）>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>  （状态见 ../ops/binary-model.md）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：静态（manifest 权限 + 脚本代码路径）与运行时（DevTools 网络 / storage 捕获）双证据；或同一 IOC 在两种独立来源（代码常量 + 实际请求）各出现一次且一致
+- `low`：仅凭权限列表或变量名推断外传（`webRequest` 存在 ≠ 在偷数据）；或只看到一个 base64 字符串就判定 C2

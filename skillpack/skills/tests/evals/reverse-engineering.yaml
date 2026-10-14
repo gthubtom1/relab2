@@ -1,0 +1,23 @@
+skill: reverse-engineering
+positive:
+  - 拿到一个样本完全不知道怎么下手，先帮我分诊一下
+  - 这程序加了壳，怎么判断是哪种保护器
+  - 调试器一挂上去进程就退了，反调试怎么绕
+  - 看不出这段代码在算什么，像是自己定义的一套指令
+  - OLLVM 控制流平坦化混淆过的 so，怎么还原
+  - 样本行为很怪，想先做一遍动态跟踪
+  - 用 unicorn 模拟执行那一段解密代码
+  - 有反调试还有反虚拟机，整体分析思路该是什么
+  - 这个加固程序静态看不出东西，该从哪使劲
+  - 帮我理一条从分诊到静态到动态的完整逆向路子
+negative:
+  - 这个 exe 的注册码算法在哪，帮我用 IDA 反编译看看校验函数  # → ida-reverse（目标类型已明确）
+  - 没买正版也不想装盗版，用免费的 ghidra 把这个样本过一遍  # → ghidra-reverse
+  - 就一个 dll，想用命令行秒看 strings 和导入表  # → radare2
+  - 想用 Binary Ninja 的 HLIL 跟一下这个函数的调用链  # → binary-ninja-reverse
+  - 这是 .NET 写的程序，dnSpy 打开就行  # → dotnet-reverse
+  - 拿到的是个 apk，要先解包看 manifest 和 smali  # → apk-reverse
+  - 路由器固件 binwalk 解出来是 squashfs，怎么往下走  # → firmware-pentest
+  - 网页里的 sign 参数怎么算出来的，要追到那个函数  # → js-reverse
+  - 已经有 PCAP 了，要把这个自定义协议的帧布局还原出来  # → protocol-reverse
+  - 这个样本是不是病毒，要提取 IOC 出 YARA 规则  # → malware-analysis

@@ -210,3 +210,54 @@ File → Save Module → 替换原文件
 - [ ] 关键逻辑是否用 IL 视图验证（而非只看 C# 伪代码）？
 - [ ] 产物（clean 样本 / 配置 / patch diff）是否落盘且可复现？
 - [ ] 是否提供了下一步菜单或报告出口？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 目标是纯 native PE/ELF（无 CLR 头、无 metadata 流）→ `../reverse-engineering/references/assault-entry.md`、`../ida-reverse/`、`../radare2/`
+- IL2CPP 编译后的 Unity 游戏（`global-metadata.dat` + `libil2cpp.so`，已是 native）→ `../game-reverse/` + `../field-journal/seed-014_unity-il2cpp-reverse.md`，dnSpy 打不开它
+- NativeAOT 产物（无 CLR 头，但有 `System.Private.CoreLib` 字符串）→ `../reverse-engineering/`，本 skill 只做识别提示
+- 目标是 APK 里的 Xamarin/MAUI 托管 dll → 先 `../apk-reverse/SKILL.md` 取包，再回到本 skill 看 C# 层
+- 目标只是 APK 的 Java/Kotlin 层（非托管）→ `../apk-reverse/SKILL.md` / `../mobile-reverse/SKILL.md`
+- 要做跨版本符号迁移 / 偏移推导 → `../binary-diff/SKILL.md`
+- 要画调用链/攻击路径图 → `../diagram-generator/`
+- de4dot 已成功但仍读不懂控制流（混淆残留、状态机型）→ 仍在本 skill，读 `references/common-workflow.md`，不要换 IDA
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| Phase 1 无 CLR 头（`Data Directory[14]` 为 0、无 mscoree 导入） | `../ida-reverse/` / `../radare2/` / `../reverse-engineering/references/assault-entry.md` |
+| 判定 IL2CPP 或 NativeAOT（native） | `../reverse-engineering/` + `../field-journal/seed-014_unity-il2cpp-reverse.md` |
+| 需要 dnSpy IL 检查但 dnSpy.Console `--md` 持续报错、且 `ilspycmd` 输出不完整 | `../ghidra-reverse/`（CLR 元数据可反编译）交叉验证；仍失败则记 E-tool-gap 停止静态 |
+| 目标实为恶意 .NET 样本，需求是 C2/持久化/IOC/YARA | `../malware-analysis/SKILL.md` |
+| 目标需跨版本符号迁移 | `../binary-diff/SKILL.md` |
+
+## 定义完成
+
+本技能产出算"完成"的**外部可观测**条件（不许写形容词）：
+
+- `target-clean.exe`（de4dot 产物路径）存在，且 `diec target-clean.exe` 的混淆器字段不再是原混淆器名（或记录 de4dot 报 `unknown` 的具体输出）
+- `ilspycmd -p -o ./decompiled_src/` 产出目录可用 `grep` 定位到目标方法；`dnSpy.Console.exe target-clean.exe --il --md 0x0600XXXX` 有完整 IL 输出
+- patch 类成品：`ldc.i4.0 → ldc.i4.1` 等改动的 IL 前后字节已落盘，`Save Module` 后的文件路径 + 一条运行命令（`dotnet target-patched.dll` 或 `target-patched.exe`）实际执行成功
+- 关键判断在 **IL 视图** 下核对过（不是只看 C# 伪码），IL 片段贴进报告
+- 若C# 重编译路径被选为成品：项目文件 + `dotnet build` 退出码 0，并说明为何不用 IL patch
+
+## 输出契约
+
+```
+FACT:       <观察，带来源（命令 / 文件:行 / Evidence ID）>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>  （状态见 ../ops/binary-model.md）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：**IL 视图**与**运行时值**双证据 —— IL 里看到的分支字节，与 dnSpyEx 调试器命中断点时读到的对象/字符串值一致（≥2 处独立锚点）
+- `low`：仅凭 C# 反编译伪码下结论（已知失真：async/await、yield、编译器生成状态机在 C# 视图里被改写）；或 de4dot 未跑就先下字符串结论

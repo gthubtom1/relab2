@@ -1,0 +1,21 @@
+skill: verify-done
+
+positive:
+  - 怎么确认这事真的改好了
+  - 帮我跑一遍验证，看看做完了没有
+  - 这个改动算不算做完，给我个 pass/fail
+  - 需求逐条核对一下，别漏了没做的那条
+  - 有没有一个能自己跑、返回 pass/fail 的 check
+  - 帮我确认修复对不对，要证据不要结论
+  - 收工前跑一下验收，把退出码贴出来
+  - 怎么验证这个功能端到端没问题
+
+negative:
+  - 帮我写这个测试，别管验收，测行为不测实现    # → write-tests
+  - 帮我审下这段代码质量，能不能合    # → code-review
+  - 帮我审这段代码有没有安全问题    # → code-audit
+  - 这个已知 bug 的根因帮我一并修了    # → fix-bug
+  - 把验收结论沉淀成一份正式交付文档    # → docs-generator
+  - 这个验证必须跑真实浏览器，帮我自动化    # → browser-automation
+  - 验证要跑在 k8s 集群里才算数    # → cloud-k8s
+  - 先别谈验收，帮我把这个功能实现出来    # → implement-feature

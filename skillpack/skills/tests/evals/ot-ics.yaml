@@ -1,0 +1,23 @@
+skill: ot-ics
+positive:
+  - 帮我评估这个工控环境，先做被动识别
+  - Purdue 分层和跨区通道怎么画
+  - Modbus 协议暴露面看下
+  - 这个 PLC 能不能直连，风险多大
+  - 工程师站和 HMI 的暴露面
+  - 镜像流量解析一下 S7 协议
+  - DNP3 设备帮我识别一下
+  - 办公网跟生产网直连了，风险多大
+  - 组态网里有哪些设备
+  - 帮我做一份只读的工控资产清单
+negative:
+  - 目标是普通办公网和 IT 系统，做端口扫描  # → pentest-tools
+  - 目标 IoT 消费设备的固件，用 binwalk 解一下  # → firmware-pentest
+  - 工控软件的桌面客户端要测信任边界  # → thick-client
+  - 要被动嗅探工业协议流量，用 wireshark 还原  # → protocol-reverse
+  - PLC 固件内部逻辑要看，用 binwalk 解镜像  # → firmware-pentest
+  - 工程师站是 Windows，域内怎么提权  # → windows-ad
+  - 车间的无线摄像头 Wi-Fi 要打  # → wifi-wireless
+  - 组态软件的源码做静态分析  # → code-audit
+  - 生产网主机被入侵，用内存 dump 做取证时间线  # → digital-forensics
+  - 工控协议里的自定义二进制格式要 reverse  # → protocol-reverse

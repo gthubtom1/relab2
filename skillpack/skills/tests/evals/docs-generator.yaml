@@ -1,0 +1,22 @@
+skill: docs-generator
+
+positive:
+  - 帮我写份渗透测试报告
+  - 出个 CTF writeup
+  - 帮我补个 README
+  - 把这个逆向结论整理成文档落到项目里
+  - 写一份给后人看的接口和架构文档
+  - 把整个过程整理成报告，以后能复用
+  - 出个正式的报告，要含 Evidence 和 Finding
+  - 把这次分析整理成文档交付
+
+negative:
+  - 帮我画个流程图，别写文字    # → diagram-generator
+  - 审一下这个 case 包完不完整    # → case-review
+  - 更新一下 changelog 就行，不用写整篇报告    # → docs-changelog
+  - 文档跟代码不一致，帮我同步一下接口说明    # → docs-changelog
+  - 帮我审这段代码有没有注入，不用写文档    # → code-audit
+  - 帮我把这个接口实现出来    # → implement-feature
+  - 改动的说明文档一直没补，帮我把这个提成 PR    # → pr-ship
+  - 验证这事到底做完了没，先别写报告    # → verify-done
+  - 报告里要的那张架构图先帮我画出来    # → diagram-generator

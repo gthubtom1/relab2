@@ -188,3 +188,46 @@ cosign verify --key cosign.pub myimage:tag
 ### `references/` — 根目录
 
 
+
+---
+
+## When NOT to use（近邻负例）
+
+- 要审的是自家业务源码逻辑 → 用 `../code-audit/SKILL.md`
+- 要打的是运行时集群/容器 → 用 `../cloud-k8s/SKILL.md`
+- 要逆向的是单个二进制样本 → 用 `../reverse-engineering/SKILL.md`
+- 前置条件：**上游是第三方包** → 不修改上游，只做本地缓解与隔离
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 发现可执行依赖（postinstall 等） | `../malware-analysis/SKILL.md` |
+| 发现构建产物与源码不一致 | `../binary-diff/SKILL.md` |
+| 发现 CI 凭据可窃取 | `../attack-chain/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- SBOM 落盘（含版本与直接/传递依赖标记）
+- 每条 CVE 有可达性判定（不只列版本）
+- CI 审计的每条发现对应到 workflow 文件的具体行
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：可达性结论有实际调用链证据（源码或反编译）
+- `low`：仅按版本号匹配 CVE 未判可达性

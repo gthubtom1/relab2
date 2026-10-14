@@ -66,3 +66,46 @@ description: CTF/AWD 靶场入口：case-init 门禁 + sidecar orchestrator 选�
 
 - `references/workflow/24h-loop-orchestration.md`
 
+
+---
+
+## When NOT to use（近邻负例）
+
+- 目标是真实生产系统/真实客户资产 → 用 `../attack-chain/SKILL.md`
+- 任务是长期项目而非单次解题 → 用 `../docs-generator/SKILL.md`
+- 只是要审一段代码 → 用 `../code-audit/SKILL.md`
+- 前置条件：比赛/靶场环境；真实目标必须走 `../ops/scope-contract.md` 授权门
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 题目归类为 pwn | `../pwn-chain/SKILL.md` |
+| 题目归类为逆向 | `../reverse-engineering/SKILL.md` |
+| 题目要求写 writeup 交付 | `../docs-generator/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- flag/预期解 落盘；解题步骤记录到 `timeline`
+- 每题的技能选择在 route-scope 里有记录
+- writeup 落盘（若需要交付）
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：flag 已取得并有原始输出证据
+- `low`：仅推断出解法但未实际跑通

@@ -1,0 +1,23 @@
+skill: code-audit
+positive:
+  - 帮我看下这段代码有没有 SQL 注入
+  - 这个仓库的鉴权逻辑过一遍，看有没有越权
+  - PR 合进去之前用 semgrep 跑一遍
+  - 白盒审计一下这个服务的注入点
+  - 这段代码硬编码了密钥和数据库密码，算不算问题
+  - 用 CodeQL 扫一遍这个项目找危险 API
+  - 多租户这块隔离没做好，帮我从源码上确认
+  - 老项目的源码都在，帮我挑挑安全毛病
+  - 用 gosec 跑一下这个 Go 服务的 SAST
+  - 这个 diff 里鉴权缺失了吗，合并之前审一遍
+negative:
+  - 这个 exe 没有源码，直接逆向看校验逻辑  # → ida-reverse
+  - 帮我分析下这个 exe 样本运行时的网络和文件行为  # → malware-analysis
+  - 审一下第三方依赖和构建流水线有没有爆雷组件  # → supply-chain-security
+  - 这个线上 API 的越权直接打环境验证  # → api-security
+  - 这套 SSO 是 OIDC 的，帮我测一下 redirect_uri  # → identity-federation
+  - 云上这个 k8s 集群的 IAM 权限配得对不对  # → cloud-k8s
+  - 这个 Electron 客户端本地存了明文凭据  # → thick-client
+  - 帮我审下这个 PR 的代码风格和可维护性  # → code-review
+  - 先跑个原型验证一下这个方案行不行  # → spike
+  - 这个安卓 app 反编译出来的逻辑帮我看看  # → apk-reverse

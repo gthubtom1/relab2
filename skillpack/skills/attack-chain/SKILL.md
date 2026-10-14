@@ -685,3 +685,46 @@ touch -t 202301010000 /path/to/file
 ### `references/` — 根目录
 
 
+
+---
+
+## When NOT to use（近邻负例）
+
+- 只有一个孤立漏洞点，还没拿到任何立足点 → 用 `../pentest-tools/SKILL.md`
+- 已拿到域内凭据，只需域内提权与横向 → 用 `../windows-ad/SKILL.md`
+- 目标只在云上（容器/K8s/元数据） → 用 `../cloud-k8s/SKILL.md`
+- 前置条件：**未取得书面授权与 ROE** → 不开打；`ops/scope-contract.md` 是硬门
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 拿到初始 shell，要枚举本机与域 | `../windows-ad/SKILL.md` |
+| 拿到域控，要找数据出口与持久化评估 | `../edr-bypass-re/SKILL.md` |
+| 发现云凭据，要评估容器逃逸 | `../cloud-k8s/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- `Path` 每条 step 关联 Evidence，终点 Finding 若声明「已拿权限」必须有 validated 证据
+- 攻击路径图（Mermaid）落盘，标出已证实/未证实节点
+- `review_case.py --verify-hashes --strict` PASS
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：整条链每一跳都有独立的成功证据（不是从终点反推）
+- `low`：链中某跳依赖未验证的推断

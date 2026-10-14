@@ -1,0 +1,23 @@
+skill: js-reverse
+positive:
+  - 还原这个页面的 sign 怎么算
+  - 前端加密参数怎么扣代码
+  - 追一下这个 XHR 的请求参数在哪生成
+  - webpack 打包的 JS 怎么还原
+  - 本地补 Node 环境跑这个加密函数
+  - 用 CDP 采样这个加密函数的入参
+  - 这个风控字段是怎么拼出来的
+  - 登录密码在前端怎么加密的
+  - 混淆过的 JS 怎么解开看
+  - Hook 一下 CryptoJS 看它的调用
+negative:
+  - 签名逻辑在 so 文件里，要用 IDA 反编译  # → ida-reverse
+  - 这是 apk 里的 JS 桥和 WebView  # → apk-reverse
+  - 任务是要 browser-free 的可重放采集器  # → web-protocol-reverse
+  - 目标是自定义二进制协议和 protobuf 帧  # → protocol-reverse
+  - 目标是浏览器扩展 crx，要看 manifest 权限  # → browser-extension-reverse
+  - 只要用 playwright 做 UI 自动化点选填报  # → browser-automation
+  - 目标是 iOS App 里的加密和抓包  # → mobile-reverse
+  - 这是游戏客户端的封包  # → game-reverse
+  - 只要抓包存 HAR 做取证  # → digital-forensics
+  - 目标是 Android 里的 jsvmp 字节码解释器  # → web-protocol-reverse

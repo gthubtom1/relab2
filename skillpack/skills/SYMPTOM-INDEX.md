@@ -213,3 +213,36 @@ _173 row(s) below the header. Every row's target exists as `skills/<dir>/SKILL.m
 | 分页在后面几页换了接口 | `web-protocol-reverse/references/observe/pagination-route-pivot-playbook.md` |
 | 挑战/风控请求看不懂 | `web-protocol-reverse/references/state/challenge-artifact-harvest-playbook.md` |
 | 不知道该用哪个工具 | `web-protocol-reverse/references/triage/tool-playbook.md` |
+
+## 受保护目标 · 启动方式与私有区（2026-10-14 补）
+
+> 来源：2026-10-13 一次真实受保护目标攻坚（用整夜换来的）。这三条此前零覆盖，
+> 而它们是那次失败的**头号杀手**。技术细节见 `reverse-engineering/references/anti-debug-bypass.md` §9、
+> `unpack-and-memory-dump.md` §6、`license-keygen/license-keygen-06-cloud-license-hook.md` §6。
+
+| 症状 | 先看 |
+|------|------|
+| 「这个程序只有双击能跑，一用命令行/启动器拉起就闪退」 | `reverse-engineering/references/anti-debug-bypass.md` §9（绕的是**时机**不是检查：先双击起来再 attach） |
+| 「挂上调试器它就退出，普通手段跟不进去」 | 同上 §9 + §4（先判断是不是启动方式检查，再处理调试器检测——两件事分开治） |
+| 「用 IFEO 挂调试器反而更容易被杀」 | 同上 §9（IFEO 把调试器插在命令行最前，父进程变成调试器 → 正好触发父进程检查） |
+| 「钩子 DLL 能注进去，但一设硬件断点进程就没了」 | `unpack-and-memory-dump.md` §6（它检查自己的调试寄存器 DR0–DR7） |
+| 「主模块看着不像加壳，但真正干活的代码在文件里找不到」 | 同上 §6（判据：`MEM_COMMIT` + `PAGE_EXECUTE_*` + 地址在 PE 镜像**之外** = 运行期生成的代码） |
+| 「反编译出来一堆 `0x1BAD8xxxxx`，不属于任何模块」 | 同上 §6（保护器运行期私有区；「脱壳」目标要降级为「理解它在做什么」） |
+| 「输入任意字符串抓包零外连，是不是纯本地校验？」 | `license-keygen/license-keygen-06-cloud-license-hook.md` §6（**错**：格式关先拦住了，服务端分支没跑过；零外连不能证明纯本地） |
+| 「没有有效卡密，怎么绕过云端授权」 | 同上 §6（四步：thick/thin → 本地/服务端 → patch/skip → 判「成本不可接受」停止） |
+| 「这个 exe 带壳脱不掉，但我要的是能用的成品」 | `reverse-engineering/references/assault-entry.md`（四问分流 Q0–Q3） |
+
+## 日常开发（2026-10-14 新增域）
+
+| 症状 | 先看 |
+|------|------|
+| 「需求太模糊了，我不知道要做什么」 | `req-clarify/SKILL.md`（收敛成可判定的验收标准；信息不足先问不猜） |
+| 「这功能从哪开始做 / 先做哪一块」 | `design-slice/SKILL.md`（端到端最薄切片，先跑通一条链路） |
+| 「帮我加个功能 / 写个接口」 | `implement-feature/SKILL.md`（小步实现，复用既有 pattern） |
+| 「给我这个改动写点测试」 | `write-tests/SKILL.md`（测行为不测实现；**不强制覆盖率**） |
+| 「修个 bug / 页面白屏了 / 跑不起来」 | `fix-bug/SKILL.md`（先复现再修，修根因不压症状） |
+| 「怎么算做完了 / 怎么验证」 | `verify-done/SKILL.md`（**给 agent 一个它能自己跑的 check**，否则「看起来做完了」是唯一信号） |
+| 「审下这段代码能不能合」 | `code-review/SKILL.md`（Google CR 标准；**与「有没有注入」区分**：那是 `code-audit`） |
+| 「把这个改动提个 PR」 | `pr-ship/SKILL.md`（最小可审 + 自测证据；**不要提交你没亲自审过的 agent 代码**） |
+| 「先试试 A 还是 B / 做个原型」 | `spike/SKILL.md`（产出是 go/no-go 判断，代码不合并） |
+| 「更新一下 readme 和 changelog」 | `docs-changelog/SKILL.md`（**与「写渗透报告」区分**：那是 `docs-generator`） |

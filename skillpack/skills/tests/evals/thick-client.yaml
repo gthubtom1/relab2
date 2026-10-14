@@ -1,0 +1,23 @@
+skill: thick-client
+positive:
+  - 这个 Electron 客户端本地存的东西有没有明文凭据
+  - 桌面客户端我装好了，想看看信任边界在哪
+  - WinForms 程序里的加密逻辑能不能绕过
+  - 这个客户端本地有个 sqlite，聊天记录没加密能直接翻
+  - 自动更新不校验签名，能不能劫持
+  - 厚客户端的 IPC 和命名管道权限是不是过宽
+  - 客户端跟服务器说了啥，抓一下对比本地行为
+  - Qt 客户端本地配置里硬编码了密钥
+  - 这个桌面软件的 DLL 能不能劫持
+  - 客户端更新器能不能降级到旧版本
+negative:
+  - 目标是纯 Web 应用，帮我测接口越权  # → api-security
+  - 这个是安卓 App，帮我脱壳看 smali  # → apk-reverse
+  - Electron 渲染进程里的 JS 逻辑，要还原签名算法  # → js-reverse
+  - 服务端更新接口的鉴权帮我做个越权验证  # → api-security
+  - 这个客户端是 .NET 的，反编译出来全是乱码  # → dotnet-reverse
+  - SMB 命名管道那块能不能拿来 NTLM relay 提权  # → windows-ad
+  - 更新包签名验证被绕过，属于供应链交付问题  # → supply-chain-security
+  - 帮我反编译这个 exe 看校验函数  # → ida-reverse
+  - 这个客户端在 Mac 上，Mach-O 的反向分析怎么做  # → macos-reverse
+  - 这个客户端里嵌了个内核驱动，要分析它的漏洞  # → kernel-exploit

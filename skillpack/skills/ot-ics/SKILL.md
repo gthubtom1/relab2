@@ -95,3 +95,46 @@ MUST NOT 在未明确允许时：
 - [ ] 是否避免对控制回路写操作（除非明确允许）？
 - [ ] Finding 是否含物理/过程影响说明？
 - [ ] Checklist / journal？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 目标是 IT 网络/办公网 → 用 `../pentest-tools/SKILL.md`
+- 目标是 IoT 消费设备固件 → 用 `../firmware-pentest/SKILL.md`
+- 目标只是工控软件的桌面客户端 → 用 `../thick-client/SKILL.md`
+- 前置条件（硬性）：**写寄存器/下装默认禁止**；任何可能影响生产物理过程的动作必须先取得书面许可
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 需要看 PLC 固件内部逻辑 | `../firmware-pentest/SKILL.md` |
+| 发现工程站 Windows 主机可打 | `../windows-ad/SKILL.md` |
+| 需要被动嗅探工业协议流量 | `../protocol-reverse/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 被动识别结果落盘（协议 → 设备 → 点位清单），全程无写操作记录
+- Purdue 分层图落盘，标出已观测到的跨层通信
+- 任何主动测试都有授权记录 + 影响评估（会不会动到物理过程）
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：协议/设备识别有被动抓包多次佐证，且未对过程产生任何扰动
+- `low`：仅从端口开放推断是某 PLC 型号

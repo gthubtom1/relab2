@@ -3,16 +3,27 @@
 > **SSoT role**: Decision-quality / evidence-sufficiency / agent-bias cookbook for reverse-skill agents.
 > **Not** a second master analysis workflow. Obey `../reverse-engineering/references/re-agent-workflow.md`, feasibility gate (#73), IAT iron rule (#72), A-T / U-AV cookbooks, and `evidence-finding-path.md` first.
 > Rule IDs **R1-R51** keep the reporter numbering (**no R15**; includes **R50/R51**). Do not renumber.
-> **Namespace:** these are **ADF-*** overlay IDs. They are **not** `routing.json` PRIMARY ids (R1=APK, R6=IDA, …). Say "ADF-R1" when speaking. Load this file at Synthesis / stuck-loop only.
+> **Namespace:** these are **ADF-*** overlay IDs. They are **not** `routing.json` PRIMARY ids (R1=APK, R6=IDA, …). Say "ADF-R1" when speaking.
+>
+> **加载时机（2026-10-14 提主链）**：本文件**不再**是"Synthesis / stuck-loop only"。
+> 换阶段前、换技能前、收工前 **MUST** 查 R2 / R31 / R43（见 §0 表）。
+> 原因：判据卡若不在主链上，"按证据改路线"就只是口号 —— 节点上没有任何机制要求模型查它。
 
 ## 0. How to use
 
 | When | Action |
 |------|--------|
+| **换阶段前**（进下一阶段/收尾） | **MUST** R2, R31, R43 |
+| **换技能前**（命中 skill-pivot-contract 任一信号） | **MUST** R2, R31, R43 |
 | Finding promotion / Synthesis | **P0** (R4*, R1, R2, R41) |
 | Stage change or stuck loop | R2, R31, R43 |
 | Multi-module / anti-analysis | R50, R51 -> anti-analysis + A-T |
 | Already covered by ops/CI/skills | **P2** pointer only |
+
+**这三条的判据含义**（不是顺序，是"换之前必须回答"）：
+- **R2** 假设驱动阶段退出：陈述当前假设，**continue / switch / stop** 三选一，不许沉默跳过
+- **R31** 阶段偏执自检：是否因为"这个环境用熟了"而拒绝切换（Votipka 实测此现象 N=1 明言）
+- **R43** 计划死锁重规划：连续 3 个动作无新证据，或 2 次换阶段无证据 → 重规划
 
 **Evidence IDs** (record even on failure):
 

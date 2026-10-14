@@ -217,3 +217,55 @@ Interceptor.attach(Module.findExportByName("libcommonCrypto.dylib", "CCCrypt"), 
 ### `references/` — 根目录
 
 
+
+---
+
+## When NOT to use（近邻负例）
+
+- 目标只是 Android APK、不涉及 iOS，且需要 apktool 重建 / smali patch / adb 一条龙 → `../apk-reverse/SKILL.md`（Android 专项 CLI 规范比本卡更细）
+- 目标是 iOS IPA 的 Mach-O / codesign / Hardened Runtime / TCC 深度分析 → `../macos-reverse/SKILL.md`
+- 目标是 APK 里的 `.so`，Java 层只是 JNI 包装 → `../ida-reverse/` / `../radare2/`
+- 目标是浏览器前端的 sign/token/cookie（没有 App 侧任务）→ `../js-reverse/`；要脱离浏览器复现 → `../web-protocol-reverse/`
+- 目标是自研引擎游戏的封包/内存结构（不是通用移动 App 渗透）→ `../game-reverse/` + `../protocol-reverse/`
+- 只做 Web 层渗透 / API 越权，原生 App 只是背景 → `../api-security/`
+- 设备未授权（无已授权真机、无模拟器授权、`frida-ps -U` 为空）→ 先 `../scripts/case-init.ps1` 落 scope；不要凭静态分析编造运行时结论
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 核心逻辑确认在 native `.so`（JNI 包装、`System.loadLibrary` 后关键逻辑消失） | `../ida-reverse/`（长期深入）或 `../radare2/`（快速侦察） |
+| iOS 侧需要 codesign 公证 / Hardened Runtime / TCC / ObjC runtime 深度 | `../macos-reverse/SKILL.md` |
+| Android 专项需要重打包 / smali patch / 模拟器一条龙 | `../apk-reverse/SKILL.md` |
+| App 服务端依赖面成主任务（接口被 403/412/429、签名 challenge、需要 browser-free 采集器） | `../web-protocol-reverse/SKILL.md` |
+| App 通信是自定义二进制帧 / protobuf / 有 PCAP 要还原状态机 | `../protocol-reverse/SKILL.md` |
+| 判定为恶意样本（供应链投毒、隐藏图标、持久化 path） | `../malware-analysis/SKILL.md` + `../supply-chain-security/` |
+| signing / 证书链本身是目标（不是绕过它） | `../identity-federation/SKILL.md` |
+
+## 定义完成
+
+本技能产出算"完成"的**外部可观测**条件（不许写形容词）：
+
+- Phase 1–4 的产物各有一份落盘文件（manifest 摘要、静态结论、Hook 脚本 + 运行日志、抓包或请求记录），路径写进报告
+- Frida / Objection 绕过结论可复现：Hook 脚本路径 + 在同一次会话内重跑的输出一致（SSL pinning 绕过需 ≥2 个不同请求被成功解密）
+- 密钥提取类结论：算法名 + 模式 + padding + key/iv 字节（脱敏）+ 一条可独立运行的解密命令
+- MASTG 检查项逐条标注 `pass` / `fail` / `not-tested` 三项之一，每项附证据 ID；`not-tested` 须写原因（工具缺 / 授权缺 / 环境不可达）
+- 若未在真机执行：报告显式写"运行时结论未验证"，只保留静态可观察项
+
+## 输出契约
+
+```
+FACT:       <观察，带来源（命令 / 文件:行 / Evidence ID）>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>  （状态见 ../ops/binary-model.md）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：同一绕过/提取在 **两种独立手段** 下都成立（如 objection `android sslpinning disable` + 自写 Frida Hook 各抓到一次明文），且钩到的明文与服务端响应字节一致
+- `low`：只跑了一条通用 bypass 脚本且未见应用行为变化就宣称"已绕过"；或仅凭 Frida 无报错推断成功（未验证捕获到的参数/返回值非空）

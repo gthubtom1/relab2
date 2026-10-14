@@ -1,0 +1,23 @@
+skill: binary-ninja-reverse
+positive:
+  - 点名用 Binary Ninja 看这个函数的 HLIL
+  - 想比较 HLIL 和 MLIL 两层的变量变化
+  - 用 bn 跟一下这个调用链，谁调用了谁
+  - 需要和 IDA 的结论交叉验证
+  - binja 的 Python API 怎么批量标类型
+  - MLIL 里这个 SSA 值是怎么流的
+  - LLIL 层看这段指令的语义
+  - 换个反编译器再看看这个 elf，对照一下
+  - bn 里怎么改函数名和类型
+  - 用 Binary Ninja 的中间表示确认这个数据流
+negative:
+  - 要 IDA 那种 Hex-Rays 质量的伪代码和 FLIRT 签名识别  # → ida-reverse
+  - 没有 BN 许可，想要免费的还能批量 headless 跑  # → ghidra-reverse
+  - 只要命令行秒看 strings 和导入表  # → radare2
+  - 这个样本 HLIL 里只有壳字样，函数计数极低  # → reverse-engineering（assault-entry 入口）
+  - 要下断点看寄存器，改运行期内存  # → x64dbg-reverse
+  - 目标实为 .NET 托管程序  # → dotnet-reverse
+  - 目标是 apk，要抓 App 的协议  # → apk-reverse
+  - 逻辑在浏览器前端，要还原 sign 怎么算  # → js-reverse
+  - 只想把旧版函数名迁到新版，不要数据流  # → binary-diff
+  - 只有单一反编译器输出却想标 confirmed，得补第二来源  # → ida-reverse

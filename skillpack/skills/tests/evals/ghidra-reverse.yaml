@@ -1,0 +1,23 @@
+skill: ghidra-reverse
+positive:
+  - 没买 IDA，想用开源的免费工具反编译看看
+  - 用 Ghidra 帮我反编译这个 elf
+  - analyzeHeadless 批量过一遍这个目录的样本怎么跑
+  - PyGhidra 脚本怎么写，想自动化出伪代码
+  - Ghidra 里交叉引用和函数改名怎么操作
+  - 这个二进制想转成接近源码的伪代码
+  - 用 Ghidra MCP 让模型自己分析
+  - 不要钱的方案，把样本全过一遍出伪代码
+  - Ghidra 里这个结构体怎么定义
+  - 批量 headless 反编译能不能接进 CI
+negative:
+  - 有 IDA 许可，想交互式深挖这个 exe 的伪代码和类型  # → ida-reverse
+  - 只要命令行秒看 strings 和段，不想付 JVM 冷启  # → radare2
+  - 点名要 Binary Ninja 的 HLIL 数据流  # → binary-ninja-reverse
+  - 这个样本带 VMP 壳，反编译出来全是壳代码，函数计数极低  # → reverse-engineering（assault-entry 入口）
+  - 目标其实是 .NET 托管的，dnSpy 直接开  # → dotnet-reverse
+  - 拿到的是 apk，要解 manifest 和 smali  # → apk-reverse
+  - 逻辑在浏览器里，要去追那个 sign  # → js-reverse
+  - 要下断点看寄存器、改运行期内存  # → x64dbg-reverse
+  - 内核驱动缺 PDB，要把旧版符号迁到新版  # → binary-diff
+  - 这个是固件镜像，binwalk 解出来的文件系统  # → firmware-pentest

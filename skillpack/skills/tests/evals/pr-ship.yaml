@@ -1,0 +1,21 @@
+skill: pr-ship
+
+positive:
+  - 帮我把这个改动提成 PR
+  - 要开 PR 了，帮我写描述和验证证据
+  - 这个 feature 怎么交付出去
+  - 帮我提交代码，附上我如何验证那一节
+  - 发起合并，CI 得是绿的
+  - 这个改动能不能推到可部署状态
+  - 帮我拆一下 PR，这一个太大了审不完
+  - 把这次发布交付一下，部署路径也给出来
+
+negative:
+  - 帮我写 release notes 正文，这次发布要交付说明    # → docs-generator
+  - 审这个 case 包完不完整    # → case-review
+  - 先评审代码本身的设计与正确性，再谈交付    # → code-review
+  - 改动还没自审，先帮我验证能不能工作    # → verify-done
+  - CI 在依赖链上挂了，帮我查第三方组件    # → supply-chain-security
+  - 更新一下 readme 和 changelog 再提交    # → docs-changelog
+  - 帮我画个架构图放进 PR 描述    # → diagram-generator
+  - 提交前先帮我把单元测试补齐    # → write-tests

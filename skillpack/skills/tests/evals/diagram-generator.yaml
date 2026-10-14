@@ -1,0 +1,21 @@
+skill: diagram-generator
+
+positive:
+  - 帮我画个流程图
+  - 时序图怎么画，用 mermaid
+  - 架构图画一张，开会要讲
+  - 画个 ER 图
+  - 帮我把这段调用关系画成结构图
+  - 用 plantuml 出个状态图
+  - 画张数据流图
+  - 帮我画个泳道图
+
+negative:
+  - 别画流程图，帮我写份文档，一大段文字那种    # → docs-generator
+  - 更新一下 changelog    # → docs-changelog
+  - 审一下这个 case 包的证据链完不完整    # → case-review
+  - 帮我写份文档，里面插几张架构图    # → docs-generator
+  - 这段代码的调用关系绕来绕去，帮我审一下有没有注入    # → code-audit
+  - 帮我爬这个页面的数据整理成结构图    # → browser-automation
+  - 帮我审这个 PR 能不能合    # → code-review
+  - 帮我修这个崩溃的 bug    # → fix-bug

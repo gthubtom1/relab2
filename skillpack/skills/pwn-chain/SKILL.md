@@ -189,3 +189,46 @@ command -v one_gadget >/dev/null || gem install one_gadget
 - [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `../TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 还没定位到漏洞点（只是拿到一个陌生二进制） → 用 `../reverse-engineering/SKILL.md`
+- 目标是内核态提权/逃逸 → 用 `../kernel-exploit/SKILL.md`
+- 有 CVE 但没有 PoC，要从前后的补丁差异反推 → 用 `../patch-diff-exploit/SKILL.md`
+- 前置条件：**只允许本地/CTF/授权靶机**；不指真实生产服务
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 利用被缓解机制挡住（SMEP/SMAP/KASLR/KPTI） | `../reverse-engineering/references/assault-entry.md` |
+| 目标是内核对象 | `../kernel-exploit/SKILL.md` |
+| 目标带壳/反调试，动态都进不去 | `../reverse-engineering/references/assault-entry.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- PoC 脚本落盘，在目标上 **≥3 轮稳定命中**（shell/flag/目标回连）
+- 利用链每跳的偏移/地址写进报告，可复现
+- 缓解绕过有单独说明（绕了什么、怎么绕的）
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：同一 exploit 连续 3 轮命中且 ASLR 开启下仍稳
+- `low`：单次命中，可能是地址运气/未开 ASLR

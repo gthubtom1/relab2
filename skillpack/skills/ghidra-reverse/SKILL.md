@@ -111,3 +111,73 @@ cmd /c "$GHIDRA_HOME\support\analyzeHeadless.bat $GHIDRA_PROJ temp_proj -import 
 - [ ] 是否标注函数地址与重命名？
 - [ ] 是否有可复现步骤？
 - [ ] Checklist / journal？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 已有 IDA 许可证、需要交互式伪代码深挖 → `../ida-reverse/SKILL.md`
+- 只要 CLI 秒看 strings/段/导入，不想付 JVM 冷启 → `../radare2/SKILL.md`
+- 点名要 Binary Ninja 的 HLIL/SSA 数据流 → `../binary-ninja-reverse/SKILL.md`
+- `diec` 报 VMP/Themida，或 `-import` 后函数计数极低、strings 只有壳字样 → `../reverse-engineering/references/assault-entry.md`，不要对着死壳反编译
+- 目标实为 .NET / APK / 浏览器 JS → `../dotnet-reverse/SKILL.md` / `../apk-reverse/SKILL.md` / `../js-reverse/SKILL.md`
+- 要寄存器值、断点、运行期内存 → `../x64dbg-reverse/SKILL.md`
+- 前置条件缺：`Resolve-ReverseToolSpec -Name 'ghidraRun'` 四级探测全 `Available=False`（无 JDK 21+ / Ghidra 本体）→ 停，按 `../TOOLS.md` 报告缺工具，禁止编 `C:\...` 路径
+- 只有单一反编译器输出就想写 `confirmed` → 不算完成，须补第二来源（IDA/BN/r2 或动态）
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| `analyzeHeadless -import` 后 `list_project_binary_metadata` 函数计数极低、`search_strings` 只有壳 UPX/VMP 字样 | `../reverse-engineering/references/assault-entry.md` |
+| `decompile_function` 返回 `Could not decompile`，或 `search_strings` 报索引未就绪且重试仍失败 | `../ida-reverse/SKILL.md` 或 `../radare2/SKILL.md` |
+| Ghidra 与第二工具（IDA/BN/r2）对同一函数的常量、调用序列结论**矛盾**（信号 3） | 以动态证据仲裁 → `../x64dbg-reverse/SKILL.md` |
+| 9111 `closed` 且端点表无预置守护启动器 | 改本卡 §2 `analyzeHeadless` 主路径；仍不通 → `../references/tool-registry.md` 核对端点，**不许手改 `mcp.json`** |
+| 同一假设连续两次分析无新证据（信号 4） | `../ops/analysis-decision-framework.md` R2/R43 |
+| 需要跨版本符号迁移 / 找同一函数 | `../binary-diff/SKILL.md`（ghidriff 联动） |
+| 已定位漏洞要写利用/触发验证 | `../pwn-chain/SKILL.md` |
+
+## 定义完成
+
+本技能产出算"完成"的**外部可观测**条件（不许写形容词）：
+
+- pyghidra 工程落盘：`list_project_binaries` 能列出 `/LicenceCheck.exe-ead7cd` 形式条目，MCP `save` 返回后该条目仍在（工程目录按注册表/`mcp_endpoints.ghidra.package_path` 查证）
+- Headless 批产物存在：`$GHIDRA_PROJ` 目录已 `mkdir`，`analyzeHeadless.bat ... -postScript ExportDecomp.py` 的输出文件非空（命令尾部必须带 `< nul`）
+- 关键函数已重命名并落注释：`rename_function` / `set_comment` 后 `decompile_function` 输出中可见新名字，地址未丢失
+- 可运行最小命令（自验通道仍通）：
+  - 探活：`curl.exe -sS http://127.0.0.1:9111/mcp` → 期望 READY / `Tool Count : 20`
+  - Headless：`cmd /c "$GHIDRA_HOME\support\analyzeHeadless.bat $GHIDRA_PROJ temp_proj -import sample.bin -postScript ExportDecomp.py < nul"`
+  - `GHIDRA_HOME` 取自 `(Get-Command ghidraRun -ErrorAction SilentlyContinue).Source` 的目录，不写死盘符
+- 功能对照一致：关键函数反编译结论与 `radare2` 反汇编／x64dbg 动态读数方向一致；不一致处显式列 `residual_risk`
+
+## 输出契约
+
+```
+FACT:       <观察，带来源（命令 / 文件:行 / Evidence ID）>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>  （状态见 ../ops/binary-model.md）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+本技能填写示例：
+
+```
+FACT:       analyzeHeadless 导出 ExportDecomp_sub_00401820.txt 非空（E-003）；
+            list_imports 含 VirtualAlloc/WriteProcessMemory（E-imports）
+HYPOTHESIS: H-002 sub_00401820 是注入壳体，写入目标是新建的远程进程
+            confidence: medium，evidence_ids: [E-001, E-003]
+QUESTION:   VirtualAlloc 的 dwSize 来自哪个调用者（import 锚点只在叶函数）
+NEXT:       list_xrefs 反查调用者后下断（换技能 → x64dbg-reverse）
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：Ghidra 反编译结论被 x64dbg 寄存器/内存读数独立印证（≥3 轮同值），或被第二独立反编译器（IDA Hex-Rays / Binary Ninja HLIL）复现同一常量与调用序列
+- `high`：Ghidra `decompile_function` + `list_xrefs`/`list_imports` 锚点 + 字符串三者方向一致，未做跨工具验证
+- `low`：**仅** `search_code` 命中若干行反编译文本就下结论，未跟 `list_xrefs` 确认该函数真的被目标路径调用
+- `low`：`search_strings` 索引未就绪时拿"未找到"当阴性证据 —— 必须重试到返回才可写 `E-negative-evidence`
+- `medium`：`analyzeHeadless` 批处理在超时/分块下完成，函数覆盖率未经 GUI 人工复核

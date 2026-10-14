@@ -65,10 +65,14 @@ if (Test-Path -LiteralPath $routingJson) {
     if ($missingRouteSkills.Count -eq 0) { Ok 'routing.json: all route skills exist' } else { Bad "routing.json missing skill files: $($missingRouteSkills.Name -join ',')" }
     $git = Get-Command git -ErrorAction SilentlyContinue
     if ($git) {
-        $trackedSkills = @(& $git.Source -C $packageRoot ls-files -- 'skills/**/SKILL.md')
+        # ★ 2026-10-14 放宽：路由目标可以是 skills/ 下任何**被跟踪**的文件，不再限于 SKILL.md。
+        #   理由：受保护目标的入口本来就是一份 references 指示牌（assault-entry.md），
+        #   它自己也写着「拿到任意受保护目标时的第一块指示牌」。本检查要防的是
+        #   「路由指向不存在/未入库的东西」（悬空承诺），任何 tracked 文件都满足这一不变量。
+        $trackedSkills = @(& $git.Source -C $packageRoot ls-files -- 'skills/**')
         if ($LASTEXITCODE -eq 0) {
             $untrackedRouteSkills = @($rjRoutes | Where-Object { ('skills/' + $_.Value.skill) -notin $trackedSkills })
-            if ($untrackedRouteSkills.Count -eq 0) { Ok 'routing.json: all route skills are tracked' } else { Bad "routing.json references untracked skills: $($untrackedRouteSkills.Name -join ',')" }
+            if ($untrackedRouteSkills.Count -eq 0) { Ok 'routing.json: all route targets are tracked' } else { Bad "routing.json references untracked targets: $($untrackedRouteSkills.Name -join ',')" }
         }
     }
     $routeIds = @($rjRoutes | ForEach-Object { $_.Name })

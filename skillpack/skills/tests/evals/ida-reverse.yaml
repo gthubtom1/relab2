@@ -1,0 +1,23 @@
+skill: ida-reverse
+positive:
+  - 反编译这个 exe，看看授权校验写在哪
+  - 这个 dll 的导出函数都是干什么的
+  - 用 IDA 看一下这个 so 的 main，JNI 那层怎么调的
+  - 帮我找出注册码的校验逻辑
+  - 这个 elf 的加密算法在哪一段
+  - 提示不是正版，想看看它是怎么判断的
+  - 静态分析一下这个二进制，交叉引用怎么追
+  - IDA 里这个函数的伪代码怎么读，类型怎么标
+  - 这个授权过期是本地判断还是联网校验的
+  - 反汇编看看这个 pe 的启动流程
+negative:
+  - diec 报这个 exe 是 VMP 壳，入口只有跳板，脱壳失败还想要成品  # → reverse-engineering（assault-entry 入口）
+  - IAT 修复失败了，想改用 x64dbg 动态抓 API  # → x64dbg-reverse
+  - 只要命令行秒看 strings 和段，不想等 IDA 冷启  # → radare2
+  - 想要免费的，还得能批量 headless 过一遍样本  # → ghidra-reverse
+  - 结论想用第二个独立反编译器交叉验证一下  # → binary-ninja-reverse
+  - 这个程序是 .NET 的，mscoree 跳板，dnSpy 直接开  # → dotnet-reverse
+  - 拿到的是 apk，要在 dex 里找逻辑  # → apk-reverse
+  - 逻辑其实在浏览器里，要去 webpack 里找 sign  # → js-reverse
+  - 需要下断点看寄存器值和运行期内存  # → x64dbg-reverse
+  - 旧版的函数名要迁到新版，偏移全变了  # → binary-diff

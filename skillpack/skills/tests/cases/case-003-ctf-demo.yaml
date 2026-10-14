@@ -1,0 +1,32 @@
+id: case-003-ctf-demo
+date: 2026-10-11
+domain: ctf
+task_verbatim: |
+  （示例案例）pwn1 ret2win —— gets() 栈溢出，返回偏移 0x48，
+  构造 payload 打通远程服务取 flag
+constraint: |
+  CTF 比赛/靶场环境（非真实生产目标）
+
+expect_chain:
+  - ctf-sandbox
+  - pwn-chain
+  - docs-generator
+  - case-review
+
+expect_deliverable: |
+  形态：可复现的解题脚本 + writeup
+  落点：skillpack/examples/ctf-demo/
+  最小命令：脚本重放命中 flag
+
+known_failures:
+  - "无（示例案例，走的是模板化理想路径）"
+
+note: |
+  ★ 本案例是**仓库内被 git 跟踪的样板案例**，也是 `verify-evidence-gate` 在 CI 里的扫描目标。
+  它的 F-01 带 3 条 evidence_ids（E-001/002/003）且 confidence=high —— 是证据链的合规范例。
+
+lesson_refs:
+  - "skillpack/examples/ctf-demo/report/report.md"
+  - "skillpack/examples/ctf-demo/evidence/E-001.md ~ E-003.md"
+
+status: resolved

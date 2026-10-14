@@ -1,0 +1,25 @@
+skill: go-rust-reverse
+# 触发率 eval 集。规范：8–10 正例 + 8–10 近邻负例（共享关键词但该用别的技能）。
+# 正例 = 该技能**应该**被选中；负例 = **不该**被选中（近邻）。
+positive:
+  - Go 编译出来的马，函数名全没了怎么恢复
+  - GoReSym 怎么用来恢复 Go 的符号
+  - pclntab 是什么，怎么从里面把函数名抠出来
+  - Rust 程序 panic 的时候字符串在哪，想用它定位函数
+  - go.buildid 怎么找、怎么用
+  - 这个样本是 Go 写的，反编译出来全是 runtime 函数，想看主逻辑
+  - Rust 的 mangled symbol 怎么 demangle
+  - Go 二进制里怎么找用户代码而不是标准库
+  - 用 IDA 打开 Go 的 exe，函数名都是 sub_，怎么重建
+  - 这个恶意样本怀疑是 Go 写的，符号被剥了
+negative:
+  - 目标是 C++ 编译的普通 exe，想反编译看逻辑 # → ida-reverse
+  - 这个 dll 是 C 写的，导出函数都是干什么的 # → ida-reverse
+  - 这个 .NET 程序反编译出来全是乱码 # → dotnet-reverse
+  - 这个 C# 的 exe 用 dnSpy 打开看校验 # → dotnet-reverse
+  - Go 二进制的 strings 和节区结构想快速扫一眼 # → radare2
+  - 命令行用 r2 看下这个 elf 的导入表 # → radare2
+  - 这个 exe 带壳，脱不掉，但我只要能用 # → reverse-engineering（assault-entry 入口）
+  - 这个程序一挂调试器就退出，想动态跟一下 # → x64dbg-reverse
+  - 这个 apk 装不上，想改 smali 重打包 # → apk-reverse
+  - 前端签名算不出来，想在 Node 里复现这个 JS 逆向 # → js-reverse

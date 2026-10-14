@@ -403,3 +403,78 @@ ida-pro-mcp --config
 - [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `../TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？
+
+---
+
+## When NOT to use（近邻负例）
+
+- `diec` 报 VMP/Themida/VMProtect，或入口只有壳跳板、真实代码运行期解密 → 不要直接 `idb_open` 看死壳，先 `../reverse-engineering/references/assault-entry.md`
+- IAT 修复已失败（已记 `E-iat-repair-fail`）→ 停止静态，转 `../x64dbg-reverse/SKILL.md` 动态抓 API
+- 只要 CLI 秒级看 strings/段/导入，不想付 IDA 冷启（实测数百秒级）→ `../radare2/SKILL.md`
+- 需要免费反编译器出伪代码、或批量 headless/CI → `../ghidra-reverse/SKILL.md`
+- 结论需要**第二个独立反编译器**交叉（Hex-Rays 单源不算 confirmed）→ `../binary-ninja-reverse/SKILL.md`
+- 目标实为 .NET（无传统 IAT、`mscoree` 跳板）→ `../dotnet-reverse/SKILL.md`
+- 目标是 APK/DEX → `../apk-reverse/SKILL.md`
+- 要寄存器值、断点、运行期内存（只有跑起来才看得见）→ `../x64dbg-reverse/SKILL.md`
+- 逻辑实际在浏览器 JS/WASM 里 → `../js-reverse/SKILL.md`
+- `ERR:idalib_license:*` 出现 → 不要重试 `open.ps1`，走本卡 §逆向分析完整工作流 路径 B（GUI），仍失败再降级 ghidra/radare2
+- 前置条件缺位（`IDADIR` 未设、四级探测全 `Available=False`）→ 走本卡「按需自举」+ `../TOOLS.md`，禁止猜路径硬跑
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| `diec` 报 VMP/Themida/VMProtect，或入口只有 `jmp` 壳跳板、`survey` 函数数异常少 | `../reverse-engineering/references/assault-entry.md` |
+| `idapro_entity_query(kind="imports")` 为空或仅剩 LoadLibrary/GetProcAddress，strings 无业务线索 | `../x64dbg-reverse/SKILL.md`（动态 API 断点） |
+| `idapro_decompile` 结果与 `idapro_disasm` 反汇编对不上，或 Scylla 修 IAT 失败 | `../ghidra-reverse/SKILL.md` / `../binary-ninja-reverse/SKILL.md` 交叉验证 |
+| 分析中遇 `0xC0000005` 自校验一步一停、`IsDebuggerPresent` 命中 | `../x64dbg-reverse/SKILL.md` |
+| 同一假设连两次 `analyze_function` 无新证据（信号 4） | 回 `../ops/analysis-decision-framework.md` R2/R31/R43 重规划，或转动态 |
+| 目标实为 .NET / APK / 浏览器 JS | `../dotnet-reverse/SKILL.md` / `../apk-reverse/SKILL.md` / `../js-reverse/SKILL.md` |
+| 需要同一函数在两个版本间的映射 | `../binary-diff/SKILL.md` |
+
+## 定义完成
+
+本技能产出算"完成"的**外部可观测**条件（不许写形容词）：
+
+- 数据库落盘：`open.ps1 -TimeoutSeconds 600` 返回 `OK:文件:session_id`（标 `(temp copy)` 时另记副本路径），且 `idb_save` 后 `<目标名>.i64`（或 `.id0/.id1/.nam` 三件套）在目标目录可 `rahash2 -a sha256` 出值
+- 重命名结果：`idapro_rename(batch)` 后 `idapro_list_funcs` 中可见新名字；`idapro_export_funcs(addrs, format="c_header")` 落盘文件非空
+- 补丁 diff：`idapro_patch`/`idapro_patch_asm` 前后各取一次 `idapro_get_bytes`，两组字节 + 原样本 sha256 全部写入证据
+- 报告存在：`../../examples/ctf-demo/report/report.md` 含 Step 3 的 `E-imports`（DLL/SYS 另有 `E-exports`）
+- 可运行最小命令（自验通道仍通）：
+  - `powershell -File "<skill-root>\ida-reverse\scripts\start.ps1"` → `OK:<工具数>`
+  - `powershell -File "<skill-root>\ida-reverse\scripts\open.ps1" -Path "<目标>" -TimeoutSeconds 600` → `OK:...:session`
+  - `idapro_survey_binary(detail_level="minimal")` / `idapro_server_health()` 返回正常
+- 功能对照一致：关键函数的 Hex-Rays 结论与反汇编、导入表锚点三者方向一致；不一致处显式标 `residual_risk` + 待验证项，不许静默取一边
+
+## 输出契约
+
+```
+FACT:       <观察，带来源（命令 / 文件:行 / Evidence ID）>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>  （状态见 ../ops/binary-model.md）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+本技能填写示例：
+
+```
+FACT:       open.ps1 返回 OK:LicenceCheck.exe:7f2a（E-001）；survey 显示 x64 PE、
+            导入含 CreateFileA/InternetOpenA/CryptDeriveKey（E-imports）
+HYPOTHESIS: H-001 校验在 sub_4017C0 本地完成，密钥来自 CryptDeriveKey 参数
+            confidence: medium，evidence_ids: [E-imports, E-002]
+QUESTION:   伪代码里的 inline switch 表是真实分发还是 Hex-Rays 误判
+NEXT:       继续（先 pdf 对照再 x64dbg 下断）
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：静态结论被**动态读数独立印证**（x64dbg 断点处寄存器/内存等于伪代码算出的值）且连续 ≥3 轮同值；或 Hex-Rays、Ghidra/BN 两个独立 lift 对同一函数给出一致常量与调用序列
+- `high`：Hex-Rays 伪代码 + `idapro_disasm` 反汇编 + 导入表锚点（如 `CryptDeriveKey`/`InternetOpenA`）三者方向一致，未做动态交叉
+- `low`：**仅** Hex-Rays 伪代码未与 `pdf` 对照 —— ADF-R1：反编译器在浮点序、内联 switch 表、手工构造栈帧上会错
+- `low`：依赖 FLIRT/Lumina 签名匹配定位"库函数"，签名不唯一（多个候选同字节）时结论只在本样本成立
+- `contextual`：因 `No database bound` / Temp 副本降级打开的库，符号地址只对该副本有效
+

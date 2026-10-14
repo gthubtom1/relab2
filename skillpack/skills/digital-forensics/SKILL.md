@@ -85,3 +85,46 @@ vol -f mem.dmp windows.cmdline
 - [ ] 时间线是否可复核？
 - [ ] IOC 是否脱敏分级？
 - [ ] Checklist？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 要分析的是样本本身的行为与能力 → 用 `../malware-analysis/SKILL.md`
+- 要做的是主动检测规则 → 用 `../threat-hunting/SKILL.md`
+- 要收集的是外部情报 → 用 `../threat-intelligence/SKILL.md`
+- 前置条件（硬性）：**不改变原始证据**；镜像前先做只读挂载或写阻止
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 转储里发现可疑样本，要分析 | `../malware-analysis/SKILL.md` |
+| PCAP 里发现异常协议 | `../protocol-reverse/SKILL.md` |
+| 需要落检测规则防复发 | `../threat-hunting/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 镜像/转储有 SHA-256 与封存路径；分析全程在副本上
+- 时间线文件落盘（事件 → 时间 → 来源证据）
+- `review_case.py --verify-hashes --strict` PASS
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：时间线事件有 ≥2 类独立来源佐证（磁盘 + 内存 / 日志 + 流量）
+- `low`：仅靠单一日志来源推断事件顺序

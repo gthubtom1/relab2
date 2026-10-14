@@ -314,3 +314,46 @@ GET 突变 → CSRF 风险
 ### `references/` — 根目录
 
 
+
+---
+
+## When NOT to use（近邻负例）
+
+- 目标是浏览器里跑的 JS 签名/加密参数，要还原成不依赖浏览器的采集器 → 用 `../web-protocol-reverse/SKILL.md`
+- 目标是源码仓库，要白盒找注入与鉴权缺失 → 用 `../code-audit/SKILL.md`
+- 目标是二进制客户端（exe/so），要静态看逻辑 → 用 `../ida-reverse/SKILL.md`
+- 前置条件：**接口属于第三方且无授权** → 停在文档与只读枚举，不做越权利用
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 签名/加密参数在客户端本地算出（断点能看到明文入参） | `../js-reverse/SKILL.md` |
+| 登录态依赖 SAML/OIDC 联邦，不是本地 JWT | `../identity-federation/SKILL.md` |
+| 越权后拿到内网可达地址，要横向 | `../attack-chain/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 每个 Finding 有 `evidence_ids`（≥1），`validated` 的 ≥2 条独立证据
+- 越权/缺陷的复现命令落盘，且在同一环境可重放
+- 报告含接口清单 + 鉴权矩阵（谁能调什么）
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：同一条越权同时有「请求 A 成功 / 请求 B（换身份）成功」两条实测
+- `low`：仅凭响应字段命名推断权限模型，未实际换身份验证

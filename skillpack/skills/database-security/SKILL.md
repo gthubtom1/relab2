@@ -81,3 +81,46 @@ description: 数据库安全评估：0.0.0.0 绑定、弱口令、权限过大�
 ### `references/` — 根目录
 
 
+
+---
+
+## When NOT to use（近邻负例）
+
+- 目标是应用层注入点，尚未接触数据库直连 → 用 `../api-security/SKILL.md`
+- 目标是数据库里的数据本身（取证/恢复） → 用 `../digital-forensics/SKILL.md`
+- 目标是 DB 服务器的操作系统层 → 用 `../pentest-tools/SKILL.md`
+- 前置条件：生产库 → 默认只读；任何写操作须先取得明确授权与回滚方案
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 确认弱口令可登录，要评估权限边界 | `../windows-ad/SKILL.md` |
+| Redis/Memcached 可写文件或 SSRF 可达 | `../cloud-k8s/SKILL.md` |
+| 库里发现高价值数据，要评估外泄路径 | `../attack-chain/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 连接矩阵落盘（实例 × 端口 × 可达性 × 认证方式）
+- 权限清单有实测（`SHOW GRANTS` / `\du` 等实际输出）
+- 每条结论附实际命令与返回
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：权限过高结论有实际 SQL 执行证据（如能读他人 schema）
+- `low`：仅凭端口开放推断存在弱口令

@@ -191,3 +191,46 @@ For English user requests, respond in English. For Chinese user requests, respon
 - [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `../TOOLS.md` 里的装法当路径猜）？
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 要写的是大段文字文档 → 用 `../docs-generator/SKILL.md`
+- 要审 case 完整性 → 用 `../case-review/SKILL.md`
+- 要画的图超出 Mermaid/PlantUML 表达能力（复杂拓扑/3D） → 用 `../docs-generator/SKILL.md`
+- 图必须来自真实结构，不许为好看编造节点
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 图里需要嵌入文档正文 | `../docs-generator/SKILL.md` |
+| 图表达不了（需要位图/截图） | `../browser-automation/SKILL.md` |
+| 需要审图所依据的 case | `../case-review/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 图源文件（.mmd/.puml）落盘，可再编辑
+- 在目标渲染器上能正确渲染（无语法错误）
+- 图中每个节点/边可追溯到实际代码或案例事实
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：图渲染通过且节点数与实际结构核对一致
+- `low`：仅凭文字描述想象出结构图

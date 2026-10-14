@@ -1,0 +1,21 @@
+skill: browser-automation
+
+positive:
+  - 帮我用 playwright 自动填这个表单
+  - 自动登录这个后台，每天重复好几次太烦了
+  - 爬取这个页面的数据，每个页面都要
+  - 帮我截个图留档，手工点太慢
+  - 自动过一下这个验证码
+  - 批量提交这个页面上的表单
+  - 操作这个 Windows 桌面应用，自动跑一遍
+  - 帮我自动打开网页登录后台导报表
+
+negative:
+  - 要还原这个页面里签名怎么算，不是驱动界面    # → web-protocol-reverse
+  - 这个目标没有 UI，只有 API，帮我测接口    # → api-security
+  - 逆向这个浏览器扩展本身，看它后台做了什么    # → browser-extension-reverse
+  - 抓包看页面接口请求怎么重放    # → web-protocol-reverse
+  - 页面上的校验参数是本地算的，要还原加密算法    # → js-reverse
+  - 帮我把这个页面功能实现出来    # → implement-feature
+  - 分析这个桌面程序自己的网络流量里藏了什么协议    # → protocol-reverse
+  - 帮我写份自动化测试的验收报告    # → docs-generator

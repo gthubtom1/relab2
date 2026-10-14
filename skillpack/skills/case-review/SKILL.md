@@ -221,3 +221,46 @@ This skill has no third-party dependency. If Python 3 is unavailable, the only a
 - [ ] 所有 Path 是否包含合法 path_type 和 Evidence 引用？
 - [ ] 是否执行了 hash verification，或记录了未执行原因？
 - [ ] 是否以 strict 模式重新运行并保存了 review 结果？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 要新建一个 case（不是审已完成的） → 用 `../ops/scope-contract.md`
+- 要写报告正文 → 用 `../docs-generator/SKILL.md`
+- 要画图 → 用 `../diagram-generator/SKILL.md`
+- 本技能是**只读**审查：不修 case 内容，只报缺陷
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 发现证据链断裂，要补证据 | `../ops/evidence-finding-path.md` |
+| 发现 scope 缺失，要补授权 | `../ops/scope-contract.md` |
+| 审查通过，要出报告 | `../docs-generator/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 审查报告落盘：每条缺陷 → case 里的具体文件与行
+- `review_case.py --verify-hashes --strict` 的原始输出贴回
+- 给出「可交 / 不可交」的明确判定与缺口清单
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：哈希与证据链全部核对过，且审查结论有具体行号支撑
+- `low`：仅通读了报告文本，未跑哈希校验

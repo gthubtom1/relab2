@@ -1,0 +1,22 @@
+skill: code-review
+
+positive:
+  - 帮我审一下这个 PR 能不能合
+  - 这段 diff 你 review 一下
+  - 代码评审，看看有没有要改的
+  - 这个改动太大了，帮我判断要不要拆
+  - 审一下这个提交，设计上有没有问题
+  - 帮我看下这段代码值不值得 approve
+  - review 一下这个 CL，测试是不是跟实现一起交的
+  - 这个 PR 自包含吗，能不能合入
+
+negative:
+  - 审这段代码有没有注入漏洞    # → code-audit
+  - 审这个接口有没有越权风险    # → api-security
+  - 验证我自己刚写的改动对不对，跑一遍测试    # → verify-done
+  - 审这个 case 证据包完整不完整    # → case-review
+  - 审的是 PR 描述和 CI 状态，不是代码本身    # → pr-ship
+  - 帮我修这个 bug，别做评审了    # → fix-bug
+  - 评审过了，帮我把这个改动提成 PR    # → pr-ship
+  - 别审代码了，帮我写份渗透测试报告    # → docs-generator
+  - 这堆代码没问题了，帮我把接口文档同步一下    # → docs-changelog

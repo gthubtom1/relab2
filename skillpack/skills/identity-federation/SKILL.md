@@ -75,3 +75,46 @@ description: 联邦身份与 SSO 授权测试：SAML 断言篡改、OIDC/OAuth2 
 ### `references/` — 根目录
 
 
+
+---
+
+## When NOT to use（近邻负例）
+
+- 目标是本地 JWT 校验，不涉及 IdP 联邦 → 用 `../api-security/SKILL.md`
+- 目标是 Windows 域内 Kerberos/NTLM（不是 Web SSO） → 用 `../windows-ad/SKILL.md`
+- 目标是 OAuth 客户端本身而非 IdP 配置 → 用 `../code-audit/SKILL.md`
+- 前置条件：IdP 属于第三方组织 → 只做配置观察与公开元数据检查
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 发现 assertion 可被篡改/重放 | `../api-security/SKILL.md` |
+| 发现签名证书可控（自签被接受） | `../attack-chain/SKILL.md` |
+| SAML 断言里带高权角色，要评估下游影响 | `../api-security/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 联邦流程逐跳落盘（IdP → SP → 会话），标注每跳的信任假设
+- 每条缺陷有实际构造的 assertion/请求与响应
+- 修复对应到具体配置（不是「加强校验」）
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：构造的 assertion 被 SP 接受且有会话建立实测
+- `low`：仅从元数据里看到签名算法为 none/弱算法

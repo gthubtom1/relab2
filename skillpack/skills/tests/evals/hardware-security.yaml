@@ -1,0 +1,23 @@
+skill: hardware-security
+positive:
+  - 这个板子上 UART 口在哪
+  - JTAG 能连上吗，帮我找找调试口
+  - 拆机看下有没有没标的排针
+  - 串口日志抓一下，看能不能拿 root shell
+  - 用 flashrom 读一下这个 SPI Flash
+  - 波特率试出来了吗
+  - 引导过程能不能打断
+  - 这个芯片里的固件怎么提取
+  - 逻辑分析仪抓一下这个测试点
+  - SWD 接口能做点什么
+negative:
+  - 我只有固件文件没有物理板子，用 binwalk 解开看看  # → firmware-pentest
+  - 软件层调试接口，用 x64dbg 下断点  # → x64dbg-reverse
+  - 目标是无线信号，用 HackRF 收一下  # → radio-sdr
+  - 串口拿到 shell 后要对系统内进程做 reverse 分析  # → reverse-engineering
+  - 发现无线芯片，要分析射频协议，用 SDR  # → radio-sdr
+  - 这个是手机 App 的调试口，要脱壳  # → apk-reverse
+  - 固件镜像解开后要审里面的 Web 接口  # → api-security
+  - kernel 驱动要从固件里提取后做漏洞分析  # → kernel-exploit
+  - 门禁读卡器的 433 信号重放可行性  # → radio-sdr
+  - 路由器的固件升级包含硬编码凭据，用 binwalk 解  # → firmware-pentest

@@ -393,6 +393,62 @@ profile 细则：
 
 可复用的细节放最具体的那篇 reference。本文保持为"协议优先的执行路径 + 路由器"。保留通用事实与固定向量，**绝不**保留线上 secret、复制的 cookie、账号 token 或站点八卦。
 
+---
+
+## When NOT to use（近邻负例）
+
+- 只定位前端 JS 的签名函数/调用链，产物是"函数在哪、调了谁" → `../js-reverse/SKILL.md`
+- 自定义 TCP/UDP 协议、Protobuf/gRPC 帧布局、PCAP 字段还原 → `../protocol-reverse/SKILL.md`
+- APK / 原生 App / 小程序为主任务 → `../apk-reverse/SKILL.md`、`../mobile-reverse/SKILL.md`
+- PE / ELF / DLL / SO 二进制逆向 → `../ida-reverse/`、`../reverse-engineering/`
+- 标准 UI 自动化、不要求协议可复现 → `../browser-automation/`
+- 只做浏览器/网络抓包取证、不做协议还原 → `../browser-automation/` 或 `../pentest-tools/`
+- 目标不在授权 scope 内 → 先 `../scripts/case-init.ps1` 落 scope，不要为仪式开浏览器
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 变异点/算法落在 native（WASM 之外：`.so`、PE、ELF） | `../ida-reverse/` / `../reverse-engineering/references/assault-entry.md` |
+| 协议栈在固件里，需要先解包/仿真固件 | `../firmware-pentest/`，回来后继续本 skill |
+| 通信是私有二进制帧 / protobuf / PCAP 优先 | `../protocol-reverse/SKILL.md` |
+| 目标是恶意/敌意站点而非授权采集目标 | `../malware-analysis/`、`../email-security/`（若来自邮件）、`../web-protocol-reverse/` 停止 |
+| 采集器已成形，要转真实渗透/越权测试 | `../api-security/`、`../pentest-tools/`、`../attack-chain/` |
+| 需要检测规则化（把 challenge 家族规律沉淀成检测） | `../threat-hunting/` |
+
+## 定义完成
+
+本技能产出算"完成"的**外部可观测**条件（按声明的交付形态，未过全部门禁前不许标记完成）：
+
+- `artifact-only` / `evidence`：真实 URL / method / body / headers / initiator 齐备 + 精确阻塞说明落盘
+- `local-proof`：固定向量 + 编码样本 + 无外网出口的可调用助手，助手固定输入校验通过（≥2 组）
+- `compact-replay`：一个已证明请求的 **PyCharm 可右键运行** 入口（项目根 `main.py` 或 `collector/main.py`，无命令行参数），且 `grep -riE "playwright|selenium|pyppeteer" <交付目录>` 无命中
+- `collector`：browser-free Python 采集器 + 至少 **2–3 次重复 live 重放成功**记录（非空签名、token 长度合理、一次 200 都不算接受）
+- Cookie / sign / 旋转状态的写者、槽位、作用域、过期与刷新路径已证明（未证明不许硬编码）
+- `analysis/proof_manifest.json`（按 `references/contract/project-artifact-contract.md` schema）存在，敏感值已脱敏
+
+## 输出契约
+
+```
+FACT:       <观察，带来源（命令 / 文件:行 / Evidence ID）>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>  （状态见 ../ops/binary-model.md）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+本技能特有四态：Stop 只能在「声明形态通过对应能力门禁」或「证明真实外部阻塞」时用；不许把 `evidence` / `local-proof` 包装成 collector。
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：wire 出站字节与本地重建**逐字节一致**，且 ≥2–3 次 fresh live 重放全部成功（不同会话/分页/cursor 各一次）
+- `low`：只有「助手能加载」「token 长度合理」「非空签名」或页面文案声称 cookie/session 参与签名——这些一律是待证假设，不是事实
+
+---
+
 ## 相关
 
 - `../js-reverse/SKILL.md` — 本 skill 的上游：定位前端 JS 的签名函数、调用链、initiator

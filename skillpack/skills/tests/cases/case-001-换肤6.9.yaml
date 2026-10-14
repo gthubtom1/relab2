@@ -1,0 +1,48 @@
+id: case-001-换肤6.9
+date: 2026-10-13
+domain: reverse
+task_verbatim: |
+  【任务】逆向【目标】，做出能正常使用的成品。
+  【目标】当前项目根里的"换肤程序点我下载6.9版本.exe"
+  【我的需求】1. 我要的是成品：所有功能都正常，我拿来就能用。不论走哪条路线
+  （打补丁 / 恢复源码 / 照行为复刻 / 绕过授权 / 混合），我只要最后的成品。
+  2. 最怕"搞到一半"… 3. 别跑偏、别缩、别拒绝
+constraint: |
+  我没有卡密（用户两次明确声明）
+  底线 1：先让它"跑起来、看运行态"，再谈逆向
+  底线 2：判据要硬（原子值 + 多轮稳定），回显 ≠ 命中
+  底线 3：先判"它靠什么才能跑起来"再定成品口径
+  底线 4：路线可改，但不许"改着改着就不做了"
+
+expect_chain:
+  - reverse-engineering                       # 通用逆向总控
+  - reverse-engineering/references/triage-first-30-min.md
+  - reverse-engineering/references/assault-entry.md   # 受保护目标入口分流（Q0-Q3）
+  - reverse-engineering/references/anti-debug-bypass.md
+  - reverse-engineering/references/unpack-and-memory-dump.md
+  - x64dbg-reverse                             # 动态调试（新技能，2026-10-14 补）
+  - reverse-engineering/references/code-patching.md
+  - reverse-engineering/references/license-keygen/README.md    # L4 业务层：授权判定分流
+
+expect_deliverable: |
+  形态：打了补丁的原程序（或验证态绕过）
+  落点：<项目根>/work/<case名>/ 下的补丁版 exe + 启动器
+  最小命令：能跑起来并验证"判定恒真 / 功能已解锁"的一条命令
+
+known_failures:
+  - "路由给到 ida-reverse（静态），没有走到 assault-entry 的受保护目标分流"
+  - "没有自行提出「先抓包定授权形态」——是用户 22:21 提醒才做的"
+  - "没有判出「启动方式依赖」：只有 explorer.exe 启动能活，CreateProcess/cmd start 一律 150ms 自杀。这一条直接决定了后续所有调试手段的可用性，但当时是撞出来的（用户 22:44 提示本机有反反调试工具）"
+  - "没有识别「判定逻辑在保护器运行期私有区」（MEM_PRIVATE + PAGE_EXECUTE_READ，与文件任何节都不匹配），因此一直在静态改文件上打转"
+  - "用户 22:39 已声明「我没有卡密」，最终答复第③段仍在索要卡密（违反用户的硬约束）"
+  - "把「点 LOGIN（错格式卡密）零外连」当成「纯本地校验」的证据——实际是本地格式关先拦住，服务端分支从未执行过"
+  - "挂硬件断点后进程自杀（它检查自己的调试寄存器 Dr0），这一反调试子类没有预案"
+
+lesson_refs:
+  - "D:/Project/wa/work/换肤6.9逆向/REPORT.md §7ter（explorer 启动的真相）"
+  - "D:/Project/wa/work/换肤6.9逆向/REPORT.md §7quinquies（保护器私有区）"
+  - "D:/Project/wa/work/换肤6.9逆向/REPORT.md §7nonies（硬件断点被检测）"
+  - "D:/Project/wa/work/换肤6.9逆向/REPORT.md §7sexies（两道关：本地格式 + 服务端判定）"
+  - "ops/analysis-decision-framework.md ADF-R2 / R31 / R43（换阶段前必查）"
+
+status: open

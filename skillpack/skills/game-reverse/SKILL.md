@@ -118,3 +118,54 @@ description: 游戏客户端逆向与反作弊机制评估：Unity IL2CPP/Mono �
 - `../reverse-engineering/` 通用二进制逆向
 - `../protocol-reverse/` 协议帧与状态机方法论
 - `../field-journal/precedent-reverse.md` 授权边界
+---
+
+## When NOT to use（近邻负例）
+
+- 普通 Windows PE 逆向（与游戏无关）→ `../reverse-engineering/references/assault-entry.md`
+- APK 游戏 / Android 原生逆向（Java 层为主）→ `../apk-reverse/`
+- 封包只是普通 TCP/UDP 二进制协议，需要通用帧还原方法论 → `../protocol-reverse/SKILL.md`（本卡 Phase 3 只是把协议卡套在游戏场景上）
+- 浏览器游戏 / H5 前端 JS → `../js-reverse/`
+- 反作弊驱动 / EDR 侧内核对抗（不是评估客户端检测面）→ `../edr-bypass-re/`
+- Unity Android 包要拆 APK / smali → `../apk-reverse/`，出了 `libil2cpp.so` 再回本卡
+- 目标不是自有客户端 / CTF 靶场 / 厂商授权审计（例如线上真实玩家客户端）→ 不做；先 `../scripts/case-init.ps1` 落 scope 再动手
+- 任务是写外挂功能（而不是产出机制说明）→ 本 skill 明确不产出，去 `../ctf-sandbox/` 或说明超范围
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 客户端是自研引擎且封包已定位，帧布局还原成主任务 | `../protocol-reverse/SKILL.md` |
+| Unity 包体要 APK 层处理（拆包、去壳、DEX/native 提取） | `../apk-reverse/` + `references/native/il2cpp-offset-discovery.md` 在同目录 |
+| IL2CPP/Mono 已恢复，深入 `libil2cpp.so` native 分析 | `../ida-reverse/` / `../reverse-engineering/` |
+| Unreal UObject 之外要啃 UE 的 native 反射序列化 | `../reverse-engineering/languages-compiled.md` |
+| 反作弊是驱动级、评估转内核对抗 | `../edr-bypass-re/` |
+| APK 侧还需要过加固/VMP | `../apk-reverse/references/packer/`（见 `../apk-reverse/SKILL.md`） |
+
+## 定义完成
+
+本技能产出算"完成"的**外部可观测**条件（不许写形容词）：
+
+- 客户端结构图落盘：引擎类型 + 版本 + 脚本形态（Mono / IL2CPP / 原生），每项附一条二进制或元数据证据（`AFSB` magic 命中地址 / dll 列表 / 导出符号）
+- 符号表落盘：`类型 → 字段偏移 → 方法地址` 三列表，且每项做过**写后读验证**（构造对象写值再读回，或断点写后读）
+- 通信面清单落盘：封包结构（magic/长度/序号/类型各占几字节、字节序）+ 状态机图 + **至少还原一条完整握手序列**（帧号可回溯）
+- 反作弊评估落盘：检测项清单（每条防什么、用什么手段检）+ 盲区列表 + 覆盖度判断，逐条标注 `实测` 或 `推断`（无证据的一律写"推断"）
+- 偏移表标明适用的客户端版本；跨版本结论写 `contextual`
+
+## 输出契约
+
+```
+FACT:       <观察，带来源（命令 / 文件:行 / Evidence ID）>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>  （状态见 ../ops/binary-model.md）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：每个字段偏移都经过**写后读验证**（构造对象写入哨兵值再读回，或断点改值后读回）；封包字段在 ≥3 帧上对齐自洽；方法地址由三来源之一（导出表/metadata 指针/hook）交叉确认
+- `low`：「据推测该字段在 +0x38」类无验证结论；或拿到 `global-metadata.dat` 就默认符号全可用（obfuscator 改名会改名字但不改类型信息，需另行确认）；或看到高熵就断定加密（压缩同样高熵）

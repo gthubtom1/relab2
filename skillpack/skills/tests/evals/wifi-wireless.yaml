@@ -1,0 +1,23 @@
+skill: wifi-wireless
+positive:
+  - airmon-ng 进监听模式抓个包
+  - 这个 WPA2 握手包能跑出来密码吗
+  - airodump-ng 锁定这个 BSSID
+  - 有没有流氓 AP 在钓鱼
+  - 抓 PMKID 做离线评估
+  - 企业无线的隔离策略评估
+  - deauth 一下看客户端会不会掉线
+  - 上网门户能不能绕过
+  - 扫一圈看看有哪些热点
+  - 握手包拿去 hashcat 跑
+negative:
+  - 目标是非 Wi-Fi 的遥控信号，用 HackRF 和 SDR 收  # → radio-sdr
+  - 网卡固件本身的分析，用 binwalk 解开看  # → firmware-pentest
+  - 域内主机的 Kerberos 攻击怎么做  # → windows-ad
+  - 路由器的 UART 调试口怎么找  # → hardware-security
+  - 无线摄像头的手机 App 要 reverse  # → apk-reverse
+  - 抓包还原这个 bluetooth 协议  # → protocol-reverse
+  - 802.11 的 MAC 层固件漏洞，提取固件用 binwalk  # → firmware-pentest
+  - 4G 基站的射频信号用 SDR 收  # → radio-sdr
+  - 内网横向的多阶段渗透怎么编排  # → attack-chain
+  - Wi-Fi 现场抓的 PCAP 要还原私有协议  # → protocol-reverse

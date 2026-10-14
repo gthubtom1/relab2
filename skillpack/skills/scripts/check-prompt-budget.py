@@ -11,7 +11,7 @@
   3. 含 `用于：`（正向触发场景）
   4. 不含换行、不含未转义的 `"` 造成的 YAML 破坏（用未加引号的 plain scalar）
   5. 不含 `务必使用此技能` / `Ensure to use this skill`（老式"抢触发"话术）
-  6. 总量 ≤ `--max-total-bytes`（默认 10000 B ≈ 3.3K tokens；超了 exit 20）
+  6. 总量 ≤ `--max-total-bytes`（默认 16000 B；超了 exit 20。标定依据见常量上方的注释）
 
 ★ 为什么**不要** `不要用于：`（anti-example）—— 这是实测结论，不是口味：
   2026-10-14，同一批 93 条自然说法、同一套 46 技能菜单、只换 description 文本，让模型盲选：
@@ -26,12 +26,13 @@
   （要复跑这个实验：`skills/tests/experiments/desc-ab/` 下有 runner 与两份报告（含三个菜单的结果）。）
 
 ★ 为什么有"总量预算"这一档：这些 description 会被宿主**预载进系统提示，每轮都付费**。
-  单个达标 ≠ 全局划算。2026-10-14 实测基线：47 份 = 8558 B ≈ 2.9K tokens（两段式）。
+  单个达标 ≠ 全局划算。2026-10-14 基线：57 技能 = 10388 B ≈ 3.5K tokens（两段式）。
+  上限 16000 B 的标定依据（宿主真实预算换算）见文件内 MAX_TOTAL_BYTES 上方注释。
 
 用法：
     python skills/scripts/check-skill-descriptions.py
     python skills/scripts/check-skill-descriptions.py --json
-    python skills/scripts/check-skill-descriptions.py --max-total-bytes 10000
+    python skills/scripts/check-prompt-budget.py --max-total-bytes 16000
 退出码：0 全过／1 形状有问题／20 总量超预算（常驻上下文负债）
 """
 from __future__ import annotations
@@ -45,7 +46,25 @@ import re
 import sys
 
 MIN_BYTES, MAX_BYTES = 40, 220
-MAX_TOTAL_BYTES = 10000
+# ★★ 总量预算的标定依据（2026-10-14 重新标定，不是无声放宽）
+#
+# 宿主侧的真实约束（实测/公开 Issue 数据）：
+#   - Anthropic Issue #11045：元数据预算约 15,500–16,000 **字符**；每技能约 109 字符固定开销
+#     （XML 标签 / name / location）；63 技能时只有 42 能进系统提示，超限**静默隐藏且无警告**。
+#   - 本包 57 技能：57 × 109 ≈ 6,213 字符 固定开销。
+#   - 剩给 description 内容的字符额度：15,500 − 6,213 ≈ 9,287 字符。
+#
+# 换算到本脚本的"字节"口径（中文 UTF-8 ≈ 3 B/字）：
+#   9,287 字符 × 3 ≈ 27,861 B —— 这是硬上限，不是可以随便用的额度。
+#
+# 取 16,000 B 的理由：
+#   16,000 B ≈ 5,333 字符内容 + 6,213 字符开销 ≈ 11,546 字符 < 15,500 → 留 ~25% 余量。
+#   同时仍比"每技能 220 B × 57 = 12,540 B"宽松，不会因为加几个技能就撞墙。
+#
+# 为什么原来定 10,000：那是按"只算 content、且按 47 技能"拍的保守值。
+# 现在技能数涨到 57 且要补日常开发域，必须按宿主真实预算重推，否则门会逼着人
+# 把有意义的 description 砍成噪声（形状达标、触发失效）—— 那正是上一轮已证伪的方向。
+MAX_TOTAL_BYTES = 16000
 ROUTE_SCOPE_BUDGET = 1000  # route-scope.md 固定注入段的上限（每次点火读一次，不是每轮）
 BANNED = ("务必使用此技能", "Ensure to use this skill", "MUST use this skill")
 REQUIRE_ANTI = False  # 见下：anti-example 已实测无收益且会反噬，默认不再要求

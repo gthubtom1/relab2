@@ -43,8 +43,18 @@
 | 供应链 SBOM | `supply-chain-security/` | |
 | LLM/Agent | `llm-security/` | + `../ops/skill-supply-chain.md` |
 | 浏览器自动化 | `browser-automation/` | |
-| 报告/图 | `docs-generator/` `diagram-generator/` | |
-| 符号迁移 | `binary-diff/` | |
+| 报告/图 | `docs-generator/` `diagram-generator/` |
+| 符号迁移 | `binary-diff/` |
+| **日常开发·需求** | `req-clarify/` | 2026-10-14 新增：需求含糊→可判定验收标准 |
+| **日常开发·设计** | `design-slice/` | 2026-10-14 新增：端到端最薄切片（walking skeleton） |
+| **日常开发·实现** | `implement-feature/` | 2026-10-14 新增：小步实现，复用既有 pattern |
+| **日常开发·测试** | `write-tests/` | 2026-10-14 新增：测行为不测实现，不强制覆盖率 |
+| **日常开发·修 bug** | `fix-bug/` | 2026-10-14 新增：先复现再修，修根因 |
+| **日常开发·验证** | `verify-done/` | 2026-10-14 新增：**给 agent 一个它能自己跑的 check**（打破「看起来做完了」） |
+| **日常开发·评审** | `code-review/` | 2026-10-14 新增：Google CR 标准 |
+| **日常开发·交付** | `pr-ship/` | 2026-10-14 新增：最小可审 PR + 自测证据 |
+| **日常开发·探索** | `spike/` | 2026-10-14 新增：一次性原型，产出是判断不是代码 |
+| **日常开发·文档** | `docs-changelog/` | 2026-10-14 新增：改动与文档/changelog 同步 |
 | 作战契约 | `ops/` | **特色** |
 | CTF 编排 | `CTF-Sandbox-Orchestrator/` | |
 | 密码学模式识别 | `reverse-engineering` 模式文档 | 与逆向任务共用，不维护独立扩展包 |

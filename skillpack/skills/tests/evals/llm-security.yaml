@@ -1,0 +1,23 @@
+skill: llm-security
+positive:
+  - 帮我测下这个 ChatBot 能不能提示词注入
+  - 套一下提示词，看能不能泄露系统提示
+  - 这个 RAG 能不能被投毒，往知识库里掺东西
+  - Agent 能调一堆工具，帮我看看能不能滥用越权
+  - 用 garak 跑一轮模型红队
+  - 帮我越狱这个模型，看能不能绕过安全策略
+  - 记忆持久化能不能被投毒
+  - 这个 AI 客服能不能套话套出不该说的
+  - 间接提示注入：文档里掺指令能不能生效
+  - 对着 OWASP LLM Top10 过一遍
+negative:
+  - 这个是传统 SQL 注入和 XSS，不是 AI 那块  # → api-security
+  - 模型文件本身要做 reverse 看结构  # → reverse-engineering
+  - Agent 的依赖和构建链，属于供应链问题  # → supply-chain-security
+  - 提示注入已经越权访问到内部 API 了，要打那个接口  # → api-security
+  - 从提示注入到内网横向，多阶段怎么走  # → attack-chain
+  - RAG 数据源污染，本质是依赖投毒  # → supply-chain-security
+  - 上线前帮我审下这个推理服务的代码  # → code-audit
+  - 这个聊天客户端的本地 sqlite 没加密  # → thick-client
+  - 模型服务跑在 k8s 里，评估一下容器逃逸  # → cloud-k8s
+  - 这个 Agent 用的向量库镜像里有恶意依赖，用 trivy 扫  # → supply-chain-security

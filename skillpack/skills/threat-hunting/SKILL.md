@@ -85,3 +85,46 @@ description: 威胁狩猎与检测工程：SIEM/EDR 假说查询、Sysmon 事件
 - [ ] 是否有明确假说与结论？
 - [ ] 规则是否注明误报与数据源？
 - [ ] Checklist？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 要分析的是样本本体（静态/动态） → 用 `../malware-analysis/SKILL.md`
+- 要做的是磁盘/内存取证 → 用 `../digital-forensics/SKILL.md`
+- 要收集的是外部威胁情报 → 用 `../threat-intelligence/SKILL.md`
+- 前置条件：查询生产 SIEM 前先确认查询范围与配额，避免拖垮日志平台
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 假设命中，需要样本确认 | `../malware-analysis/SKILL.md` |
+| 需要落盘检测规则 | `../reverse-engineering/references/re-agent-workflow.md` |
+| 需要外部 IOC 富化 | `../threat-intelligence/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 假设清单 + 对应查询语句 + 结果落盘
+- 每条检测规则在实际数据上验证过「能触发且不误报」
+- 规则文件路径 + 触发样本证据
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：规则在真实数据上实测触发，且控制组不误报
+- `low`：规则只在理论上能匹配，未跑过数据

@@ -1,0 +1,23 @@
+skill: cloud-k8s
+positive:
+  - 云上这台机器能不能打到元数据 169.254.169.254
+  - 这个集群的 RBAC 配得对不对
+  - 容器里发现宿主机挂载，能不能逃逸
+  - 这个 S3 存储桶是不是谁都能看
+  - IAM 权限配得太大，帮我评估能到哪些服务
+  - K8s 的 secrets 谁能读，帮我验一下
+  - 容器镜像里有什么东西，帮我过一遍
+  - 云账号的访问密钥丢得到处都是
+  - 帮我评估一下 docker 逃逸路径
+  - 这个 admission 配置有没有能绕过的点
+negative:
+  - 自建机房那几台物理机，用 nmap 扫一遍内部网段  # → pentest-tools
+  - 只是应用层 API 接口的越权  # → api-security
+  - 要审的是构建流水线而不是运行时集群  # → supply-chain-security
+  - 容器逃逸到内核层，帮我做 kernel 侧的利用  # → kernel-exploit
+  - 云凭据拿到了，要往内网做多阶段打通  # → attack-chain
+  - 这个设备的固件我用 binwalk 解开了  # → firmware-pentest
+  - 工控环境里的控制器暴露面帮我看看  # → ot-ics
+  - 帮我审下这个 API 网关的代码  # → code-audit
+  - 这台数据库直接暴露在公网，密码还是默认的  # → database-security
+  - 主机被入侵了，要做内存 dump 取证  # → digital-forensics

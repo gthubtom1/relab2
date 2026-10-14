@@ -112,3 +112,54 @@ MUST 产出：
 - [ ] 是否有可复现解码命令？
 - [ ] 是否遵守 scope / 脱敏？
 - [ ] 是否回写 field-journal / 报告 Checklist？
+---
+
+## When NOT to use（近邻负例）
+
+- 只还原 HTTP 参数签名 / JS 加密字段（sign/token 在页面 JS 里）→ `../js-reverse/`
+- 目标是 browser-free 采集器 / 403/412 风控 bypass → `../web-protocol-reverse/SKILL.md`
+- 只是 TLS 证书链问题（过期、自签名、固定证书）→ `../pentest-tools/` 或浏览器代理，本 skill 不处理 PKI 本身
+- 固件内协议栈深挖（要先解包 / 仿真固件才能看到服务端）→ `../firmware-pentest/`，拿到可执行体后再回本 skill
+- 目标是 APK/`.so` 里的序列化函数（帧结构已知，要逆算法）→ `../ida-reverse/`、`../apk-reverse/`
+- 目标是游戏封包的通用规则（心跳/分片/序号）→ `../game-reverse/` 先按游戏场景分流，再回本 skill 做帧
+- 已有 PCAP 但需求是数字取证（谁在什么时候发了什么）→ `../digital-forensics/`
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 帧里出现加密/压缩且密钥派生在客户端 native 里 | `../ida-reverse/` / `../apk-reverse/` 定位密钥例程，回来后继续 |
+| 密钥/签名逻辑在浏览器 JS | `../js-reverse/`，回来后继续 |
+| 目标协议宿主是固件 / IoT 设备 | `../firmware-pentest/`（Stage 6+ 仿真），回来后继续 |
+| 需求转成对还原后协议的利用 / 重放攻击 | `../pentest-tools/`、`../api-security/` |
+| PCAP 本身是取证对象（时间线、入侵溯源） | `../digital-forensics/` |
+| C2 协议 + 恶意样本主体 | `../malware-analysis/SKILL.md` |
+
+## 定义完成
+
+本技能产出算"完成"的**外部可观测**条件（不许写形容词）：
+
+- 消息类型表落盘：`name / opcode / fields`（字段含类型、长度、字节序），至少覆盖握手 + 一条业务消息
+- 至少 1 条**可复现**的解码命令或脚本（原样贴命令，输出与本文件中的 hex 摘录对得上）
+- Evidence 落盘：原始 hex 摘录 + 解码结果（脱敏），位置在 PCAP 或日志里可回溯（帧号 / offset）
+- 状态机画成 `Connect → Auth → Ready → … → Close` 的可引用图，且至少有一条完整握手序列被实际观测到
+- 未还原的消息 / 未知字段显式进 `## unknowns`，不许留空白
+- `assault.md` 回填写实：布局结论 → `## findings`（类型 `proto`），可复现命令 → 证据列
+
+## 输出契约
+
+```
+FACT:       <观察，带来源（命令 / 文件:行 / Evidence ID）>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>  （状态见 ../ops/binary-model.md）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：同一字段位置在**多条同类消息**上对齐成立（自增序号 / 长度字段随 payload 变化），且用同一份解码脚本对 ≥3 帧输出结构一致
+- `low`：只从单条消息猜出的字段语义（尤其是定长字段边界、含头/不含头的长度字段）；或"高熵 = 加密"未排除压缩可能

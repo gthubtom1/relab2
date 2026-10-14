@@ -1,0 +1,38 @@
+id: case-002-prng-upx
+date: 2026-10-13
+domain: reverse
+task_verbatim: |
+  （自造样本，非用户原话）以 MinGW 编译的 PRNG 探针（UPX 5.21 加壳）为目标，
+  按 assault-entry 四状态机完整走一遍，过 L1（壳）与 L4（算法）两层，
+  产出可运行复刻实现，以同输入对照 + 严格审计收尾
+constraint: |
+  自造样本（own_system），offline
+  preset: assault
+
+expect_chain:
+  - reverse-engineering/references/assault-entry.md
+  - reverse-engineering/references/unpack-and-memory-dump.md
+  - reverse-engineering/references/struct-reconstruction.md
+  - docs-generator
+  - case-review
+
+expect_deliverable: |
+  形态：可运行的复刻实现（源码）
+  落点：work/assault-prng-upx/build/prng_rebuilt.py
+  最小命令：diff-runner.py 逐 function 对照，stdout/exit 逐字节一致
+
+known_failures:
+  - "无（这是正控案例：链路按预期走通，四状态机、双层、对照审计全绿）"
+
+note: |
+  ★ 本案例是**正控**（positive control）：证明「四状态机 + 对照审计」这条路是能走通的。
+  与 case-001 的对照价值在于：case-002 的目标是自造样本（无保护器私有区、无启动方式依赖、
+  无反调试），所以走的正是 assault-entry 的理想路径；case-001 的真实目标带齐了这三样，
+  于是暴露了技能包在这三处的空白。**两案例一起看，才能区分「流程对不对」与「覆盖够不够」。**
+
+lesson_refs:
+  - "skillpack/skills/field-journal/2026-10-13_assault-prng-upx-l1l4.md"
+  - "work/assault-prng-upx/assault.md（§functions / §findings / §diff_baseline 全表填实）"
+  - "skillpack/skills/field-journal/seed-005 等 seed 系列（正控语料）"
+
+status: resolved

@@ -262,7 +262,8 @@
         },
         {
           "must": "(?<![a-z0-9_])exe(?![a-z0-9_])|(?<![a-z0-9_])dll(?![a-z0-9_])|exe.?文件|dll.?文件",
-          "note": "routing.md: Binary exe/dll → ida-reverse；ida SKILL.md: 分析 exe/dll/so/elf/macho，看看这个exe；不用\\b因CJK是词字符"
+          "note": "routing.md: Binary exe/dll → ida-reverse；ida SKILL.md: 分析 exe/dll/so/elf/macho，看看这个exe；不用\\b因CJK是词字符；★ 2026-10-14：受保护/带壳目标 exclude 掉，交 R54 assault-entry （case-001 实测：这条不排除则「带壳 exe 做成品」永远落在纯静态 IDA 上）",
+          "exclude": "加壳|带壳|脱壳|去壳|保护壳|加固|套壳|vmp|vmprotect|themida|enigma|反调试|自校验|混淆|虚拟化|0xC0000409|fastfail|受保护|保护器"
         },
         {
           "must": "授权.?校验|注册.?校验|授权.?验证|许可.?验证|license.?check",
@@ -515,6 +516,10 @@
       "label": "API security",
       "skill": "api-security/SKILL.md",
       "keywords": [
+        {
+          "must": "(?<![a-z0-9_])idor(?![a-z0-9_])|(?<![a-z0-9_])bola(?![a-z0-9_])",
+          "note": "2026-10-14 补：IDOR/BOLA 字面量先前无关键词，落到 R0"
+        },
         {
           "must": "graphql|bola|bfla|api.?secur|接口.?安全|越权|未授权.?访问|rest.?api.?secur"
         },
@@ -1331,6 +1336,10 @@
             "连库|身份|权力|权限|系统|收紧|库"
           ],
           "note": "canon-gap N087：连库身份权限过大调系统（SKILL权限过大/危险功能；权力大口语）"
+        },
+        {
+          "must": "脱库|拖库|库被拖|数据(泄露|泄漏|被拖)|数据库.{0,6}(泄露|泄漏)",
+          "note": "2026-10-14 补：口语「脱库/拖库」先前无关键词，落到 R0"
         }
       ]
     },
@@ -1682,6 +1691,174 @@
           "note": "防吸走：Windows 内核（走 R18 edr-bypass-re）"
         }
       ]
+    },
+    "R53": {
+      "label": "x64dbg dynamic debugging",
+      "skill": "x64dbg-reverse/SKILL.md",
+      "keywords": [
+        {
+          "must": "x64dbg|ollydbg|x64dbg.?mcp|dynamic.?debugger",
+          "note": "x64dbg-reverse SKILL.md：点名 x64dbg 的动态调试手段；与 ida-reverse 静态反编译互补"
+        },
+        {
+          "must": "下断点|硬件断点|软断点|单步跟踪|看寄存器|改内存|内存补丁|调用栈|dump.?module|反反调试",
+          "mustAll": [
+            "x64dbg|debugger|调试器|attach"
+          ],
+          "note": "动态调试产物词，且必须同现 x64dbg/debugger/attach，避免与 frida/域卡抢"
+        },
+        {
+          "must": "attach|附加",
+          "exclude": "frida|hook|硬件|jtag|swd|uart|spi|flash|固件|android|安卓|apk|模拟器",
+          "note": "attach 动态调试归本路由；frida 手段归域卡（R1/R0），硬件调试口归 R34"
+        }
+      ]
+    },
+    "R54": {
+      "label": "Protected target assault entry",
+      "skill": "reverse-engineering/references/assault-entry.md",
+      "keywords": [
+        {
+          "must": "加壳|带壳|脱壳|去壳|保护壳|加固|套壳|壳.{0,6}(难|打不开|脱不掉|进不去)|vmp|vmprotect|themida|enigma|aspack",
+          "mustAll": "逆向|破解|分析|复刻|成品|还原|patch|补丁|exe|dll|\\.so|\\.elf|程序|软件|目标|样本",
+          "note": "assault-entry Q2 L1 层：静态先判壳类型再决定脱壳路线；未过 L1 前 static/dynamic 都在壳层打转",
+          "exclude": "苹果|macos|mac os|osx|os x|dmg|mach-?o|ios|iphone|ipad"
+        },
+        {
+          "must": "反调试|反反调试|自校验|完整性校验|检测调试器|anti.?debug|ollvm|控制流平坦|混淆.{0,6}(严重|重)|指令虚拟化",
+          "mustAll": "逆向|破解|分析|复刻|成品|exe|dll|\\.so|程序|软件|目标|样本|壳",
+          "note": "assault-entry Q2 L3 层：自检层必须先过（ScyllaHide），否则附加即闪退，根本走不到 dump",
+          "exclude": "苹果|macos|mac os|osx|os x|dmg|mach-?o|ios|iphone|ipad"
+        },
+        {
+          "must": "0xC0000409|C0000409|fastfail|FAST_FAIL|int 29|启动.{0,8}(即死|就退|一闪)|双击.{0,6}(能跑|才能)|只有双击",
+          "note": "受保护目标的启动自检特征：__fastfail 自杀点；或「只有 explorer 双击能跑」——先过 L3 再谈其他；★ 排除 macOS 语境（那条归 R31 macos-reverse：「苹果电脑上的程序双击能跑」是 macOS 签名/启动项问题，不是受保护目标）",
+          "exclude": "苹果|macos|mac os|osx|os x|dmg|mach-?o|\\.app\\b|ios|iphone|ipad|签名校验"
+        },
+        {
+          "must": "受保护|保护器|壳.{0,4}(层|分析)|脱壳.{0,6}(失败|不通|卡)|判定.{0,6}私有区|运行期.{0,4}生成.{0,4}代码",
+          "note": "assault-entry Q2 总体：受保护目标必须先分层（L0-L4）再选路线",
+          "exclude": "苹果|macos|mac os|osx|os x|dmg|mach-?o|ios|iphone|ipad"
+        },
+        {
+          "must": "(逆向|破解|分析|复刻|还原).{0,24}(做出|要|想|来个|给我).{0,12}(成品|能正常使用|可正常使用|可用|能用|一模一样的|功能一样)",
+          "mustAll": "exe|dll|\\.so|\\.elf|程序|软件|目标|二进制|文件",
+          "note": "★ 2026-10-14 补：目标=可运行成品 时，入口必须是 assault-entry 四问分流（Q0-Q3），不是某把具体的刀。case-001 原话「逆向 X.exe 做出能正常使用的成品」原先落在 ida-reverse（纯静态），模型拿到后自己判「太重」弃用 → PRIMARY 形同虚设。目标含「成品」语义就是受保护目标的强信号。",
+          "exclude": "苹果|macos|mac os|osx|os x|dmg|mach-?o|ios|iphone|ipad"
+        },
+        {
+          "must": "(挂|上|接|附加|打开).{0,6}调试器.{0,10}(就|即|马上|立刻)?\\s*(退|崩|死|消失|秒退)|一调试就|附加即退|调试器.{0,6}闪退|反调试.{0,4}(命中|被杀|检测到)",
+          "note": "L3 自检层症状：附加即退 → 先 anti-debug-bypass + ScyllaHide，别在静态上打转（assault-entry Q2 L3 过层判据）",
+          "exclude": "苹果|macos|mac os|osx|os x|dmg|mach-?o|ios|iphone|ipad"
+        }
+      ]
+    },
+    "R55": {
+      "label": "Requirement clarification",
+      "skill": "req-clarify/SKILL.md",
+      "keywords": [
+        {
+          "must": "需求.{0,6}(含糊|不清|不明|模糊|太笼统|没讲清)|验收标准|做到什么程度|怎么算做完|先确认需求|要做什么功能|写个 ?spec|定一下 ?spec",
+          "mustAll": "帮我|我们要?|做|写|开发|改|项目|功能",
+          "exclude": "逆向|渗透|破解|脱壳|漏洞|利用|靶场|恶意|样本"
+        }
+      ]
+    },
+    "R56": {
+      "label": "Design slice / walking skeleton",
+      "skill": "design-slice/SKILL.md",
+      "keywords": [
+        {
+          "must": "怎么设计|架构怎么|从哪(里|儿)?开始|先做哪(个|块|部分)|最小可用|最薄(的)?闭环|walking ?skeleton|垂直切|先搭架子|从哪下手|先做哪一块",
+          "mustAll": "功能|模块|系统|服务|项目|开发|搭建|实现|做",
+          "exclude": "逆向|渗透|破解|漏洞|靶场"
+        }
+      ]
+    },
+    "R57": {
+      "label": "Implement feature",
+      "skill": "implement-feature/SKILL.md",
+      "keywords": [
+        {
+          "must": "(写|做|加|实现|开发|搭|搞|建|弄).{0,12}(功能|模块|接口|页面|服务|系统|网站|工具|脚本|组件|后台|前端|表单|登录)",
+          "mustAll": "帮我|要|把|做|写|开发|实现|加|搭",
+          "exclude": "逆向|渗透|破解|脱壳|漏洞|利用|外挂|靶场|恶意|样本|壳|越权|注入|卡密|授权校验"
+        }
+      ]
+    },
+    "R58": {
+      "label": "Write tests",
+      "skill": "write-tests/SKILL.md",
+      "keywords": [
+        {
+          "must": "(写|补|加|搞).{0,6}(单元|集成|端到端|e2e|回归)?测试|单测|测试覆盖率|测试怎么写|补测试|回归测试",
+          "exclude": "逆向|渗透|漏洞|利用|靶场|恶意|样本"
+        }
+      ]
+    },
+    "R59": {
+      "label": "Fix bug",
+      "skill": "fix-bug/SKILL.md",
+      "keywords": [
+        {
+          "must": "修(个)? ?(bug|问题|缺陷)|报错|抛异常|崩溃|不工作|坏了|跑不起来|起不来|白屏|闪退|复现(一下)?",
+          "mustAll": "代码|程序|功能|页面|接口|脚本|服务|项目|应用|网站",
+          "exclude": "逆向|反调试|脱壳|壳|靶场|渗透|漏洞利用|恶意|样本|卡密|授权"
+        }
+      ]
+    },
+    "R60": {
+      "label": "Verify done",
+      "skill": "verify-done/SKILL.md",
+      "keywords": [
+        {
+          "must": "怎么验证|算不算做完|做完了吗|验收(一下)?|怎么确认|检查一下是不是|确认(改|修)(好|对)了|确认.{0,12}(改|修).{0,6}(好|对)了|真的(修好|改好)了吗|是不是真的(好|对)了",
+          "exclude": "逆向|渗透|靶场|漏洞|样本|报告",
+          "note": "verify-done：验证「做完了」——核心是给 agent 一个它能自己跑的 check（否则『看起来做完了』是唯一信号）"
+        }
+      ]
+    },
+    "R61": {
+      "label": "Code review",
+      "skill": "code-review/SKILL.md",
+      "keywords": [
+        {
+          "must": "代码评审|审(一下)?(这个|这段)?(代码|改动|diff|PR)|code ?review|能不能合|合入|review 一下",
+          "exclude": "逆向|渗透|漏洞|靶场|恶意|样本|越权|注入"
+        }
+      ]
+    },
+    "R62": {
+      "label": "Ship a PR",
+      "skill": "pr-ship/SKILL.md",
+      "keywords": [
+        {
+          "must": "提(个)? ?pr|开(个)? ?pr|提交(代码|改动)|发起合并|交付(这个)?功能|发布(一?个)?版本",
+          "mustAll": "帮我|要|把|这个|改动|代码|功能",
+          "exclude": "逆向|渗透|漏洞|靶场|恶意"
+        }
+      ]
+    },
+    "R63": {
+      "label": "Spike / throwaway prototype",
+      "skill": "spike/SKILL.md",
+      "keywords": [
+        {
+          "must": "先试试|验证一下(行不行|可行|能不能)|技术选型|比较(两个|几种|一下)?方案|做个原型|原型验证|prototype(?!\\s*pollution)|poc ?一下|探一下路|哪个方案(好|更合适)",
+          "exclude": "逆向|渗透|漏洞利用|靶场|恶意|样本|injection|xxe|pollution|越权",
+          "note": "spike：一次性原型/技术选型。★ 2026-10-14：`prototype` 加负向断言，避免误吃 \"prototype pollution\"（那是 Web 注入面，归 R46）"
+        }
+      ]
+    },
+    "R64": {
+      "label": "Docs and changelog sync",
+      "skill": "docs-changelog/SKILL.md",
+      "keywords": [
+        {
+          "must": "(更新|同步|补|写|加上?).{0,8}(readme|changelog|文档|注释|变更记录)|变更记录|文档(和|跟|与)代码(对不上|不一致)|文档过时|补注释|同步文档",
+          "exclude": "逆向|渗透|漏洞|靶场|恶意|样本|报告|writeup"
+        }
+      ]
     }
   },
   "priority": [
@@ -1698,6 +1875,7 @@
     "R21",
     "R22",
     "R45",
+    "R54",
     "R6",
     "R7",
     "R8",
@@ -1709,6 +1887,7 @@
     "R24",
     "R37",
     "R23",
+    "R63",
     "R35",
     "R25",
     "R44",
@@ -1716,18 +1895,21 @@
     "R29",
     "R38",
     "R32",
+    "R61",
     "R26",
     "R27",
     "R10",
     "R46",
     "R11",
     "R12",
+    "R62",
     "R13",
     "R14",
     "R15",
     "R19",
     "R40",
     "R47",
+    "R64",
     "R20",
     "R39",
     "R48",
@@ -1735,6 +1917,48 @@
     "R50",
     "R51",
     "R52",
+    "R53",
+    "R55",
+    "R56",
+    "R57",
+    "R58",
+    "R59",
+    "R60",
     "R0"
-  ]
+  ],
+  "entry_menu": [
+    {
+      "skill": "reverse-engineering/references/triage-first-30-min.md",
+      "why": "目标是什么还不清楚时先分诊（格式/壳/反调试/依赖）"
+    },
+    {
+      "skill": "reverse-engineering/SKILL.md",
+      "why": "通用逆向 / 反调试 / 未知二进制"
+    },
+    {
+      "skill": "reverse-engineering/references/assault-entry.md",
+      "why": "受保护目标（加壳/反调试/自校验）或目标是「做出成品」→ 四问分流"
+    },
+    {
+      "skill": "pentest-tools/SKILL.md",
+      "why": "资产探测 / 渗透 / 信息收集"
+    },
+    {
+      "skill": "code-audit/SKILL.md",
+      "why": "有源码要审注入/鉴权"
+    },
+    {
+      "skill": "malware-analysis/SKILL.md",
+      "why": "可疑样本的行为与能力"
+    },
+    {
+      "skill": "req-clarify/SKILL.md",
+      "why": "需求含糊 / 不知道要什么 / 验收标准写不出"
+    },
+    {
+      "skill": "docs-generator/SKILL.md",
+      "why": "要出报告 / writeup / 文档"
+    }
+  ],
+  "entry_menu_note": "起点候选（≤8）：仅在 PRIMARY=R0 / confidence=low / candidates 为空时使用。它解决的是「一句模糊请求时模型手上什么都没有」。不是第二套路由，不参与打分，不改变 PRIMARY。依据：arXiv 2607.17598 实测两级路由足够、三级会崩坏；此处即第一级。"
 }

@@ -1,0 +1,23 @@
+skill: browser-extension-reverse
+positive:
+  - 解包这个 crx 看看 manifest 权限
+  - 油猴脚本和 content script 到底干了什么
+  - service_worker 里的后台逻辑是什么
+  - 这个扩展是不是在偷偷上报数据
+  - 权限给多了没，读不读所有网站
+  - mv3 扩展的 background 怎么分析
+  - 插件往哪发请求，有没有夹带私货
+  - 从 Chrome 商店下的这个扩展有没有问题
+  - 解压 xpi 看 Firefox 扩展
+  - 扩展的 IOC 和流量怎么提
+negative:
+  - 目标是普通网页的 webpack 打包 JS，没有 crx 和 manifest  # → js-reverse
+  - 目标是挂马和钓鱼页本身，不是扩展，要看邮件的 SPF/DMARC  # → email-security
+  - 是 Electron 桌面端的插件机制  # → thick-client
+  - 只要用 playwright 自动化装和点这个扩展  # → browser-automation
+  - 已入侵环境取证，扩展只是其中一个 artifact  # → digital-forensics
+  - 签名和加密算法在服务端实现，属于 signature 还原  # → web-protocol-reverse
+  - 扩展带的 helper 原生二进制要逆向  # → reverse-engineering
+  - 是一个油猴脚本注入的页面逻辑，不是扩展  # → js-reverse
+  - 是 apk 里的 WebView 插件  # → apk-reverse
+  - 要从抓到的包里还原服务端协议状态机  # → protocol-reverse

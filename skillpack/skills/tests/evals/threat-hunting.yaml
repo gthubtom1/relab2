@@ -1,0 +1,23 @@
+skill: threat-hunting
+positive:
+  - 半夜有人登录，帮我顺着日志猎一下
+  - 写条 Sigma 规则把这类行为捞出来
+  - 蓝队要主动去找，不等告警
+  - 这个误报太烦了，帮我调调规则
+  - 顺着线索看看有没有漏网的
+  - LOTL 横向行为用检测规则怎么捞
+  - YARA 规则验证一下能不能触发
+  - 主机上留下的痕迹帮我猎一猎
+  - SIEM 查询怎么写这个假说
+  - 把 IOC 落地成检测规则
+negative:
+  - 要分析的是样本本体，放 sandbox 里跑  # → malware-analysis
+  - 磁盘和内存 dump 的取证  # → digital-forensics
+  - 外部 OSINT 威胁情报的收集  # → threat-intelligence
+  - 攻击方那边要绕过 EDR 投递载荷  # → edr-bypass-re
+  - PCAP 里异常外连的流量包要做溯源  # → digital-forensics
+  - 这条 IOC 从公开渠道富化一下  # → threat-intelligence
+  - 日志里有 SQL 注入痕迹，要打那个站  # → pentest-tools
+  - Agent 的工具调用日志要审是不是被滥用  # → llm-security
+  - 规则要落到 CI 里做依赖扫描，用 trivy  # → supply-chain-security
+  - 规则写完要整理成 report 交付  # → docs-generator

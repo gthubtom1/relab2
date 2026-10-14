@@ -1,0 +1,23 @@
+skill: ctf-sandbox
+positive:
+  - 打个 CTF，环境怎么起
+  - AWD 比赛，切题流程是什么
+  - 靶场题目打不开，帮我看看
+  - 这道 pwn 题怎么做
+  - 比赛环境里要先跑 case-init 吗
+  - 夺旗赛的题分几类，怎么切
+  - 靶机连不上，环境跑起来
+  - 刷题的时候 flag 格式不对
+  - 比赛里 web 题和 misc 题怎么分技能
+  - 闯关题的解题路径帮我定一下
+negative:
+  - 目标是真实生产系统，不是靶场，要按授权打  # → attack-chain
+  - 这是长期项目不是单次解题，要写 writeup 和交付报告  # → docs-generator
+  - 只是要审一段代码的 diff 有没有注入  # → code-audit
+  - 这题是 pwn，我已经定位到漏洞点，要写 exploit  # → pwn-chain
+  - 这题是 APK，要用 jadx 反编译  # → apk-reverse
+  - 这题是内核提权，要做 CVE 根因分析  # → kernel-exploit
+  - 这题是恶意样本，要放 sandbox 分析  # → malware-analysis
+  - 交报告前帮我审下 case 的证据链  # → case-review
+  - 这题是固件题，要用 binwalk 解开  # → firmware-pentest
+  - 这题是安卓 App 的加固，要脱壳  # → apk-reverse

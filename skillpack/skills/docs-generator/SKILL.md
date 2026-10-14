@@ -188,3 +188,46 @@ For README, API endpoint, and file organization templates, see [references/templ
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 报告是否含 Evidence / Finding / Path（ops 契约）？
 - [ ] 是否完成并回写了 RULES 要求的 Checklist 项？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 要画的是图不是文 → 用 `../diagram-generator/SKILL.md`
+- 要审 case 完整性而不是写文档 → 用 `../case-review/SKILL.md`
+- 要写的是代码注释/README 之外的代码 → 用 `../code-audit/SKILL.md`
+- 前置条件：报告里的技术结论必须来自 case 的 Evidence，不许自创
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 报告里需要图，先画图 | `../diagram-generator/SKILL.md` |
+| 报告要交出去，先审 case | `../case-review/SKILL.md` |
+| 需要补技术证据 | `../ops/evidence-finding-path.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 文档落盘路径存在，含 Scope / Evidence / Findings / ≥1 Path
+- 每条结论可追到 Evidence ID
+- Executive Summary 面向非技术读者，无术语堆砌
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：报告中每条技术主张都能在 Evidence 里找到对应
+- `low`：报告中出现无法追溯的结论

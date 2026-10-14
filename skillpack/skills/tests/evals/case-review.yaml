@@ -1,0 +1,23 @@
+skill: case-review
+positive:
+  - 交报告前帮我审一下这个 case 包
+  - 证据链全不全，帮我核一遍
+  - 这个 case 的 artifact SHA-256 帮我复核
+  - scope 就绪度怎么样，能不能开打
+  - Evidence 链可不可追溯
+  - 时间线有没有断点
+  - rebuild 表的状态有没有证据撑着
+  - 每条结论有没有证据
+  - 这份报告能不能交出去
+  - case 里的证据之间对不上，帮我看看
+negative:
+  - 我要新建一个 case，不是审旧的，授权范围怎么写  # → ops/scope-contract
+  - 要写报告正文，整理成文档  # → docs-generator
+  - 帮我画个 Mermaid 攻击路径图  # → diagram-generator
+  - 这份报告的格式和排版帮我改改  # → docs-generator
+  - 帮我把这次渗透的发现整理成报告  # → docs-generator
+  - 攻击链的每一步证据要补充采集  # → attack-chain
+  - 这个 case 的漏洞还没修，继续打  # → pentest-tools
+  - 时间线要重新梳理，从内存 dump 开始  # → digital-forensics
+  - 帮我画个时序图放在报告里  # → diagram-generator
+  - 证据里的哈希对应那个 exe 样本要逆一下  # → ida-reverse

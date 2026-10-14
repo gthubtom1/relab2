@@ -331,6 +331,20 @@ Blindspots (Rust/Go/VMP/injection/OLE/PDF/agent-meta): [analysis-blindspot-cookb
 | 5 提取 IoC 与攻击链 | §4 Synthesis | IOC + Kill Chain / Path |
 | 6 归档与规则化 | §4 + docs-generator / YARA | 结构化报告；规则可选 |
 
+### 阶段边界门（2026-10-14 提主链 · MUST）
+
+**阶段之间不是顺序，是「换之前必须回答」。** 每次准备进下一阶段 / 换技能 / 收工前，**MUST** 查 `../../ops/analysis-decision-framework.md`：
+
+| 判据 | 必须回答 |
+|---|---|
+| **ADF-R2** | 当前假设是什么？**continue / switch / stop** 三选一 |
+| **ADF-R31** | 是否因为「这个环境用熟了」而拒绝切换？（Votipka 实测此现象） |
+| **ADF-R43** | 连续 3 个动作无新证据 / 2 次换阶段无证据 → 重规划 |
+
+换技能时在 timeline 记一行 `换技能：<旧> → <新>，因为 <证据>`（信号清单见 `../../ops/skill-pivot-contract.md`）。
+
+**为什么这门必须存在**：六阶段骨架本身是好设计（IAT 铁律 / 时间盒 / 可行性门闩都是判据），但**判据此前全在阶段内部**。阶段之间没有门 → 模型在节点上拿到了决定性新证据（判出壳、判出启动方式依赖），却没有任何机制要求它改路线。这正是 2026-10-13 实弹里发生的：路由给了 `ida-reverse`，"这是带保护器目标"的证据出现时，没人要求改走 `assault-entry`。
+
 ## 6. 与「堆 RE skill 插件」的差异
 
 - 本包用 **阶段门闩 + 运行时工具探测**，不默认启用 Hex-Rays「unsafe 全自动执行」类插件  

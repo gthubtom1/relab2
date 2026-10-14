@@ -123,3 +123,46 @@ kubectl get clusterrolebindings
 ### `references/` — 根目录
 
 
+
+---
+
+## When NOT to use（近邻负例）
+
+- 目标是自建机房的物理机/虚拟机，不涉及云元数据与容器 → 用 `../pentest-tools/SKILL.md`
+- 目标只是应用层接口 → 用 `../api-security/SKILL.md`
+- 要审的是构建流水线而非运行时集群 → 用 `../supply-chain-security/SKILL.md`
+- 前置条件：**云账号不属于你** → 只做只读枚举与配置取证，不做资源变更
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 拿到云凭据，要评估能到哪些服务 | `../attack-chain/SKILL.md` |
+| 容器内发现宿主机挂载/特权，要逃逸验证 | `../kernel-exploit/SKILL.md` |
+| 发现 CI runner 可被投毒 | `../supply-chain-security/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- IAM 权限矩阵落盘（主体 × 动作 × 资源），每条有实测证据
+- 逃逸/越权的 PoC 命令落盘并可重放
+- 修复建议对应到具体配置项（不是泛泛而谈）
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：权限提升链每一跳都有 API 返回实测（不是策略文档推断）
+- `low`：仅凭 IAM policy JSON 静态推断可达，未实际调用

@@ -11,8 +11,12 @@
       "id": "verify-spec-structure",
       "script": "skills/scripts/verify-spec-structure.py",
       "args": [],
-      "blocking_exits": [20],
-      "non_blocking_exits": [10],
+      "blocking_exits": [
+        20
+      ],
+      "non_blocking_exits": [
+        10
+      ],
       "executes_vendor_code": false,
       "why": "Spec section numbering, cross-references and the task-card count."
     },
@@ -20,7 +24,9 @@
       "id": "audit-discovery-surface",
       "script": "skills/scripts/audit-discovery-surface.py",
       "args": [],
-      "blocking_exits": [20],
+      "blocking_exits": [
+        20
+      ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "Spec 17.27 physical isolation: a plain recursive skills/** walk must find exactly canonical skills plus the four wrappers."
@@ -29,8 +35,12 @@
       "id": "verify-triage-lock",
       "script": "skills/scripts/verify-triage-lock.py",
       "args": [],
-      "blocking_exits": [20],
-      "non_blocking_exits": [10],
+      "blocking_exits": [
+        20
+      ],
+      "non_blocking_exits": [
+        10
+      ],
       "executes_vendor_code": false,
       "why": "Pins docs/community/link-triage.json to a digest in an independent file. Blocks the self-exemption hole found on 2026-09-29.",
       "ci_note": "exit 10 in CI is EXPECTED: the read-only upstream snapshots live outside the repository, so an actionless checkout cannot machine-verify upstream_layout_unmappable claims. This is a documented degradation, not a regression (see HANDOFF.md 2.1)."
@@ -39,8 +49,12 @@
       "id": "verify-community-banner",
       "script": "skills/scripts/verify-community-banner.py",
       "args": [],
-      "blocking_exits": [20],
-      "non_blocking_exits": [10],
+      "blocking_exits": [
+        20
+      ],
+      "non_blocking_exits": [
+        10
+      ],
       "executes_vendor_code": false,
       "why": "Detects a silent revert by scripts/adapt-community.py: vendored docs losing their reference-only banner, raw skills losing the integration contract, hack-skills regaining AI LOAD INSTRUCTION.",
       "ci_note": "exit 10 is a REGISTERED non-blocking item (WORK-BOARD U1): 15 vendored documents still lack the banner. Wiring must preserve that; it must never be turned into a red build, and it must never be silenced either."
@@ -49,8 +63,12 @@
       "id": "verify-source-attestation",
       "script": "scripts/verify-source-attestation.py",
       "args": [],
-      "blocking_exits": [20],
-      "non_blocking_exits": [10],
+      "blocking_exits": [
+        20
+      ],
+      "non_blocking_exits": [
+        10
+      ],
       "executes_vendor_code": false,
       "why": "T12+T14 provenance gate (spec 17.28): static attestation checks always run, live snapshot checks degrade to exit 10 without ../upstream. Previously called by no CI entrypoint (P1-2).",
       "ci_note": "exit 10 in CI is EXPECTED: a clean checkout has no ../upstream snapshot, so live HEAD/digest claims degrade to named NEEDS_REVIEW items. Static defects (bad format, dirty, missing field) still exit 20 and block."
@@ -59,8 +77,12 @@
       "id": "verify-community-bundle",
       "script": "scripts/verify-community-bundle.py",
       "args": [],
-      "blocking_exits": [20],
-      "non_blocking_exits": [10],
+      "blocking_exits": [
+        20
+      ],
+      "non_blocking_exits": [
+        10
+      ],
       "executes_vendor_code": false,
       "why": "T12 portability gate: bundle boundary, relative snapshot_rel, gitignore coverage, registry schema plus stats. Previously called by no CI entrypoint (P1-2).",
       "ci_note": "exit 10 is the registered no-git note (without .git the bundle-commit claim cannot be machine-checked). A clean CI checkout has .git, so CI normally sees exit 0; release-bundle copies without .git degrade to 10, never silently passed."
@@ -69,8 +91,12 @@
       "id": "verify-canonical-base-lock",
       "script": "scripts/verify-canonical-base-lock.py",
       "args": [],
-      "blocking_exits": [20],
-      "non_blocking_exits": [10],
+      "blocking_exits": [
+        20
+      ],
+      "non_blocking_exits": [
+        10
+      ],
       "executes_vendor_code": false,
       "why": "T21 canonical-base lock (spec 17.15/17.28/17.29): base record, commits, snapshot digests. Default mode only; --require-signatures is deliberately NOT wired (see ci_note). Previously called by no CI entrypoint (P1-2).",
       "ci_note": "exit 10 in CI is EXPECTED (no ../upstream snapshot in a clean checkout). Only the default mode is wired: --require-signatures exits 20 on the real tree by design (unsigned base, 17.15) and would keep CI red; wiring it non-blocking would train CI to ignore a promotion refusal. Promotion readiness stays a human-run gate."
@@ -78,9 +104,15 @@
     {
       "id": "verify-routing-signals",
       "script": "skills/scripts/verify-routing-signals.py",
-      "args": ["--check"],
-      "blocking_exits": [20],
-      "non_blocking_exits": [10],
+      "args": [
+        "--check"
+      ],
+      "blocking_exits": [
+        20
+      ],
+      "non_blocking_exits": [
+        10
+      ],
       "executes_vendor_code": false,
       "why": "T26 signal-layer verifier, 12 fail-closed checks. Added by T26 and previously called by no entrypoint (WORK-BOARD U10)."
     },
@@ -88,7 +120,9 @@
       "id": "test-routing-signals",
       "script": "skills/scripts/test-routing-signals.py",
       "args": [],
-      "blocking_exits": [1],
+      "blocking_exits": [
+        1
+      ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "T26 negative controls: drives the real verifier with 13 mutated documents and requires each to exit 20, plus a no-op mutation self-check. Added by T26, previously called by no entrypoint."
@@ -97,7 +131,9 @@
       "id": "test-contract-v2",
       "script": "skills/scripts/test-contract-v2.py",
       "args": [],
-      "blocking_exits": [1],
+      "blocking_exits": [
+        1
+      ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "Registry v2 contract, section 4.6 migration table row by row, three JSON Schemas, handoff semantics."
@@ -106,7 +142,9 @@
       "id": "test-community-route",
       "script": "skills/scripts/test-community-route.py",
       "args": [],
-      "blocking_exits": [1],
+      "blocking_exits": [
+        1
+      ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "4.7 exit-code statuses and fail-closed behaviour. Runs community-route.py as a subprocess; that is repository code, not vendor code."
@@ -115,7 +153,9 @@
       "id": "test-route-ranking",
       "script": "skills/scripts/test-route-ranking.py",
       "args": [],
-      "blocking_exits": [1],
+      "blocking_exits": [
+        1
+      ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "Field-aware ranking, plus the permanent D1/D2/D5/D6 defect guards."
@@ -124,7 +164,9 @@
       "id": "test-community-decoys",
       "script": "skills/scripts/test-community-decoys.py",
       "args": [],
-      "blocking_exits": [1],
+      "blocking_exits": [
+        1
+      ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "The repository's only negative corpus (T26 / D8): 29 decoys assert a hint must NOT reach something. Added by T26, previously called by no entrypoint.",
@@ -134,7 +176,9 @@
       "id": "test-frontmatter-parsing",
       "script": "skills/scripts/test-frontmatter-parsing.py",
       "args": [],
-      "blocking_exits": [1],
+      "blocking_exits": [
+        1
+      ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "59 assertions on YAML folded/quoted descriptions, including 15 negative guards."
@@ -143,8 +187,12 @@
       "id": "verify-gate-wiring",
       "script": "skills/tests/verify-gate-wiring.py",
       "args": [],
-      "blocking_exits": [20],
-      "non_blocking_exits": [10],
+      "blocking_exits": [
+        20
+      ],
+      "non_blocking_exits": [
+        10
+      ],
       "executes_vendor_code": false,
       "why": "Cross-checks this manifest against .github/workflows: a gate that no workflow invokes is reported UNWIRED and blocks. This is the gate that would have caught WORK-BOARD U10 on day one. Also enforces spec 17.31: read-only workflow permissions, no vendor-code execution in a run: line, no secret in a gate workflow, full-SHA action pinning.",
       "ci_note": "exit 10 is the honest open item it carries: auto-merge-journal.yml holds contents: write and pull-requests: write as a non-gate job, and 17.31 asks for an independent review record (owner T24). The gate reads docs/CI-TRUST-BOUNDARY.md and clears the item only when that workflow's own write-scope record is found in the review section; a missing record is still exit 10, reported, not waived."
@@ -153,7 +201,9 @@
       "id": "validate-integration",
       "script": "scripts/validate-integration.py",
       "args": [],
-      "blocking_exits": [1],
+      "blocking_exits": [
+        1
+      ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "Registry paths, frontmatter and license warnings. CI must call it WITHOUT --release: the release mode is T04's deliverable and is not wired by T10.",
@@ -163,8 +213,12 @@
       "id": "verify-doc-links",
       "script": "skills/scripts/verify-doc-links.py",
       "args": [],
-      "blocking_exits": [1],
-      "non_blocking_exits": [10],
+      "blocking_exits": [
+        1
+      ],
+      "non_blocking_exits": [
+        10
+      ],
       "executes_vendor_code": false,
       "why": "active=0 wrapper=0 broken links; provenance breaks must be registered. Already wired in ci.yml before T10 (kept where it was)."
     },
@@ -172,7 +226,9 @@
       "id": "verify-repository-security",
       "script": "skills/scripts/verify-repository-security.py",
       "args": [],
-      "blocking_exits": [1],
+      "blocking_exits": [
+        1
+      ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "Executable/reference boundaries, unreviewed binaries, full-SHA Action pinning. Already wired in ci.yml before T10 (kept where it was)."
@@ -181,8 +237,12 @@
       "id": "verify-release-gate",
       "script": "scripts/verify-release-gate.py",
       "args": [],
-      "blocking_exits": [20],
-      "non_blocking_exits": [10],
+      "blocking_exits": [
+        20
+      ],
+      "non_blocking_exits": [
+        10
+      ],
       "executes_vendor_code": false,
       "why": "T04 redistribution/provenance gate (spec 17.29): answers whether this tree may be redistributed. Previously called by no CI entrypoint (the T10 comment named it deliberately unwired while T04 was being created concurrently).",
       "ci_note": "CI wires the default local-only mode only: exit 0 on the real tree (473 provenance findings recorded as warnings), structural defects exit 20 and block. --release exits 20 by design on this registry and stays a human promotion gate, deliberately NOT wired. Exit 10 is reserved by the spec 4.7 table and never emitted. No snapshot/.git dependency: identical exit 0 in no-git copies."
@@ -191,7 +251,9 @@
       "id": "test-adapt-community",
       "script": "scripts/test-adapt-community.py",
       "args": [],
-      "blocking_exits": [30],
+      "blocking_exits": [
+        30
+      ],
       "non_blocking_exits": [],
       "requires_upstream_snapshot": true,
       "executes_vendor_code": false,
@@ -202,7 +264,9 @@
       "id": "test-routing",
       "script": "skills/scripts/test-routing.ps1",
       "args": [],
-      "blocking_exits": [1],
+      "blocking_exits": [
+        1
+      ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "199-case main routing regression. Already wired in ci.yml before T10 (kept where it was).",
@@ -212,7 +276,9 @@
       "id": "verify-routing-coherence",
       "script": "skills/scripts/verify-routing-coherence.ps1",
       "args": [],
-      "blocking_exits": [1],
+      "blocking_exits": [
+        1
+      ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "Routing coherence plus the supply-chain pin gate. Already wired in ci.yml before T10 (kept where it was).",
@@ -222,17 +288,22 @@
       "id": "verify-evolution",
       "script": "scripts/verify-evolution.py",
       "args": [],
-      "blocking_exits": [20, 21, 30],
+      "blocking_exits": [
+        20,
+        21,
+        30
+      ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "docs/EVOLUTION-CHECKLIST.md as one command: 10 checks (doc links, signal layer fail-closed, routing entry, community reachability, tool manifest, registry consistency, script inventory, coherence, spec structure, dual benchmark). Built by b124d76 and previously called by no entrypoint."
-    }
-    ,
+    },
     {
       "id": "test-experience-card",
       "script": "skills/scripts/test-experience-card.py",
       "args": [],
-      "blocking_exits": [1],
+      "blocking_exits": [
+        1
+      ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "经验卡晋级门 + 8 类反例控制组。经验卡是 skills/experience-cards/ 下已晋级的结构化规则；没有这道门，一张编造 fixture 路径、或只复现过一次的卡会被当成可复用经验消费。"
@@ -241,7 +312,9 @@
       "id": "test-emulator-lab",
       "script": "skills/apk-reverse/scripts/test-emulator-lab.ps1",
       "args": [],
-      "blocking_exits": [1],
+      "blocking_exits": [
+        1
+      ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "runtime": "powershell",
@@ -251,10 +324,71 @@
       "id": "check-prompt-budget",
       "script": "skills/scripts/check-prompt-budget.py",
       "args": [],
-      "blocking_exits": [1, 20],
+      "blocking_exits": [
+        1,
+        20
+      ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "常驻/固定注入文本的预算与形状。① 每个技能的 name+description 会被宿主预载进系统提示（每轮付费），也是模型选择技能的唯一信号：exit 1 = 形状坏（多行/超长/缺 用于：/残留旧的'务必使用此技能'抢触发话术），exit 20 = 总量越过常驻预算。② route-scope.md 的固定注入段必须两侧（.ps1/.sh）渲染一致且不超过预算。没有这道门，下一轮会静默把常驻成本推上去，而且没人拦得住。"
+    },
+    {
+      "id": "verify-evidence-gate",
+      "script": "skills/tests/verify-evidence-gate.py",
+      "args": [
+        "--root",
+        "skillpack/examples"
+      ],
+      "blocking_exits": [
+        1
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "证据门 —— 把 ops/analysis-decision-framework.md ADF-R4* 与 templates/assault.md 的'状态列只能升到证据列支撑的高度' 从纸面规矩变成会红的门。查三件事：① functions 表状态升到「对照一致」必须有 diff/<F-ID>.md 证据；② findings 表每行证据列非空且引用的 E-nnn 真实存在；③ 块格式 status=validated 需 ≥2 条独立证据（单条须显式写 residual_risk + 人工确认）。★ 自带自检控制组（1 正例 + 5 反例必须全部转红）—— 因为真实案例在用户项目目录、不在仓里，只扫仓库会让这道门永远绿；一道永远不会红的门比没有门更坏（虚假安全感）。同一惯例见 experience-cards 的反例控制组。"
+    },
+    {
+      "id": "run-regression",
+      "script": "skills/tests/run-regression.py",
+      "args": [],
+      "blocking_exits": [
+        1
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "失败→技能回归表的结构门（L2.1）。本包此前 26 个门全是格式/一致性门、0 行为门，所以「改好了」只能验形状不能验行为——这是「下次真实做又出问题」的机械原因。本门查：① 每条 case 必填字段齐全；② expect_chain 引用的技能/文档真实存在（防悬空承诺）；③ known_failures 为空时必须显式声明「无/正控」（防假填，真实项目几乎不可能零失败）；④ 报出 open 数与未收敛失败数。模型驱动的行为门见 L2.2（test-routing-e2e / test-trigger-rate / test-assault-behavior，挂 non-blocking 先跑数）。"
+    },
+    {
+      "id": "test-routing-e2e",
+      "script": "skills/tests/test-routing-e2e.py",
+      "args": [],
+      "blocking_exits": [
+        1
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "端到端路由回归（L2.2 行为门二）。已有 test-routing 跑的是 224 条人工短句，验的是「路由规则没退化」；本门拿 tests/cases/*.yaml 的 task_verbatim（**用户原话，不改写**）走 master-route，检查 PRIMARY/entry_menu 是否落在该 case 的 expect_chain 上。二者不同：前者是短句，后者是真实请求。案例：case-001 的原话「逆向 换肤程序点我下载6.9版本.exe 做出能正常使用的成品」此前落在 ida-reverse（纯静态），现已改走 assault-entry（受保护目标四问分流）。"
+    },
+    {
+      "id": "test-trigger-rate",
+      "script": "skills/tests/test-trigger-rate.py",
+      "args": [],
+      "blocking_exits": [
+        1
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "技能触发率评估的结构门（L2.2 行为门三）。依据 Anthropic Agent Skills 规范：每技能 8–10 正例 + 8–10 **近邻负例**，正例触发率 ≥0.5、负例 <0.5。本门只做结构检查（不需要模型调用）：eval 集存在、正例 ≥8、负例 ≥8、**每条负例确实近邻**（与目标或同域技能共享关键词）。弱负例（「今天天气怎么样」）测不出东西，会被判无效。实跑触发率用 --run（花钱），建议挂 non-blocking。"
+    },
+    {
+      "id": "test-assault-behavior",
+      "script": "skills/tests/test-assault-behavior.py",
+      "args": [],
+      "blocking_exits": [
+        1
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "真实任务行为门（L2.2 行为门一）。把 2026-10-13 那次真实攻坚里**主人亲口提的四条验收标准**机械化：① 自己提出抓包/判壳 ② 自己走到 assault-entry/反调试 ③ 自己发现并说明 x64dbg MCP 通道 ④ 无卡密后不再索要卡密。这四条当时**一条都没被执行过**（终态报告换成了别的 KPI）。默认只做配置检查（不花钱）；--run 才开新会话实跑。"
     }
   ]
 }

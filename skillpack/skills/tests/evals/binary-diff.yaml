@@ -1,0 +1,23 @@
+skill: binary-diff
+positive:
+  - 旧版符号迁到新版，偏移全变了
+  - 新版 PDB 下不到，函数名怎么认回来
+  - 内核驱动缺 PDB 怎么推导符号
+  - 用 BinDiff 对比两个版本
+  - 用 Diaphora 把标注搬过去
+  - 结构体偏移漂移了怎么对齐
+  - 批量把标好的函数名迁移到新版
+  - 新版本偏移变了，老的函数名对不上
+  - 有没有办法不重新认一遍所有函数
+  - 两个同源二进制，把注释和标签 port 过去
+negative:
+  - 要从补丁差异写 PoC 和利用，不只是迁符号  # → patch-diff-exploit
+  - 只有单个版本，没有对比对象，只能从头做一遍逆向  # → reverse-engineering
+  - 目标是 .NET 程序，去混淆更直接  # → dotnet-reverse
+  - 源码可见的开源项目，仓库代码都在，直接审  # → code-audit
+  - 只是想看看这个函数是干啥的  # → ida-reverse
+  - 是游戏客户端的版本更新，符号要跟着搬  # → game-reverse
+  - 要跨版本还原私有协议的状态机  # → protocol-reverse
+  - 这个二进制加了壳，脱壳都还没搞定，要能用的成品  # → reverse-engineering（assault-entry 入口）
+  - 固件两个版本的升级包要差分  # → firmware-pentest
+  - 这是 Linux kernel 的 LPE，利用原语要重新推导  # → kernel-exploit

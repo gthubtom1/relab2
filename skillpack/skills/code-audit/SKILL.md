@@ -84,3 +84,46 @@ Finding：位置 + 数据流 + PoC + 修复建议
 - [ ] 是否含修复建议？
 - [ ] 是否限定在授权仓库范围？
 - [ ] Checklist？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 手里只有二进制/APK，没有源码 → 用 `../reverse-engineering/SKILL.md`
+- 要看的是运行时行为（网络/文件/内存），源码看不到 → 用 `../malware-analysis/SKILL.md`
+- 要审的是依赖与构建链，不是自家源码 → 用 `../supply-chain-security/SKILL.md`
+- 前置条件：**审查他人闭源代码** → 先确认授权范围（`ops/scope-contract.md`）
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| SAST 报出 taint 路径，需要在运行时确认可达 | `../pentest-tools/SKILL.md` |
+| 发现硬编码密钥/证书，要验证可否利用 | `../attack-chain/SKILL.md` |
+| 发现 CI 配置里注入点 | `../supply-chain-security/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- Findings 表每行有 `location`（file:line）与 `evidence_ids`
+- 每条 Finding 有最小复现（单测/脚本/请求）
+- 修好后的验证：原 PoC 不再成立，且既有测试仍绿
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：污点路径从 source 到 sink 完整走通，且有可执行 PoC
+- `low`：仅 grep 到危险 API 调用，未确认参数可控/可达

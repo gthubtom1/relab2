@@ -73,3 +73,46 @@ description: Go/Rust 二进制逆向：go.buildid、pclntab 与 GoReSym 恢复�
 - [ ] 是否恢复关键函数名或等价映射？
 - [ ] 是否标注语言运行时证据？
 - [ ] Checklist？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 目标是 C/C++ 编译的普通 PE/ELF → 用 `../ida-reverse/SKILL.md`
+- 目标是托管代码（.NET） → 用 `../dotnet-reverse/SKILL.md`
+- 只是要快速看 strings/结构 → 用 `../radare2/SKILL.md`
+- 前置条件：先用 `diec` 确认语言（Go 有 buildid，Rust 有 mangled 符号）
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 确认是 Go 且带 panic 字符串 | `../reverse-engineering/references/triage-first-30-min.md` |
+| 符号被剥离需要重建函数名 | `../binary-diff/SKILL.md` |
+| 目标是恶意样本（Go 恶意软件常见） | `../malware-analysis/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 恢复的函数名/类型表落盘（含置信度）
+- 关键逻辑定位有实际反编译输出作为证据
+- 在样本上验证：恢复的符号指向的字符串/调用符合预期
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：用 pclntab/GoReSym 等元数据恢复，且抽样在反编译中核对一致
+- `low`：仅凭字符串模式猜测函数用途

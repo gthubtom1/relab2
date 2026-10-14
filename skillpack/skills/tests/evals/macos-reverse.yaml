@@ -1,0 +1,23 @@
+skill: macos-reverse
+positive:
+  - 分析这个 Mach-O 的签名和装载
+  - codesign 校验怎么绕
+  - ObjC 类结构怎么恢复
+  - 这个 dylib 和 .app bundle 是干什么的
+  - 用 otool 和 jtool2 看这个 mac 木马
+  - launchagent 和 launchdaemon 自启动怎么查
+  - TCC 隐私权限是怎么被绕过的
+  - Hardened Runtime 下怎么调试
+  - 未签名和公证绕过怎么判断
+  - 反编译这个 swift 程序看签名逻辑
+negative:
+  - 目标是 iOS 的 ipa，不是 macOS 二进制  # → mobile-reverse
+  - macOS 上跑的 .NET 托管程序，有 CLR 头  # → dotnet-reverse
+  - 只是普通 ELF 和 PE，恰好在我 mac 上分析  # → ida-reverse
+  - iOS 上的私有协议要还原状态机，走移动端  # → protocol-reverse
+  - 重点在证书链本身，是给 OAuth2 单点登录用的信任锚  # → identity-federation
+  - macOS 恶意样本的全流程，沙箱和 YARA 和 IOC  # → malware-analysis
+  - 目标是 Electron 厚客户端在 mac 上的本地数据  # → thick-client
+  - 目标是浏览器里装的扩展  # → browser-extension-reverse
+  - Go 写的一个 mac 二进制，pclntab 符号被剥了  # → go-rust-reverse
+  - 目标是加壳保护过的二进制，需求是做出来能正常跑的成品  # → reverse-engineering（assault-entry 入口）

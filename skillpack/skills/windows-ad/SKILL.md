@@ -87,3 +87,46 @@ bloodhound-python -d domain.local -u user -p pass -c All -ns <DC>
 - [ ] 是否记录可复现命令并脱敏？
 - [ ] 是否遵守 scope 禁止项？
 - [ ] Checklist？
+
+---
+
+## When NOT to use（近邻负例）
+
+- 还没有任何域内立足点（无凭据/无 shell） → 用 `../pentest-tools/SKILL.md`
+- 目标是 Linux 环境 → 用 `../kernel-exploit/SKILL.md`
+- 要打的是 Web SSO 联邦 → 用 `../identity-federation/SKILL.md`
+- 前置条件：**域不属于你** → 只做只读枚举（BloodHound 采集），不做写操作
+
+## When to Pivot
+
+信号与判据见 `../ops/skill-pivot-contract.md`。本技能去向：
+
+| 触发证据 | 换到 |
+|---|---|
+| 拿到域管，要找出口与持久化评估 | `../edr-bypass-re/SKILL.md` |
+| 发现 AD CS 配置错误（ESC1-ESC8） | `../attack-chain/SKILL.md` |
+| 发现 NTLM 可中继的目标 | `../pentest-tools/SKILL.md` |
+
+## 定义完成
+
+本技能产出算「完成」的**外部可观测**条件（不许写形容词）：
+
+- 攻击路径图（BloodHound 导出 + Mermaid）落盘
+- 每条边有实测证据（不是理论可达）
+- 提权/横向的 PoC 命令落盘可重放
+
+## 输出契约
+
+```
+FACT:       <观察，带来源：命令 / 文件:行 / Evidence ID>
+HYPOTHESIS: <可测试断言 + confidence: high|medium|low>（状态见 `../ops/binary-model.md`）
+QUESTION:   <当前最大不确定点>
+NEXT:       <继续 | 换技能 | 停止（附成本判据）>
+```
+
+## 置信度词表
+
+词表见 `../ops/confidence-vocabulary.md`。本技能特有判据：
+
+- `confirmed`：凭据可用性有实际认证成功证据（不是哈希格式判断）
+- `low`：仅凭 BloodHound 边推断可达，未实际执行

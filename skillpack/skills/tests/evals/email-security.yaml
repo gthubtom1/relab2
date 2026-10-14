@@ -1,0 +1,23 @@
+skill: email-security
+positive:
+  - 这封邮件是不是钓鱼的，帮我看看头
+  - 帮我查下这个域的 SPF 配好没
+  - DKIM 签名没过，是不是被伪造了
+  - DMARC 策略是 none，能伪造发件人吗
+  - 这封冒充老板让财务打款的邮件，是 BEC 吗
+  - 帮我拆一下这封钓鱼邮件的 IOC
+  - 原始 Received 链帮我还原一下投递路径
+  - 邮件网关的策略帮我评估一下有没有问题
+  - 帮我看看这封邮件里的链接指向哪
+  - 发件人地址是不是伪造的，帮我核一下
+negative:
+  - 这个附件样本我要放 sandbox 里跑动态分析  # → malware-analysis
+  - 邮件网关的 Web 界面用 nmap 扫一下看能不能打  # → pentest-tools
+  - 邮件服务器主机层，用 mimikatz 看看域内提权  # → windows-ad
+  - 发现可伪造发件域，要评估多阶段的下游利用  # → attack-chain
+  - 邮件里的链接指向自家 API 应用，要审这个接口  # → api-security
+  - 邮箱账号被盗后要查主机入侵时间线  # → digital-forensics
+  - 仿冒品牌的钓鱼域名，用 OSINT 公开情报溯源  # → threat-intelligence
+  - 邮件里的可疑域名哈希先做 IOC 富化  # → threat-intelligence
+  - 附件行为要提取 IOC 落地检测规则  # → threat-hunting
+  - 这封邮件的正文是一个漏洞利用的 exe，要逆它  # → ida-reverse
