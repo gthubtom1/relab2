@@ -7,6 +7,8 @@ description: CTF/AWD 靶场入口：case-init 门禁 + sidecar orchestrator 选�
 
 ## ACTION REQUIRED（读完后立刻执行）
 
+> **手上只有"现象"、不知道该读哪一篇？** 本技能的技术正文有症状索引：先按现象查 [`../field-journal/KB-INDEX.md`](../field-journal/KB-INDEX.md)（现象 → 该读哪一篇技术文档），再读那一篇。**别按目录翻**。（来源与改编规则见同目录 `KB-SOURCES.md`）
+
 1. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。

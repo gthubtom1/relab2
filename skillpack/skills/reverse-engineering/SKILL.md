@@ -12,6 +12,8 @@ metadata:
 
 ## ACTION REQUIRED（读完后立刻执行）
 
+> **手上只有"现象"、不知道该读哪一篇？** 本技能的技术正文有症状索引：先按现象查 [`../field-journal/KB-INDEX.md`](../field-journal/KB-INDEX.md)（现象 → 该读哪一篇技术文档），再读那一篇。**别按目录翻**。（来源与改编规则见同目录 `KB-SOURCES.md`）
+
 > 阶段门闩：`references/re-agent-workflow.md`（triage→static→dynamic→synthesis）。社区 RE skill 对照：`../references/community-security-skills.md`。
 
 > 方法论：拿到样本的前 30 分钟 → `references/triage-first-30-min.md`（分钟级 triage，末节产出动态断点计划）；

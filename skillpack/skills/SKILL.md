@@ -26,6 +26,15 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 | 桌面客户端（Electron/Qt/.NET GUI） | 先画信任边界表（`thick-client/`） |
 | 只有网络资产（域名/IP） | 先被动侦察 + 指纹（`pentest-tools/`），再谈漏洞面 |
 
+**手上只有"现象"、不知道该读哪一篇？** 两级症状索引，**按现象查，不按目录翻**：
+
+- 现象 → **该进哪个技能**：`SYMPTOM-INDEX.md`
+- 现象 → **进了技能之后该读哪一篇技术文档**：`field-journal/KB-INDEX.md`
+  （206 篇改编自外部知识库 `LING71671/open-reverselab` 的技术正文；来源与改编规则见同目录 `KB-SOURCES.md`）
+
+`master-route` 报 low / R0、或任务中途换域（开发里突然要逆向/渗透/抓包）时，**先读前一张**；
+已经在某个技能里、要挑具体文档时，**读后一张**。这两张表不改任何路由逻辑，只补"关键词永远差一个字"的近失。
+
 **工具在手边（取用优先级：MCP 通道 > CLI 孪生 > GUI）**：
 `idalib-mcp`（stdio，装好即用）/ `idapro`（http `127.0.0.1:13337`，起 `<技能包根>\skills\ida-reverse\scripts\start.ps1`）/
 `pyghidra-mcp`（stdio，或 http `127.0.0.1:9111`）/ `x64dbg-mcp`（http `127.0.0.1:9094`，启动命令 `mcp-status.ps1` 会打印）。

@@ -144,6 +144,21 @@ function Invoke-Doctor {
     }
     else { Add-Result 'MCP 通道' 'FAIL' '缺少 skills\scripts\mcp-status.ps1' }
 
+    # 4b ★ 知识库（外部来源 + 症状索引）—— 2026-10-15 主人指出「知识库没接上」：
+    #    实测 206 篇技术正文在，但「现象 → 该读哪一篇」的索引没人指向；而 KB-SOURCES 声称
+    #    「原始副本留存于 <工具根>\kb-open-reverselab\」—— 那台机器上**其实是空的**。
+    $kbOrig = Join-Path $env:REVERSE_TOOL_ROOT 'kb-open-reverselab'
+    $kbIndex = Join-Path $RepoRoot 'skillpack\skills\field-journal\KB-INDEX.md'
+    $kbOrigN = if (Test-Path -LiteralPath $kbOrig) { @(Get-ChildItem -LiteralPath $kbOrig -Recurse -Filter *.md -ErrorAction SilentlyContinue).Count } else { -1 }
+    if (-not (Test-Path -LiteralPath $kbIndex)) {
+        Add-Result '知识库' 'FAIL' '找不到 field-journal\KB-INDEX.md（现象→文档的症状索引）'
+    }
+    elseif ($kbOrigN -lt 0) {
+        Add-Result '知识库' 'WARN' "症状索引在；但原始副本 $kbOrig 不在本机（GPL 溯源会断）—— 见 KB-SOURCES.md 的恢复办法"
+    }
+    else {
+        Add-Result '知识库' 'OK' ("症状索引在；原始副本 $kbOrigN 篇（GPL 溯源可查）")
+    }
     # 5 技能挂载（一份实体 N 个 junction）
     $rs = Join-Path $RepoRoot 'skillpack\skills\scripts\register-skills.ps1'
     if (Test-Path -LiteralPath $rs) {
