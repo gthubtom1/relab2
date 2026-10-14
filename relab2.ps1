@@ -184,11 +184,40 @@ function Invoke-Setup {
     Invoke-Step -File 'skillpack\skills\scripts\register-skills.ps1' -ArgList $b -Label '技能挂载（一份实体 N 个联接）' | Out-Null
     if ($LASTEXITCODE -ne 0 -and -not $DryRun) { $rc = 1 }
 
+    # ---- MCP 一键注册（幂等 + 备份 + 干跑）----
+    $mcpReg = Join-Path $RepoRoot 'skillpack\skills\scripts\register-mcp.py'
+    if (Test-Path -LiteralPath $mcpReg) {
+        $py = $null
+        foreach ($cand in @(
+                (Join-Path $env:REVERSE_TOOL_ROOT 'runtime\python-venv\Scripts\python.exe'),
+                (Join-Path $env:REVERSE_TOOL_ROOT 'runtime\angr-mcp-venv\Scripts\python.exe'))) {
+            if ($cand -and (Test-Path -LiteralPath $cand)) { $py = $cand; break }
+        }
+        if (-not $py) { $py = (Get-Command python -ErrorAction SilentlyContinue).Source }
+        if ($py) {
+            $mcpArgs = @($mcpReg, '--skill-root', $RepoRoot)
+            if ($DryRun) { $mcpArgs += '--dry-run' }
+            Write-Host '  MCP 注册（5 条通道，幂等 + 自动备份）' -ForegroundColor DarkGray
+            # ★ 显式捕获再打印：直接 `& $py @args` 的输出在这个 PowerShell 里会被吞掉
+            #   （2026-10-15 实测：调用方看不到任何输出，等于静默失败）。捕获 + 原样回显，错误也看得见。
+            $mcpOut = & $py @mcpArgs 2>&1 | Out-String
+            $mcpRc = $LASTEXITCODE
+            if ($mcpOut.Trim()) { Write-Host $mcpOut.TrimEnd() }
+            if ($mcpRc -ne 0 -and -not $DryRun) {
+                Add-Result 'MCP 注册' 'WARN' "register-mcp.py 退出码 $mcpRc —— 见上方输出"
+            }
+        }
+        else {
+            Add-Result 'MCP 注册' 'WARN' 'PATH 与工具根里都没找到 python，跳过（见 环境初始化.md §11.1-B 第 10 条）'
+        }
+    }
+    else {
+        Add-Result 'MCP 注册' 'WARN' "缺少 $mcpReg，跳过"
+    }
+
     Write-Host ''
-    Write-Host '  MCP 注册：走 kernel\04-console 工作台（选智能体 → 勾三段 → 载入）。' -ForegroundColor Yellow
-    Write-Host '  出厂形态是 5 条通道：pyghidra / angr / relab2-tools 直连 stdio；' -ForegroundColor DarkGray
-    Write-Host '  idapro / x64dbg-mcp 走 skills\scripts\mcp-lazy-http.py（stdio·懒启，后端被调用时才拉起）。' -ForegroundColor DarkGray
-    Write-Host '  换机要改的是 args 里的 launcher 路径与 x64dbg 的 Bearer token —— 见 环境初始化.md §11.1-B 第 10 条。' -ForegroundColor DarkGray
+    Write-Host '  还差最后一步（本脚本不代做）：把卡片载进宿主 —— 开 kernel\04-console\start-console.bat，' -ForegroundColor Yellow
+    Write-Host '  选智能体 → 勾三段（中枢标记块 / 底模卡 / 客套指引卡）→ 载入。它会写你的入口文件、并留备份。' -ForegroundColor DarkGray
 
     if (-not $DryRun) {
         Write-Host ''
