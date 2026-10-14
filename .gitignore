@@ -98,3 +98,9 @@ IDAHook.log
 
 # 机器状态：junction 登记表（register-skills.ps1 自动写；换机后跑 -Doctor 体检）
 skillpack/skills/junction-manifest.json
+
+# JVM 崩溃/调试日志（IDA/Ghidra/JDK 在仓根留下的），2026-10-15 误入版本库过一次
+hs_err_pid*.log
+replay_pid*.log
+jaccess*.log
+env.bat
