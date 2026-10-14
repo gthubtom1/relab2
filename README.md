@@ -22,9 +22,20 @@ GitHub / winget 上一键能装的免费工具不在那里 —— 那些由 `TOO
 
 ## ★ 新电脑从哪开始
 
+```powershell
+# ★ 一条命令：先看它要干什么（一个字都不改），再真跑，再看就绪度
+powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2.ps1 setup -DryRun
+powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2.ps1 setup
+powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2.ps1 doctor   # 退出码 0 = 就绪
+```
+
+`doctor` 逐项报：仓根 / 环境变量 / 自检 / **MCP 通道**（注册几条、哪条是懒启、后端在不在）/ 技能挂载 /
+技能卡数 / 门禁清单 / 破甲卡 / 要求门 R1–R13。**它就是「换机 = 一条命令」的那条命令。**
+它只证明「本机配置就绪」，不证明「能力就绪」—— 能力只由真实验收证明。
+
 | 情况 | 先读 |
 |---|---|
-| **新开的电脑，环境是空的** | **[`环境初始化.md`](环境初始化.md)** —— 只给判断依据，步骤由智能体按本机实际情况自己定 |
+| **新开的电脑，环境是空的** | 先跑上面的 `relab2.ps1 setup` → `doctor`；再读 **[`环境初始化.md`](环境初始化.md)** §11（完整适配清单） |
 | 环境已就绪，要开始干活 | [`START-HERE.md`](START-HERE.md) |
 
 ---
@@ -35,20 +46,24 @@ GitHub / winget 上一键能装的免费工具不在那里 —— 那些由 `TOO
 C:\relab2\
 ├─ 环境初始化.md              ★ 新机施工单（AI 第一份读）
 ├─ START-HERE.md              ★ 正式干活的主入口
+├─ relab2.ps1                 ★ 唯一门面：doctor / setup / update（换机一条命令）
 ├─ README.md                     本文件
 │
 ├─ kernel\                  ① 行为层 —— agent 怎么做事
-│  ├─ 04-console\cards\        44 张卡片（3 个可读池 hub/base/guest + 各停车位）
+│  ├─ 04-console\cards\        常驻卡 10 张（base 5 + guest 1 + hub 4）+ 停车位若干
 │  │  └─ guest\全能专精指引.md  ★ 安全逆向总控路由（常驻卡片）
 │  ├─ 02-hubcore\               中枢本体
 │  ├─ 03-bundle\                卡片打包/装卸/校验
 │  └─ 07-kernel-sweep\          提示词实测与调优工具链
 │
 ├─ skillpack\              ② 能力层 —— agent 会做什么
-│  ├─ skills\                   ★ 50 个技能模块（46 顶层 + 4 community wrapper），主入口 SKILL.md
-│  │  ├─ TOOLS.md               ★ 工具清单与装法（机器无关）
-│  │  ├─ references\tool-registry.md   MCP 通道登记模板
-│  │  └─ scripts\lib\Bootstrap.ps1    探测层（纯测量）
+│  ├─ skills\                   ★ 57 个技能模块，主入口 SKILL.md
+│  │  ├─ TOOLS.md               ★ 工具清单与装法（机器无关）+ 按能力找工具
+│  │  ├─ references\tool-registry.md   MCP 通道登记模板（含 stdio·懒启代理）
+│  │  ├─ scripts\capability-index.py     能力发现（不按名字，按「能干什么」扫本机）
+│  │  ├─ scripts\relab2-tools-mcp.py     工具箱 MCP（把本机工具链递给模型）
+│  │  ├─ scripts\mcp-lazy-http.py        HTTP 型 MCP 通道的 stdio 懒启动代理
+│  │  └─ scripts\lib\Bootstrap.ps1      探测层（纯测量）
 │  ├─ CTF-Sandbox-Orchestrator\  CTF 场景编排
 │  ├─ community-raw\             第三方技能源（vendored，有 README 声明）
 │  └─ scripts\                   仓库级路由/校验脚本
