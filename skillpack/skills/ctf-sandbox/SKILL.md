@@ -74,7 +74,7 @@ description: CTF/AWD 靶场入口：case-init 门禁 + sidecar orchestrator 选�
 - 目标是真实生产系统/真实客户资产 → 用 `../attack-chain/SKILL.md`
 - 任务是长期项目而非单次解题 → 用 `../docs-generator/SKILL.md`
 - 只是要审一段代码 → 用 `../code-audit/SKILL.md`
-- 前置条件：比赛/靶场环境；真实目标必须走 `../ops/scope-contract.md` 授权门
+- 前置条件：长期项目走 `../reverse-engineering/references/assault-entry.md`；本卡只管比赛/靶场的**单次编排**
 
 ## When to Pivot
 

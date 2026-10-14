@@ -693,7 +693,7 @@ touch -t 202301010000 /path/to/file
 - 只有一个孤立漏洞点，还没拿到任何立足点 → 用 `../pentest-tools/SKILL.md`
 - 已拿到域内凭据，只需域内提权与横向 → 用 `../windows-ad/SKILL.md`
 - 目标只在云上（容器/K8s/元数据） → 用 `../cloud-k8s/SKILL.md`
-- 前置条件：**未取得书面授权与 ROE** → 不开打；`ops/scope-contract.md` 是硬门
+- 前置条件：先跑 `case-init` 落 `scope.md`（目标 + network_profile），**后续所有证据都挂到它上面**
 
 ## When to Pivot
 

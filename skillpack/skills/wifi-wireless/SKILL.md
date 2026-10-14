@@ -65,7 +65,7 @@ description: 授权 Wi-Fi 安全评估：监听模式、WPA/WPA2 握手/PMKID、
 - 目标是非 Wi-Fi 射频（遥控/ADS-B/传感器） → 用 `../radio-sdr/SKILL.md`
 - 目标是网卡的固件本身 → 用 `../firmware-pentest/SKILL.md`
 - 目标是域内主机 → 用 `../windows-ad/SKILL.md`
-- 前置条件：**监听本身也可能违法** → 只对自有/授权网络抓包与评估
+- 前置条件：监听会把别人的流量也收进来 → 只抓**自建网络**或确认环境是隔离实验网
 
 ## When to Pivot
 

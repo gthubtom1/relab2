@@ -79,7 +79,7 @@ description: 邮件安全与钓鱼分析：Received 链、SPF/DKIM/DMARC 校验�
 - 目标是邮件网关的 Web 界面 → 用 `../pentest-tools/SKILL.md`
 - 要分析的是恶意附件本身 → 用 `../malware-analysis/SKILL.md`
 - 要查的是邮件服务器主机层 → 用 `../windows-ad/SKILL.md`
-- 前置条件：**涉及真实收件人** → 不发送任何测试邮件，只在受控邮箱内验证
+- 前置条件：验证发件路径用**受控邮箱**（自建或自己的别名），便于反复试且不打扰他人
 
 ## When to Pivot
 

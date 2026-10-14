@@ -61,7 +61,7 @@ description: 授权 RF/SDR 信号研究：调制识别、GNU Radio/URH/Inspectru
 - 目标是 Wi-Fi（802.11） → 用 `../wifi-wireless/SKILL.md`
 - 目标是固件里的无线配置 → 用 `../firmware-pentest/SKILL.md`
 - 目标是蓝牙以外的普通网络协议 → 用 `../protocol-reverse/SKILL.md`
-- 前置条件：**默认只收不发**；任何发射（重放/干扰）须在屏蔽室或书面授权下进行
+- 前置条件：**默认只收不发**；发射（重放/干扰）会污染现场 → 只在屏蔽室或物理隔离环境做
 
 ## When to Pivot
 

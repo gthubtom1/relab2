@@ -197,7 +197,7 @@ command -v one_gadget >/dev/null || gem install one_gadget
 - 还没定位到漏洞点（只是拿到一个陌生二进制） → 用 `../reverse-engineering/SKILL.md`
 - 目标是内核态提权/逃逸 → 用 `../kernel-exploit/SKILL.md`
 - 有 CVE 但没有 PoC，要从前后的补丁差异反推 → 用 `../patch-diff-exploit/SKILL.md`
-- 前置条件：**只允许本地/CTF/授权靶机**；不指真实生产服务
+- 前置条件：利用要在**可重启的目标**上验证（崩溃是常态，目标不可重启会中断迭代）
 
 ## When to Pivot
 

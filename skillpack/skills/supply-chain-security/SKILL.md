@@ -196,7 +196,7 @@ cosign verify --key cosign.pub myimage:tag
 - 要审的是自家业务源码逻辑 → 用 `../code-audit/SKILL.md`
 - 要打的是运行时集群/容器 → 用 `../cloud-k8s/SKILL.md`
 - 要逆向的是单个二进制样本 → 用 `../reverse-engineering/SKILL.md`
-- 前置条件：**上游是第三方包** → 不修改上游，只做本地缓解与隔离
+- 前置条件：上游包不要就地改（下次安装会覆盖）→ 缓解写在本地（patch/overlay/wrapper）
 
 ## When to Pivot
 

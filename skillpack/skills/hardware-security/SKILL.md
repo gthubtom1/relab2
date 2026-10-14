@@ -65,7 +65,7 @@ description: 硬件/嵌入式接口安全：UART/JTAG/SWD 调试口发现、root
 - 目标只有固件文件，没有物理板子 → 用 `../firmware-pentest/SKILL.md`
 - 目标是软件层的调试接口（不是 JTAG/SWD/UART） → 用 `../x64dbg-reverse/SKILL.md`
 - 目标是无线射频信号 → 用 `../radio-sdr/SKILL.md`
-- 前置条件：**设备不是你的资产** → 先确认授权；物理接触可能不可逆
+- 前置条件：物理接触可能不可逆 → 动手前先留**可恢复的备份/快照**（Flash 读数、焊点照片）
 
 ## When to Pivot
 

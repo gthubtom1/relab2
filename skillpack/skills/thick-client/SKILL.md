@@ -90,7 +90,7 @@ description: 桌面厚客户端测试：信任边界、凭证存储、IPC/命名
 - 目标是纯 Web 应用/API → 用 `../api-security/SKILL.md`
 - 目标是 Android/iOS 应用 → 用 `../apk-reverse/SKILL.md`
 - 目标是 Electron 渲染进程里的 JS 逻辑，不涉及本地能力 → 用 `../js-reverse/SKILL.md`
-- 前置条件：客户端属于第三方且无授权 → 只做本地配置与安全边界观察
+- 前置条件：先画**信任边界表**（进程/用户/文件/网络的每一处跨界），再挑最有价值的一处深挖
 
 ## When to Pivot
 

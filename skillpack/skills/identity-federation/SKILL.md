@@ -83,7 +83,7 @@ description: 联邦身份与 SSO 授权测试：SAML 断言篡改、OIDC/OAuth2 
 - 目标是本地 JWT 校验，不涉及 IdP 联邦 → 用 `../api-security/SKILL.md`
 - 目标是 Windows 域内 Kerberos/NTLM（不是 Web SSO） → 用 `../windows-ad/SKILL.md`
 - 目标是 OAuth 客户端本身而非 IdP 配置 → 用 `../code-audit/SKILL.md`
-- 前置条件：IdP 属于第三方组织 → 只做配置观察与公开元数据检查
+- 前置条件：先取一份**公开元数据**（`/.well-known/openid-configuration` 等）作为基线，再谈差异
 
 ## When to Pivot
 

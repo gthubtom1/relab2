@@ -238,7 +238,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "&lt;SKILL_ROOT&gt;\skills\s
 - 只是要分析样本行为，不涉及交付躲避 → 用 `../malware-analysis/SKILL.md`
 - 目标是 Linux 主机 → 用 `../kernel-exploit/SKILL.md`
 - 目标根本没有 EDR/AV 驻守 → 用 `../pentest-tools/SKILL.md`
-- 前置条件：**必须是授权红队演练环境**；本技能只在受控环境交付
+- 前置条件：载荷交付前先确认目标机**可快照回滚**（EDR 会拦，回滚是常态操作）
 
 ## When to Pivot
 

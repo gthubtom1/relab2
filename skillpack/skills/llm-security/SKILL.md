@@ -149,7 +149,7 @@ LLM 输出可能被下游系统直接消费：
 - 目标是传统注入（SQLi/XSS/命令注入） → 用 `../api-security/SKILL.md`
 - 目标是模型权重与训练数据本身 → 用 `../reverse-engineering/SKILL.md`
 - 要审的是 agent 供应链（依赖/构建） → 用 `../supply-chain-security/SKILL.md`
-- 前置条件：**目标模型/服务属于第三方** → 只做授权范围内的红队与文档对照
+- 前置条件：攻击要有**可重放的输入序列**（单次命中可能是采样随机性，不足为证）
 
 ## When to Pivot
 

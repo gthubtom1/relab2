@@ -249,7 +249,7 @@ npm run doctor:network
 - 要做的是还原站点签名/加密算法（不是驱动界面） → 用 `../web-protocol-reverse/SKILL.md`
 - 目标没有 UI，只有 API → 用 `../api-security/SKILL.md`
 - 要逆向的是扩展代码本身 → 用 `../browser-extension-reverse/SKILL.md`
-- 前置条件：自动化操作第三方站点前确认其 ToS 与授权；不用于绕过反爬风控的规避性用途
+- 前置条件：脚本要能在**干净会话**里重复跑通（依赖手动状态的脚本不算资产）
 
 ## When to Pivot
 

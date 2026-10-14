@@ -92,7 +92,7 @@ Finding：位置 + 数据流 + PoC + 修复建议
 - 手里只有二进制/APK，没有源码 → 用 `../reverse-engineering/SKILL.md`
 - 要看的是运行时行为（网络/文件/内存），源码看不到 → 用 `../malware-analysis/SKILL.md`
 - 要审的是依赖与构建链，不是自家源码 → 用 `../supply-chain-security/SKILL.md`
-- 前置条件：**审查他人闭源代码** → 先确认授权范围（`ops/scope-contract.md`）
+- 前置条件：先建 `scope.md` 记下审的是哪个版本/哪个 commit，否则结论无法复现
 
 ## When to Pivot
 

@@ -25,7 +25,7 @@ SPECS["pentest-tools"] = dict(
         ("目标是源码仓库、要白盒审注入与鉴权", "../code-audit/SKILL.md"),
         ("已经从信息收集进到「多跳串联、要打通域控」", "../attack-chain/SKILL.md"),
     ],
-    not_use_pre="前置条件：**没有书面授权 / scope 未定义** → 先落 `scope.md`（`templates/scope.md`），不要开扫",
+    not_use_pre="前置条件：先落 `scope.md`（`templates/scope.md`）记下目标与网络面 —— 扫描结果要挂到它上面才可复现",
     pivot=[
         ("扫描命中一个具体接口的鉴权缺陷，需要逐参数验证", "../api-security/SKILL.md"),
         ("发现凭据/票据，要往内网横向", "../windows-ad/SKILL.md"),
@@ -48,7 +48,7 @@ SPECS["api-security"] = dict(
         ("目标是源码仓库，要白盒找注入与鉴权缺失", "../code-audit/SKILL.md"),
         ("目标是二进制客户端（exe/so），要静态看逻辑", "../ida-reverse/SKILL.md"),
     ],
-    not_use_pre="前置条件：**接口属于第三方且无授权** → 停在文档与只读枚举，不做越权利用",
+    not_use_pre="前置条件：越权验证要先有**成对的请求**（原身份 + 目标身份），否则差异无法归因",
     pivot=[
         ("签名/加密参数在客户端本地算出（断点能看到明文入参）", "../js-reverse/SKILL.md"),
         ("登录态依赖 SAML/OIDC 联邦，不是本地 JWT", "../identity-federation/SKILL.md"),
@@ -69,7 +69,7 @@ SPECS["code-audit"] = dict(
         ("要看的是运行时行为（网络/文件/内存），源码看不到", "../malware-analysis/SKILL.md"),
         ("要审的是依赖与构建链，不是自家源码", "../supply-chain-security/SKILL.md"),
     ],
-    not_use_pre="前置条件：**审查他人闭源代码** → 先确认授权范围（`ops/scope-contract.md`）",
+    not_use_pre="前置条件：先建 `scope.md` 记下审的是哪个版本/哪个 commit，否则结论无法复现",
     pivot=[
         ("SAST 报出 taint 路径，需要在运行时确认可达", "../pentest-tools/SKILL.md"),
         ("发现硬编码密钥/证书，要验证可否利用", "../attack-chain/SKILL.md"),
@@ -90,7 +90,7 @@ SPECS["attack-chain"] = dict(
         ("已拿到域内凭据，只需域内提权与横向", "../windows-ad/SKILL.md"),
         ("目标只在云上（容器/K8s/元数据）", "../cloud-k8s/SKILL.md"),
     ],
-    not_use_pre="前置条件：**未取得书面授权与 ROE** → 不开打；`ops/scope-contract.md` 是硬门",
+    not_use_pre="前置条件：先跑 `case-init` 落 `scope.md`（目标 + network_profile），**后续所有证据都挂到它上面**",
     pivot=[
         ("拿到初始 shell，要枚举本机与域", "../windows-ad/SKILL.md"),
         ("拿到域控，要找数据出口与持久化评估", "../edr-bypass-re/SKILL.md"),
@@ -111,7 +111,7 @@ SPECS["thick-client"] = dict(
         ("目标是 Android/iOS 应用", "../apk-reverse/SKILL.md"),
         ("目标是 Electron 渲染进程里的 JS 逻辑，不涉及本地能力", "../js-reverse/SKILL.md"),
     ],
-    not_use_pre="前置条件：客户端属于第三方且无授权 → 只做本地配置与安全边界观察",
+    not_use_pre="前置条件：先画**信任边界表**（进程/用户/文件/网络的每一处跨界），再挑最有价值的一处深挖",
     pivot=[
         ("更新器校验可降级/可替换", "../supply-chain-security/SKILL.md"),
         ("本地存储发现可复用凭据，要打服务端", "../api-security/SKILL.md"),
@@ -132,7 +132,7 @@ SPECS["cloud-k8s"] = dict(
         ("目标只是应用层接口", "../api-security/SKILL.md"),
         ("要审的是构建流水线而非运行时集群", "../supply-chain-security/SKILL.md"),
     ],
-    not_use_pre="前置条件：**云账号不属于你** → 只做只读枚举与配置取证，不做资源变更",
+    not_use_pre="前置条件：云资源变更不可逆 → 默认只读枚举；要变更先记录原配置以便回滚",
     pivot=[
         ("拿到云凭据，要评估能到哪些服务", "../attack-chain/SKILL.md"),
         ("容器内发现宿主机挂载/特权，要逃逸验证", "../kernel-exploit/SKILL.md"),
@@ -153,7 +153,7 @@ SPECS["database-security"] = dict(
         ("目标是数据库里的数据本身（取证/恢复）", "../digital-forensics/SKILL.md"),
         ("目标是 DB 服务器的操作系统层", "../pentest-tools/SKILL.md"),
     ],
-    not_use_pre="前置条件：生产库 → 默认只读；任何写操作须先取得明确授权与回滚方案",
+    not_use_pre="前置条件：生产库默认只读；要写先备好**回滚方案**（改前取快照 / 记录原值）",
     pivot=[
         ("确认弱口令可登录，要评估权限边界", "../windows-ad/SKILL.md"),
         ("Redis/Memcached 可写文件或 SSRF 可达", "../cloud-k8s/SKILL.md"),
@@ -174,7 +174,7 @@ SPECS["identity-federation"] = dict(
         ("目标是 Windows 域内 Kerberos/NTLM（不是 Web SSO）", "../windows-ad/SKILL.md"),
         ("目标是 OAuth 客户端本身而非 IdP 配置", "../code-audit/SKILL.md"),
     ],
-    not_use_pre="前置条件：IdP 属于第三方组织 → 只做配置观察与公开元数据检查",
+    not_use_pre="前置条件：先取一份**公开元数据**（`/.well-known/openid-configuration` 等）作为基线，再谈差异",
     pivot=[
         ("发现 assertion 可被篡改/重放", "../api-security/SKILL.md"),
         ("发现签名证书可控（自签被接受）", "../attack-chain/SKILL.md"),
@@ -195,7 +195,7 @@ SPECS["email-security"] = dict(
         ("要分析的是恶意附件本身", "../malware-analysis/SKILL.md"),
         ("要查的是邮件服务器主机层", "../windows-ad/SKILL.md"),
     ],
-    not_use_pre="前置条件：**涉及真实收件人** → 不发送任何测试邮件，只在受控邮箱内验证",
+    not_use_pre="前置条件：验证发件路径用**受控邮箱**（自建或自己的别名），便于反复试且不打扰他人",
     pivot=[
         ("附件是宏文档/脚本，要静态+动态分析", "../malware-analysis/SKILL.md"),
         ("发现可伪造发件域，要评估下游可利用面", "../attack-chain/SKILL.md"),
@@ -237,7 +237,7 @@ SPECS["llm-security"] = dict(
         ("目标是模型权重与训练数据本身", "../reverse-engineering/SKILL.md"),
         ("要审的是 agent 供应链（依赖/构建）", "../supply-chain-security/SKILL.md"),
     ],
-    not_use_pre="前置条件：**目标模型/服务属于第三方** → 只做授权范围内的红队与文档对照",
+    not_use_pre="前置条件：攻击要有**可重放的输入序列**（单次命中可能是采样随机性，不足为证）",
     pivot=[
         ("发现 agent 能调工具，要评估工具滥用链", "../attack-chain/SKILL.md"),
         ("发现 RAG 数据源污染", "../supply-chain-security/SKILL.md"),
@@ -258,7 +258,7 @@ SPECS["supply-chain-security"] = dict(
         ("要打的是运行时集群/容器", "../cloud-k8s/SKILL.md"),
         ("要逆向的是单个二进制样本", "../reverse-engineering/SKILL.md"),
     ],
-    not_use_pre="前置条件：**上游是第三方包** → 不修改上游，只做本地缓解与隔离",
+    not_use_pre="前置条件：上游包不要就地改（下次安装会覆盖）→ 缓解写在本地（patch/overlay/wrapper）",
     pivot=[
         ("发现可执行依赖（postinstall 等）", "../malware-analysis/SKILL.md"),
         ("发现构建产物与源码不一致", "../binary-diff/SKILL.md"),
@@ -280,7 +280,7 @@ SPECS["pwn-chain"] = dict(
         ("目标是内核态提权/逃逸", "../kernel-exploit/SKILL.md"),
         ("有 CVE 但没有 PoC，要从前后的补丁差异反推", "../patch-diff-exploit/SKILL.md"),
     ],
-    not_use_pre="前置条件：**只允许本地/CTF/授权靶机**；不指真实生产服务",
+    not_use_pre="前置条件：利用要在**可重启的目标**上验证（崩溃是常态，目标不可重启会中断迭代）",
     pivot=[
         ("利用被缓解机制挡住（SMEP/SMAP/KASLR/KPTI）", ASSAULT),
         ("目标是内核对象", "../kernel-exploit/SKILL.md"),
@@ -301,7 +301,7 @@ SPECS["kernel-exploit"] = dict(
         ("只是要分析驱动文件结构，不涉及利用", "../reverse-engineering/SKILL.md"),
         ("目标是 Android 应用层", "../apk-reverse/SKILL.md"),
     ],
-    not_use_pre="前置条件：**只在本地 VM/授权靶机**；内核操作可能使宿主不可恢复",
+    not_use_pre="前置条件：内核操作可能使宿主不可恢复 → 在**可快照回滚的 VM** 上做，先记内核版本与缓解开关",
     pivot=[
         ("确认漏洞点，要写用户态利用", "../pwn-chain/SKILL.md"),
         ("目标是容器逃逸", "../cloud-k8s/SKILL.md"),
@@ -322,7 +322,7 @@ SPECS["edr-bypass-re"] = dict(
         ("目标是 Linux 主机", "../kernel-exploit/SKILL.md"),
         ("目标根本没有 EDR/AV 驻守", "../pentest-tools/SKILL.md"),
     ],
-    not_use_pre="前置条件：**必须是授权红队演练环境**；本技能只在受控环境交付",
+    not_use_pre="前置条件：载荷交付前先确认目标机**可快照回滚**（EDR 会拦，回滚是常态操作）",
     pivot=[
         ("载荷落地后被静态查杀", "../reverse-engineering/SKILL.md"),
         ("需要分析 EDR 自身的用户态 hook", "../x64dbg-reverse/SKILL.md"),
@@ -343,7 +343,7 @@ SPECS["patch-diff-exploit"] = dict(
         ("只是要把旧版符号迁到新版，不需要利用", "../binary-diff/SKILL.md"),
         ("目标是源码可见的开源项目", "../code-audit/SKILL.md"),
     ],
-    not_use_pre="前置条件：**目标不是你维护的资产** → 只做漏洞分析与 PoC 验证，不投递利用",
+    not_use_pre="前置条件：PoC 要在**受影响版本与修复版双向验证**（只在一个版本上成功不足以定论）",
     pivot=[
         ("定位到新增检查点，要写利用", "../pwn-chain/SKILL.md"),
         ("目标是内核补丁", "../kernel-exploit/SKILL.md"),
@@ -406,7 +406,7 @@ SPECS["hardware-security"] = dict(
         ("目标是软件层的调试接口（不是 JTAG/SWD/UART）", "../x64dbg-reverse/SKILL.md"),
         ("目标是无线射频信号", "../radio-sdr/SKILL.md"),
     ],
-    not_use_pre="前置条件：**设备不是你的资产** → 先确认授权；物理接触可能不可逆",
+    not_use_pre="前置条件：物理接触可能不可逆 → 动手前先留**可恢复的备份/快照**（Flash 读数、焊点照片）",
     pivot=[
         ("从 Flash 提取到固件镜像", "../firmware-pentest/SKILL.md"),
         ("从串口拿到 shell，要分析系统内进程", "../reverse-engineering/SKILL.md"),
@@ -427,7 +427,7 @@ SPECS["ot-ics"] = dict(
         ("目标是 IoT 消费设备固件", "../firmware-pentest/SKILL.md"),
         ("目标只是工控软件的桌面客户端", "../thick-client/SKILL.md"),
     ],
-    not_use_pre="前置条件（硬性）：**写寄存器/下装默认禁止**；任何可能影响生产物理过程的动作必须先取得书面许可",
+    not_use_pre="前置条件：写寄存器/下装会动到**物理过程** → 默认只读被动；确要写先确认有物理回退手段（旁路/急停）",
     pivot=[
         ("需要看 PLC 固件内部逻辑", "../firmware-pentest/SKILL.md"),
         ("发现工程站 Windows 主机可打", "../windows-ad/SKILL.md"),
@@ -448,7 +448,7 @@ SPECS["radio-sdr"] = dict(
         ("目标是固件里的无线配置", "../firmware-pentest/SKILL.md"),
         ("目标是蓝牙以外的普通网络协议", "../protocol-reverse/SKILL.md"),
     ],
-    not_use_pre="前置条件：**默认只收不发**；任何发射（重放/干扰）须在屏蔽室或书面授权下进行",
+    not_use_pre="前置条件：**默认只收不发**；发射（重放/干扰）会污染现场 → 只在屏蔽室或物理隔离环境做",
     pivot=[
         ("识别出具体协议，需要还原报文结构", "../protocol-reverse/SKILL.md"),
         ("信号来自某设备，需要看其固件", "../firmware-pentest/SKILL.md"),
@@ -553,7 +553,7 @@ SPECS["ctf-sandbox"] = dict(
         ("任务是长期项目而非单次解题", "../docs-generator/SKILL.md"),
         ("只是要审一段代码", "../code-audit/SKILL.md"),
     ],
-    not_use_pre="前置条件：比赛/靶场环境；真实目标必须走 `../ops/scope-contract.md` 授权门",
+    not_use_pre="前置条件：长期项目走 `../reverse-engineering/references/assault-entry.md`；本卡只管比赛/靶场的**单次编排**",
     pivot=[
         ("题目归类为 pwn", "../pwn-chain/SKILL.md"),
         ("题目归类为逆向", "../reverse-engineering/SKILL.md"),
@@ -637,7 +637,7 @@ SPECS["browser-automation"] = dict(
         ("目标没有 UI，只有 API", "../api-security/SKILL.md"),
         ("要逆向的是扩展代码本身", "../browser-extension-reverse/SKILL.md"),
     ],
-    not_use_pre="前置条件：自动化操作第三方站点前确认其 ToS 与授权；不用于绕过反爬风控的规避性用途",
+    not_use_pre="前置条件：脚本要能在**干净会话**里重复跑通（依赖手动状态的脚本不算资产）",
     pivot=[
         ("页面里的参数是本地算的，要还原算法", "../js-reverse/SKILL.md"),
         ("需要抓包分析接口", "../web-protocol-reverse/SKILL.md"),
