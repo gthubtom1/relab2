@@ -6,7 +6,8 @@
     "quickNote": "quick=true 的用例是每个路由的最小回归集（smoke 快速模式使用）",
     "R50_added": "2026-10-10 01:51:14",
     "R53_R54_added": "2026-10-14",
-    "dev_domain_added": "2026-10-14"
+    "dev_domain_added": "2026-10-14",
+    "real_utterance_added": "2026-10-15 补 20 条主人原话（真人日常口吻，非关键词拼装）；加之前有一半落到 R0 逆向总入口"
   },
   "cases": [
     {
@@ -1144,6 +1145,126 @@
       "hint": "帮我确认一下这个改动是不是真的修好了",
       "expect": "R60",
       "quick": false
+    },
+    {
+      "hint": "帮我做个网站",
+      "expect": "R57",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "帮我做个命令行工具",
+      "expect": "R57",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "帮我接手一个现有的仓库",
+      "expect": "R57",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "帮我抓个 app 的包",
+      "expect": "R21",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "这个 exe 加了壳怎么脱",
+      "expect": "R6",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "帮我查下这个域名的 SPF 配对没",
+      "expect": "R36",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "这封邮件是钓鱼吗",
+      "expect": "R36",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "帮我审一下这个 PR",
+      "expect": "R61",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "这个 bug 怎么修",
+      "expect": "R59",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "帮我写份渗透测试报告",
+      "expect": "R11",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "打 CTF",
+      "expect": "R41",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "这个路由器固件能解开吗",
+      "expect": "R8",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "这个 Go 程序函数名全没了",
+      "expect": "R33",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "帮我看看这个内存转储",
+      "expect": "R25",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "帮我读一下这个 excel",
+      "expect": "R57",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "这个服务器装个 nginx",
+      "expect": "R57",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "帮我连一下这个数据库",
+      "expect": "R35",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "帮我写个爬虫",
+      "expect": "R57",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "这段代码有没有 SQL 注入",
+      "expect": "R26",
+      "quick": false,
+      "source": "real-utterance-yg"
+    },
+    {
+      "hint": "这个网站的后台怎么进",
+      "expect": "R11",
+      "quick": false,
+      "source": "real-utterance-yg"
     }
   ]
 }

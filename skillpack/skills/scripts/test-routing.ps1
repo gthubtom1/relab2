@@ -9,7 +9,11 @@ param(
     [string] $Benchmark = '',
     [switch] $Quick,
     [string] $LogDir = '',
-    [string] $PackageRoot = ''
+    [string] $PackageRoot = '',
+    # ★ 2026-10-15 独立审计实测：路由那几道主门**一道反例都没有** —— 也就是说
+    #   「期望值写错它也照样全绿」这种情况从来没被排除过。这里补上控制组：
+    #   默认先跑一遍**故意把期望值写错**的基准，必须判红，否则本门判据失效。
+    [switch] $NoSelftest
 )
 # ★ PSModulePath 自愈（2026-10-10 注入，路径由 inject-psmp.py 统一计算）：剔除 WindowsApps 版 PowerShell 7 的模块目录，否则 PS 5.1 会因 TypeData 重复定义失败而使 Get-FileHash / Get-ExecutionPolicy 不可用（已造成两次假绿 + 一次失败被吞）。重算/迁移后请重跑 work/envinit/inject-psmp.py
 # ★ 2026-10-10 去掉硬编码 `C:\relab2\...` 绝对路径。
@@ -57,6 +61,11 @@ if (-not (Test-Path -LiteralPath $Benchmark)) {
 }
 $bm = Get-Content -LiteralPath $Benchmark -Raw -Encoding UTF8 | ConvertFrom-Json
 
+# ---- 控制组（**前置检查**）：拿「故意写错期望值」的用例跑一遍，必须判红 ----
+# ★ 2026-10-15：第一版写成「替换 $bm 然后 exit」—— 那会把 227 条真实基准整个跳过。
+#   正确姿势：控制组只是**前置自检**，跑完立刻恢复真基准，继续跑全量。
+$SelftestActive = -not $NoSelftest
+
 # $env:TEMP 在 Linux/macOS runner 上可能未设置，统一用 GetTempPath fallback
 $tmpBase = if ($env:TEMP) { $env:TEMP } else { [System.IO.Path]::GetTempPath() }
 
@@ -66,21 +75,12 @@ if ([string]::IsNullOrWhiteSpace($LogDir)) {
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 
 $masterRoute = Join-Path $scriptDir 'master-route.ps1'
-$cases = @($bm.cases)
-if ($Quick) { $cases = @($cases | Where-Object { $_.quick }) }
 
-$fail = New-Object System.Collections.Generic.List[string]
-$pass = 0
-$failCount = 0
-$detail = New-Object System.Collections.Generic.List[string]
-
-Write-Host ("=== test-routing | {0} cases (quick={1}) ===" -f $cases.Count, [bool]$Quick)
-
-foreach ($c in $cases) {
+function Invoke-OneRouteCase([string]$Hint) {
     $tmp = Join-Path $tmpBase ("rs-rt-{0}" -f [guid]::NewGuid().ToString('n'))
     $got = 'ERR'
     try {
-        $null = & $HostExe -NoProfile -ExecutionPolicy Bypass -File $masterRoute -Hint $c.hint -OutDir $tmp 2>&1
+        $null = & $HostExe -NoProfile -ExecutionPolicy Bypass -File $masterRoute -Hint $Hint -OutDir $tmp 2>&1
         $scope = Join-Path $tmp 'route-scope.md'
         if (Test-Path -LiteralPath $scope) {
             $text = Get-Content -LiteralPath $scope -Raw -Encoding UTF8
@@ -92,7 +92,48 @@ foreach ($c in $cases) {
     } finally {
         Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
     }
+    return $got
+}
 
+if ($SelftestActive) {
+    $seed = @($bm.cases | Select-Object -First 2)
+    if ($seed.Count -eq 0) {
+        Write-Host '[控制组] 基准里没有用例，无法构造控制组' -ForegroundColor Yellow
+        $SelftestActive = $false
+    }
+    else {
+        Write-Host '[控制组] 期望值故意写成不存在的路由 id —— 本门**必须判红**' -ForegroundColor DarkGray
+        $ctlBad = 0
+        foreach ($c in $seed) {
+            $got = Invoke-OneRouteCase $c.hint
+            $fired = ($got -ne 'R99-NOT-A-REAL-ROUTE')
+            Write-Host ("  [{0}] {1} :: got={2}（坏期望必须被抓）" -f
+                        $(if ($fired) { 'RED ' } else { 'GREEN' }), $c.hint, $got)
+            if ($fired) { $ctlBad++ }
+        }
+        if ($ctlBad -eq $seed.Count) {
+            Write-Host ('控制组 PASS（本门可信）：{0} 条坏期望全被判红' -f $ctlBad) -ForegroundColor Green
+        }
+        else {
+            Write-Host '控制组 FAIL（本门判据失效）：期望值故意写错，本门仍然报绿' -ForegroundColor Red
+            exit 1
+        }
+    }
+}
+
+# ---- 真基准（照旧跑全量；控制组不参与、不干扰）----
+$cases = @($bm.cases)
+if ($Quick) { $cases = @($cases | Where-Object { $_.quick }) }
+
+$fail = New-Object System.Collections.Generic.List[string]
+$pass = 0
+$failCount = 0
+$detail = New-Object System.Collections.Generic.List[string]
+
+Write-Host ("=== test-routing | {0} cases (quick={1}) ===" -f $cases.Count, [bool]$Quick)
+
+foreach ($c in $cases) {
+    $got = Invoke-OneRouteCase $c.hint
     if ($got -eq $c.expect) {
         $pass++
         [void]$detail.Add(("PASS {0} -> {1}" -f $c.expect, $c.hint))
@@ -115,7 +156,7 @@ $summary = @(
     "LogDir=$LogDir"
 )
 $summary -join [Environment]::NewLine | Set-Content -LiteralPath (Join-Path $LogDir 'SUMMARY.txt') -Encoding UTF8
-Write-Host ('=== ROUTING TEST SUMMARY ===')
+Write-Host '=== ROUTING TEST SUMMARY ==='
 $summary | ForEach-Object { Write-Host $_ }
 if ($failCount -gt 0) {
     $fail | Set-Content -LiteralPath (Join-Path $LogDir 'failures.txt') -Encoding UTF8
