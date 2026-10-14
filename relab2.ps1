@@ -293,8 +293,14 @@ function Invoke-Setup {
     }
 
     Write-Host ''
-    Write-Host '  还差最后一步（本脚本不代做）：把卡片载进宿主 —— 开 kernel\04-console\start-console.bat，' -ForegroundColor Yellow
-    Write-Host '  选智能体 → 勾三段（中枢标记块 / 底模卡 / 客套指引卡）→ 载入。它会写你的入口文件、并留备份。' -ForegroundColor DarkGray
+    Write-Host '  ── 换机剩下的（本脚本不代做，因为写的是「你的机器状态」）──────────────' -ForegroundColor Yellow
+    Write-Host '  □ 1. 载入卡片：开 kernel\04-console\start-console.bat → 选智能体 → 勾三段 → 载入' -ForegroundColor Gray
+    Write-Host '        （它会把中枢标记块 / 底模卡 / 客套指引卡写进宿主的入口文件，并留备份）' -ForegroundColor DarkGray
+    Write-Host '  □ 2. 凭据：ssh 私钥 / API key / 商业 license —— 按 环境初始化.md §11.1-E 逐条补' -ForegroundColor Gray
+    Write-Host '  □ 3. 清旧状态：删掉会被旧机污染的目录（见 环境初始化.md §11.2）' -ForegroundColor Gray
+    Write-Host '  □ 4. 登 GitHub CLI：gh auth status 不自证就 gh auth login' -ForegroundColor Gray
+    Write-Host '  □ 5. 确认新机上没有上一台留下的计划任务/开机自启（环境初始化.md §11 的 D 组）' -ForegroundColor Gray
+    Write-Host '  ────────────────────────────────────────────────────────────────' -ForegroundColor Yellow
 
     if (-not $DryRun) {
         Write-Host ''
