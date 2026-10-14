@@ -125,18 +125,23 @@ foreach ($src in $sources) {
         $s = $bag[$name]
         $url = if ($s.url) { [string]$s.url } else { $null }
         if (-not $url -and $s.command -and "$($s.command) $($s.args -join ' ')" -match '(https?://[^\s"]+)') { $url = $Matches[1] }
-        $transport = if ($s.type) { [string]$s.type } elseif ($url) { 'http' } else { 'stdio' }
+        # ★ 2026-10-15：懒启动代理（mcp-lazy-http.py）是 stdio 形态，args 里那个 http:// 只是
+        #   它**要去拉起**的后端端点，不是宿主到它的传输方式。以前这里一律报 http/closed，
+        #   会让后来人误判「通道没起 = 没接线」，实际工具已经常驻可见、后端被调用时才起。
+        $isLazy = ("$($s.command) $($s.args -join ' ')" -match 'mcp-lazy-http\.py')
+        $transport = if ($isLazy) { 'stdio·懒启' } elseif ($s.type) { [string]$s.type } elseif ($url) { 'http' } else { 'stdio' }
         $hostName = $null; $port = 0; $listening = $null
         if ($url) {
             try { $u = [uri]$url; $hostName = $u.Host; $port = $u.Port; $listening = Test-Port -HostName $hostName -Port $port } catch { }
         }
+        if ($isLazy) { $listening = $null }   # 懒启动：后端在不在都不影响可用性
         $rows.Add([pscustomobject]@{
             host       = $src.host
             name       = $name
             transport  = $transport
-            endpoint   = if ($url) { $url } elseif ($s.command) { ('stdio: {0}' -f $s.command) } else { '' }
+            endpoint   = $(if ($isLazy) { 'stdio·懒启: 后端 ' + $url } elseif ($url) { $url } elseif ($s.command) { 'stdio: ' + $s.command } else { '' })
             listening  = $listening
-            start_note = if ($startHints.ContainsKey($name)) { $startHints[$name] } else { '（未登记启动方式）' }
+            start_note = $(if ($isLazy) { '工具常驻可见；后端由代理在被调用时自动拉起，无需人工' } elseif ($startHints.ContainsKey($name)) { $startHints[$name] } else { '（未登记启动方式）' })
         })
     }
 }
