@@ -218,6 +218,12 @@ def main() -> int:
         for c in CRITERIA:
             print(f"    - {c['id']}   （{c['note']}）")
         print("  要实跑：加 --run（会开新会话，花钱，建议挂 non-blocking）")
+        print("")
+        print("  " + "!" * 66)
+        print("  ⚠️  本次只确认了「配置就绪」—— 四条标准**一条都没验**。")
+        print("     这道门在 CI 里从不带 --run，所以「模型面对加壳/反调试目标时到底行不行」，")
+        print("     CI 给不出任何证据。绿色只代表 case 文件能解析、控制组自洽。")
+        print("  " + "!" * 66)
         return trust
 
     answer = run_session(case, args.model, args.timeout, probe=args.probe)

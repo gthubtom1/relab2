@@ -16,7 +16,10 @@ relab2.ps1 —— 本仓库的唯一门面（对齐 REA 的 setup / doctor / upd
 
 约定：
   · 本文件不写任何盘符绝对路径（环境初始化.md §10）。仓根一律由 $PSScriptRoot 推导。
-  · doctor 只读，不改任何东西；退出码 0 = 就绪，1 = 未就绪。
+  · doctor **不改配置、不改环境变量**；但它会调用 selfcheck / register-skills -Doctor / mcp-status，
+    其中会有**机器状态快照**被刷新（如 skillpack\.hub\tools.local.json —— 已 gitignore）。
+    ⚠️ 旧版这里写的是「只读，不改任何东西」—— 与事实不符（审计实测），已改。
+    退出码 0 = 就绪，1 = 未就绪。
   · setup 幂等，带 -DryRun 预览，不碰用户未授权的机器级状态。
 #>
 [CmdletBinding()]
@@ -241,7 +244,7 @@ function Show-Help {
     Write-Host @'
 relab2 —— 本仓库唯一门面
 
-  relab2 doctor          本机现在能不能干活（只读，退出码 0 = 就绪）
+  relab2 doctor          本机现在能不能干活（不改配置；会刷新机器状态快照。退出码 0 = 就绪）
   relab2 setup           一键接入：仓根定位 → 环境变量 → 技能挂载（幂等）
   relab2 setup -DryRun   只打印将要执行的每一行，不改任何东西
   relab2 update          换机/升级：git pull → 重跑 setup

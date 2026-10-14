@@ -293,6 +293,13 @@ def main() -> int:
                          ensure_ascii=False, indent=2))
     else:
         print(f"test-trigger-rate: eval sets={len(evals)} ran={len(results)}")
+        if not results:
+            print("")
+            print("  " + "!" * 66)
+            print("  ⚠️  本次只做了**结构检查**（eval 集存在、字段齐全）—— 模型行为一次都没验。")
+            print("     这道门在 CI 里从不带 --run，所以「技能能不能被正确触发」这件事，CI 给不出任何证据。")
+            print("     要真数字：python skills/tests/test-trigger-rate.py --run --limit 20（会调模型，慢且花钱）。")
+            print("  " + "!" * 66)
         if results:
             print("  ┌ 实测触发率（正例应 ≥0.5 / 负例应 <0.5）")
             for r in results:
