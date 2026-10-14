@@ -211,8 +211,14 @@ Write-Case -Name '老版本只打标题（无 JSON）-> 0 实例，不崩' `
     -Ok ($mb['MU_INSTANCES'] -eq '0') -Detail ("实得 " + $mb['MU_INSTANCES'])
 
 # 反例：把 fixture 换成只输出一半的 JSON，解析必须**拿不到**实例而不是硬凑一个
-$brokenMumu = Join-Path (Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))) `
-                         'scripts\work\fake-mumu-broken.cmd'
+$brokenDir = Join-Path (Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))) `
+                       'scripts\work'
+# ★ 2026-10-15 换机实测修：scripts\work\ 是 gitignore 的机器状态目录，干净 clone 里**不存在**——
+#   原来直接 WriteAllText 会炸在 "Could not find a part of the path"（阶段 5 干净目录实测抓到的真缺陷）。
+if (-not (Test-Path -LiteralPath $brokenDir)) {
+    New-Item -ItemType Directory -Path $brokenDir -Force | Out-Null
+}
+$brokenMumu = Join-Path $brokenDir 'fake-mumu-broken.cmd'
 try {
     [System.IO.File]::WriteAllText($brokenMumu,
         "@echo off`r`necho [`r`necho   { `"index`": `"0`", `"adb_port`": 16384 }`r`n",
