@@ -96,14 +96,51 @@ function Invoke-Doctor {
     }
     else { Add-Result '部署自检 selfcheck' 'FAIL' '缺少 selfcheck.ps1' }
 
-    # 4 MCP 通道
+    # 4 MCP 通道 —— 注册清单 + **真自检**（审计：REA 的 doctor 会分辨「注册对不对 / 真连上没」，
+    #   我们原来只有静态清单）。这里至少做到两层：① 命令在不在 ② 它是真能起来的形态。
     $mcp = Join-Path $RepoRoot 'skillpack\skills\scripts\mcp-status.ps1'
     if (Test-Path -LiteralPath $mcp) {
         $lines = & powershell -NoProfile -ExecutionPolicy Bypass -File $mcp 2>&1
         $reg = @($lines | Where-Object { $_ -match '^\s*\S+\s+\S+\s+(stdio|http)' })
-        $closed = @($reg | Where-Object { $_ -match 'closed' })
-        Add-Result 'MCP 通道' 'OK' ("已注册 {0} 条（{1} 条 http 待按需启动）" -f $reg.Count, $closed.Count)
+        $closed = @($lines | Where-Object { $_ -match 'closed' })
+        Add-Result 'MCP 通道' 'OK' ("已注册 {0} 条（{1} 条端点未监听 —— 懒启属正常）" -f $reg.Count, $closed.Count)
         foreach ($l in $reg) { Write-Host ("      " + $l.Trim()) -ForegroundColor DarkGray }
+
+        # 真自检：读宿主 mcp.json，逐条验「命令在不在 / 懒启代理有没有缓存（= 工具是否对模型可见）」
+        $hostMcp = Join-Path $env:USERPROFILE '.omp\agent\mcp.json'
+        if (Test-Path -LiteralPath $hostMcp) {
+            try {
+                $cfg = (Get-Content -LiteralPath $hostMcp -Raw -Encoding UTF8 | ConvertFrom-Json).mcpServers
+                $cacheDir = Join-Path $env:LOCALAPPDATA 'reverse-skill\mcp-lazy'
+                $bad = 0
+                foreach ($nm in $cfg.PSObject.Properties.Name) {
+                    $e = $cfg.$nm
+                    $cmdOk = $e.command -and (Test-Path -LiteralPath $e.command)
+                    $isLazy = ("$($e.args -join ' ')") -match 'mcp-lazy-http'
+                    if (-not $cmdOk) {
+                        $bad++
+                        Write-Host ("      · {0,-14} 命令不存在！{1}" -f $nm, $e.command) -ForegroundColor Red
+                        continue
+                    }
+                    if ($isLazy) {
+                        $cf = Join-Path $cacheDir "$nm.json"
+                        $seed = Join-Path $RepoRoot "skillpack\skills\references\mcp-lazy-seeds\$nm.json"
+                        if ((Test-Path -LiteralPath $cf) -or (Test-Path -LiteralPath $seed)) {
+                            Write-Host ("      · {0,-14} 懒启·缓存/种子在位（工具对模型可见）" -f $nm) -ForegroundColor DarkGray
+                        }
+                        else {
+                            Write-Host ("      · {0,-14} 懒启·**无缓存也无种子** → 模型看不见它的工具" -f $nm) -ForegroundColor Yellow
+                        }
+                    }
+                    else {
+                        Write-Host ("      · {0,-14} stdio（宿主按会话拉起）" -f $nm) -ForegroundColor DarkGray
+                    }
+                }
+                if ($bad -gt 0) { Add-Result 'MCP 通道自检' 'FAIL' "$bad 条的 command 指向不存在的文件" }
+                else { Add-Result 'MCP 通道自检' 'OK' '命令都在；懒启通道有缓存/种子兜底' }
+            }
+            catch { Add-Result 'MCP 通道自检' 'WARN' "解析 $hostMcp 失败：$_" }
+        }
     }
     else { Add-Result 'MCP 通道' 'FAIL' '缺少 skills\scripts\mcp-status.ps1' }
 
