@@ -144,7 +144,7 @@ Get-Content $log | Select-String -NotMatch 'Nuget|Repository|Extension|Path vali
 `pe-sieve` 专门扫运行中进程的注入、替换、shellcode、inline hook、IAT hook。
 
 ```powershell
-$pesis = '(Resolve-ReverseToolSpec -Name 'pe-sieve').Command'
+$pesis = "(Resolve-ReverseToolSpec -Name 'pe-sieve').Command"
 
 # 基本扫描
 & $pesis /pid <PID>

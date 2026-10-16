@@ -59,16 +59,28 @@ def _write_wrapper(cli_dir: str, name: str, helptext: str) -> str:
     为什么不用 .cmd：help 文本里天然含 `(` `)` `<` `>` `|` `&` ——
     这些都是 cmd 的特殊字符，即使转义也容易把输出改面目（rc=255、零输出）。
     改用 Python 做 wrapper：只在合成目录里，不动工具根。
+
+    ★ 2026-10-17：POSIX 上没有 .cmd —— 那时写一个**无扩展名的可执行** shell wrapper。
+    原来只写 `<name>.cmd`，而 GitHub 的 ubuntu runner 不认 .cmd，于是合成树上
+    4 个工具一个都认不出（CI 原文 `unknown=4`、`实得 None`），本门在 CI 永久红。
+    capability-index 侧同步补了「POSIX 无扩展名 + 可执行」的候选判据。
     """
-    path = os.path.join(cli_dir, name + ".cmd")
     py = os.path.join(cli_dir, name + ".py")
     with open(py, "w", encoding="utf-8", newline="") as f:
         f.write("import sys\n")
         f.write("if '--help' in sys.argv or '-h' in sys.argv:\n")
         f.write("    sys.stdout.write(%r)\n" % helptext)
-    # .cmd 只负责找到 Python 并转发（参数经 python 传，不经 cmd 解析）
-    with open(path, "w", encoding="utf-8", newline="") as f:
-        f.write('@echo off\r\npython "%~dp0' + name + '.py" %*\r\n')
+    if os.name == "nt":
+        # .cmd 只负责找到 Python 并转发（参数经 python 传，不经 cmd 解析）
+        path = os.path.join(cli_dir, name + ".cmd")
+        with open(path, "w", encoding="utf-8", newline="") as f:
+            f.write('@echo off\r\npython "%~dp0' + name + '.py" %*\r\n')
+        return path
+    path = os.path.join(cli_dir, name)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write('#!/bin/sh\nexec "%s" "$(dirname "$0")/%s.py" "$@"\n'
+                % (sys.executable, name))
+    os.chmod(path, 0o755)
     return path
 
 

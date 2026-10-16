@@ -375,6 +375,22 @@ SKIP_DIR_PARTS = {"node_modules", "__pycache__", ".git", "_dl", "docs", "db", "d
                   "tests", "test-data", "man", "locale", "cmake", "pkgconfig"}
 EXEC_EXT = {".exe", ".cmd", ".bat", ".ps1"}
 
+
+def _is_exec_candidate(p: Path) -> bool:
+    """这个文件算不算「可执行候选」。
+
+    ★ 2026-10-17：POSIX 上可执行文件**没有扩展名**（`/usr/bin/nmap`）。原来只认
+    {.exe,.cmd,.bat,.ps1} —— Linux 上整棵工具树一个候选都扫不出来，于是 help 兜底
+    永远 0 命中：CI 的 integration gates 里 `verify-capability-help` 报
+    `合成工具 myowndecomp/mydbg 实得 None | unknown=4`，`test-new-tool-discovery`
+    同理整门红（本包支持 Linux 孪生脚本与 Kali 包，工具层不该只认 Windows 后缀）。
+    非 Windows 上补一条：**无扩展名且真的可执行**（`os.access(p, X_OK)`）才算候选 ——
+    不是把「所有无扩展名文件」都收进来，避免把 README/LICENSE 当工具。
+    """
+    if p.suffix.lower() in EXEC_EXT:
+        return True
+    return os.name != "nt" and p.suffix == "" and os.access(p, os.X_OK)
+
 # ★ 2026-10-15（审计实测后的补丁）：这些是**通用启动器/示例名**，光看名字说明不了能力。
 #   旧版拿「文件名 **或** 完整路径」匹配规则，于是 `...\angr-mcp-venv\Scripts\mcp.exe`
 #   因为路径里含 `\angr` 被误判成「符号执行」；hashcat 自带的 `example0.cmd` 被当成「口令破解」。
@@ -496,7 +512,7 @@ def scan_candidates(roots: list[Path], max_depth: int = 5) -> list[Path]:
                 try:
                     if len(p.parts) - base_depth > max_depth:
                         continue
-                    if p.is_dir() or p.suffix.lower() not in EXEC_EXT:
+                    if p.is_dir() or not _is_exec_candidate(p):
                         continue
                     if SKIP_DIR_PARTS & {x.lower() for x in p.parts}:
                         continue

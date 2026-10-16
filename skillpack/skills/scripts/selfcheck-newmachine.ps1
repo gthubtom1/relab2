@@ -67,6 +67,15 @@ if (-not $ToolRoot) {
              elseif (Test-Path 'D:\Tools')      { 'D:\Tools' }
              else                               { '' }
 }
+# ★ 2026-10-17：显式传 -ToolRoot 时必须**真的驱动扫描**。
+#   原来它只影响第 3 行的显示与第 158 行的对比，第 6 节的扫描走 Get-ReverseToolRoot
+#   （读 $env:REVERSE_TOOL_ROOT）—— 于是 `selfcheck-newmachine.ps1 -ToolRoot <空目录>`
+#   照样报「25/25 全部通过」，参数等于不存在（实测复现）。
+#   口径与根目录 selfcheck.ps1 一致：显式参数 > 环境变量 > 默认探测。
+#   只写进程级环境变量，不落盘、不动用户环境（脚本自述的「只测量，不修改」仍成立）。
+if ($PSBoundParameters.ContainsKey('ToolRoot') -and $ToolRoot) {
+  $env:REVERSE_TOOL_ROOT = $ToolRoot
+}
 
 Write-Host ''
 Write-Host '=== 换机部署自检（只测量，不修改） ===' -ForegroundColor Cyan
@@ -246,10 +255,17 @@ try {
   }
   $missing = @($entries.GetEnumerator() | Where-Object { $_.Value.Available -ne $true } | ForEach-Object { $_.Key })
   $availCount = $totalCount - $missing.Count
-  if ($toolRootExists) {
-    Ok ("核心逆向工具就绪: $availCount / $totalCount（已缓存至 $snapFile）")
-  } else {
+  # ★ 2026-10-17：这里原来「只要工具根存在就一律 Ok」——
+  #   于是 13/25 也报 OK、末尾打「全部通过」rc=0，是**假绿**：
+  #   新机 agent 会以为装好了。按就绪率分档（主人定的阈值：<50% WARN、0 件 FAIL）。
+  if (-not $toolRootExists) {
     Warn ("核心逆向工具就绪: $availCount / $totalCount —— **该数字无效**，工具根指错导致探测未真正执行")
+  } elseif ($totalCount -eq 0) {
+    Bad "核心逆向工具就绪: 0 / 0 —— 快照里一个工具都没有，探测层没跑或工具根为空"
+  } elseif (($availCount / $totalCount) -lt 0.5) {
+    Warn ("核心逆向工具就绪: {0} / {1} —— 低于一半，本机大概率干不了活" -f $availCount, $totalCount)
+  } else {
+    Ok ("核心逆向工具就绪: $availCount / $totalCount（已缓存至 $snapFile）")
   }
   if ($missing.Count -and $toolRootExists) {
     Write-Host ("      - 未就绪: " + ($missing -join ', ')) -ForegroundColor Yellow
@@ -270,7 +286,9 @@ try {
     Write-Host ("      分战场分母: " + ($parts -join ' · ')) -ForegroundColor Gray
     foreach ($k in $snap.ToolGroups.Keys) {
       if ($snap.ToolGroups[$k].Available -eq 0) {
-        Write-Host ("        ★ 「{0}」战场本机 0 把刀：{1}" -f $k, ($snap.ToolGroups[$k].Missing -join ', ')) -ForegroundColor Yellow
+        # ★ 2026-10-17：原来只打一行黄色提示（不参与判定）。某个战场 0 把刀
+        #   意味着「该域在本机做不了活」，按主人定的语义算 FAIL -> selfcheck exit 1。
+        Bad ("「{0}」战场本机 0 把刀：{1} —— 该域在当前机器上做不了活" -f $k, ($snap.ToolGroups[$k].Missing -join ', '))
       }
     }
   }

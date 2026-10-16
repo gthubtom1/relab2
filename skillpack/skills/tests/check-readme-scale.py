@@ -35,6 +35,45 @@ def _read(p):
         return ""
 
 
+def _tracked_blob_bytes(files):
+    """按 git 里**存储的** blob 大小求和 —— 与工作树的换行符无关。
+
+    ★ 2026-10-17：原来用 os.path.getsize 逐文件求和。Windows 工作树是 CRLF、
+    Linux/CI 检出是 LF（.gitattributes 归一化），同一次提交在两边量出的
+    tracked_mb 差 0.1 MB —— 于是这个数字**不可能同时在两个平台上正确**：
+    CI 上实测 `README scale 行 tracked_mb=43.6，实际 43.5` 永久红。
+    改用 HEAD 的 blob 大小（仓库里实际存的字节），两边一致（本机实测同为 43.5）。
+    工作树里有、HEAD 里没有的（新暂存文件）回退到 getsize。
+    """
+    sizes: dict[str, int] = {}
+    try:
+        out = subprocess.run(
+            ["git", "-C", REPO_ROOT, "ls-tree", "-r", "-l", "-z", "HEAD"],
+            capture_output=True, check=False, timeout=120).stdout
+    except (OSError, subprocess.SubprocessError):
+        out = b""
+    for rec in out.split(b"\0"):
+        if not rec:
+            continue
+        meta, _, path = rec.partition(b"\t")
+        parts = meta.split()
+        if len(parts) >= 4 and parts[1] == b"blob":
+            try:
+                sizes[path.decode("utf-8", "surrogateescape")] = int(parts[3])
+            except ValueError:
+                continue
+    total = 0
+    for rel in files:
+        if rel in sizes:
+            total += sizes[rel]
+            continue
+        try:
+            total += os.path.getsize(os.path.join(REPO_ROOT, rel))
+        except OSError:
+            continue
+    return total
+
+
 def actual_numbers():
     """全部由文件系统 / git 现算，不读任何文档。"""
     # 顶层技能 = <skills>/<name>/SKILL.md
@@ -57,12 +96,7 @@ def actual_numbers():
     out = subprocess.run(["git", "-C", REPO_ROOT, "ls-files", "-z"],
                          capture_output=True, check=False, timeout=120).stdout
     files = [x.decode("utf-8") for x in out.split(b"\0") if x]
-    total_bytes = 0
-    for rel in files:
-        try:
-            total_bytes += os.path.getsize(os.path.join(REPO_ROOT, rel))
-        except OSError:
-            continue
+    total_bytes = _tracked_blob_bytes(files)
     return {
         "skills_top": len(top),
         "skills_nested": len(nested),

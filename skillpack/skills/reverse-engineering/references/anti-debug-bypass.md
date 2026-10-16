@@ -138,7 +138,7 @@ $peb=000000d4dda0b000
 ```powershell
 $exe  = 'C:\path\to\adbg.exe'
 $cdb  = "$env:LOCALAPPDATA\Microsoft\WindowsApps\cdbX64.exe"
-$inj  = '(Resolve-ReverseToolSpec -Name 'scyllahide').Command'
+$inj  = "(Resolve-ReverseToolSpec -Name 'scyllahide').Command"
 $dll  = '<scyllahide 目录>\Generic\HookLibraryx64.dll'
 $log  = "$env:TEMP\cdb_sh.txt"
 $cmds = "$env:TEMP\c_sh.txt"

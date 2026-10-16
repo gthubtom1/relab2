@@ -20,6 +20,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -67,16 +68,41 @@ if ($bad -gt 0) { exit 1 } else { exit 0 }
 """
 
 
+def _resolve_ps() -> list[str] | None:
+    """找到可用的 PowerShell 宿主（含宿主参数）。
+
+    ★ 2026-10-17：原来硬编码 `powershell`。GitHub 的 ubuntu runner **只装了 pwsh**
+    —— `powershell` 这个命令名只有 Windows 才有 —— 于是这道门在 CI 的
+    integration gates 里以 `FileNotFoundError: 'powershell'` exit 2 永久红，
+    而 exit 2 不是清单登记的退出码，run-ci-gates 直接判 FAILED。
+    顺序：Windows PowerShell（`powershell`，本机 PS 5.1 原生）→ PowerShell 7（`pwsh`）。
+    `-ExecutionPolicy` 只在 Windows PowerShell 上传（非 Windows 的 pwsh 不需要它）。
+    """
+    exe = shutil.which("powershell")
+    if exe:
+        return [exe, "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
+    exe = shutil.which("pwsh")
+    if exe:
+        return [exe, "-NoProfile", "-Command"]
+    return None
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
 
+    ps = _resolve_ps()
+    if ps is None:
+        print("FAIL：本机既没有 powershell 也没有 pwsh —— 无法解析 .ps1。"
+              "这道门需要一个 PowerShell 宿主（CI 的 ubuntu runner 预装 pwsh）。",
+              file=sys.stderr)
+        return 1
+
     root = str(REPO).replace("\\", "\\\\")
     try:
-        p = subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
-                            "-Command", PS_SCRIPT.replace("__ROOT__", root)],
+        p = subprocess.run(ps + [PS_SCRIPT.replace("__ROOT__", root)],
                            capture_output=True, text=True, encoding="utf-8",
                            errors="replace", timeout=900)
     except (OSError, subprocess.TimeoutExpired) as e:

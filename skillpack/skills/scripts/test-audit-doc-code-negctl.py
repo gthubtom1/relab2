@@ -15,6 +15,7 @@
   1  有漏报、误报，或门禁已被绕过
 """
 import io
+import importlib.util
 import json
 import os
 import shutil
@@ -26,15 +27,23 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 AUDIT = os.path.join(HERE, "audit-doc-code.py")
 PY = sys.executable
 
-# ★ 2026-10-17：本机有没有 PowerShell。
-#   Linux runner 上没有 —— 那时 classify_powershell 对每个 ps 块返回
-#   ("SKIP", "no powershell")，于是「期望 catch」的用例永远拿不到 real_bug，
-#   负控会把它当漏报（CI 原文：`漏报: ['powershell 缺右括号']` -> NG）。
-#   平台差异不是缺陷，所以按本仓既有平台守卫先例（test-bootstrap-manifest.sh:203-211）
-#   探测一次，只在「本机确实能判 powershell」时才要求它判红。
-PS_AVAILABLE = bool(shutil.which("powershell") or shutil.which("pwsh"))
-# 同上：yara 判据在无 yara 的机器上返回 ("SKIP", "no yara binary")。
-YARA_AVAILABLE = bool(shutil.which("yara") or shutil.which("yara64"))
+
+def _gate_capabilities():
+    """直接问门禁自己：它的 powershell / yara 判据可用吗。
+
+    ★ 2026-10-17 踩过的坑：最初这里自己探测 `shutil.which("powershell") or
+    shutil.which("pwsh")`，而门禁用的是 `shutil.which("powershell")`（只有这个名字）。
+    GitHub 的 ubuntu runner **预装了 pwsh 但没有 powershell** —— 于是两边判据不一致：
+    门禁返回 SKIP、负控却以为"本机该判红"，又变成假 NG。
+    现在改为加载门禁模块、读它自己的 `PS` / `YARA` 全局量，判据不可能再漂移。
+    """
+    spec = importlib.util.spec_from_file_location("_audit_doc_code_probe", AUDIT)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return bool(getattr(mod, "PS", None)), bool(getattr(mod, "YARA", None))
+
+
+PS_AVAILABLE, YARA_AVAILABLE = _gate_capabilities()
 
 # SKIP 原因 -> 本机是否具备该判据。不具条件时，「期望 catch」的用例记为 SKIP（不计漏报）。
 _PLATFORM_SKIP = {
@@ -76,6 +85,16 @@ CASES = [
     ("py-badbody", "python",
      "import os\n\ndef f():\n    x = = 1\n",
      "catch", "python 函数体语法错（不是「只有定义」）"),
+    # ★ 2026-10-17：yara 判据此前**没有任何负控**，而它的调用形态在本机是错的
+    #   （YARA-X 必须 `scan <rules> <target>`；旧式无子命令形态 rc=2 ->
+    #   8 个 yara 围栏全被误判 SYNTAX_ERR）。这两条把形态钉死。
+    #   无 yara 的机器上会 SKIP（与 ps-parse 的平台守卫同构）。
+    ("yara-missing-condition", "yara",
+     "rule t {\n strings:\n  $a = \"MZ\"\n}\n",
+     "catch", "yara 缺 condition 子句"),
+    ("yara-valid-rule", "yara",
+     "rule t {\n strings:\n  $a = \"MZ\"\n condition:\n  $a\n}\n",
+     "pass", "yara 合法规则（形态对了才放行）"),
 
     # ---------- 必须放行：合法 / 片段 / 伪码 / 模板 ----------
     ("py-complete", "python",

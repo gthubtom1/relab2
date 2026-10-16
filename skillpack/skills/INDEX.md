@@ -18,10 +18,10 @@
 | [cloud-k8s](cloud-k8s/SKILL.md) | 云/容器/K8s 安全评估：元数据 SSRF、IAM 越权、公开桶、容器逃逸、K8s RBAC。用于：云元数据 SSRF、容器逃逸、集群 RBAC。 |
 | [code-audit](code-audit/SKILL.md) | 白盒源码审计：PR/差分审查、Semgrep/CodeQL/Bandit/gosec SAST、注入点、鉴权缺失。用于：审代码注入、PR 合前过安全、IDOR/多租户。 |
 | [code-review](code-review/SKILL.md) | 逐行评审 diff：判断改动是否提升 code health、是否足够小自包含，按设计/功能/复杂度/测试给结论。用于：帮我审这个 PR、这段改动能不能合。 |
-| [community-apk-extension](community/apk-extension/SKILL.md) | APK 逆向能力扩展入口。把新版 apk-reverse 的 doctor、capability matrix、DEX/Dart/native、Frida、重打包和证据脚本接到 canonical apk-reverse 的统一 case 与工具门。 |
-| [community-ctf-hub](community/ctf-hub/SKILL.md) | CTF 任务的友好分诊与教学适配层。把自动分流、头脑风暴、比赛和题解输出接到 reverse-skill 的 scope、case、证据和 CTF sandbox 流程。 |
-| [community-delivery-workflow](community/delivery/SKILL.md) | 全栈软件交付编排适配层。按目标、输入、角色工作流、验收和文档沉淀推进项目，并在安全/逆向阶段交还 canonical reverse-skill 路由。 |
-| [community-hack-hub](community/hack-hub/SKILL.md) | Web、API、主机和应用安全专题适配层。将 hack-skills 的分类和深度 playbook 接到 reverse-skill 的可执行路由、授权 scope、case 证据和报告合同。 |
+| [community-apk-extension](community/apk-extension/SKILL.md) | APK 逆向能力扩展入口。用于：拿到新版 apk-reverse 的 doctor、capability matrix、DEX/Dart/native、Frida、重打包和证据脚本时，接回 canonical apk-reverse 的 case 与工具门。 |
+| [community-ctf-hub](community/ctf-hub/SKILL.md) | CTF 任务分诊与教学适配层。用于：要自动分流、头脑风暴、比赛切题和题解输出，接到 skill 的 scope、case、证据与 CTF sandbox 流程时。 |
+| [community-delivery-workflow](community/delivery/SKILL.md) | 全栈交付编排适配层。用于：按目标、输入、角色工作流、验收与文档沉淀推项目，并在安全/逆向阶段交还 skill 路由时。 |
+| [community-hack-hub](community/hack-hub/SKILL.md) | Web/API/主机/应用安全专题适配层。用于：把 hack-skills 的分类与深度 playbook 接到可执行路由、授权 scope、case 证据和报告合同时。 |
 | [ctf-sandbox](ctf-sandbox/SKILL.md) | CTF/AWD 靶场入口：case-init 门禁 + sidecar orchestrator 选竞赛子技能。用于：打 CTF、AWD、比赛切题、靶场题、pwn 怎么做、环境跑起来。 |
 | [database-security](database-security/SKILL.md) | 数据库安全评估：0.0.0.0 绑定、弱口令、权限过大、危险功能（xp_cmdshell/UDF）、NoSQL 注入。用于：库是否暴露、被脱库、Redis 写文件提权。 |
 | [design-slice](design-slice/SKILL.md) | 把新功能切成端到端最薄闭环再横向扩张：先跑通一条最小链路，接口先定契约，不先搭大架构。用于：不知从哪切、要 walking skeleton。 |
@@ -50,14 +50,14 @@
 | [ot-ics](ot-ics/SKILL.md) | OT/ICS 工控安全评估：Purdue 分区、PLC/RTU/SCADA 暴露面、Modbus/DNP3/S7/EtherNet/IP 识别、被动优先只读。用于：评估工控环境、镜像流量解析协议。 |
 | [patch-diff-exploit](patch-diff-exploit/SKILL.md) | N-day 补丁差分到利用：before/after 二进制对齐符号，BinDiff/ghidriff/Diaphora 差分，从新增检查反推 bug class（OOB/UAF/溢出）并写 PoC。用于：有 CVE 无 PoC、闭源驱动补丁还原。 |
 | [pentest-tools](pentest-tools/SKILL.md) | 主动渗透工具链：子域名、Nmap/Masscan 端口扫描、Nuclei 漏洞扫描、SQLi/XSS/SSRF 与 SQLMap/FFUF 爆破、Hashcat 口令破解。用于：授权扫描主机与 Web。 |
-| [src-hunter](pentest-tools/src-hunter/SKILL.md) | 实战 SRC / 众测 / Bug bounty 漏洞挖掘工作流 skill。包含：5 阶段方法论（intake → recon → enum → hunt → report）、19 个攻击类 playbook（SQLi/XSS/RCE/SSRF/IDOR/CSRF/Path Traversal/File Upl... |
+| [src-hunter](pentest-tools/src-hunter/SKILL.md) | 实战 SRC/众测/bug bounty 漏洞挑战工作流。用于：5 阶段方法论 + 19 类攻击 playbook + 结构化 payload + WAF/EDR 绕过变体、真实漏洞案例库。 |
 | [pr-ship](pr-ship/SKILL.md) | 用最小、可审的 PR 交付改动，并附作者自己的验证证据与完整描述。用于：帮我把这个改动提成 PR、要开 PR 了、把这个 feature 交付出去。 |
 | [protocol-reverse](protocol-reverse/SKILL.md) | 自定义协议逆向：TCP/UDP 帧布局还原、protobuf/gRPC 解码、WebSocket/MQTT 分析、PCAP 还原状态机。用于：有 PCAP 要还协议、未知 protobuf 恢复。 |
 | [pwn-chain](pwn-chain/SKILL.md) | 漏洞点到可用 exploit 的利用链：栈溢出、堆/tcache、ROP/ret2libc、kernel pwn、pwntools。用于：CTF pwn 远程打不通、已知漏洞点写 exploit、绕 SMEP/SMAP/KASLR。 |
 | [radare2](radare2/SKILL.md) | radare2/r2 命令行二进制分析：反汇编、交叉引用、strings/imports、patch、r2pipe/rabin2/rasm2/radiff2。用于：r2 CLI 分析 exe/dll/so/elf/apk/dex/wasm、定位函数。 |
 | [radio-sdr](radio-sdr/SKILL.md) | RF/SDR 信号研究：调制识别、GNU Radio/URH/Inspectrum 解调、屏蔽室重放。用于：非 Wi-Fi 射频（RTL-SDR/HackRF IQ）、ADS-B/遥控/传感器协议。 |
 | [req-clarify](req-clarify/SKILL.md) | 把模糊需求收敛成可判定的验收标准（Given-When-Then、含负例与边界），信息不足先问不猜。用于：需求含糊、验收写不出、开工前定 spec。 |
-| [dsl-vm-reverse](reverse-engineering/dsl-vm-reverse/SKILL.md) | Reverse JavaScript-based custom DSL/VM interpreters, non-standard WASM-like runtimes, and risk-control engines. Use when analyzing IIFE or switch-based opcod... |
+| [dsl-vm-reverse](reverse-engineering/dsl-vm-reverse/SKILL.md) | JS 自定义 DSL/VM 解释器逆向。用于：分析 IIFE 或 switch opcode 分发器、提取指令表、恢复字节码语义、捕获 VM 状态时。 |
 | [reverse-engineering](reverse-engineering/SKILL.md) | 通用逆向方法论：triage→static→dynamic，判壳/混淆/虚拟化、custom VM、anti-debug。用于：搞不清样本怎么跑、加固挡路、调试器一用就退。 |
 | [spike](spike/SKILL.md) | 跑一次性原型验证可行性或比较方案，产出 go/no-go 结论与证据而非可合并代码。用于：先验证一下行不行、比较两个方案、做个技术选型原型。 |
 | [supply-chain-security](supply-chain-security/SKILL.md) | 供应链安全评估：SBOM、SCA 依赖漏洞与可达性、CI/CD 管道审计、容器镜像。用于：审依赖许可、查组件 CVE、测 GitHub Actions 信任边界。 |

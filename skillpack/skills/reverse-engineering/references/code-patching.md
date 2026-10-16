@@ -36,7 +36,7 @@ $py    = (Resolve-ReverseToolSpec -Name 'pyre').Command   # pefile 2024.8.26
 ### 1. 定位并抽出原始字节
 
 ```powershell
-$r2 = '(Resolve-ReverseToolSpec -Name 'r2').Command'
+$r2 = "(Resolve-ReverseToolSpec -Name 'r2').Command"
 & $r2 -2 -qc 'aaa; afl~CheckBranch; s sym.CheckBranch; pdf; q' .\ptgt2.exe
 ```
 
@@ -168,7 +168,7 @@ CheckBranch(7)   = 9999 (expect 100)     ← 改动了
 用 `rasm2` 拿准确的机器码（**注意 bits 影响短跳偏移**）：
 
 ```powershell
-$rasm = '(Resolve-ReverseToolSpec -Name 'rasm2').Command'
+$rasm = "(Resolve-ReverseToolSpec -Name 'rasm2').Command"
 
 & $rasm -a x86 -b 64 'jne 0x7'      # -> 7505
 & $rasm -a x86 -b 64 'mov eax, 9999'# -> b80f270000

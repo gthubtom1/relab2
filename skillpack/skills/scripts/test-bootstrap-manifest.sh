@@ -236,11 +236,28 @@ WRAP
   chmod +x "$NO_PYTHON_BIN/$1"
 }
 for tool in bash uname dirname mktemp rm head tr basename mkdir cat ln; do _mk_wrapper "$tool"; done
+# ★ 2026-10-17：本夹具原来把子进程 PATH 设成**只有** $NO_PYTHON_BIN 这一个目录，
+#   里面只包了十几个 coreutils —— 而 bootstrap-reverse.sh 会用到 grep/find/cut/awk/env/…
+#   CI 上实测：`bootstrap-reverse.sh: line 338: grep: command not found` -> 整个
+#   no-python 负例必红（本文件其它三个用例都是 `PATH="$STUB_BIN:/usr/bin:/bin"`，
+#   只有这一处是裸 PATH，属漏改）。
+#   修法：照本文件既有惯例把标准系统目录接在后面，并**用失败桩遮住 python/python3**
+#   —— 这才是「本机有解释器但用不了」的真实形态（正是脚本头部防的 WindowsApps stub 场景）。
+#   若哪天桩失效、真 python3 被找到，下面的 `expect_line 'apt-get|install|-y|python3'`
+#   会立刻判红，所以这条修法自带反例。
+cat > "$NO_PYTHON_BIN/python3" <<'NOPY'
+#!/bin/sh
+echo "python3: no usable interpreter on PATH (no-python fixture)" >&2
+exit 127
+NOPY
+chmod +x "$NO_PYTHON_BIN/python3"
+cp "$NO_PYTHON_BIN/python3" "$NO_PYTHON_BIN/python"
+chmod +x "$NO_PYTHON_BIN/python"
 mkdir -p "$PARSER_FIXTURE"
 cp "$BOOTSTRAP" "$PARSER_FIXTURE/bootstrap-reverse.sh"
 cp "$MANIFEST" "$PARSER_FIXTURE/bootstrap-manifest.json"
 : > "$CALL_LOG"
-if ! env PATH="$NO_PYTHON_BIN" HOME="$SCRATCH/home" CALL_LOG="$CALL_LOG" \
+if ! env PATH="$NO_PYTHON_BIN:/usr/bin:/bin" HOME="$SCRATCH/home" CALL_LOG="$CALL_LOG" \
   STUB_ACTIVE_BIN="$NO_PYTHON_BIN" STUB_PYTHON_SOURCE="$STUB_BIN/python3" \
   RELAB_PYTHON_NO_FULLSCAN=1 \
   REVERSE_SKILL_TOOLS_DIR="$SCRATCH/tools" CLAUDE_MCP_CONFIG="$SCRATCH/home/mcp.json" \

@@ -1,6 +1,6 @@
 ---
 name: community-apk-extension
-description: APK 逆向能力扩展入口。用于：拿到新版 apk-reverse 的 doctor、capability matrix、DEX/Dart/native、Frida、重打包和证据脚本时，接回共云 apk-reverse 的 case 与工具门。
+description: APK 逆向能力扩展入口。用于：拿到新版 apk-reverse 的 doctor、capability matrix、DEX/Dart/native、Frida、重打包和证据脚本时，接回 canonical apk-reverse 的 case 与工具门。
 ---
 
 # Community APK capability adapter

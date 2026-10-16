@@ -51,6 +51,32 @@ def _find(*cands):
 
 PY = _find(_shutil.which("python"), sys.executable) or sys.executable
 YARA = _find(_shutil.which("yara"), _shutil.which("yara64"))
+
+
+def _yara_is_x(binary):
+    """本机的 yara 是不是 YARA-X（决定要不要插 `scan` 子命令）。
+
+    ★ 2026-10-17：本机 `D:\\Tools\\cli\\yara.cmd` 是裸转发到 `yr.exe`（YARA-X 1.21.0），
+    必须写成 `yr scan <rules> <target>`。旧式 `yara <rules> <target>` 在 YARA-X 上
+    rc=2、stderr `error: unrecognized subcommand`，于是 8 个 yara 围栏被误判 SYNTAX_ERR。
+    `--version` 两种形态都支持（YARA-X 实测打印 `yara-x-cli 1.21.0`），拿它做判据。
+    正确形态本仓已知：config/tool-recipes.json 的 `yara.scan` 配方就是 ["scan", ...]。
+    """
+    if not binary:
+        return False
+    try:
+        r = subprocess.run([binary, "--version"], capture_output=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    raw = r.stdout + r.stderr
+    try:
+        out = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        out = raw.decode("cp936", errors="replace")
+    return "yara-x" in out.lower()
+
+
+YARA_X = _yara_is_x(YARA)
 # ★ 2026-10-10 扩展：R2-DocCodeAudit 统计出 bash 1993 / js 444 / sql 300 /
 #   c 293 / json 175 块，第一版只覆盖 python+yara+powershell，漏掉大头。
 BASH_CHECKER = _find(r"C:\Program Files\Git\bin\bash.exe",
@@ -313,7 +339,9 @@ def classify_yara(code, tmpdir, idx, sample):
         return ("SKIP", "no yara binary", 0)
     f = os.path.join(tmpdir, "b%d.yar" % idx)
     io.open(f, "w", encoding="utf-8", newline="\n").write(code)
-    r = subprocess.run([YARA, f, sample], capture_output=True, timeout=60)
+    # ★ 2026-10-17：YARA-X 必须走 `scan` 子命令，旧式无子命令形态在本机实测 rc=2。
+    argv = [YARA] + (["scan"] if YARA_X else []) + [f, sample]
+    r = subprocess.run(argv, capture_output=True, timeout=60)
     if r.returncode == 0:
         return ("RUNS", "", 0)
     err = dec(r.stderr).strip()

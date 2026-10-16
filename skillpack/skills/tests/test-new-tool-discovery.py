@@ -48,8 +48,17 @@ def make_fake_root() -> Path:
     cli = root / "cli"
     cli.mkdir(parents=True)
     for name, (helptext, _cap) in FAKE.items():
-        # .cmd 不能带 BOM（cmd.exe 会把 BOM 当命令）；用 ASCII 正文避免代码页干扰
-        (cli / f"{name}.cmd").write_text(f"@echo off\r\necho {helptext}\r\nexit /b 0\r\n", encoding="ascii")
+        if os.name == "nt":
+            # .cmd 不能带 BOM（cmd.exe 会把 BOM 当命令）；用 ASCII 正文避免代码页干扰
+            (cli / f"{name}.cmd").write_text(
+                f"@echo off\r\necho {helptext}\r\nexit /b 0\r\n", encoding="ascii")
+        else:
+            # ★ 2026-10-17：POSIX 上没有 .cmd —— 写无扩展名的可执行 shell wrapper。
+            #   原来只写 .cmd，CI（ubuntu）上 4 个假工具一个都发现不了，本门永久红。
+            p = cli / name
+            p.write_text("#!/bin/sh\ncat <<'REL2EOF'\n" + helptext + "\nREL2EOF\n",
+                         encoding="ascii")
+            p.chmod(0o755)
     return root
 
 

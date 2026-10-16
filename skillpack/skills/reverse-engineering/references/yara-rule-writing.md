@@ -185,7 +185,7 @@ rule HackTool_DLL_Injector_Generic
 **从样本提取 AOB 的实操流程**：
 
 ```powershell
-$r2 = '(Resolve-ReverseToolSpec -Name 'r2').Command'
+$r2 = "(Resolve-ReverseToolSpec -Name 'r2').Command"
 # 1. 定位目标函数
 & $r2 -2 -qc 'aaa; afl~inject; q' .\sample.exe
 # 2. 抽字节

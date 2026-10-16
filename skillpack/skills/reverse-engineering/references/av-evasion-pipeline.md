@@ -25,7 +25,7 @@ $gcc = 'D:\Tools\runtime\mingw64\bin\gcc.exe'   # 本机 gcc 15.2.0
 $py  = (Resolve-ReverseToolSpec -Name 'pyre').Command
 $diec = (Resolve-ReverseToolSpec -Name 'diec').Command
 $capa = (Resolve-ReverseToolSpec -Name 'capa').Command
-$pe   = '(Resolve-ReverseToolSpec -Name 'pe-sieve').Command'
+$pe   = "(Resolve-ReverseToolSpec -Name 'pe-sieve').Command"
 ```
 
 ★ **本机 gcc 可用，MSVC 不可用**。编译命令用 MinGW 形态。

@@ -190,6 +190,30 @@ def diagnosis(text: str) -> str:
     return " | ".join(lines[-3:])[:400]
 
 
+DIAG_TAIL_LINES = 18
+
+
+def diagnosis_block(text: str, limit: int = DIAG_TAIL_LINES) -> list[str]:
+    """失败门的**可诊断尾部**（原样多行）。
+
+    ★ 2026-10-17：原来只印 `diagnosis()` 那 400 个字符。一次 integration gates 里
+    四道门同时红，job 日志只留下 `stderr: Traceback (most recent call last):` 这一行
+    —— 真正的异常类型与行号全在被 `dump_gate_log` 写到 runner 上的 `.log` 里，
+    作业一结束就没了，等于不可回放。红门必须能在 job 日志里自查。
+    取法：从第一个 `Traceback` / `FAIL` / `NEEDS_REVIEW` / `[BLOCKED]` 起截；
+    都没有就取末尾 limit 行。
+    """
+    lines = [ln.rstrip() for ln in (text or "").splitlines() if ln.strip()]
+    if not lines:
+        return []
+    start = max(0, len(lines) - limit)
+    for i, ln in enumerate(lines):
+        if ln.lstrip().startswith(("Traceback", "FAIL", "NEEDS_REVIEW", "[BLOCKED]")):
+            start = i
+            break
+    return lines[start:start + limit]
+
+
 def dump_gate_log(gate_id: str, code: int, out: str, err: str) -> Path | None:
     """★ 2026-10-16：非 ok 的门，把**完整输出**落到仓库外，并返回路径。
 
@@ -310,8 +334,11 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 print(f"[{verdict.upper():6}] {gate['id']:30} {reason}")
                 print(f"         {diagnosis(gate_out)}")
+                for line in diagnosis_block(gate_out):
+                    print(f"         | {line}")
                 if gate_err:
-                    print(f"         stderr: {diagnosis(gate_err)}")
+                    for line in diagnosis_block(gate_err, 24):
+                        print(f"         ! {line}")
                 log_path = dump_gate_log(gate["id"], gate_rc, gate_out, gate_err)
                 if log_path:
                     print(f"         完整现场（可回放）：{log_path}")
