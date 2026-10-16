@@ -223,7 +223,20 @@ jobs:
       # every action is SHA-pinned. This is the gate that would have caught U10.
       - name: Verify the gates are actually wired into CI
         shell: bash
-        run: python3 skillpack/skills/tests/verify-gate-wiring.py
+        run: |
+          set +e
+          python3 skillpack/skills/tests/verify-gate-wiring.py
+          rc=$?
+          set -e
+          # ★ 2026-10-17：这道门有两种「非 0」——10 是**清单里登记的非阻断**（needs_review，
+          #   例如反向接线登记册那条汇总），20 是阻断。原来直接 `run:` 一个命令，
+          #   于是 exit 10 会把整个 step 判红，把「响亮但不拦」变成「拦」。
+          #   这里按清单的 non_blocking_exits 口径分流；其它码属未登记，仍判红。
+          case "$rc" in
+            0)  echo "verify-gate-wiring: PASS" ;;
+            10) echo "verify-gate-wiring: NEEDS_REVIEW (exit 10, registered non-blocking -- see ci-gates.json)" ;;
+            *)  echo "verify-gate-wiring: exit $rc is not a registered code -- failing" >&2; exit 1 ;;
+          esac
 
   sh-syntax:
     name: shell script syntax check
