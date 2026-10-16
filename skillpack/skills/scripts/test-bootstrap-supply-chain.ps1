@@ -40,6 +40,23 @@ Remove-Variable -Name Resolve-Relab2PsModulePathInit -ErrorAction SilentlyContin
 . (Join-Path $PSScriptRoot 'lib/BootstrapSupplyChain.ps1')
 
 function Assert-True { param([bool]$Condition, [string]$Message) if (-not $Condition) { throw $Message } }
+
+# ★ 2026-10-17 路径模板解析回归（Linux CI step6 的真实根因，见 lib/Bootstrap.ps1 的注释）。
+#   两条独立缺陷，各自都足以让子进程看不见夹具：
+#     ① Get-ReverseUserProfilePath 只认 USERPROFILE，POSIX 上该变量不存在 -> 展开成空
+#     ② manifest 的路径模板用 Windows 反斜杠，POSIX 上不归一化 -> 得到带 `\` 的单个文件名
+#   断言放在这里（本脚本 CI 两个平台都跑），锁死它们。
+. (Join-Path $PSScriptRoot 'lib/Bootstrap.ps1')
+$__profile = Get-ReverseUserProfilePath
+Assert-True (-not [string]::IsNullOrWhiteSpace($__profile)) 'user profile path resolved to empty (POSIX needs the HOME fallback)'
+$__seclists = Get-ReverseBootstrapDefinition -Name 'seclists'
+Assert-True (-not [string]::IsNullOrWhiteSpace($__seclists.installDir)) 'seclists installDir expanded to empty'
+Assert-True ([System.IO.Path]::IsPathRooted([string]$__seclists.installDir)) ("seclists installDir is not an absolute path: " + $__seclists.installDir)
+if (-not (Test-Relab2IsWindows)) {
+    Assert-True (-not ([string]$__seclists.installDir).Contains('\')) ("POSIX installDir still carries a backslash separator: " + $__seclists.installDir)
+}
+Assert-True ((Get-ReverseBootstrapDefinition -Name 'jadx').assetRegex -eq '^jadx-1\.5\.6\.zip$') 'separator normalization corrupted a non-path field (assetRegex)'
+Remove-Variable -Name __profile, __seclists -ErrorAction SilentlyContinue
 function Invoke-Git { param([string[]]$Arguments) & git @Arguments; if ($LASTEXITCODE -ne 0) { throw "git failed: $Arguments" } }
 function Write-UnixExecutable {
     param(

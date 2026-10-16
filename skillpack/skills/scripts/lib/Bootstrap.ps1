@@ -129,14 +129,43 @@ function Sync-ReverseEnvironment {
     }
 }
 
+# ★ 2026-10-17：本机是否 Windows。路径模板归一化要用它（见 Resolve-ReversePathTemplate）。
+function Test-Relab2IsWindows {
+    [CmdletBinding()]
+    param()
+    if ($PSVersionTable.PSVersion.Major -ge 6 -and $PSVersionTable.ContainsKey('Platform')) {
+        return ($PSVersionTable.Platform -eq 'Win32NT')
+    }
+    return ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT)
+}
+
 function Get-ReverseUserProfilePath {
     [CmdletBinding()]
     param()
+    # ★ 2026-10-17：原来只认 USERPROFILE，POSIX 上该变量**不存在** ——
+    #   manifest 里 `%USERPROFILE%\Tools\...` 于是被解析成 `\Tools\...`（根下），
+    #   与调用方用 [Environment]::GetFolderPath('UserProfile') 算出的家目录**不一致**。
+    #   CI 上表现为 test-bootstrap-supply-chain.ps1 的 step6 在 Linux 必红：
+    #   夹具在 /home/runner/Tools/SecLists，子进程却去看 \Tools\SecLists。
+    #   回退顺序：USERPROFILE -> HOME -> GetFolderPath(UserProfile)。
+    #   三者都空时才返回空串（保持「解析不出来就明说」的语义）。
     $p = [Environment]::GetEnvironmentVariable('USERPROFILE')
     if (-not [string]::IsNullOrWhiteSpace($p) -and (Test-Path -LiteralPath $p -PathType Container)) {
         return $p
     }
-    return $env:USERPROFILE
+    # ★ 变量名不能叫 `$home`：PowerShell 的 $HOME 是**只读自动变量**，
+    #   赋值会静默失败（WriteError）并保留原值 —— 那会让本回退形同虚设。
+    $posixHome = [Environment]::GetEnvironmentVariable('HOME')
+    if (-not [string]::IsNullOrWhiteSpace($posixHome) -and (Test-Path -LiteralPath $posixHome -PathType Container)) {
+        return $posixHome
+    }
+    try {
+        $folder = [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)
+        if (-not [string]::IsNullOrWhiteSpace($folder)) { return $folder }
+    }
+    catch { }
+    if (-not [string]::IsNullOrWhiteSpace($env:USERPROFILE)) { return $env:USERPROFILE }
+    return $posixHome
 }
 
 function Get-ReverseSkillRoot {
@@ -184,7 +213,23 @@ function Resolve-ReversePathTemplate {
         '%TEMP%'         = [string]([Environment]::GetEnvironmentVariable('TEMP'))
         '%SKILL_ROOT%'   = (Get-ReverseSkillRoot)
     }
-    foreach ($key in $replacements.Keys) { $resolved = $resolved.Replace($key, $replacements[$key]) }
+    $replaced = $false
+    foreach ($key in $replacements.Keys) {
+        if ($resolved.Contains($key)) {
+            $resolved = $resolved.Replace($key, $replacements[$key])
+            $replaced = $true
+        }
+    }
+    # ★ 2026-10-17：manifest 的路径模板用 Windows 反斜杠写（`%USERPROFILE%\Tools\jadx`）。
+    #   POSIX 上 `\` 不是分隔符 —— 展开后得到 `/home/runner\Tools\jadx` 这种
+    #   **带反斜杠的单个文件名**，Test-Path 为假、Ensure-GitCloneInstall 于是去网上重新克隆，
+    #   而不是对已存在的夹具做校验。CI 上表现为 routing tests (ubuntu) 的 step6 红：
+    #   断言 `failed public bootstrap did not report checkout verification` 拿不到预期的 error。
+    #   只在**确实展开过 token** 的值上归一化 —— assetRegex 之类不含 token 的字段
+    #   （`^jadx-1\.5\.6\.zip$`）必须原样保留，否则正则被改坏。
+    if ($replaced -and -not (Test-Relab2IsWindows)) {
+        $resolved = $resolved -replace '\\', '/'
+    }
     return $resolved
 }
 
