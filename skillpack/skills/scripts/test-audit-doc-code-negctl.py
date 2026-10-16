@@ -26,6 +26,22 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 AUDIT = os.path.join(HERE, "audit-doc-code.py")
 PY = sys.executable
 
+# ★ 2026-10-17：本机有没有 PowerShell。
+#   Linux runner 上没有 —— 那时 classify_powershell 对每个 ps 块返回
+#   ("SKIP", "no powershell")，于是「期望 catch」的用例永远拿不到 real_bug，
+#   负控会把它当漏报（CI 原文：`漏报: ['powershell 缺右括号']` -> NG）。
+#   平台差异不是缺陷，所以按本仓既有平台守卫先例（test-bootstrap-manifest.sh:203-211）
+#   探测一次，只在「本机确实能判 powershell」时才要求它判红。
+PS_AVAILABLE = bool(shutil.which("powershell") or shutil.which("pwsh"))
+# 同上：yara 判据在无 yara 的机器上返回 ("SKIP", "no yara binary")。
+YARA_AVAILABLE = bool(shutil.which("yara") or shutil.which("yara64"))
+
+# SKIP 原因 -> 本机是否具备该判据。不具条件时，「期望 catch」的用例记为 SKIP（不计漏报）。
+_PLATFORM_SKIP = {
+    "no powershell": PS_AVAILABLE,
+    "no yara binary": YARA_AVAILABLE,
+}
+
 # (用例名, 围栏语言, 代码, 期望, 说明)
 #   期望 "catch" = 必须报真错；"pass" = 必须放行（片段 / 合法 / 不参与编译）
 CASES = [
@@ -197,6 +213,9 @@ def main():
 
         found = {(b["path"], b["lang"]): b["msg"]
                  for b in data.get("real_bugs", [])}
+        # ★ 2026-10-17：SKIP 明细 —— 用来区分「跳过」与「真的干净」。
+        skipped = {(b["path"], b["lang"]): b["msg"]
+                   for b in data.get("skipped", [])}
         # 未闭合围栏不算 real_bug（它是独立的 unclosed 列表）
         unclosed_paths = {p for p, _l, _lang
                           in data.get("unclosed", [])}
@@ -209,8 +228,19 @@ def main():
         print("-" * 74)
 
         miss, extra = [], []
+        skipped_cases = []
         for name, lang, _code, want, desc in CASES:
-            hit = found.get((name + ".md", lang))
+            key = (name + ".md", lang)
+            hit = found.get(key)
+            skip_msg = skipped.get(key, "")
+            platform_skip = (want == "catch" and hit is None and skip_msg
+                             and not _PLATFORM_SKIP.get(skip_msg, True))
+            if platform_skip:
+                # 本机不具备该判据（无 PowerShell / 无 yara）—— 平台差异，不算漏报
+                skipped_cases.append("%s（%s）" % (desc, skip_msg))
+                print("%-32s %-6s %-6s %s"
+                      % (desc[:30], want, "SKIP", "SKIP(平台无此判据)"))
+                continue
             good = (hit is not None) == (want == "catch")
             if want == "catch" and hit is None:
                 miss.append(desc)
@@ -219,6 +249,10 @@ def main():
             print("%-32s %-6s %-6s %s"
                   % (desc[:30], want, "catch" if hit else "pass",
                      "OK" if good else "NG"))
+        if skipped_cases:
+            print("跳过（本机无对应判据）：%d 条" % len(skipped_cases))
+            for s in skipped_cases:
+                print("   - " + s)
 
         # ---------------- 对抗组 ----------------
         print()

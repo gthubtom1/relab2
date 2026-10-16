@@ -687,6 +687,13 @@ def main():
     for r in trunc[:20]:
         print("   %s:%d" % (r["path"], r["line"]))
 
+    # ★ 2026-10-17：把 SKIP 的**逐块明细**也吐进 JSON。
+    #   负控需要知道「某用例是被判成 SKIP 还是被放行」——
+    #   只看 real_bugs 分不出「跳过」与「真的干净」，于是
+    #   `test-audit-doc-code-negctl.py` 在无 PowerShell 的 Linux runner 上
+    #   把 ps-parse 的 SKIP 当成漏报，job 必红。
+    #   这是向后兼容的加法：老消费者只读 real_bugs/unclosed，不受影响。
+    skips = agg.get("SKIP", [])
     if args.json:
         with io.open(args.json, "w", encoding="utf-8") as fh:
             fh.write(json.dumps({
@@ -694,6 +701,7 @@ def main():
                 "tested": len(results),
                 "verdicts": {k: len(v) for k, v in agg.items()},
                 "real_bugs": real, "truncated": trunc,
+                "skipped": skips,
                 "unclosed": unclosed,
             }, ensure_ascii=False, indent=1))
         print("\n机读: %s" % args.json)

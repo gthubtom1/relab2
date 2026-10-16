@@ -69,20 +69,79 @@ def git_tracked(repo: str) -> set[str]:
             and not p.decode("utf-8").startswith(FORBIDDEN_PREFIXES)}
 
 
+# ★ 2026-10-17：`run:` 里的**块标量**（`run: |` / `run: >`）以前一个字都没被扫。
+#   旧实现用 `re.finditer(r"run:\s*(?:\|)?\s*(.+)", text)`，`(.+)` 只吃同一行 ——
+#   于是 ci.yml 里 8 处 `run: |` 块内的引用全部漏检。三条指向
+#   `$GITHUB_WORKSPACE/skills/...`（仓库根根本没有 `skills/` 目录）的错路径
+#   就是这样长期躺在 CI 里、本地门禁还报绿的。
+#   现在按行遍历：命中 `run: |` 就把它后面**缩进更深**的连续行拼成整块一起扫。
+_BLOCK_SCALAR_RE = re.compile(r"^(\s*)run:\s*[|>][-+]?\s*$")
+_INLINE_RUN_RE = re.compile(r"^\s*run:\s*(?!\|)(?!>)(.+)$")
+
+# `$GITHUB_WORKSPACE/` 在 runner 上就是仓库根，判存在性前必须剥掉。
+_WS_PREFIXES = ("${GITHUB_WORKSPACE}/", "$GITHUB_WORKSPACE/", "GITHUB_WORKSPACE/")
+
+# ★ 2026-10-17：块标量一扫，运行期临时路径也进来了。两类**不是仓库引用**的必须剔掉，
+#   否则门禁会把 `$scratch/work/x/scope.md` 这种产物断言报成「引用不存在」。
+#   ① 前缀是 `$` 的 shell 变量展开（`$scratch/...`、`$caller/...`）——
+#      REF_RE 的字符类不含 `$`，所以匹配到的是变量名之后的半截，必须看**匹配位置前一个字符**。
+#   ② 仓库根 `work/`（含 `skillpack/work/`）—— 已在 .gitignore，按定义不是源文件；
+#      `test ! -e "$GITHUB_WORKSPACE/work/caller-default"` 这类**产物路径断言**就属此列。
+_RUNTIME_PREFIXES = ("work/",)
+
+
+def _collect_line_refs(line: str, found: set[str]) -> None:
+    """把一行文本里的仓库内路径引用收进 found（URL 行直接跳过）。"""
+    if "http://" in line or "https://" in line:
+        return
+    for m in REF_RE.finditer(line):
+        raw = m.group(0)
+        # ① `$var/...`：匹配位置前一个字符是 `$`，且它不是已知的仓库根前缀
+        if m.start() > 0 and line[m.start() - 1] == "$" \
+                and not raw.startswith(_WS_PREFIXES):
+            continue
+        p = raw
+        for pre in _WS_PREFIXES:
+            if p.startswith(pre):
+                p = p[len(pre):]
+                break
+        p = p.lstrip("./")
+        # 必须含目录分隔符才像仓库内路径（避免 `foo.py` 这种相对当前目录的）
+        if "/" not in p:
+            continue
+        if p.endswith(GENERATED_SUFFIX):
+            continue
+        # ② 运行期产物目录
+        if p.startswith(_RUNTIME_PREFIXES):
+            continue
+        found.add(p)
+
+
 def refs_in(text: str) -> set[str]:
     found: set[str] = set()
-    for m in re.finditer(r"run:\s*(?:\|)?\s*(.+)", text):
-        line = m.group(1)
-        if "http://" in line or "https://" in line:
+    lines = text.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        block = _BLOCK_SCALAR_RE.match(line)
+        if block:
+            base_indent = len(block.group(1))
+            i += 1
+            while i < len(lines):
+                nxt = lines[i]
+                if not nxt.strip():
+                    i += 1
+                    continue
+                indent = len(nxt) - len(nxt.lstrip(" "))
+                if indent <= base_indent:
+                    break
+                _collect_line_refs(nxt, found)
+                i += 1
             continue
-        for raw in REF_RE.findall(line):
-            p = raw.lstrip("./")
-            # 必须含目录分隔符才像仓库内路径（避免 `foo.py` 这种相对当前目录的）
-            if "/" not in p:
-                continue
-            if p.endswith(GENERATED_SUFFIX):
-                continue
-            found.add(p)
+        inline = _INLINE_RUN_RE.match(line)
+        if inline:
+            _collect_line_refs(inline.group(1), found)
+        i += 1
     return found
 
 

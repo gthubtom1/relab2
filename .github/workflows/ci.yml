@@ -267,8 +267,8 @@ jobs:
           printf 'fixture' > "$scratch/sample.apk"
           (
             cd "$caller"
-            bash "$GITHUB_WORKSPACE/skills/scripts/master-route.sh" --hint "offline apk"
-            bash "$GITHUB_WORKSPACE/skills/scripts/case-init.sh" \
+            bash "$GITHUB_WORKSPACE/skillpack/skills/scripts/master-route.sh" --hint "offline apk"
+            bash "$GITHUB_WORKSPACE/skillpack/skills/scripts/case-init.sh" \
               --hint "offline apk" \
               --case-name "caller-default" \
               --preset offline-sample \
@@ -352,7 +352,7 @@ jobs:
           # --force is compatibility-only and must not bypass the hard auth gate.
           (
             cd "$caller"
-            bash "$GITHUB_WORKSPACE/skills/scripts/case-init.sh" \
+            bash "$GITHUB_WORKSPACE/skillpack/skills/scripts/case-init.sh" \
               --hint "pending offline apk" \
               --case-name "force-auth" \
               --sample "$scratch/sample.apk"

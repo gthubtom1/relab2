@@ -36,6 +36,14 @@ BAD = [
     ("引用一个只有 PS 孪生、没有 .sh 的路径",
      "      - name: bogus\n        shell: bash\n"
      "        run: /bin/bash skillpack/skills/scripts/test-client-neutral-bootstrap.sh"),
+    # ★ 2026-10-17：块标量（run: |）里的引用以前一个字都没被扫。
+    #   这两条是那次漏检的回归用例 —— 它们必须被抓。
+    ("块标量里引用不存在的文件",
+     "      - name: bogus\n        shell: bash\n        run: |\n"
+     "          bash skillpack/skills/scripts/nope-block.sh"),
+    ("GITHUB_WORKSPACE 前缀 + 不存在路径",
+     "      - name: bogus\n        shell: bash\n        run: |\n"
+     "          bash \"$GITHUB_WORKSPACE/skillpack/skills/scripts/nope-ws.sh\""),
 ]
 
 # 干净基线：**不引用任何仓库内文件**。
@@ -52,6 +60,23 @@ jobs:
         run: echo hello
 """
 
+# ★ 2026-10-17：块标量形式的**正确**引用必须放行 —— 否则收紧后的实现会把
+#   合法 workflow 全部报红。夹具会真实落一个被引用的文件。
+CLEAN_BLOCK = """name: synthetic
+on: [push]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: real block scalar reference
+        shell: bash
+        run: |
+          bash skillpack/skills/scripts/real-block.sh
+"""
+
+# 上面那份夹具引用它；必须真实存在（git 跟踪或磁盘存在二者其一）。
+CLEAN_BLOCK_FILE = "skillpack/skills/scripts/real-block.sh"
+
 
 def run(root: str, timeout: int = 120) -> tuple[int, str]:
     p = subprocess.run([PY, "-B", GATE, "--root", root],
@@ -59,7 +84,8 @@ def run(root: str, timeout: int = 120) -> tuple[int, str]:
     return p.returncode, (p.stdout + p.stderr).decode("utf-8", "replace")
 
 
-def make_repo(tmp: str, name: str, body: str) -> str:
+def make_repo(tmp: str, name: str, body: str,
+              extra_files: list[str] | None = None) -> str:
     root = os.path.join(tmp, name)
     wf = os.path.join(root, ".github", "workflows")
     os.makedirs(wf, exist_ok=True)
@@ -68,6 +94,10 @@ def make_repo(tmp: str, name: str, body: str) -> str:
                    capture_output=True, timeout=60)
     io.open(os.path.join(wf, "synthetic.yml"), "w",
             encoding="utf-8", newline="\n").write(body)
+    for rel in extra_files or []:
+        target = os.path.join(root, rel.replace("/", os.sep))
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        io.open(target, "w", encoding="utf-8", newline="\n").write("# fixture\n")
     return root
 
 
@@ -86,7 +116,17 @@ def main() -> int:
                             % (rc, out.strip()[:200]))
         print("  %-44s %s" % ("干净副本 -> 放行", "OK" if rc == 0 else "NG"))
 
-        # 2) 三种坏引用必须被抓
+        # 1b) 块标量形式的**正确**引用必须放行（否则收紧后的实现误报）
+        clean_blk = make_repo(tmp, "clean-block", CLEAN_BLOCK,
+                              extra_files=[CLEAN_BLOCK_FILE])
+        rc, out = run(clean_blk)
+        if rc != 0:
+            failures.append("块标量正确引用必须 rc=0（实得 %d）: %s"
+                            % (rc, out.strip()[:200]))
+        print("  %-44s %s"
+              % ("块标量正确引用 -> 放行", "OK" if rc == 0 else "NG"))
+
+        # 2) 坏引用必须被抓（含两条块标量用例）
         for i, (desc, step) in enumerate(BAD, 1):
             body = CLEAN + "\n" + step + "\n"
             root = make_repo(tmp, "bad%d" % i, body)
