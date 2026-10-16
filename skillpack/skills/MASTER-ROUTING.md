@@ -9,7 +9,7 @@
 2. 输出 PRIMARY 路径 + 一句话依据
 3. case-init / scope.md（ops/scope-contract）— 建案：目标、网络档、产出物落 work/<case>/
 4. 指定 lead + specialist 角色（ops/role-map）
-5. 立即打开 PRIMARY 的 SKILL.md → ACTION REQUIRED
+5. 打开 PRIMARY（`route-scope.md` 里 `primary_skill` 指的那份文件，**可以是 `references/**.md`**）并照它的指引执行
 6. 工具路径只认实测（`(Get-Command …)`）；缺则 bootstrap（仅 manifest 能力）
 7. 过程追加 timeline / workitems；结论走 Evidence→Finding→Path
 8. 未命中 → 读 routing.md 全表或提议新 skill

@@ -186,12 +186,14 @@ jobs:
       # when a human typed them. The manifest is skills/tests/ci-gates.json.
       #
       # Exit semantics are preserved exactly, not normalised:
-      #   * verify-community-banner exit 10 is a REGISTERED non-blocking item
-      #     (WORK-BOARD U1: 15 vendored documents still lack the reference-only
-      #     banner). The runner classifies it as non-blocking and prints it as a
-      #     warning. Treating it as a failure would block every PR on a known,
-      #     already-registered item; treating it as a pass without the warning
-      #     would hide it. Both are wrong, so it is reported as a warning.
+      #   * verify-community-banner exits 0 today. Measured 2026-10-17: 19 vendored
+      #     docs, 0 missing the reference-only banner. The older comment here claimed
+      #     "15 vendored documents still lack the banner" — that was stale.
+      #     Exit 10 stays REGISTERED as non-blocking for the day a vendored doc does
+      #     lose its banner (WORK-BOARD U1 recorded 15 such documents back then). The
+      #     runner classifies 10 as non-blocking and prints it as a warning, so a
+      #     regression is loud without blocking every PR on an already-registered
+      #     item. The gate's own red path is covered by its negative controls.
       #   * verify-triage-lock exit 10 is also expected here: the read-only
       #     upstream snapshots live outside the repository, so a clean checkout
       #     cannot machine-verify upstream_layout_unmappable claims. That
@@ -362,51 +364,19 @@ jobs:
             exit 1
           fi
 
-      - name: PowerShell syntax check (PSParser, all tracked .ps1)
-        shell: pwsh
-        run: |
-          $files = git ls-files '*.ps1'
-          if (-not $files) { Write-Host 'No .ps1 files tracked'; exit 0 }
-          $failed = 0
-          foreach ($f in $files) {
-            $tokens = $null
-            $errors = $null
-            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $f), [ref]$tokens, [ref]$errors) | Out-Null
-            if ($errors -and $errors.Count -gt 0) {
-              $failed++
-              Write-Host "::error file=$f::$($errors.Count) parse error(s)"
-              foreach ($e in $errors) {
-                Write-Host ("  L{0}:{1} {2}" -f $e.Extent.StartLineNumber, $e.Extent.StartColumnNumber, $e.Message)
-              }
-            } else {
-              Write-Host "syntax OK: $f"
-            }
-          }
-          if ($failed -gt 0) { exit 1 }
+      # ★ 2026-10-17：这两个 step 原来**内联复刻**了门 #41 / #42 的判据，却不调用门。
+      #   复刻的 PSParser 版用的是 `[Parser]::ParseFile` —— 而它正是被门修掉的那个
+      #   盲区：Windows PowerShell 5.1 对**无 BOM 的 UTF-8** 文件按 ANSI 码页解码，
+      #   文件里有中文就解析出 0 个错误。也就是说 CI 上这一步**判不了**它本该判的东西。
+      #   现在改成直接调用门脚本（与 `integration-gates` 里跑的是同一份判据），
+      #   内联复刻删除 —— 判据只有一处，不会再分叉。
+      - name: PowerShell syntax check (all tracked .ps1)
+        shell: bash
+        run: python3 skillpack/skills/tests/verify-powershell-syntax.py
 
       - name: Non-ASCII .ps1 must carry a UTF-8 BOM (Windows PowerShell 5.1 safety)
-        shell: pwsh
-        run: |
-          # PS 5.1 parses a BOM-less .ps1 as the system ANSI codepage, garbling
-          # Chinese/em-dash string literals. Every non-ASCII script MUST have a BOM.
-          $files = git ls-files '*.ps1'
-          if (-not $files) { Write-Host 'No .ps1 files tracked'; exit 0 }
-          $bad = 0
-          foreach ($f in $files) {
-            $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path $f))
-            $hasNonAscii = $false
-            foreach ($b in $bytes) { if ($b -ge 0x80) { $hasNonAscii = $true; break } }
-            if (-not $hasNonAscii) { continue }
-            $hasBom = $bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF
-            if ($hasBom) {
-              Write-Host "BOM OK: $f"
-            } else {
-              $bad++
-              Write-Host "::error file=$f::non-ASCII .ps1 lacks a UTF-8 BOM; add one so literals survive Windows PowerShell 5.1"
-            }
-          }
-          if ($bad -gt 0) { Write-Host "$bad file(s) need a UTF-8 BOM"; exit 1 }
-          Write-Host 'All non-ASCII .ps1 carry a UTF-8 BOM'
+        shell: bash
+        run: python3 skillpack/skills/tests/verify-ps1-bom.py
 
   leak-scan:
     name: field-journal leak scan

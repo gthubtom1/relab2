@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "subject": "skills/tests/ci-gates.json",
-  "subject_digest": "sha256:6a097406d32add9b81bf1f000c381671f36a4d5313a711debff8c51d0423b8a4",
+  "subject_digest": "sha256:ca133b8be798b22d298d0cf7119796463446f62bdd15bdc481dbaeaf91932dce",
   "gates_total": 42,
   "gate_ids": [
     "verify-spec-structure",

@@ -33,7 +33,7 @@ clone 完**在这个目录下开一个新的智能体会话** —— 之后读�
 **第 0.5 步 · 一条命令问「这台机器现在能不能干活」**
 
 ```powershell
-# 先看它要干什么（一个字都不改）
+# 先看它要干什么 —— 只打印计划、不改环境变量与配置；会刷新本机工具快照 `skillpack/.hub/tools.local.json`（gitignored）
 powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2.ps1 setup -DryRun
 # 真跑：仓根定位 → 环境变量 → 技能挂载（幂等，可反复跑）
 powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2.ps1 setup
@@ -136,7 +136,7 @@ GPL 分发待拍板等）全部记在 [`docs/KNOWN-BOUNDARIES.md`](docs/KNOWN-BO
 ```text
 ① 读 skillpack/skills/SKILL.md          ← 主入口，含路由契约与命令纪律
 ② 跑 .\skillpack\skills\scripts\master-route.ps1 选当前阶段的技能（PRIMARY）
-③ 打开 PRIMARY 的 SKILL.md，照它的 ACTION REQUIRED 做
+③ 打开 PRIMARY（`route-scope.md` 里 `primary_skill` 指的那份文件，**可以是 `references/**.md`**）并照它的指引执行
 ④ **每推进到一个阶段，重新跑一遍 ②** —— 一个程序各阶段要的东西不同（有没有壳决定走脱壳还是直接静态、
    静态看不出东西就转动态），别在第一个阶段选定的技能里死磕到底
 ⑤ 报告用 Evidence → Finding → Path

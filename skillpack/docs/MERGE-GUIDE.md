@@ -3,7 +3,7 @@
 **这份文档给谁用**：给**以后要往这个包里加新技能包的智能体或人**。
 你不需要读完整套施工规范；照本文的步骤走，每一步都有命令和验收条件。
 
-**一句话**：把新包**只读拉下来 → 侦察 → 定策略 → 物理隔离 → 建记录 → 建通道 → 加路由 → 跑门 → 提交复核**。
+**一句话**：把新包**只读拉下来 → 侦察 → 定策略 → 物理隔离 → 建记录 → 建社区接入点 → 加路由 → 跑门 → 提交复核**。
 本文第 11 节的"坑清单"是本仓库**实际踩过并付出代价**的经验，**不要跳过**。
 
 > 想一句话开工？把 [docs/MERGE-KICKOFF.md](MERGE-KICKOFF.md) 整段复制给 AI 即可。
@@ -17,7 +17,7 @@
 ├── integrated-skill-hub\                  <- 融合包本体（这才是仓库）
 │   ├── skills\                            <- 客户端发现根：只有这里的内容会被智能体看到
 │   │   ├── <43 个 canonical 技能>\
-│   │   └── community\<4 条通道 wrapper>\  <- 社区包的接入点
+│   │   └── community\<4 个社区接入点>\  <- 社区包的接入点
 │   ├── community-raw\<来源>\              <- 上游原文（物理隔离，17.27，客户端看不到）
 │   ├── skills\community\registry.json     <- 所有社区技能的登记表
 │   ├── skills\config\routing.json         <- 路由唯一事实源（48 条 R 规则）
@@ -36,12 +36,12 @@
 |---|---|---|---|
 | 1 | 拉新包到 `upstream/`（只读，**必须是 git 仓库**） | `git clone --depth 1 <url> upstream/<name>` | 快照 |
 | 2 | 侦察：技能数、许可、成熟度、**有没有夹带重复框架** | 见 §3 | 侦察结论 |
-| 3 | **定策略**：canonical 并入 / 社区通道 / 排除 | 见 §4 | 决策记录（落盘位置见 §4 末） |
+| 3 | **定策略**：canonical 并入 / 社区接入点 / 排除 | 见 §4 | 决策记录（落盘位置见 §4 末） |
 | 4 | 登记导入器白名单（**必须在 import 之前**） | 改 `scripts/adapt-community.py` 四表 + pin 上游 HEAD | 白名单条目 + pin commit |
 | 5 | 建 source 记录 | 改 `registry.json` 的 `sources[]`（17 字段全表见 §5） | 一条 source |
 | 6 | 物理隔离原文 | `adapt-community.py import` | `community-raw/<source>/`（**不产出 `skills[]` 记录**） |
 | 7 | 提技能记录（**手写**，导入器不产出） | 手写 `skills[]` + 同步 `stats` | N 条 skill |
-| 8 | 建通道 wrapper | 手写 `skills/community/<name>/SKILL.md` + `wrappers[]` 条目 | 一个 wrapper（模板见 §6） |
+| 8 | 建社区接入点 wrapper | 手写 `skills/community/<name>/SKILL.md` + `wrappers[]` 条目 | 一个 wrapper（模板见 §6） |
 | 9 | 加路由 | 改 `routing.json` 的 R 条目（空号查询见 §7） | 新 R 规则 |
 | 10 | 跑门验收（含**融合必红三门**的预期处理） | 见 §9 | 全绿或具名降级 |
 | 11 | 提交 + **clone 复核**（lab 版命令见 §10） | 见 §10 | 提交 + 复核记录 |
@@ -118,10 +118,10 @@ d 问把过滤词换成**本包已有的框架名**（如 `reverse-skill`）在�
 | 策略 | 什么时候用 | 做法 |
 |---|---|---|
 | **A. canonical 并入** | 包本身就是**同类框架**、且与本包主框架**同源**（如 `reverse-skill` 自己） | 直接进 `skills/<name>/`。**极少用**——本包只把主框架自己算 canonical |
-| **B. 社区通道**（**默认**） | 绝大多数情况：新包是**独立的技能集合** | 原文进 `community-raw/<source>/`，技能登记进 `registry.json`，经**一条新 wrapper** 暴露 |
+| **B. 社区接入点**（**默认**） | 绝大多数情况：新包是**独立的技能集合** | 原文进 `community-raw/<source>/`，技能登记进 `registry.json`，经**一条新 wrapper** 暴露 |
 | **C. 排除** | 重复框架、无技能价值的脚手架、许可不明且无法补救的部分 | 记进 `registry.json` 的 `excluded[]`，**必须写理由** |
 
-**默认走 B**。本包现有 4 条通道（`ctf-hub` / `hack-hub` / `delivery` / `apk-extension`）都是 B。
+**默认走 B**。本包现有 4 个社区接入点（`ctf-hub` / `hack-hub` / `delivery` / `apk-extension`）都是 B。
 
 **为什么默认 B**：
 - 原文在 `community-raw/`（**在 `skills/` 发现根之外**），客户端**看不到**，安全；
@@ -228,7 +228,7 @@ $up = '<开发根>\upstream'
 纠正旧文：`import`/`promote` **只产出** `community-raw/` 原文 + 候选 `registry.json`
 （attestation 列刷新），**不产出 `skills[]` 记录**。每个新技能手写一条（19 字段，
 仿 `community-ctf-super-hub-001`）：`id` / `source` / `source_path`（快照内相对路径）/
-`adapted_path` / `path`（= `community-raw/<dest>/…`）/ `entrypoint`（本通道 wrapper 路径）/
+`adapted_path` / `path`（= `community-raw/<dest>/…`）/ `entrypoint`（本接入点 wrapper 路径）/
 `discovery: "reference-only"` / `license_status` / `maturity` / `distribution: "local-only"` /
 `allowed_context`（数组，合法上下文词）/ `risk` / `content_type` / `keywords` /
 `canonical_downstream`（数组，无则 `[]`）/ `reference_ids`（数组，无则 `[]`）/
@@ -258,18 +258,18 @@ apk=11 / ctf=13 / hack=141 / ai=137，全量 302 恰为四者之和，**全部�
 
 ---
 
-## 6. 第 7 步：建 wrapper（通道文件）
+## 6. 第 7 步：建 wrapper（社区接入点文件）
 
-在 `skills/community/<新通道名>/SKILL.md` 建一个文件。**不要只"参考现有的四个"**——
+在 `skills/community/<新接入点名>/SKILL.md` 建一个文件。**不要只"参考现有的四个"**——
 下面是可直接复制的最小模板（正文骨架仿 `delivery/SKILL.md`，frontmatter 只需两行）：
 
 ```markdown
 ---
-name: community-<通道名>
-description: <一句话：这个通道提供什么能力，什么情况下路由到这里>。
+name: community-<接入点名>
+description: <一句话：这个接入点提供什么能力，什么情况下路由到这里>。
 ---
 
-# Community <通道名> adapter
+# Community <接入点名> adapter
 
 ## ACTION REQUIRED
 
@@ -277,14 +277,14 @@ description: <一句话：这个通道提供什么能力，什么情况下路由
 2. `NEXT`: 从 `community-raw/<dest>/` 读取对应的适配后技能正文；
    这些路径已被适配到当前包，不使用源仓库的全局 hooks、私有嵌套 checkout 或自动 bootstrap。
 3. `ACT`: 高风险动作（真实部署、外部发布、逆向利用）必须交还 canonical 路由，
-   遵循它自己的 scope/case/授权门；本通道只负责引路和验收。
+   遵循它自己的 scope/case/授权门；本接入点只负责引路和验收。
 4. `DONE`: 产出结果、证据路径、风险与回滚说明，未验证的能力标为 `unverified`。
 
 ## Canonical boundaries
 
 - 全局安全规则仍由根 `RULES.md` 管理。
 - 路由仍由 `skills/config/routing.json` 管理。
-- 上游原文在 `community-raw/<dest>/`，客户端经本通道发现根进入，不直读原文。
+- 上游原文在 `community-raw/<dest>/`，客户端经本接入点发现根进入，不直读原文。
 ```
 
 `registry.json` 的 `wrappers[]` 里登记一条（**12 字段全表**，仿 `wrapper-ctf-super-hub`，
@@ -293,7 +293,7 @@ description: <一句话：这个通道提供什么能力，什么情况下路由
 ```json
 {
   "id": "wrapper-<source_id>",
-  "path": "skills/community/<通道名>/SKILL.md",
+  "path": "skills/community/<接入点名>/SKILL.md",
   "source": "<source_id>",
   "route_ids": ["R<新编号>"],
   "reference_ids": ["<该 source 的 skill id, 逐条列全>"],
@@ -333,13 +333,13 @@ $env:PYTHONIOENCODING='utf-8'
 |---|---|---|
 | 1 | `skills/config/routing.json` 的 `routes` | 新增 `"R42": {...}` 条目（格式见下） |
 | 2 | 同文件的 `priority[]` 数组 | **同步插入** `"R42"`（顺序影响并列裁决；新路由放同类路由附近，仿 R46–R49 的相对位置） |
-| 3 | `skills/MASTER-ROUTING.md` 优先级表 | 加一行 `| **R42** | <一句话> | `community/<通道>/` |`，**与 `priority[]` 同序** |
+| 3 | `skills/MASTER-ROUTING.md` 优先级表 | 加一行 `| **R42** | <一句话> | `community/<接入点>/` |`，**与 `priority[]` 同序** |
 | 4 | `skills/tests/routing-benchmark.json` 的 `cases` | 至少加一条正向用例（`hint` 命中 R42）+ 两条负向对照用例 |
 
 ```json
 "R<新编号>": {
   "label": "<一句话描述>",
-  "skill": "community/<通道名>/SKILL.md",
+  "skill": "community/<接入点名>/SKILL.md",
   "keywords": [
     { "must": "<正则>", "note": "<为什么这么写、语料依据是什么>" }
   ]
@@ -406,13 +406,18 @@ $env:PYTHONIOENCODING='utf-8'
 & '(Resolve-ReverseToolSpec -Name 'pyre').Command' "$repo\skills\tests\run-ci-gates.py" --runner python
 ```
 
-**门数口径（唯一真值，2026-10-02 实测复核）**：`skills/tests/ci-gates.json` 共 **23** 门 =
-**21** 个 python 门（`--runner python` 实跑的就是这 21 个）+ **2** 个 `runtime: powershell` 门
-（`test-routing`、`verify-routing-coherence`，CI 里单独跑，不进 `--runner python`）。
-所以 `--runner python` 的 `total` 恒等于 23 − 2 = **21**；文档里出现的"20 门""22 门"是加门前的历史残留。
-加门/删门后请同步改这一句，别让两个口径并存。
+**门数口径（以现算为准，别抄这里的数字）**：真值永远由 `skills/tests/ci-gates.json` 现算 ——
+```
+python skillpack/skills/tests/run-ci-gates.py --runner python      # 只跑 python 门
+python skillpack/skills/tests/run-ci-gates.py --runner powershell  # 只跑 .ps1 门
+```
+**2026-10-17 实测：清单共 42 门 = 39 python + 3 powershell**（`test-routing`、`verify-routing-coherence`、
+`test-emulator-lab`；CI 里单独跑，不进 `--runner python`）。
+★ 这一段**故意不再写死数字** —— 它以前写死过 20 / 22 / 23 三个口径，每次加门就腐烂一次。
+要数字就现算；本文件只在括号里留一次实测值作参照。
 
-**期望**（真树）：`total=21 ok=21 non_blocking=0 skipped=0 blocked=0 failed=0`，exit 0。
+**期望**（真树，2026-10-17 实测）：`total=39 ok=33 non_blocking=4 skipped=1 blocked=0 failed=0`，exit 0。
+`non_blocking` 与 `skipped` 是**已登记**的降级（见下段与各门的 `ci_note`），不是失败。
 
 **clone 到仓库外**（无 `../upstream` 快照）时允许的差异：三个门（`verify-triage-lock`、
 `verify-source-attestation`、`verify-canonical-base-lock`）因缺快照降级为 exit 10（非阻断），
@@ -552,7 +557,7 @@ Remove-Item Env:\GIT_DIR
 
 **做法**：跑门时确认没有其他写者；看到 `exit 30` 先查是不是并发。
 
-### 坑 #5 · subagent 派发：模型与通道
+### 坑 #5 · subagent 派发：模型与提供商
 
 - 用 `subagent` + `provider:"axon"` + `model:"muse-spark-1.3-contributor-free"` + `reasoning_effort:"high"`
 - **不要**用 `spawn_teammate`（没有 model 参数）；**不要**用 `subagent_fork`（继承 Lead 的模型）
@@ -587,10 +592,9 @@ Remove-Item Env:\GIT_DIR
 
 `skills/tests/ci-gates.json` 是**声明层**，`ci-gates.lock.json` 是**锁**（含 digest）。
 加门要改 manifest 并 `--write-lock` 重生成锁；`verify-gate-wiring.py` 会交叉校验"每门都被 workflow 调用"。
-**当前：manifest 23 门 = 21 个 python 门 + 2 个 powershell 门；`--runner python` 跑 21 门
-（`total` 恒 = 清单 − 2）。** 这是本卡的第 #11 号坑本身——门数一变，下面这句和 HANDOFF 的
-「门数唯一口径」都必须同步改，否则会再次出现"20/22/23"三个口径并存。
-本仓最近一次变动：`verify-evolution` 接进清单（22 → 23 门），所以旧文档里的"22 门（20+2）"已作废。
+**当前口径：不写死。** 现算命令 = `python skillpack/skills/tests/run-ci-gates.py --runner python`
+（2026-10-17 实测清单 42 门 = 39 python + 3 powershell）。这正是第 #11 号坑本身 ——
+数字一写进文档就会腐烂，本仓已出现过 "20/22/23" 三个口径并存。**所以现在一律现算，不在文档里钉数字。**
 
 ### 坑 #12 · 导入器只认"四表齐全"的 source（半登记必被 21 拦下）
 
@@ -667,8 +671,10 @@ Remove-Item Env:\GIT_DIR
 ```
 任何一次融合收尾时，按这个顺序跑（每步贴 exit 与关键行）：
 
-1. 双基准：test-routing.ps1（182/182）与 test-routing-natural.ps1（≥76/86）——不许退化
-2. 全门：run-ci-gates.py --runner python → total=21 ok=21 failed=0
+1. 双基准：test-routing.ps1 与 test-routing-natural.ps1 —— **不许退化**。
+   两个脚本的用例数都以 `skills/tests/routing-benchmark.json` 为准（2026-10-17 实测 247 条）；
+   跑完看它自己打的 `TOTAL=/PASS=/FAIL=`，别抄文档里的旧分数（这里曾写死 182/182、≥76/86，早已腐烂）。
+2. 全门：run-ci-gates.py --runner python → total=N ok=N failed=0（N 现算；2026-10-17 实测 39）
 3. CI-only 两项（本地门看不见，必须单独跑）：
      powershell -NoProfile -ExecutionPolicy Bypass -File skills/scripts/extract-summaries.ps1 -Check   → exit 0
      # 非 ASCII .ps1 的 BOM 自检（一行 python，见 §11 坑 #14）
@@ -680,7 +686,7 @@ Remove-Item Env:\GIT_DIR
 ```
 
 **第 3 步为什么必须单列**：`extract-summaries.ps1 -Check` 与 `.ps1` 的 BOM 自检**都不在
-`--runner python` 的 21 门里**，本地全绿不代表 CI 绿（§11 坑 #14 两次都栽在这儿）。
+`--runner python` 跑的那一组里**（现算），本地全绿不代表 CI 绿（§11 坑 #14 两次都栽在这儿）。
 
 **第 5 步为什么不能省**：297/300 是"同一批字面"的成绩，26/100（干净子集整体 29.6%、
 其中**社区侧 10.6%**）才是它对**没调过的说法**的真实水平（§11 坑 #17）。

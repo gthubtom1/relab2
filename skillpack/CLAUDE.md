@@ -39,7 +39,7 @@ Routing order (two paths: canonical first, community second):
    R46–R49 are community routes: listed in `MASTER-ROUTING.md`, details only via `community-route.py`.
 3. `skills/scripts/case-init.ps1` (Windows) or `bash skills/scripts/case-init.sh --hint "..."` (Linux / macOS / Kali) → current analysis project's `work/<case>/scope.md` (records scope; no target-authorization gate)
 4. `skills/routing.md` when ambiguous; roles in `skills/ops/role-map.md`
-5. Open PRIMARY `SKILL.md` and execute ACTION REQUIRED
+5. Open PRIMARY (`primary_skill` in `route-scope.md`; it may be a `references/**.md`, not only a `SKILL.md`) and follow its instructions
 6. Timeline/workitems + Evidence→Finding→Path (`skills/ops/`)
 7. `skillpack/skills/TOOLS.md` for real tool paths (never guess)
 8. Missing tool → `skills/scripts/bootstrap-reverse.ps1` (Windows) or `skills/scripts/bootstrap-reverse.sh` (Linux / macOS) (manifest capabilities only)

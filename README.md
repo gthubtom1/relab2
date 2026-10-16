@@ -23,7 +23,7 @@ GitHub / winget 上一键能装的免费工具不在那里 —— 那些由 `TOO
 ## ★ 新电脑从哪开始
 
 ```powershell
-# ★ 一条命令：先看它要干什么（一个字都不改），再真跑，再看就绪度
+# ★ 一条命令：先看它要干什么（只打印计划、不改环境变量与配置；会刷新本机工具快照 `skillpack/.hub/tools.local.json`（gitignored）），再真跑，再看就绪度
 powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2.ps1 setup -DryRun
 powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2.ps1 setup
 powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2.ps1 doctor   # 退出码 0 = 就绪

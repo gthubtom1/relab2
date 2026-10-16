@@ -62,9 +62,6 @@ def _skip(p) -> bool:
     return bool(set(Path(p).parts) & SKIP_PARTS)
 
 
-SKIP = ("_归档-禁读-历史文档", os.sep + "work" + os.sep, "community-raw", "_snapshots")
-
-
 def _read(p) -> str:
     try:
         return io.open(p, encoding="utf-8-sig", errors="replace").read()

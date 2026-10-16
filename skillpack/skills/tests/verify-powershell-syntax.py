@@ -8,11 +8,17 @@
 **仓库里没有任何门发现它** —— 直到真跑 `relab2.ps1 doctor` 才看到 6 个语法错误、
 整个入口直接崩。这类错误完全可以用解析器静态抓住，不需要"跑一遍才知道"。
 
-判据：PowerShell 的语言解析器（`[Parser]::ParseFile`）对每个 `.ps1` 零错误。
+判据：PowerShell 的语言解析器对每个 `.ps1` 零错误。
+    实现细节（必须与代码一致，2026-10-17 修正）：**不用** `[Parser]::ParseFile` ——
+    改为 `[System.IO.File]::ReadAllText(<f>, UTF8 无 BOM)` 再 `[Parser]::ParseInput`。
+    原因：Windows PowerShell 5.1 的 `ParseFile` 对**无 BOM 的 UTF-8** 文件按系统 ANSI
+    码页解码，文件里只要有中文就把字节边界吃穿、整个文件解析出 0 个错误
+    （同一文件实测 powershell=0 / pwsh=1）—— 也就是说"能看见错误"只是碰巧带了 BOM。
+    显式 UTF-8 + ParseInput 与宿主无关。
 排除：禁读区 / `work/` / `_archive` / `_history` / `community-raw`（第三方与归档不参与）。
 
 用法：python skills/tests/verify-powershell-syntax.py [--json]
-退出码：0 全部可解析；1 有解析错误。
+退出码：0 全部可解析；1 有解析错误（或一个 .ps1 都没扫到、或本机没有 PowerShell 宿主）。
 """
 from __future__ import annotations
 

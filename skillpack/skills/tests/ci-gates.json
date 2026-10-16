@@ -57,7 +57,7 @@
       ],
       "executes_vendor_code": false,
       "why": "Detects a silent revert by scripts/adapt-community.py: vendored docs losing their reference-only banner, raw skills losing the integration contract, hack-skills regaining AI LOAD INSTRUCTION.",
-      "ci_note": "exit 10 is a REGISTERED non-blocking item (WORK-BOARD U1): 15 vendored documents still lack the banner. Wiring must preserve that; it must never be turned into a red build, and it must never be silenced either."
+      "ci_note": "exit 10 is a REGISTERED non-blocking code for the case where vendored docs lose their reference-only banner. Measured 2026-10-17: this gate exits 0 (19 vendored docs, 0 missing the banner) — the older note claiming '15 vendored documents still lack the banner' was stale (the 15 were fixed; WORK-BOARD U1 is the history, not the current state). Exit 10 must never be turned into a red build, and must never be silenced either."
     },
     {
       "id": "verify-source-attestation",
@@ -269,7 +269,7 @@
       ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
-      "why": "199-case main routing regression. Already wired in ci.yml before T10 (kept where it was).",
+      "why": "主路由回归。条数以 `skills/tests/routing-benchmark.json` 为准（2026-10-17 实测 247 条）—— 这里不写死数字，它每加一批语料就变。本门在 T10 之前就已接进 ci.yml，位置保持不变。",
       "runtime": "powershell"
     },
     {
@@ -369,7 +369,7 @@
       ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
-      "why": "端到端路由回归（L2.2 行为门二）。已有 test-routing 跑的是 224 条人工短句，验的是「路由规则没退化」；本门拿 tests/cases/*.yaml 的 task_verbatim（**用户原话，不改写**）走 master-route，检查 PRIMARY/entry_menu 是否落在该 case 的 expect_chain 上。二者不同：前者是短句，后者是真实请求。案例：case-001 的原话「逆向 换肤程序点我下载6.9版本.exe 做出能正常使用的成品」此前落在 ida-reverse（纯静态），现已改走 assault-entry（受保护目标四问分流）。"
+      "why": "端到端路由回归（L2.2 行为门二）。已有 test-routing 跑的是人工短句（条数以 `skills/tests/routing-benchmark.json` 为准，2026-10-17 实测 247 条），验的是「路由规则没退化」；本门拿 tests/cases/*.yaml 的 task_verbatim（**用户原话，不改写**）走 master-route，检查 PRIMARY/entry_menu 是否落在该 case 的 expect_chain 上。二者不同：前者是短句，后者是真实请求。案例：case-001 的原话「逆向 换肤程序点我下载6.9版本.exe 做出能正常使用的成品」此前落在 ida-reverse（纯静态），现已改走 assault-entry（受保护目标四问分流）。"
     },
     {
       "id": "test-trigger-rate",
@@ -492,7 +492,7 @@
       ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
-      "why": "逐树杈核验：树干只是骨架，要保证的是**每一片叶子都是通的**（主人 2026-10-16 原话：「你要把树状图做好…保证每一个树杈都是通的…不停地去核验」）。本门查的是 `verify-doc-links.py` 看不到的那一半：那个门只查「链接指向的东西在不在」，本门查「**在的东西有没有入口**」——存在但没有任何 md/脚本/门禁指向它 = 模型的树杈断了。★ 2026-10-16 更新实测口径：**合计 1897 片叶子 / 0 片断**（contracts 29 · kb-index 现象行 198 · 技能卡内引用 1099 等），本门现在**是绿的**。（原文写「1620 片 / 131 片断 …… 本门现在应当是红的」已过期：那 131 片已各得其位。判红能力由负控证明 —— 注入 1 片孤儿叶子立刻报「1898 片，其中 1 片断了入口」并 rc=1，见 report-gate-falsifiability.md #17。）"
+      "why": "逐树杈核验：树干只是骨架，要保证的是**每一片叶子都是通的**（主人 2026-10-16 原话：「你要把树状图做好…保证每一个树杈都是通的…不停地去核验」）。本门查的是 `verify-doc-links.py` 看不到的那一半：那个门只查「链接指向的东西在不在」，本门查「**在的东西有没有入口**」——存在但没有任何 md/脚本/门禁指向它 = 模型的树杈断了。★ 2026-10-17 更新口径：**规模数字一律以 `python skillpack/skills/tests/verify-leaves.py` 的输出为准**（叶子数每加一份 references 就变 —— 本 why 里先后写过 1896 / 1897 / 1898，三处并存）。本门现在**是绿的**（2026-10-17 实测 0 片断）。（原文写「1620 片 / 131 片断 …… 本门现在应当是红的」已过期：那 131 片已各得其位。判红能力由负控证明 —— 注入 1 片孤儿叶子立刻报「1898 片，其中 1 片断了入口」并 rc=1，见 report-gate-falsifiability.md #17。）"
     },
     {
       "id": "verify-powershell-syntax",

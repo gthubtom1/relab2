@@ -28,6 +28,12 @@
 | 14 | **契约/模板层** | `templates/` + `schemas/` + `ops/`（跨技能共用的契约与方法） | `verify-leaves.py`（每个都有入口）+ `test-contract-v2.py` |
 | 15 | **依赖层** | 跑这些脚本真正要的运行时与包 | `feature-tree.py`（会报 python / node / **mcp 版本** / venv） |
 
+> **术语约定（三个"卡"不是一回事，2026-10-17 定名）**：
+> · **行为卡片** = `kernel/04-console/cards/base|guest/*.md`（**正式名**；别称：人设卡、装机卡）；
+> · **技能卡** = `skillpack/skills/*/SKILL.md`（方法论，见第 2 层）；
+> · **经验卡** = `skillpack/skills/experience-cards/*.json`（见第 11 层）。
+> 三者混着说会把"我改了哪一层"讲错，写文档时一律用上面这三个词。
+
 ---
 
 ## 2. 核验工具箱（逐层可复核）

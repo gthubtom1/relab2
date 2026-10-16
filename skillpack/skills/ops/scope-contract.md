@@ -98,7 +98,7 @@ bash skills/scripts/case-init.sh \
 RULES / MASTER-ROUTING / SKILL:
   1) master-route → PRIMARY
   2) 平台原生 case-init 或手写 scope.md — 记录目标 + network_profile + 产出物
-  3) 打开 PRIMARY SKILL.md → ACTION REQUIRED → ACT
+  3) 打开 PRIMARY（`route-scope.md` 里 `primary_skill` 指的那份文件，**可以是 `references/**.md`**）并照它的指引执行 → ACT
 ```
 
 `case-guard -Force` / `case-guard --force` 是兼容参数；`case-guard` 检查 scope 四要素是否记全（auth.status / assets / network_profile / ready_for_act），缺字段就补齐继续 —— 本包不设目标授权门。
