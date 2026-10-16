@@ -178,7 +178,12 @@ function Invoke-Doctor {
     # 5 技能挂载（一份实体 N 个 junction）
     $rs = Join-Path $RepoRoot 'skillpack\skills\scripts\register-skills.ps1'
     if (Test-Path -LiteralPath $rs) {
-        $o = & powershell -NoProfile -ExecutionPolicy Bypass -File $rs -Doctor 2>&1
+        # ★ 2026-10-17：**必须显式传 -RepoRoot** —— 否则 -Doctor 会拿
+        #   `$env:REVERSE_SKILL_ROOT` 指的那棵树当"预期根"，于是：
+        #   · 环境变量指别处时，这一项查的是**别人**，本树的挂载错了也报 OK（假绿）；
+        #   · 同一份 clone 在不同会话里会给出不同结论（实测出现过一次 OK / 之后稳定 WARN）。
+        #   传了之后判据只与"本脚本所在这棵树"有关，与进程环境无关。
+        $o = & powershell -NoProfile -ExecutionPolicy Bypass -File $rs -Doctor -RepoRoot $RepoRoot 2>&1
         if ($LASTEXITCODE -eq 0) { Add-Result '技能挂载' 'OK' '各智能体技能目录已挂上' }
         else { Add-Result '技能挂载' 'WARN' ("退出码 $LASTEXITCODE —— 有断链/MISMATCH；跑一次不带参数的 register-skills.ps1 重挂"); $o | Select-Object -Last 12 | ForEach-Object { Write-Host "      $_" -ForegroundColor DarkGray } }
     }
@@ -401,6 +406,15 @@ function Invoke-Setup {
 
     $b = @()
     if ($DryRun) { $b += '-WhatIf' }
+    # ★ 2026-10-17（换机真空实测抓到的真缺陷）：**必须显式传 -RepoRoot**。
+    #   register-skills.ps1 的根解析顺序是「-Given → -RepoRoot\skillpack\skills →
+    #   $env:REVERSE_SKILL_ROOT\skillpack\skills → 脚本自身位置上溯」。
+    #   不传 -RepoRoot 时，只要环境变量指向**另一棵树**（换机/两份 clone/同机移动仓库），
+    #   它就把技能联接挂到那**另一棵树**上 —— 而 setup 刚刚才把变量写成这棵树。
+    #   实测：在 C:\relab2_clean_test 里跑 setup（进程里 REVERSE_SKILL_ROOT 仍是 C:\relab2），
+    #   跑完 252 处联接全部 MISMATCH 指向 C:\relab2，而 `doctor` 那一项也报不出来。
+    #   （MCP 注册本来就传了 --skill-root $RepoRoot，所以 MCP 路径一直是对的 —— 两者不一致。）
+    $b += @('-RepoRoot', $RepoRoot)
     Invoke-Step -File 'skillpack\skills\scripts\register-skills.ps1' -ArgList $b -Label '技能挂载（一份实体 N 个联接）' | Out-Null
     if ($LASTEXITCODE -ne 0 -and -not $DryRun) { $rc = 1 }
 
