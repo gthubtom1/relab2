@@ -19,6 +19,7 @@ import json
 import os
 import re
 import subprocess
+from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SKILLS_ROOT = os.path.dirname(HERE)
@@ -35,6 +36,47 @@ def _read(p):
         return ""
 
 
+def _walk_files():
+    """遍历目录树取文件清单（无 git 时的回退）。
+
+    排除项与 `.gitignore` 的运行时目录同源；只按**相对仓根**的段比，
+    免得 runner 的 `/home/runner/work/...` 里那个 `work` 段把整棵树误伤。
+    """
+    skip_parts = {".git", "__pycache__", "node_modules", ".hub", ".candidates",
+                  ".worktrees", "work"}
+    out: list[str] = []
+    for root, dirs, files in os.walk(REPO_ROOT):
+        rel_root = Path(root).relative_to(REPO_ROOT)
+        dirs[:] = [d for d in dirs if d not in skip_parts]
+        if set(rel_root.parts) & skip_parts:
+            continue
+        for f in files:
+            if f.endswith(".pyc"):
+                continue
+            out.append(str(rel_root / f).replace(os.sep, "/"))
+    return sorted(out)
+
+
+def tracked_files() -> list[str]:
+    """仓库里「被跟踪」的文件清单。
+
+    ★ 2026-10-17：原来只用 `git ls-files`。而 `tests/community/test-ci-negative-controls.py`
+    的基线要求「**未改动的无 .git 副本**必须全绿」（spec 17.18 的发布包 run-skin）——
+    在那个副本里 `git ls-files` 返回空，于是 tracked_files=0 / tracked_mb=0.0，
+    门判红 → 基线不绿 → 整套负控失效（CI 上实测 `baseline ... green: False`）。
+    git 不可用时回退到遍历目录树；两条路都不通才返回空（那时下面的 0 检查会判红）。
+    """
+    try:
+        out = subprocess.run(["git", "-C", REPO_ROOT, "ls-files", "-z"],
+                             capture_output=True, check=False, timeout=120).stdout
+    except (OSError, subprocess.SubprocessError):
+        out = b""
+    files = [x.decode("utf-8") for x in out.split(b"\0") if x]
+    if files:
+        return files
+    return _walk_files()
+
+
 def _tracked_blob_bytes(files):
     """按 git 里**存储的** blob 大小求和 —— 与工作树的换行符无关。
 
@@ -42,8 +84,10 @@ def _tracked_blob_bytes(files):
     Linux/CI 检出是 LF（.gitattributes 归一化），同一次提交在两边量出的
     tracked_mb 差 0.1 MB —— 于是这个数字**不可能同时在两个平台上正确**：
     CI 上实测 `README scale 行 tracked_mb=43.6，实际 43.5` 永久红。
-    改用 HEAD 的 blob 大小（仓库里实际存的字节），两边一致（本机实测同为 43.5）。
+    改用 HEAD 的 blob 大小（仓库里实际存的字节），两边一致。
     工作树里有、HEAD 里没有的（新暂存文件）回退到 getsize。
+    **无 git 的发布副本**里拿不到 blob 大小，全部回退到 on-disk 尺寸
+    （那正是「包里的字节」；换行符会让末位可能差 0.1，属该形态的已知边界）。
     """
     sizes: dict[str, int] = {}
     try:
@@ -93,9 +137,7 @@ def actual_numbers():
         if os.path.isdir(p):
             active += len([f for f in os.listdir(p) if f.endswith(".md")])
     # 跟踪文件与体积
-    out = subprocess.run(["git", "-C", REPO_ROOT, "ls-files", "-z"],
-                         capture_output=True, check=False, timeout=120).stdout
-    files = [x.decode("utf-8") for x in out.split(b"\0") if x]
+    files = tracked_files()
     total_bytes = _tracked_blob_bytes(files)
     return {
         "skills_top": len(top),

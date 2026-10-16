@@ -51,15 +51,32 @@ ALLOWED_NO_ENTRY = {
         "kernel/03-bundle/patches/DEAD-REFS.md:183 归为「禁令里的名字，不是活指针」）→ 按需，不接入口",
 }
 
+_REPO_RESOLVED = REPO.resolve()
+
+# ★ 2026-10-17：**约定根**。`docs/KNOWN-BOUNDARIES.md` 第 10 条明写：`C:\relab2` 与 `D:\Tools`
+#   是主人定死的约定路径，文档/技能卡里写它们**不是缺陷**（`scan-defect-classes.py` 的 D3
+#   已把它们加进白名单）。这里做同一件事：把以约定根开头的引用**归一成仓内相对路径**再判存在 ——
+#   否则在「换机 / 发布包 / CI runner」这些**仓根不在 `C:\relab2`** 的地方，这些引用会被
+#   整片误判成断叶（实测在无 `.git` 的发布副本里 50 片）。
+_CONVENTION_ROOTS = ("c:\\relab2", "c:/relab2")
+
 
 def _skip(p) -> bool:
-    """按**路径段**判断是否跳过。
+    """按**仓库相对**的路径段判断是否跳过。
 
-    ★ 2026-10-16：以前是裸子串匹配 —— `".git" in "C:\\relab2\\.github\\workflows\\ci.yml"`
-      为真（`.github` 的前四个字符就是 `.git`），**整个 `.github/` 被误杀**，
-      于是"被 CI 直接 run 的脚本"全部成了假断叶。必须按段比。
+    ★ 2026-10-17：以前按**绝对路径**的段比 —— 而 GitHub runner 的检出目录是
+      `/home/runner/work/relab2/relab2`，里面**有一个叫 `work` 的目录段**。
+      `work` 在 SKIP_PARTS 里（指的是仓内那个运行时目录），于是 CI 上**每个文件都被跳过**：
+      `_files()` 全返回空 → 0 片叶子 / 0 片断 → 门报 PASS。
+      也就是说这道门在 CI 上从来没真扫过（假绿），而路径里没有 `work` 段的地方
+      （例如无 .git 的副本）才真的扫 —— 同一个提交两处结论不同。
+      修法：只比**相对仓根**的段（与 verify-powershell-syntax.py 2026-10-17 的修法同源）。
     """
-    return bool(set(Path(p).parts) & SKIP_PARTS)
+    try:
+        rel = Path(p).resolve().relative_to(_REPO_RESOLVED)
+    except (ValueError, OSError):
+        rel = Path(p)
+    return bool(set(rel.parts) & SKIP_PARTS)
 
 
 def _read(p) -> str:
@@ -158,6 +175,13 @@ def resolve_rel(src: Path, target: str) -> Path | None:
       `skillpack/skills/skills/scripts/x.py`（exists=False）→ 假断一大片。
     """
     t = target.replace("\\", "/").strip()
+    # ★ 约定根归一化（见 _CONVENTION_ROOTS 注释）：`C:\relab2\skillpack\...` → `skillpack/...`
+    low = t.lower()
+    for root in _CONVENTION_ROOTS:
+        root_fwd = root.replace("\\", "/")
+        if low.startswith(root_fwd):
+            t = t[len(root_fwd):].lstrip("/")
+            break
     for cand in (src.parent / t, REPO / t, SKILLS / t, SKILLS.parent / t):
         try:
             if cand.exists():
@@ -353,6 +377,18 @@ def main() -> int:
             print(f"      … 另有 {len(r['detail']) - a.max_show} 片（--max-show N 看全）")
     print()
     print(f"合计叶子 {tot_l} 片，其中 {tot_b} 片断了入口。")
+    # ★ 2026-10-17：**扫到 0 片叶子必须判红**。原实现只在「有断叶」时返回 1，
+    #   于是「一片都没扫到」（路径算错 / 排除规则误伤整个仓 / 布局变了）会静默报绿 ——
+    #   本仓反复出现的一类假绿（门早就不检查了，但汇总数字一样好看）。
+    #   实测踩过：CI 检出目录 `/home/runner/work/relab2/relab2` 里有 `work` 段，
+    #   被 SKIP_PARTS 命中 → 全仓被跳过 → 0 片叶子 → PASS。
+    #   只在**全量**运行时判（`--trunk` 单选某个树干时它本来就可能是 0）。
+    if not a.trunk and tot_l == 0:
+        print("FAIL：一片叶子都没扫到 —— 本仓不可能没有叶子，说明扫描根或排除规则算错了", file=sys.stderr)
+        if _fh is not None:
+            _fh.close()
+            sys.stdout = _old_stdout
+        return 1
     if _fh is not None:
         _fh.close()
         sys.stdout = _old_stdout
