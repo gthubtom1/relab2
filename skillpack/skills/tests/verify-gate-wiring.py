@@ -39,6 +39,17 @@ It is deliberately structural, not behavioural: it reads YAML and JSON as text. 
 never executes a workflow, never executes vendor code, and never writes except
 under the explicit ``--write-lock`` coordinator flag.
 
+6. The reverse direction (2026-10-17): a script that a workflow invokes directly but
+   that is *not* in the manifest must be registered in
+   ``skills/tests/wired-not-in-manifest.json`` with a one-line reason. Without this,
+   check 1 was one-directional: ``ci.yml`` also calls dozens of scripts directly
+   (negative controls, smoke, extract-summaries, run_all …), so removing a gate from
+   the manifest produced no complaint at all as long as the workflow still ran the
+   script. Unregistered ones are NEEDS_REVIEW; registered ones are printed on every
+   run, and the set itself is reported as a standing NEEDS_REVIEW item (exit 10,
+   registered non-blocking) so it stays visible in the CI log instead of being
+   swallowed by a PASS line.
+
 Usage::
 
     python skills/tests/verify-gate-wiring.py
@@ -78,6 +89,13 @@ def _repo_root() -> Path:
 
 REPO_ROOT = _repo_root()
 WORKFLOWS = REPO_ROOT / ".github" / "workflows"
+# ★ 2026-10-17（4.7）：反方向缺口的登记册 —— workflow 直连、但不在 ci-gates.json 的脚本。
+WIRED_NOT_IN_MANIFEST = ROOT / "skills" / "tests" / "wired-not-in-manifest.json"
+
+# `run:` 里直接点名的仓库内脚本（含块标量 —— 只吃单行会漏掉 ci.yml 里绝大多数 step）
+_RUN_BLOCK = re.compile(r"^(\s*)run:\s*[|>][-+]?\s*$")
+_RUN_INLINE = re.compile(r"^\s*run:\s*(?!\|)(?!>)(.+)$")
+_SCRIPT_REF = re.compile(r"[\w./\\-]+\.(?:py|ps1|sh)")
 
 # A gate may be invoked directly, or indirectly: CI runs skills/tests/run-ci-gates.py,
 # which reads the manifest and runs each gate itself. So "is this gate wired?" has to
@@ -205,6 +223,100 @@ def check_wiring(gates: list[dict[str, Any]], texts: dict[str, str]) -> tuple[li
         else:
             print(f"  wired  {gate['id']:30} -> {', '.join(where)}")
     return blocked, review
+
+
+def workflow_script_refs(texts: dict[str, str]) -> set[str]:
+    """Workflow 文本里**直接点名**的仓库内脚本（正斜杠、仓库相对）。
+
+    ★ 2026-10-17：必须连**块标量**（`run: |`）一起扫。ci.yml 里绝大多数 step 都是
+    块标量，只吃单行会把它们全漏掉 —— 同一个盲区在 `verify-workflow-refs.py` 里
+    也踩过一次（那次漏掉的正是三条指向 `$GITHUB_WORKSPACE/skills/` 的错路径）。
+    """
+    found: set[str] = set()
+
+    def collect(line: str) -> None:
+        for raw in _SCRIPT_REF.findall(line):
+            p = raw.replace("\\", "/").lstrip("./")
+            if "/" in p:
+                found.add(p)
+
+    for text in texts.values():
+        lines = text.splitlines()
+        i = 0
+        while i < len(lines):
+            block = _RUN_BLOCK.match(lines[i])
+            if block:
+                base = len(block.group(1))
+                i += 1
+                while i < len(lines):
+                    nxt = lines[i]
+                    if not nxt.strip():
+                        i += 1
+                        continue
+                    if len(nxt) - len(nxt.lstrip(" ")) <= base:
+                        break
+                    collect(nxt)
+                    i += 1
+                continue
+            inline = _RUN_INLINE.match(lines[i])
+            if inline:
+                collect(inline.group(1))
+            i += 1
+    return found
+
+
+def check_reverse_wiring(gates: list[dict[str, Any]],
+                         texts: dict[str, str]) -> list[str]:
+    """反方向：workflow 直连、但**不在清单里**的脚本必须登记在案。
+
+    ★ 2026-10-17：原来只做单向（清单 → workflow）。于是 `ci.yml` 另**直接调用**了
+    40 个不在清单里的脚本（各 `*-negctl.py`、`smoke.ps1`、`extract-summaries.ps1`、
+    `run_all.py` …），而**清单里删掉一道门不会有任何东西报出来** —— 只要 workflow
+    还在直接跑那个脚本，单向检查就永远是绿的。
+    照本仓「登记在案、每次大声报出、不静默放行」的写法（`verify-leaves.py` 的
+    `ALLOWED_NO_ENTRY`）：不在册的 -> NEEDS_REVIEW（响亮，但不拦 CI）；
+    在册的 -> 每次运行逐条打印（不静默）。
+    """
+    manifest_repo = {"skillpack/" + g["script"].replace("\\", "/") for g in gates}
+    refs = {r for r in workflow_script_refs(texts)
+            if (REPO_ROOT / r).is_file()}
+    unknown = sorted(refs - manifest_repo)
+
+    registered: dict[str, str] = {}
+    if WIRED_NOT_IN_MANIFEST.is_file():
+        try:
+            registered = json.loads(
+                WIRED_NOT_IN_MANIFEST.read_text(encoding="utf-8")).get("entries") or {}
+        except (OSError, ValueError):
+            registered = {}
+
+    review: list[str] = []
+    for path in unknown:
+        why = registered.get(path)
+        if why:
+            print(f"  registered  {path:64} {why}")
+        else:
+            review.append(
+                f"UNREGISTERED workflow script {path!r}: a workflow invokes it directly, "
+                "but it is neither in ci-gates.json nor registered in "
+                "skills/tests/wired-not-in-manifest.json. Add it to the manifest (if it is a "
+                "gate) or register it there with a one-line reason."
+            )
+    # ★ 2026-10-17：**只要存在反向差集就报一条 NEEDS_REVIEW**（即使全部在册）。
+    #   理由：`run-ci-gates` 对 PASS 的门只印一行 `[PASS] <id>`，不转发门自己的输出 ——
+    #   如果全在册时返回 0，上面那 38 行「逐条打印」在 CI 日志里**根本看不见**，
+    #   「不静默」就成了空话。返回 10 时 run-ci-gates 会打 `[WARN] + 诊断行`，
+    #   整份在册清单随之进日志；而 10 已在清单里登记为非阻断，不会拦 CI。
+    #   （计划 V2 的期望因此从 non_blocking=4 变成 5。）
+    if unknown:
+        review.append(
+            f"reverse wiring: {len(unknown)} script(s) are invoked by workflows but are declared "
+            "only in skills/tests/wired-not-in-manifest.json (each printed above with its reason). "
+            "This is registered, not waived: when this set changes, either add the script to "
+            "ci-gates.json (if it is a gate) or extend the registry."
+        )
+    return review
+
 
 def check_vendor_execution(texts: dict[str, str]) -> list[str]:
     blocked: list[str] = []
@@ -405,6 +517,9 @@ def main() -> int:
     wiring_blocked, wiring_review = check_wiring(gates, texts)
     blocked += wiring_blocked
     review += wiring_review
+
+    print("--- workflows only invoke scripts that are declared or registered ---")
+    review += check_reverse_wiring(gates, texts)
 
     for label, found in (("vendor execution", check_vendor_execution(texts)),
                          ("gate secrets", check_secrets(texts)),

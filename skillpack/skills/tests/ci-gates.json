@@ -194,7 +194,7 @@
         10
       ],
       "executes_vendor_code": false,
-      "why": "Cross-checks this manifest against .github/workflows: a gate that no workflow invokes is reported UNWIRED and blocks. This is the gate that would have caught WORK-BOARD U10 on day one. Also enforces spec 17.31: read-only workflow permissions, no vendor-code execution in a run: line, no secret in a gate workflow, full-SHA action pinning.",
+      "why": "Cross-checks this manifest against .github/workflows, in BOTH directions. Forward: a gate that no workflow invokes is reported UNWIRED and blocks -- this is the gate that would have caught WORK-BOARD U10 on day one. Reverse (2026-10-17): a script a workflow invokes directly but that is not in this manifest must be registered in skills/tests/wired-not-in-manifest.json with a reason; unregistered ones are NEEDS_REVIEW, registered ones are printed every run, and the set itself is a standing NEEDS_REVIEW item so it stays visible instead of being swallowed by a PASS line. Also enforces spec 17.31: read-only workflow permissions, no vendor-code execution in a run: line, no secret in a gate workflow, full-SHA action pinning.",
       "ci_note": "exit 10 is the honest open item it carries: auto-merge-journal.yml holds contents: write and pull-requests: write as a non-gate job, and 17.31 asks for an independent review record (owner T24). The gate reads docs/CI-TRUST-BOUNDARY.md and clears the item only when that workflow's own write-scope record is found in the review section; a missing record is still exit 10, reported, not waived."
     },
     {
