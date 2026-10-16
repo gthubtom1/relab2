@@ -70,6 +70,14 @@ def main() -> int:
 
     root = make_fake_root()
     os.environ["REVERSE_TOOL_ROOT"] = str(root)
+    # ★ 2026-10-17：把本门的**落盘状态**也隔离进临时根。
+    #   ① 下面要写一份**合成**能力索引；若写到用户真实的
+    #      `%LOCALAPPDATA%\reverse-skill\capabilities\` 就把真索引冲掉了。
+    #   ② 解析链的第 3 级（能力索引）是个**落盘产物**：CI 的 ubuntu runner 上没有
+    #      PowerShell（第 2 级探测层不可用），索引文件也不存在 —— 于是 step ②
+    #      在 Linux 上必然判「解析链找不到」，而它验的其实是「认得出 + 调得动」这条链。
+    #      先把索引写进隔离目录，第 3 级才真的可测（两个平台同一套判据）。
+    os.environ["LOCALAPPDATA"] = str(root / "localappdata")
     fails: list[str] = []
     report: dict = {"fake_root": str(root), "discovery": {}, "resolution": {}}
 
@@ -78,6 +86,9 @@ def main() -> int:
     ci = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(ci)  # type: ignore[union-attr]
     idx = ci.build(probe_help=True)
+    state = ci.state_dir()
+    (state / "capabilities.json").write_text(
+        json.dumps(idx, ensure_ascii=False, indent=1), encoding="utf-8")
     found = {}
     for cap, lst in idx["capabilities"].items():
         for e in lst:

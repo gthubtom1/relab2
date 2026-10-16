@@ -57,10 +57,28 @@ import time
 import uuid
 from pathlib import Path
 
-import anyio
-import mcp.types as types
-from mcp.server.lowlevel import Server
-from mcp.server.stdio import stdio_server
+# ★ 2026-10-17：MCP 传输栈**按需导入**，不在模块级硬失败。
+#   起因：这几行原来是模块级无条件 import。CI 的 ubuntu runner 没装 mcp/anyio，
+#   于是**任何** `import` 这个模块的路径都直接 ModuleNotFoundError —— 受害的是
+#   **不需要 MCP 的三条路**：
+#     · `relab2-tools-mcp.py --selftest`（捕获 / 分页 / 字节保真自检）
+#     · `test-tool-recipes.py`（配方真跑）
+#     · `test-new-tool-discovery.py`（能力发现 + 解析链）
+#   三道门在 CI 上都以 traceback 红掉，而它们验的都不是传输层
+#   （CI 原文只有 `stderr: Traceback (most recent call last):` 一行，看不出原因）。
+#   现在：缺 MCP 栈时模块仍可导入，自检与门禁照跑；真要起服务器才报错并说清缺什么。
+try:
+    import anyio
+    import mcp.types as types
+    from mcp.server.lowlevel import Server
+    from mcp.server.stdio import stdio_server
+    _MCP_IMPORT_ERROR = ""
+except ImportError as _mcp_exc:  # pragma: no cover - 取决于宿主是否装了 MCP 栈
+    anyio = None
+    types = None
+    Server = None
+    stdio_server = None
+    _MCP_IMPORT_ERROR = f"{type(_mcp_exc).__name__}: {_mcp_exc}"
 
 # 常用工具 id —— 覆盖四大战场。「没有的」当场报出来，不去猜。
 KNOWN_TOOLS = [
@@ -1036,6 +1054,11 @@ def main() -> int:
     a = ap.parse_args()
     if a.selftest:
         return _selftest()
+    if _MCP_IMPORT_ERROR:
+        print(f"relab2-tools-mcp: 起不了 MCP 服务器 —— 缺少传输栈（{_MCP_IMPORT_ERROR}）。"
+              f"装好依赖后再起；`--selftest` 不需要它，可以先跑它验捕获/分页。",
+              file=sys.stderr)
+        return 1
     ctx = Ctx(a)
     ctx.log(f"start skill_root={ctx.skill_root!r} tool_root={ctx.tool_root!r}")
     try:
