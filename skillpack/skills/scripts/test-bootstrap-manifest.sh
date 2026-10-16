@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# ★ 2026-10-17：`-E`（errtrace）是必须的 —— 没有它，ERR trap **不会继承到函数与子 shell**，
+#   函数内的失败仍然静默。CI 上实测：加了 trap 后只报出「预期失败」的那一处探针，
+#   真正让脚本 abort 的失败藏在函数里，一行都没打出来。
+set -Eeuo pipefail
 
 # ★ 2026-10-17：本文件有大量**裸 `[[ ... ]]` 断言**，在 `set -e` 下失败即**静默退出** ——
 #   CI 上实测：step4 打完 test-routing.sh 的 "OVERALL: ALL PASS" 之后，本脚本跑了 11 秒、
 #   **一行输出都没有**、exit 1。日志里看不出是哪条断言红的，只能靠猜。
 #   加一个 ERR trap 把失败点（行号 + 命令 + rc）打到 stderr。
-#   只做诊断：`set -e` 本来就会在这些点中止，trap 不改变任何判据与退出码。
-trap 'rc=$?; echo "ASSERT FAILED (rc=$rc) at ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}" >&2' ERR
+#   ★ 只在 `$-` 含 `e` 时出声 —— 那些**预期会失败**的探针（`set +e` 包着的 bootstrap 负例）
+#     不是缺陷，报出来只是噪声；而 `set -e` 生效时的那一次失败才是真的要 abort 的那次。
+#   判据与退出码一个字没改，只加诊断。
+trap 'case "$-" in *e*) rc=$?; echo "ASSERT FAILED (rc=$rc) at ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}" >&2 ;; esac' ERR
 
 # 断言失败要**自己说清楚是哪一条**：本文件原来有 12 处裸 `[[ ... ]]`，`set -e` 下
 # 失败即静默退出 —— CI 上实测跑了 11 秒、零输出、exit 1，只能靠猜。
