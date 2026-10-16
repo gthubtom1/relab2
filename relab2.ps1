@@ -297,6 +297,65 @@ function Invoke-Doctor {
         Add-Result '行为门实跑' 'WARN' '从未实跑过 —— 行为门只验了「配置形状」，能力一条都没验；跑 python skillpack\skills\tests\test-assault-behavior.py --run'
     }
 
+    # 9b ★ 2026-10-17：把换机手册里的「步 4 扫死路径」搬进 doctor（原属人工，实测只读）。
+    #   换机手册 §11.5 把这一步列为「人工」，但审计实测它**纯只读、无凭据、无交互**
+    #   （work/_full-audit/report-newmachine.md §5.2）—— 只是没人把它搬进脚本。
+    #   现在 doctor 直接报「用户级环境变量死路径」与「PATH 死段」两个数：
+    #   · 用户级变量指向不存在的盘符 → 换机后每个进程都继承这个脏值（本仓踩过 E:\nope-not-here）
+    #   · PATH 里的死段 → Get-Command 对真工具返回空，进而让探测层误判「本机缺工具」
+    #   只读：不删任何东西，只报数。要清理由人照 环境初始化.md §11.2 做。
+    $deadEnv = @()
+    try {
+        $userEnv = Get-Item -LiteralPath 'HKCU:\Environment' -ErrorAction Stop
+        foreach ($n in $userEnv.Property) {
+            $v = (Get-ItemProperty -LiteralPath 'HKCU:\Environment' -ErrorAction SilentlyContinue).$n
+            if ($v -and ($v -is [string]) -and $v -notmatch ';' -and $v -match '^[A-Za-z]:\\') {
+                if (-not (Test-Path -LiteralPath $v)) { $deadEnv += "$n=$v" }
+            }
+        }
+    } catch { }
+    $deadPath = @($env:PATH -split ';' | Where-Object { $_ -match '^[A-Za-z]:\\' -and -not (Test-Path -LiteralPath $_) })
+    if ($deadEnv.Count -eq 0 -and $deadPath.Count -eq 0) {
+        Add-Result '死路径' 'OK' '用户级环境变量死路径 0 条 · PATH 死段 0 段'
+    }
+    else {
+        if ($deadEnv.Count) { Write-Host ('      用户级死变量: ' + ($deadEnv -join ', ')) -ForegroundColor Yellow }
+        if ($deadPath.Count) { Write-Host ('      PATH 死段: ' + (($deadPath | Select-Object -First 5) -join ', ')) -ForegroundColor Yellow }
+        Add-Result '死路径' 'WARN' ("用户级变量 $($deadEnv.Count) 条 · PATH 死段 $($deadPath.Count) 段 —— 换机后会让探测层误判「缺工具」，见 环境初始化.md §11.2")
+    }
+
+    # 9c ★ 2026-10-17：换机手册里另外两步「假人工」（实测均只读、无凭据）也搬进来。
+    #   · 步 6「查宿主家目录」：判「哪家宿主真装了」—— 只看目录在不在，不读内容。
+    #   · 步 9「清旧状态」：**只清点、不删**（列出会被旧机污染的目录是否存在）。
+    #     真删要人照 环境初始化.md §11.2 逐条确认；这里只让"有残留"不再隐形。
+    try {
+        $hostDirs = @()
+        foreach ($h in @('.omp', '.agents', '.config\agents', '.claude', '.copilot', '.codex', '.cursor', '.gemini', '.pi', '.roo', '.openhands')) {
+            if (Test-Path -LiteralPath (Join-Path $env:USERPROFILE $h)) { $hostDirs += $h }
+        }
+        if ($hostDirs.Count -eq 0) {
+            Add-Result '宿主家目录' 'WARN' '一个宿主目录都没找到（本机还没接任何智能体？）'
+        }
+        else {
+            Add-Result '宿主家目录' 'OK' ("存在 $($hostDirs.Count) 个：$($hostDirs -join ', ')")
+        }
+    } catch { Add-Result '宿主家目录' 'WARN' "扫描失败：$_" }
+
+    $stale = @()
+    foreach ($rel in @('skillpack\.hub\tools.local.json', 'kernel\state', 'kernel\04-console\TEMP',
+                       'kernel\06-verify\TEMP', 'kernel\07-kernel-sweep', 'work', '.candidates',
+                       'kernel\safebox', 'kernel\04-console\safebox', 'kernel\04-console\hostlist\custom-hosts.json')) {
+        $full = Join-Path $RepoRoot $rel
+        if (Test-Path -LiteralPath $full) { $stale += $rel }
+    }
+    if ($stale.Count -eq 0) {
+        Add-Result '旧状态清点' 'OK' '10 个易污染目录一个都没有（干净）'
+    }
+    else {
+        Write-Host ('      存在（换机前应逐条确认是否该清）: ' + ($stale -join ', ')) -ForegroundColor DarkGray
+        Add-Result '旧状态清点' 'OK' ("$($stale.Count)/10 个易污染目录存在 —— 换机时照 环境初始化.md §11.2 逐条确认（doctor 只清点、不删）")
+    }
+
     # 10 换机剩余人工项（★ 2026-10-16）
     #   一键路径只代劳 1–3 步 + MCP 注册；凭据与宿主入口文件按设计归人做。
     #   归人做**不等于**可以不报：不报的话 doctor 会把"还差一步"说成全绿。

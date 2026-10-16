@@ -49,6 +49,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - **门登记口径漂移**：`validate-integration` 的 `blocking_exits` 由 `[1]` 改为 `[20]`（脚本从不返回 1）；`verify-leaves` 的 `why` 由过期的「1620 片/131 断」更新为实测「1898 片/0 断」。
 - **`master-route` 收尾措辞与事实不符** —— 硬编码 `Open PRIMARY SKILL.md … execute ACTION REQUIRED`，但 PRIMARY 可以是 references 文件（R54 即 `assault-entry.md`，且该文件无 "ACTION REQUIRED" 字样）。已改为打印真实路径。
 
+- **换机「假人工」四步搬进 `doctor`（只读）** —— 审计实测手册 §11.5 里 4/5/6/9 四步**纯只读、无凭据、无交互**，只是没人搬进脚本。现 `doctor` 新增：**死路径**（用户级变量死路径 + PATH 死段，含反例控制组）、**宿主家目录**（哪家宿主真装了）、**旧状态清点**（10 个易污染目录，只清点不删）。「核工具根映射」原已有（`toolmap prefer`）。见 `docs/_history/HANDOFF-2026-10-16-本轮收尾.md`。
+
 ### Changed
 - **Coherence clamp (identity-preserving)** — `RULES.md` hot path is `master-route` → `case-init` → PRIMARY. `routing.json` remains the only route table; `MASTER-ROUTING.md` priority order is verified against JSON. `routing.md` is advisory. `precedent-auth.md` no longer grants auth.
 - **IDA open** — lock files may force a temp copy; `.i64` / `.idb` are never deleted.
