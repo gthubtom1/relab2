@@ -27,6 +27,14 @@ import sys
 import tempfile
 from pathlib import Path
 
+# ★ 2026-10-17：本脚本往 stdout 打中文（`=== 经验卡 · 契约测试 ===` 等）。Windows runner 的
+#   控制台编码是 cp1252，`print` 遇到中文直接抛
+#   `UnicodeEncodeError: 'charmap' codec can't encode characters` —— 门在
+#   `routing tests (windows-latest)` 的 step19 上以 traceback 红掉，与判据无关。
+#   显式把 stdout/stderr 切到 UTF-8（与 verify-doc-links.py 同一写法）。
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
+
 ROOT = Path(__file__).resolve().parents[2]
 SKILLS = ROOT / "skills"
 CARD_DIR = SKILLS / "experience-cards"
@@ -42,9 +50,15 @@ def run_validate(cards_dir: Path, work: Path) -> subprocess.CompletedProcess:
     """
     env = dict(os.environ)
     env["EXPERIENCE_CARD_DIR"] = str(cards_dir)
+    # ★ 2026-10-17：原来只有 `text=True` —— Windows 下子进程输出用**系统码页**解码，
+    #   而 experience-card.py 打的是 UTF-8 中文，两边不一致（乱码或 UnicodeDecodeError）。
+    #   显式 UTF-8 + errors="replace"，与 test-routing-e2e.py 同一写法。
+    #   同一进程的 PYTHONIOENCODING 也一并固定，免得子进程自己按码页写。
+    env["PYTHONIOENCODING"] = "utf-8"
     return subprocess.run(
         [sys.executable, str(TOOL), "validate"],
-        capture_output=True, text=True, env=env, timeout=120, cwd=str(work),
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        env=env, timeout=120, cwd=str(work),
     )
 
 

@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# ★ 2026-10-17：本文件有大量**裸 `[[ ... ]]` 断言**，在 `set -e` 下失败即**静默退出** ——
+#   CI 上实测：step4 打完 test-routing.sh 的 "OVERALL: ALL PASS" 之后，本脚本跑了 11 秒、
+#   **一行输出都没有**、exit 1。日志里看不出是哪条断言红的，只能靠猜。
+#   加一个 ERR trap 把失败点（行号 + 命令 + rc）打到 stderr。
+#   只做诊断：`set -e` 本来就会在这些点中止，trap 不改变任何判据与退出码。
+trap 'rc=$?; echo "ASSERT FAILED (rc=$rc) at ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}" >&2' ERR
+
+# 断言失败要**自己说清楚是哪一条**：本文件原来有 12 处裸 `[[ ... ]]`，`set -e` 下
+# 失败即静默退出 —— CI 上实测跑了 11 秒、零输出、exit 1，只能靠猜。
+# 现在每一条都写成 `[[ COND ]] || { echo "ASSERT FAILED: COND"; exit 1; }`。
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOOTSTRAP="$SCRIPT_DIR/bootstrap-reverse.sh"
 KALI_BOOTSTRAP="$SCRIPT_DIR/../../kali/scripts/bootstrap-reverse.sh"
@@ -71,7 +82,7 @@ case "$name:${1:-}" in
     (( count > 0 )) && exit 0 || exit 1
     ;;
 esac
-[[ "${STUB_FAIL_COMMAND:-}" != "$name" ]]
+[[ "${STUB_FAIL_COMMAND:-}" != "$name" ]] || { echo "ASSERT FAILED: "${STUB_FAIL_COMMAND:-}" != "$name"" >&2; exit 1; }
 STUB
 chmod +x "$STUB_BIN/command-stub"
 for name in git node npm npx pipx pnpm sleep nc apt-get sudo nohup; do ln -s command-stub "$STUB_BIN/$name"; done
@@ -297,7 +308,7 @@ env PATH="$STUB_BIN:/usr/bin:/bin" HOME="$SCRATCH/home" CALL_LOG="$CALL_LOG" \
   bash "$BROKEN_DIR/bootstrap-reverse.sh" agent-browser --skip-refresh >/dev/null 2>&1
 broken_rc=$?
 set -e
-[[ $broken_rc -ne 0 ]]
+[[ $broken_rc -ne 0 ]] || { echo "ASSERT FAILED: $broken_rc -ne 0" >&2; exit 1; }
 if grep -Eq '^npm\|install\|-g(\||$)' "$CALL_LOG"; then
   echo "unexpected global npm install invocation" >&2
   exit 1
@@ -322,7 +333,7 @@ if STUB_FAIL_PIP_INSTALL=1 run_generic frida --skip-refresh >/dev/null 2>&1; the
   exit 1
 fi
 expect_line "python3|-m|pip|install|--user|--upgrade|$pipx_package"
-[[ $(grep -c '|pip|install|' "$CALL_LOG") -eq 1 ]]
+[[ $(grep -c '|pip|install|' "$CALL_LOG") -eq 1 ]] || { echo "ASSERT FAILED: $(grep -c '|pip|install|' "$CALL_LOG") -eq 1" >&2; exit 1; }
 if grep -Eq '^pipx\|(install|upgrade)' "$CALL_LOG"; then
   echo "unexpected pipx invocation" >&2
   exit 1
@@ -337,8 +348,8 @@ expect_line 'pnpm|install|--frozen-lockfile'
 expect_line 'pnpm|dev'
 expect_fragment "remote|add|origin|$anything_repo"
 expect_fragment "fetch|--depth|1|origin|$anything_pin"
-[[ -d "$anything_dir/.git" ]]
-[[ $(grep -c '|status|--porcelain|--untracked-files=all' "$CALL_LOG") -ge 2 ]]
+[[ -d "$anything_dir/.git" ]] || { echo "ASSERT FAILED: -d "$anything_dir/.git"" >&2; exit 1; }
+[[ $(grep -c '|status|--porcelain|--untracked-files=all' "$CALL_LOG") -ge 2 ]] || { echo "ASSERT FAILED: $(grep -c '|status|--porcelain|--untracked-files=all' "$CALL_LOG") -ge 2" >&2; exit 1; }
 
 # Dirty sources never reach install/dev.
 touch "$anything_dir/.stub-dirty"
@@ -348,11 +359,11 @@ rm "$anything_dir/.stub-dirty"
 # Failed fetch leaves no final checkout or staging poison; a retry can succeed.
 retry_root="$SCRATCH/retry-tools"
 TEST_TOOLS_ROOT="$retry_root" STUB_FAIL_FETCH=1 rejects_without_pnpm run_generic anything-analyzer --start-services --skip-refresh
-[[ ! -e "$retry_root/anything-analyzer" ]]
-[[ -z "$(find "$retry_root" -maxdepth 1 -name '.reverse-bootstrap-*' -print -quit)" ]]
+[[ ! -e "$retry_root/anything-analyzer" ]] || { echo "ASSERT FAILED: ! -e "$retry_root/anything-analyzer"" >&2; exit 1; }
+[[ -z "$(find "$retry_root" -maxdepth 1 -name '.reverse-bootstrap-*' -print -quit)" ]] || { echo "ASSERT FAILED: -z "$(find "$retry_root" -maxdepth 1 -name '.reverse-bootstrap-*' -print -quit)"" >&2; exit 1; }
 : > "$CALL_LOG"
 TEST_TOOLS_ROOT="$retry_root" STUB_PNPM_VERSION=10.24.0 run_generic anything-analyzer --start-services --skip-refresh >/dev/null
-[[ -d "$retry_root/anything-analyzer/.git" ]]
+[[ -d "$retry_root/anything-analyzer/.git" ]] || { echo "ASSERT FAILED: -d "$retry_root/anything-analyzer/.git"" >&2; exit 1; }
 
 # Kali exercises the same source-before-execution boundary where associative arrays are supported.
 if (( BASH_VERSINFO[0] >= 4 )); then
@@ -364,7 +375,7 @@ if (( BASH_VERSINFO[0] >= 4 )); then
   set -e
   expect_line "npm|install|-g|$pnpm_package"
   expect_line 'pnpm|install|--frozen-lockfile'
-  [[ $(grep -c '|status|--porcelain|--untracked-files=all' "$CALL_LOG") -ge 2 ]]
+  [[ $(grep -c '|status|--porcelain|--untracked-files=all' "$CALL_LOG") -ge 2 ]] || { echo "ASSERT FAILED: $(grep -c '|status|--porcelain|--untracked-files=all' "$CALL_LOG") -ge 2" >&2; exit 1; }
   touch "$kali_dir/.stub-dirty"
   rejects_without_pnpm run_kali anything-analyzer --start-services --skip-refresh
   STUB_NC_PREOCCUPIED=1 rejects_without_pnpm run_kali anything-analyzer --start-services --skip-refresh
@@ -373,12 +384,12 @@ if (( BASH_VERSINFO[0] >= 4 )); then
   rm -rf "$kali_dir"
   : > "$CALL_LOG"
   STUB_FAIL_FETCH=1 rejects_without_pnpm run_kali anything-analyzer --start-services --skip-refresh
-  [[ ! -e "$kali_dir" ]]
-  [[ -z "$(find "${kali_dir%/*}" -maxdepth 1 -name '.reverse-bootstrap-*' -print -quit)" ]]
+  [[ ! -e "$kali_dir" ]] || { echo "ASSERT FAILED: ! -e "$kali_dir"" >&2; exit 1; }
+  [[ -z "$(find "${kali_dir%/*}" -maxdepth 1 -name '.reverse-bootstrap-*' -print -quit)" ]] || { echo "ASSERT FAILED: -z "$(find "${kali_dir%/*}" -maxdepth 1 -name '.reverse-bootstrap-*' -print -quit)"" >&2; exit 1; }
   set +e
   STUB_PNPM_VERSION=10.24.0 run_kali anything-analyzer --start-services --skip-refresh >/dev/null 2>&1
   set -e
-  [[ -d "$kali_dir/.git" ]]
+  [[ -d "$kali_dir/.git" ]] || { echo "ASSERT FAILED: -d "$kali_dir/.git"" >&2; exit 1; }
   expect_line 'pnpm|install|--frozen-lockfile'
 fi
 
