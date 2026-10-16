@@ -51,6 +51,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 - **换机「假人工」四步搬进 `doctor`（只读）** —— 审计实测手册 §11.5 里 4/5/6/9 四步**纯只读、无凭据、无交互**，只是没人搬进脚本。现 `doctor` 新增：**死路径**（用户级变量死路径 + PATH 死段，含反例控制组）、**宿主家目录**（哪家宿主真装了）、**旧状态清点**（10 个易污染目录，只清点不删）。「核工具根映射」原已有（`toolmap prefer`）。见 `docs/_history/HANDOFF-2026-10-16-本轮收尾.md`。
 
+- **两处门假绿（在全新 clone 上实测抓到）** —— `verify-powershell-syntax.py` 的 `$skip` 里有 `TEMP`，而 PowerShell 的 `-notmatch`/`-contains` **默认不区分大小写** → clone 到 `%TEMP%\...` 时**所有 .ps1 被 skip**，门报「扫了 0 个，0 个错误 ✓」= 绿（实测：主仓 52 个，clone 0 个）。改为**只按相对仓库根的目录段、区分大小写**匹配。同时两门都加「**扫到 0 个必须判红**」（本仓不可能没有 .ps1，0 个只能是门自己坏了）。反例控制组：空树 → rc=1；clone 里塞未闭合 `{` → 报 1 个错误。
+
 ### Changed
 - **Coherence clamp (identity-preserving)** — `RULES.md` hot path is `master-route` → `case-init` → PRIMARY. `routing.json` remains the only route table; `MASTER-ROUTING.md` priority order is verified against JSON. `routing.md` is advisory. `precedent-auth.md` no longer grants auth.
 - **IDA open** — lock files may force a temp copy; `.i64` / `.idb` are never deleted.

@@ -30,9 +30,23 @@ REPO = SKILLS.parent.parent
 
 PS_SCRIPT = r"""
 $ErrorActionPreference = 'Continue'
-$skip = '\\(_archive|_history|_归档-禁读-历史文档|work|node_modules|community-raw|TEMP)\\'
+# ★ 2026-10-17 修一处**假绿**（在全新 clone 上实测抓到）：原来的 `$skip` 里有 `TEMP`，
+#   而 PowerShell 的 `-notmatch` **默认不区分大小写** —— 于是任何路径里含 `Temp` 的仓库
+#   （例：clone 到 `%TEMP%\clone-final\`）**所有 .ps1 都被 skip 掉**，门报
+#   「扫了 0 个 .ps1，有解析错误的 0 个 ✓」= 绿。这与本仓最恨的「假绿」是同一类。
+#   修法：① 该 skip 的是**目录名**而不是子串 —— 用 `\\(TEMP|work|...)\\` 锚定到路径分隔符
+#   （`\\TEMP\\` 只匹配名为 TEMP 的目录段，不再误伤 `Temp\clone-final`）；
+#   ② 排除项统一**只按目录段**匹配。
+$skipDirNames = @('_archive', '_history', '_归档-禁读-历史文档', 'work', 'node_modules', 'community-raw', 'TEMP')
+$rootFull = (Resolve-Path -LiteralPath '__ROOT__').Path.TrimEnd([IO.Path]::DirectorySeparatorChar)
 $files = @(Get-ChildItem -LiteralPath '__ROOT__' -Recurse -Filter *.ps1 -ErrorAction SilentlyContinue |
-           Where-Object { $_.FullName -notmatch $skip })
+           Where-Object {
+             # ★ 只按**相对仓库根**的目录段匹配，且区分大小写（`-ccontains`）——
+             #   否则 clone 到 `%TEMP%\...`（祖先目录叫 Temp）会把整个仓库误伤掉。
+             $rel = $_.FullName.Substring($rootFull.Length).TrimStart([IO.Path]::DirectorySeparatorChar)
+             $parts = $rel.Split([IO.Path]::DirectorySeparatorChar)
+             -not ($parts | Where-Object { $skipDirNames -ccontains $_ })
+           })
 $bad = 0
 foreach ($f in $files) {
   $e = $null; $t = $null
@@ -82,16 +96,31 @@ def main() -> int:
             errs.append({"file": rel, "line": int(ln), "message": msg.strip()})
         elif line.startswith("TOTAL|"):
             _, total, bad = line.split("|")
+    # ★ 2026-10-17：`line.split("|")` 给的是**字符串**，`"0" == 0` 为 False ——
+    #   原来若直接 `if total == 0` 会漏判。这里显式转 int（解析失败也当 0，同样判红）。
+    try:
+        total_n = int(total)
+        bad_n = int(bad)
+    except (TypeError, ValueError):
+        total_n = 0
+        bad_n = 0
 
     if a.json:
-        print(json.dumps({"total": int(total), "bad": int(bad), "errors": errs},
+        print(json.dumps({"total": total_n, "bad": bad_n, "errors": errs},
                          ensure_ascii=False, indent=2))
     else:
-        print(f"PowerShell 语法核验：扫了 {total} 个 .ps1，有解析错误的 {bad} 个")
+        print(f"PowerShell 语法核验：扫了 {total_n} 个 .ps1，有解析错误的 {bad_n} 个")
         for e in errs:
             print(f"  [FAIL] {e['file']}:{e['line']} {e['message']}")
         if not errs:
             print("  全部可被 PowerShell 解析器解析 ✓")
+    # ★ 2026-10-17：扫到 0 个 .ps1 **必须判红**。原实现只在「有 errs」时返回 1，
+    #   于是「一个文件都没扫到」（路径算错 / skip 规则误伤 / 仓库布局变了）会静默报绿 ——
+    #   这正是本仓反复出现的一类假绿（门早就不检查了，但汇总数字一样）。一个仓库
+    #   不可能没有 .ps1（本仓 52 个），所以 total==0 只可能是门自己坏了。
+    if total_n == 0:
+        print("FAIL：一个 .ps1 都没扫到 —— 本仓不可能没有 .ps1，说明根路径或排除规则算错了", file=sys.stderr)
+        return 1
     return 1 if errs else 0
 
 

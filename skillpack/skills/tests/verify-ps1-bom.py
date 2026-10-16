@@ -109,6 +109,13 @@ def main() -> int:
                   "`$c=Get-Content -Raw $f; [IO.File]::WriteAllText($f,$c,(New-Object Text.UTF8Encoding $true))`）")
             return 1
         print("  全部合规 ✓（含非 ASCII 的 .ps1 都带 UTF-8 BOM）")
+    # ★ 2026-10-17：与 verify-powershell-syntax.py 同源的一类假绿 —— **一个 .ps1 都没扫到**
+    #   会静默报绿（路径算错 / `git ls-files` 在非 git 目录返回空 / 排除规则误伤）。
+    #   本仓有 62 个被跟踪 .ps1，0 个只可能是门自己坏了，必须判红。
+    if not files:
+        print("FAIL：一个被跟踪的 .ps1 都没有 —— 本仓不可能没有 .ps1，"
+              "说明根路径算错、或不在 git 仓库里、或排除规则误伤", file=sys.stderr)
+        return 1
     return 1 if bad else 0
 
 
