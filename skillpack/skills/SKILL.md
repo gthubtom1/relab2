@@ -49,7 +49,7 @@ description: 技能总路由入口。用于：任务跨模块或不详该走哪�
 
 1. `NOW`：跑平台原生 router（Windows `scripts/master-route.ps1`；Linux/macOS/Kali `scripts/master-route.sh`），从 `config/routing.json` 定 PRIMARY；疑难再读 `routing.md` 三轴附录。
 2. `NOW`：平台原生 `case-init` 落地当前分析项目的 `work/<case>/scope.md` —— 记录目标、网络档、产出物（本包不设目标授权门；产物一律落调用者项目，见 `../RULES_zh.md`）。本地离线样本使用 `offline-sample` preset + explicit sample。
-3. `ACT`：打开 PRIMARY（`route-scope.md` 里 `primary_skill` 指的那份文件，**可以是 `references/**.md`**）并照它的指引执行。
+3. `ACT`：打开 PRIMARY（`route-scope.md` 里 `primary_skill` 指的那份文件，**可以是 `references/**/*.md`**）并照它的指引执行。
 4. `NEXT`：工具路径**当场探测本机** —— 唯一入口是探测层。先按仓内相对路径 dot-source `scripts\lib\Bootstrap.ps1`（相对本文件，即 `<技能包根>\skills\scripts\lib\Bootstrap.ps1`），然后 `Resolve-ReverseToolSpec -Name <工具id>`（`env → PATH → 别名表 → 工具根递归` 四级递进，返回 `Available`/`Command`/`Via`，调用前自动自愈 PATH 与 `DOTNET_ROOT`）。
    **当前部署在 `<仓根>`（工具根 `D:\Tools`），但这不是约定**（2026-10-10 修正）：2026-10-10 全项目审查给 30 个入口脚本去掉了硬编码 `C:\relab2\...`，全部改成按 `$PSScriptRoot` 逐级上溯定位；`relab2-root.ps1` 也会在多个常见位置里找仓根。**所以换机可以 clone 到任何位置，命令里不要写死路径。**
    （若某台机器上相对路径找不到：设 `REVERSE_SKILL_ROOT` 指向技能包根 / 仓库根 / skills 根——探测层三种写法都认。都没有就把情况报出来问人，不许自己找地方新建一份。）

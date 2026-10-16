@@ -22,7 +22,7 @@ After activation and approval, deterministic steps covered by the disclosed plan
    - Windows: powershell -File skills/scripts/master-route.ps1 -Hint "<task>"
    - Linux/macOS/Kali: bash skills/scripts/master-route.sh --hint "<task>"
 3. NEXT: Run the approved platform-native case-init to record case scope (target + network_profile). No target-authorization gate applies — proceed directly.
-4. ACT: Open PRIMARY (`primary_skill` in `route-scope.md`; it may be a `references/**.md`, not only a `SKILL.md`) and follow its instructions. Locate tools with the **four-level probe** (env vars → current shell → tool root → full-disk search); `TOOLS.md` is the install guide, not an inventory. Missing tools use a separately disclosed and approved platform-native bootstrap action.
+4. ACT: Open PRIMARY (`primary_skill` in `route-scope.md`; it may be a `references/**/*.md`, not only a `SKILL.md`) and follow its instructions. Locate tools with the **four-level probe** (env vars → current shell → tool root → full-disk search); `TOOLS.md` is the install guide, not an inventory. Missing tools use a separately disclosed and approved platform-native bootstrap action.
 
 Optional later (do NOT preload):
 - Ambiguous PRIMARY → skills/routing.md (advisory matrix only)
@@ -97,7 +97,7 @@ Hot path only:
 
 1. `skills/scripts/master-route.ps1 -Hint "<task>"` — PRIMARY from `skills/config/routing.json`
 2. `skills/scripts/case-init.ps1` — `scope.md` gate
-3. PRIMARY (`primary_skill` in `route-scope.md`; may be a `references/**.md`) ACTION REQUIRED
+3. PRIMARY (`primary_skill` in `route-scope.md`; may be a `references/**/*.md`) ACTION REQUIRED
 4. `skills/TOOLS.md` — install guide (what to install and how). It is not a path index, and there is nothing to regenerate.
 
 `skills/routing.md` is an advisory 3-axis view **after** PRIMARY, not a second router.
@@ -160,7 +160,7 @@ Hot path only:
 2. Detect package root path (derive from this file's location)
 3. Platform-native master-route (`.ps1` Windows / `.sh` Linux, macOS, Kali) → PRIMARY from skills/config/routing.json; use routing.md only when ambiguous
 4. Platform-native case-init / scope.md (ops/scope-contract) — record case scope before target ACT; no target-authorization gate applies
-5. Open PRIMARY (`primary_skill` in `route-scope.md`; may be a `references/**.md`) ACTION REQUIRED
+5. Open PRIMARY (`primary_skill` in `route-scope.md`; may be a `references/**/*.md`) ACTION REQUIRED
 6. Route not matched → propose new skill (edit routing.json + benchmark; do not hand-edit routing.md as SSoT)
 7. Locate the tools this task needs with the **four-level probe**. Read `TOOLS.md` only when something actually has to be installed.
 8. Missing tools → disclose exact bootstrap/refresh commands and effects, obtain approval, then run the platform-native actions
@@ -393,7 +393,7 @@ which levels you tried, plus the official source and the install's effects.
 1. NOW: Run the approved platform-native master-route (.ps1 on Windows / .sh on Linux, macOS, Kali) → PRIMARY from routing.json
 2. NEXT: If ambiguous, open <SKILL_ROOT>/skills/routing.md
 3. NEXT: Use the approved platform-native case-init / scope.md to record case scope (target + network profile); no target-authorization gate applies
-4. ACT: Open PRIMARY (`primary_skill` in `route-scope.md`; may be a `references/**.md`); timeline/workitems + Evidence→Finding→Path (ops/*)
+4. ACT: Open PRIMARY (`primary_skill` in `route-scope.md`; may be a `references/**/*.md`); timeline/workitems + Evidence→Finding→Path (ops/*)
 ```
 
 ### Core Rules (Compact)

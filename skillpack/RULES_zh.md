@@ -22,7 +22,7 @@
    - Windows: powershell -File skills/scripts/master-route.ps1 -Hint "<任务>"
    - Linux/macOS/Kali: bash skills/scripts/master-route.sh --hint "<任务>"
 3. NEXT: 运行已获批的平台原生 case-init，记录 case scope（目标 + network_profile）。**本包不设目标授权门**，直接执行。
-4. ACT: 打开 PRIMARY（`route-scope.md` 里 `primary_skill` 指的那份文件，**可以是 `references/**.md`**）并照它的指引执行。工具用**四级探测**定位（环境变量 → 当前 shell 能解析到的命令 → 工具根 → 全盘搜索）；`TOOLS.md` 是装法说明书，不是清单。缺少工具时，必须另行披露并获批后才运行平台原生 bootstrap。
+4. ACT: 打开 PRIMARY（`route-scope.md` 里 `primary_skill` 指的那份文件，**可以是 `references/**/*.md`**）并照它的指引执行。工具用**四级探测**定位（环境变量 → 当前 shell 能解析到的命令 → 工具根 → 全盘搜索）；`TOOLS.md` 是装法说明书，不是清单。缺少工具时，必须另行披露并获批后才运行平台原生 bootstrap。
 
 可选的后续读取（不要预加载）：
 - PRIMARY 有歧义 → skills/routing.md（仅建议矩阵）
@@ -154,7 +154,7 @@
 
 1. 运行已获批的平台原生 router（Windows `.ps1`；Linux/macOS/Kali `.sh`）— 从 `skills/config/routing.json` 选出 PRIMARY
 2. 运行已获批的平台原生 case-init — 记录 `scope.md`（不设授权门）
-3. `skills/<PRIMARY>` — 打开 PRIMARY（`route-scope.md` 里 `primary_skill` 指的那份文件，**可以是 `references/**.md`**）并照它的指引执行
+3. `skills/<PRIMARY>` — 打开 PRIMARY（`route-scope.md` 里 `primary_skill` 指的那份文件，**可以是 `references/**/*.md`**）并照它的指引执行
 4. `skills/TOOLS.md` — 装法说明书（装什么、哪个版本、怎么验）。它不是路径索引，也没有东西需要生成。
 5. `skills/routing.md` — 仅在 PRIMARY 歧义时读取的三轴附录，不是第二套路由器
 
@@ -216,7 +216,7 @@
 2. 检测本包实际安装路径（从本文件位置推导）
 3. 运行已获批的平台原生 master-route → PRIMARY；疑难再读 routing.md
 4. 运行已获批的平台原生 case-init / scope.md（ops/scope-contract）— 记录 case scope 后 ACT；**本包不设目标授权门**
-5. 分配角色（ops/role-map）；打开 PRIMARY（`route-scope.md` 里 `primary_skill` 指的那份文件，**可以是 `references/**.md`**）并照它的指引执行
+5. 分配角色（ops/role-map）；打开 PRIMARY（`route-scope.md` 里 `primary_skill` 指的那份文件，**可以是 `references/**/*.md`**）并照它的指引执行
 6. 如果路由未命中 → 联网搜索该领域方法论 → 提议新增 skill
 7. 用**四级探测**定位本任务要用的工具。只在确实需要安装时才读 `TOOLS.md`。
 8. 如果缺工具 → 披露准确的 bootstrap/refresh 命令与影响，取得同意后再运行平台原生动作
@@ -556,7 +556,7 @@ bash <本包根目录>/kali/scripts/bootstrap-reverse.sh 工具名 --start-servi
 1. NOW: 运行已获批的平台原生 master-route（Windows .ps1；Linux/macOS/Kali .sh）→ routing.json 的 PRIMARY
 2. NEXT: 有歧义时读取 <SKILL_ROOT>/skills/routing.md
 3. NEXT: 使用已获批的平台原生 case-init / scope.md 记录 case scope（目标 + network_profile）；**本包不设目标授权门**
-4. ACT: 打开 PRIMARY（`route-scope.md` 里 `primary_skill` 指的那份文件，**可以是 `references/**.md`**）并照它的指引执行；timeline/workitems + Evidence→Finding→Path 见 ops/*
+4. ACT: 打开 PRIMARY（`route-scope.md` 里 `primary_skill` 指的那份文件，**可以是 `references/**/*.md`**）并照它的指引执行；timeline/workitems + Evidence→Finding→Path 见 ops/*
 ```
 
 ### 核心规则（精简版）

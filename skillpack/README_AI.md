@@ -47,7 +47,7 @@ AI Community: https://linux.do
    Both write `work/<case>/` **relative to the current working directory** — run this from the project you are
    analysing, **not** from the package root (otherwise the case directory lands inside the skill pack).
    Record a valid network profile before target ACT (`offline` for a local sample). `-Force`/`--force` never bypasses the readiness gate. **This package sets no target-authorization gate — every target is a local/isolated fixture.** Evidence chain: `skills/ops/evidence-finding-path.md`. Roles: `skills/ops/role-map.md`. Identity: `skills/ops/IDENTITY.md`.
-10. Open PRIMARY (`primary_skill` in `route-scope.md`; it may be a `references/**.md`, not only a `SKILL.md`) and follow its instructions. After activation and approval, deterministic steps may continue without repeated confirmation unless a new side-effect category appears.
+10. Open PRIMARY (`primary_skill` in `route-scope.md`; it may be a `references/**/*.md`, not only a `SKILL.md`) and follow its instructions. After activation and approval, deterministic steps may continue without repeated confirmation unless a new side-effect category appears.
 11. Before report handoff, run the case review — `python skills/case-review/scripts/review_case.py work/<case> --verify-hashes --strict` on Windows (`python3` on Linux/macOS/Kali; on Windows `python3` is often a Microsoft Store stub that exits 9009) — then report via docs-generator + field-journal within the approved project scope.
 ```
 

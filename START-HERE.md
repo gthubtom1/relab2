@@ -136,7 +136,7 @@ GPL 分发待拍板等）全部记在 [`docs/KNOWN-BOUNDARIES.md`](docs/KNOWN-BO
 ```text
 ① 读 skillpack/skills/SKILL.md          ← 主入口，含路由契约与命令纪律
 ② 跑 .\skillpack\skills\scripts\master-route.ps1 选当前阶段的技能（PRIMARY）
-③ 打开 PRIMARY（`route-scope.md` 里 `primary_skill` 指的那份文件，**可以是 `references/**.md`**）并照它的指引执行
+③ 打开 PRIMARY（`route-scope.md` 里 `primary_skill` 指的那份文件，**可以是 `references/**/*.md`**）并照它的指引执行
 ④ **每推进到一个阶段，重新跑一遍 ②** —— 一个程序各阶段要的东西不同（有没有壳决定走脱壳还是直接静态、
    静态看不出东西就转动态），别在第一个阶段选定的技能里死磕到底
 ⑤ 报告用 Evidence → Finding → Path

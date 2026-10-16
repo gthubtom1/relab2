@@ -308,8 +308,19 @@ def trunk_card_refs():
                     continue
                 # ② 跨卡：兄弟技能卡里存在同名目标即可达（多个同名则算有歧义但不判断）
                 name = Path(t2).name
-                sib = [p for p in SKILLS.glob(f"*/{t2}") if p.is_file()]
-                sib += [p for p in SKILLS.glob(f"*/**/{name}") if p.is_file()]
+                # ★ 2026-10-17：**单条怪引用不许把整道门弄崩**。
+                #   实测：文档里写了 `references/**.md`（本意是"references 下的 .md"），
+                #   抽取器把它当路径 → `glob("*/references/**.md")` ——
+                #   而 Python 3.12 的 pathlib 对「`**` 不单独成段」的模式抛
+                #   `ValueError: Invalid pattern: '**' can only be an entire path component`。
+                #   后果：整道门在 CI（py3.12）上 traceback 崩掉、exit 1，
+                #   而本机（py3.14，pathlib 已支持 `**` 任意位置）完全看不出来。
+                #   glob 失败就当"没有兄弟"处理（该引用照旧按断叶判），而不是崩门。
+                try:
+                    sib = [p for p in SKILLS.glob(f"*/{t2}") if p.is_file()]
+                    sib += [p for p in SKILLS.glob(f"*/**/{name}") if p.is_file()]
+                except (ValueError, OSError):
+                    sib = []
                 if sib:
                     continue
                 # ③ 已声明未落地
