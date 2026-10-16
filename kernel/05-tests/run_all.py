@@ -136,6 +136,21 @@ def main(argv=None):
     fp_before = T.fingerprint(T.HARD_ZONES + T.PROJ_ZONES + T.SOFT_ZONES)
     print("[保护区] 跑前取指纹：%d 个文件" % len(fp_before))
 
+    # ★ 2026-10-16：场景 9.2 要验的是「**本轮测试自己**有没有把仓库弄脏」，
+    #   而它原来拿的是「跑完后的绝对 git status」—— 于是**任何人的未提交改动**都会让它红
+    #   （实测：统筹当时有 130+ 处未提交改动 → 9.2 必然假红）。这里跑前存一份基线，
+    #   9.2 只对比「新增」，别人的改动不再误伤。
+    try:
+        import subprocess as _sp
+        gb = _sp.run(["git", "status", "--porcelain"], cwd=str(T.REPO),
+                     capture_output=True, encoding="utf-8", errors="replace", timeout=120)
+        T.TEMP.mkdir(parents=True, exist_ok=True)
+        (T.TEMP / ".git-status-before").write_text(gb.stdout or "", encoding="utf-8")
+        print("[基线] 跑前 git status：%d 行（别人的未提交改动，9.2 不计入）"
+              % len([x for x in (gb.stdout or "").splitlines() if x.strip()]))
+    except Exception as exc:      # noqa: BLE001
+        print("[警告] 存 git 基线失败（9.2 会降级为只报不判红）：%r" % (exc,))
+
     results = []
     t0 = time.perf_counter()
     for sid, title, fn in T.SCENARIOS:

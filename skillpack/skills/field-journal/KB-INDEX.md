@@ -11,20 +11,41 @@
 
 | 板块 | 技能目录 | 技术正文数 |
 |---|---|---|
-| PE / 二进制逆向 | `../reverse-engineering/` | 61 |
-| Web / API 安全 | `../api-security/` | 72 |
+| PE / 二进制逆向 | `../reverse-engineering/` | 39 |
+| Web / API 安全 | `../api-security/` | 74 |
 | 数据库注入 | `../database-security/` | 10 |
-| Web 攻击链与 CVE 实证 | `../attack-chain/` | 18 |
-| Web-CTF 比赛与付费墙 | `../ctf-sandbox/` | 11 |
-| 云 / K8s / CI-CD | `../cloud-k8s/` | 9 |
-| 身份联邦（OAuth / SAML） | `../identity-federation/` | 5 |
-| 供应链 | `../supply-chain-security/` | 3 |
-| 邮件安全 | `../email-security/` | 2 |
-| Web JS 运行时 | `../js-reverse/` | 15 |
-| **技术正文合计** | — | **206** |
+| Web 攻击链与 CVE 实证 | `../attack-chain/` | 16 |
+| Web-CTF 比赛与付费墙 | `../ctf-sandbox/` | 15 |
+| 云 / K8s / CI-CD | `../cloud-k8s/` | 8 |
+| 身份联邦（OAuth / SAML） | `../identity-federation/` | 4 |
+| 供应链 | `../supply-chain-security/` | 1 |
+| 邮件安全 | `../email-security/` | 1 |
+| Web JS 运行时 | `../js-reverse/` | 2 |
+| 移动端 Web 桥（§12） | `../mobile-reverse/` | 2 |
+| APK / Android（§13） | `../apk-reverse/` | 26 |
+| 游戏逆向（§13） | `../game-reverse/` | 6 |
+| 内核利用（§13） | `../kernel-exploit/` | 5 |
+| **技术正文合计** | — | **209** |
 
-> 统计口径：排除 `../SKILL.md` / `../ops/README.md` / `../ctf-sandbox/references/index.md` 这类入口文件，只数技术正文。
-> 全技能包 md 总数 625 篇（含全部索引与入口）。
+> **统计口径（★ 2026-10-16 重算，旧值 206 是错的）**：只数 `skills/*/references/**` 下
+> **带标准来源声明行**（`> **来源**：改编自 \`LING71671/open-reverselab\` …`）的文件 —— 也就是**真的改编落盘的副本**。
+> 这与 `skillpack/NOTICE`（GPL 篇数）和 `docs/PROJECT-MAP.md` 第 9 层（知识库层）用的是**同一个判据**。复算：
+>
+> ```bash
+> grep -rl '\*\*来源\*\*：改编自 `LING71671/open-reverselab`' skillpack/skills/*/references | wc -l   # → 209
+> python work/_full-audit/consistency-counts.py --truth                                              # → 逐板块 + 合计
+> ```
+>
+> ⚠ **下面各节标题里的「（N 篇）」= 该节实际收录的条目数**，除 §2 外与上表同板块的值相等
+> （§2 只收录 26 条，而该板块共 39 篇 —— 差额 13 篇改编正文尚未编进症状表，
+> 如 `license-keygen/license-keygen-01..07`、`external-memory-rw`、`trampoline-detour` 等，
+> 由板块入口与 `../reverse-engineering/SKILL.md` 直接指路）。
+> 其它口径差也一并写明：`apk-reverse/references/` 目录下**全部 md** 是 31 篇（= 26 篇改编 + 5 篇本包自写），
+> 上表只数改编正文，所以是 26。
+> **这两个数不要互相引用**，要哪个口径就用对应的命令现算。
+>
+> 参考：`skillpack/skills/` 下**全部 md 共 663 篇**（含全部索引与入口，2026-10-16 现算；
+> 旧文里写的 625 是同口径的旧快照。此数只增 —— 引用前重算 `find skillpack/skills -name '*.md' | wc -l`）。
 
 ## 1. 用这张表的铁律
 
@@ -34,7 +55,7 @@
 4. **命中两篇就读两篇**。这些文档是攻击链的环节，不是互斥选项。
 5. **对不上任何一行 = 记一条 case**。本表是活的，新症状没被收录时，把它写进 `field-journal/` 并回填到对应板块末尾。
 
-## 2. PE / 二进制逆向（20 篇）
+## 2. PE / 二进制逆向（本节收录 26 条 · 板块正文 39 篇）
 
 > **板块入口**：[`../reverse-engineering/SKILL.md`](../reverse-engineering/SKILL.md)
 
@@ -44,15 +65,21 @@
 |---|---|---|
 | x64dbg/cdb 附加后目标立刻退出，或什么都不发生。 | [anti-debug-bypass.md](../reverse-engineering/references/anti-debug-bypass.md) | 反调试检测与绕过 |
 | 目标模块每次运行基址都不同（iI~baddr 每次不同），写死的 base+0x1234 不再命中。 | [aob-signature-scan.md](../reverse-engineering/references/aob-signature-scan.md) | AOB 特征码扫描 |
+| 已授权的红队/免杀环境里，payload 一落地就被 EDR/杀软拦下。 | [av-evasion-pipeline.md](../reverse-engineering/references/av-evasion-pipeline.md) | 免杀管线：Shellcode 处理与 Loader 编写 |
 | 已定位到需要修改的目标地址（反调试分支、校验结果、常量）。 | [code-patching.md](../reverse-engineering/references/code-patching.md) | 代码 Patch 与字节修改 |
 | 样本里有 256 字节 / 1024 字节的整齐常量表，不确定是什么 | [crypto-algorithm-identification.md](../reverse-engineering/references/crypto-algorithm-identification.md) | 算法盲识别：从字节特征反推加密/哈希/编码算法 |
 | 密文长度 == 明文长度（流密码 / XOR / 替换） | [custom-obfuscation-reverse.md](../reverse-engineering/references/custom-obfuscation-reverse.md) | 自定义混淆/加密还原方法论 |
 | 目标 PE 已加载，需要在某个 WinAPI 上观察参数与返回值。 | [debugger-breakpoints.md](../reverse-engineering/references/debugger-breakpoints.md) | 调试器断点策略（cdb / x64dbg） |
+| 目标的 ntdll 导出被安全软件/反作弊 inline hook 或 IAT hook，用户态 API 调不到干净版本。 | [direct-syscall.md](../reverse-engineering/references/direct-syscall.md) | Direct Syscall（绕过用户态 Hook） |
 | 已拿到某地址的原始字节，需要知道它到底是几条指令、边界在哪。 | [disasm-jit-asm.md](../reverse-engineering/references/disasm-jit-asm.md) | 反汇编与机器码生成（capstone / rasm2 / r2） |
 | 目标进程已启动，需要在它内部执行自己的代码。 | [dll-injection-patterns.md](../reverse-engineering/references/dll-injection-patterns.md) | DLL 注入模式与远程内存操作 |
 | 导入表稀疏：ii 只有十几条甚至个位数，但程序行为丰富。 | [dynamic-api-resolution.md](../reverse-engineering/references/dynamic-api-resolution.md) | 动态 API 解析链还原 |
+| 拿到一个软件要知道它的授权属于本地算法 / 签名链 / 自引用 / 云端哪一类（分类错=白干几小时）。 | [license-keygen/README.md](../reverse-engineering/references/license-keygen/README.md) | 许可证机制逆向七篇总入口（判定树） |
+| `LoadLibrary` 注入会被目标发现（模块列表 / 加载通知 / 完整性自检）。 | [manual-map-injection.md](../reverse-engineering/references/manual-map-injection.md) | 手动映射注入（Manual Map） |
+| 需要在 hook 里完整访问 CPU 状态（所有通用寄存器 + 标志位），且要求最小开销。 | [naked-function-hook.md](../reverse-engineering/references/naked-function-hook.md) | Naked Function Hook（裸汇编 gateway） |
 | 拿到的不是文件而是内存镜像（.dmp、pe-sieve 的输出、VirtualAlloc dump 出来的 buffer）。 | [pe-header-parsing.md](../reverse-engineering/references/pe-header-parsing.md) | PE 头解析与节区定位 |
 | 连续多次抓包拿到同一接口返回的「随机」字段 | [prng-cracking.md](../reverse-engineering/references/prng-cracking.md) | PRNG 破解：从输出恢复内部状态与种子 |
+| 要非侵入式观察目标的文件/注册表/网络/进程行为（不改内存、不下断点、目标无感）。 | [procmon-patterns.md](../reverse-engineering/references/procmon-patterns.md) | Procmon 行为监控与过滤 |
 | 已知某实体的运行时地址，需要确定它的字段偏移、类型和语义。 | [reclass-reconstruction.md](../reverse-engineering/references/reclass-reconstruction.md) | 结构体重建的桌面侧工具与自动化替代 |
 | 「我看到一个可疑进程在跑，但不知道该上什么工具」 | [signal-to-tool-decision.md](../reverse-engineering/references/signal-to-tool-decision.md) | 按信号选工具决策树 |
 | 反编译/反汇编里同一个基址被多种偏移访问：*(int*)(a+0x36C)、*(float*)(a+0x378)、*(char)(a+0x268)。 | [struct-reconstruction.md](../reverse-engineering/references/struct-reconstruction.md) | 内存结构体逆向重建 |
@@ -397,6 +424,7 @@
 |---|---|---|
 | `kernel-exploit/references/` | 5 | [cifswitch-nss-privesc](../kernel-exploit/references/cifswitch-nss-privesc.md) · [mm-null-ptrace-bypass](../kernel-exploit/references/mm-null-ptrace-bypass.md) · [page-cache-write-family](../kernel-exploit/references/page-cache-write-family.md) · [pintheft-io-uring-page-cache](../kernel-exploit/references/pintheft-io-uring-page-cache.md) · [slab-cross-cache](../kernel-exploit/references/slab-cross-cache.md) |
 | `game-reverse/references/` | 6 | [README](../game-reverse/references/README.md) · [game-anti-cheat-bypass](../game-reverse/references/game-anti-cheat-bypass.md) · [game-esp-wallhack-rendering](../game-reverse/references/game-esp-wallhack-rendering.md) · [game-memory-hacking](../game-reverse/references/game-memory-hacking.md) · [game-packet-interception](../game-reverse/references/game-packet-interception.md) · [game-speedhack-time-manipulation](../game-reverse/references/game-speedhack-time-manipulation.md) |
+| `apk-reverse/references/` | 31（含 5 篇本包自写；改编正文 26 篇，见 §0） | [篇目索引](../apk-reverse/references/apk-reverse-index.md)（23 篇技法 + 综合/速查/记录） · [分叉决策图](../apk-reverse/references/attack-network.md) · [安全测试速查](../apk-reverse/references/apk-security-checklist.md) · [模拟器能力层](../apk-reverse/references/emulator-lab.md)。**板块入口**：[`../apk-reverse/SKILL.md`](../apk-reverse/SKILL.md) |
 
 **症状对照**（这些症状现在应读上面那几篇，不是「本包不支持」）：
 
@@ -413,8 +441,10 @@
 | 内核提权漏洞怎么分析 | `kernel-exploit/references/pintheft-io-uring-page-cache.md` 等 5 篇 |
 
 
-**仍未落盘**：§12 原表所列 `apk-reverse/techniques/` 25 篇与
-`general/techniques/protocol/` 2 篇。上表所列 19 篇经核实**已存在**。
+**仍未落盘**：`general/techniques/protocol/` 2 篇（`protocol-reverse/references/` 下另有本包自写的 protocol-workflow / traffic-proxy 两篇，不是这一批）。
+`apk-reverse/techniques/` 那一批**已落盘**到 `apk-reverse/references/`（31 篇，2026-10-16 逐篇复核），
+入口见上表 `apk-reverse/references/` 行与 [`../apk-reverse/SKILL.md`](../apk-reverse/SKILL.md) 的「技法分篇导航」。
+上表所列 **42 篇**（5 + 6 + 31）经核实**已存在**。
 若后续仍有文档落盘，请同步更新本节，并把新篇按症状补进 §2。
 
 

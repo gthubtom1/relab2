@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 relab2.ps1 —— 本仓库的唯一门面（对齐 REA 的 setup / doctor / update 三件套）
 
@@ -25,7 +25,7 @@ relab2.ps1 —— 本仓库的唯一门面（对齐 REA 的 setup / doctor / upd
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('doctor', 'setup', 'update', 'help')]
+    [ValidateSet('doctor', 'setup', 'update', 'known', 'help')]
     [string] $Command = 'help',
 
     [switch] $DryRun,
@@ -84,7 +84,7 @@ function Invoke-Doctor {
             Add-Result 'REVERSE_SKILL_ROOT' 'FAIL' "指向另一棵树（$sk），而本脚本在 $RepoRoot —— 模型实际用的是前者。要么改环境变量，要么别在这份 clone 里跑。"
         }
     }
-    else { Add-Result 'REVERSE_SKILL_ROOT' 'WARN' '未设置（跑 setup 或 relab2-root.ps1）' }
+    else { Add-Result 'REVERSE_SKILL_ROOT' 'WARN' '未设置（跑 setup 或 relab2-root.ps1）——此时卡片兑底值为 C:\relab2；若本机不在那个路径下，模型会用错仓库/技能树' }
     if ($tk) { Add-Result 'REVERSE_TOOL_ROOT' 'OK' $tk } else { Add-Result 'REVERSE_TOOL_ROOT' 'WARN' '未设置（跑 setup）' }
 
     # 3 部署自检（selfcheck 的退出码就是结论）
@@ -96,6 +96,22 @@ function Invoke-Doctor {
     }
     else { Add-Result '部署自检 selfcheck' 'FAIL' '缺少 selfcheck.ps1' }
 
+    # 6b ★ 2026-10-15 审计 P8：仓内默认别名表的失效 prefer 计数。
+    #   本机实测 68 条 prefer 里 53 条指向不存在的文件（只有 15 条命中）。
+    #   本机不致命（D:\Tools\_map.json 覆盖层 38 条全部存在），但换一台没有 _map.json 的机器，
+    #   这 53 条会静默落到第 4 级 scan（可信度最低）——以前没有任何东西报这件事。
+    try {
+        . (Join-Path $RepoRoot 'skillpack\skills\scripts\lib\Bootstrap.ps1')
+        $tmh = Test-ReverseToolmapHealth
+        if ($tmh.ok) {
+            Add-Result 'toolmap prefer' 'OK' ("{0} 条全部指得动" -f $tmh.total)
+        }
+        else {
+            Add-Result 'toolmap prefer' 'WARN' ("{0}/{1} 条指向不存在（如 {2}…）——未来换机时会落到第 4 级 scan" -f $tmh.missing, $tmh.total, ($tmh.missingIds -join ', '))
+        }
+    } catch {
+        Add-Result 'toolmap prefer' 'WARN' "探测层载入或该函数不可用：$_"
+    }
     # 4 MCP 通道 —— 注册清单 + **真自检**（审计：REA 的 doctor 会分辨「注册对不对 / 真连上没」，
     #   我们原来只有静态清单）。这里至少做到两层：① 命令在不在 ② 它是真能起来的形态。
     $mcp = Join-Path $RepoRoot 'skillpack\skills\scripts\mcp-status.ps1'
@@ -145,7 +161,7 @@ function Invoke-Doctor {
     else { Add-Result 'MCP 通道' 'FAIL' '缺少 skills\scripts\mcp-status.ps1' }
 
     # 4b ★ 知识库（外部来源 + 症状索引）—— 2026-10-15 主人指出「知识库没接上」：
-    #    实测 206 篇技术正文在，但「现象 → 该读哪一篇」的索引没人指向；而 KB-SOURCES 声称
+    #    实测 209 篇改编技术正文在（KB-INDEX 可复算），但「现象 → 该读哪一篇」的索引没人指向；而 KB-SOURCES 声称
     #    「原始副本留存于 <工具根>\kb-open-reverselab\」—— 那台机器上**其实是空的**。
     $kbOrig = Join-Path $env:REVERSE_TOOL_ROOT 'kb-open-reverselab'
     $kbIndex = Join-Path $RepoRoot 'skillpack\skills\field-journal\KB-INDEX.md'
@@ -164,14 +180,24 @@ function Invoke-Doctor {
     if (Test-Path -LiteralPath $rs) {
         $o = & powershell -NoProfile -ExecutionPolicy Bypass -File $rs -Doctor 2>&1
         if ($LASTEXITCODE -eq 0) { Add-Result '技能挂载' 'OK' '各智能体技能目录已挂上' }
-        else { Add-Result '技能挂载' 'WARN' ("退出码 $LASTEXITCODE（未装智能体的目录会被跳过，属正常）"); $o | Select-Object -Last 12 | ForEach-Object { Write-Host "      $_" -ForegroundColor DarkGray } }
+        else { Add-Result '技能挂载' 'WARN' ("退出码 $LASTEXITCODE —— 有断链/MISMATCH；跑一次不带参数的 register-skills.ps1 重挂"); $o | Select-Object -Last 12 | ForEach-Object { Write-Host "      $_" -ForegroundColor DarkGray } }
     }
     else { Add-Result '技能挂载' 'FAIL' '缺少 register-skills.ps1' }
 
     # 6 技能卡与门禁清单
-    $cards = @(Get-ChildItem -LiteralPath (Join-Path $RepoRoot 'skillpack\skills') -Directory -ErrorAction SilentlyContinue |
+    # ★ 2026-10-16：这里原来只报顶层数（57），而实际 SKILL.md 总数是 63（+4 community wrapper
+    #   +2 嵌套）。两个数都对但含义不同 —— 口径不写清，下一个读的人会当成"对不上"。
+    #   现在两个数都报，且与 `branch-walk.py` 的复算口径**一致**。
+    $skillsRoot = Join-Path $RepoRoot 'skillpack\skills'
+    $cards = @(Get-ChildItem -LiteralPath $skillsRoot -Directory -ErrorAction SilentlyContinue |
         Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'SKILL.md') })
-    if ($cards.Count -ge 40) { Add-Result '技能卡' 'OK' ("$($cards.Count) 张") } else { Add-Result '技能卡' 'FAIL' ("只有 $($cards.Count) 张，异常") }
+    $allCards = @(Get-ChildItem -LiteralPath $skillsRoot -Recurse -Filter SKILL.md -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -eq 'SKILL.md' -and $_.DirectoryName -ne $skillsRoot })
+    if ($cards.Count -ge 40) {
+        $nested = $allCards.Count - $cards.Count
+        Add-Result '技能卡' 'OK' ("$($cards.Count) 张顶层 + $nested 张嵌套/包装 = 共 $($allCards.Count) 个 SKILL.md")
+    }
+    else { Add-Result '技能卡' 'FAIL' ("顶层只有 $($cards.Count) 张，异常") }
 
     $gates = Join-Path $RepoRoot 'skillpack\skills\tests\ci-gates.json'
     if (Test-Path -LiteralPath $gates) {
@@ -188,41 +214,36 @@ function Invoke-Doctor {
     }
     else { Add-Result '破甲卡' 'WARN' '未找到 kernel\04-console\cards\base' }
 
-    # 7b ★ 装机卡 vs 仓库卡的漂移（2026-10-15 审计实测：宿主 PERSONALITY.md 比仓库卡旧 6 行，
-    #    而这件事**没有任何门禁在看** —— 于是"仓库修好了、机器上还是旧的"能一直藏着。）
-    $hostAgentDir = Join-Path $env:USERPROFILE '.omp\agent'
-    $cardDirs = @((Join-Path $RepoRoot 'kernel\04-console\cards\base'),
-                  (Join-Path $RepoRoot 'kernel\04-console\cards\guest'))
-    $drift = 0
-    foreach ($hf in @('PERSONALITY.md', 'RULES.md')) {
-        $hp = Join-Path $hostAgentDir $hf
-        if (-not (Test-Path -LiteralPath $hp)) { continue }
-        $hLines = @(Get-Content -LiteralPath $hp -Encoding UTF8) -replace "`r$", ''
-        $bestName = $null; $bestDiff = [int]::MaxValue
-        foreach ($cd in $cardDirs) {
-            if (-not (Test-Path -LiteralPath $cd)) { continue }
-            foreach ($cf in @(Get-ChildItem -LiteralPath $cd -Filter *.md -ErrorAction SilentlyContinue)) {
-                $cLines = @(Get-Content -LiteralPath $cf.FullName -Encoding UTF8) -replace "`r$", ''
-                $cmp = Compare-Object $hLines $cLines
-                $n = if ($cmp) { @($cmp).Count } else { 0 }
-                if ($n -lt $bestDiff) { $bestDiff = $n; $bestName = $cf.Name }
-            }
-        }
-        if ($null -ne $bestName) {
-            if ($bestDiff -eq 0) {
-                Write-Host ("      · {0} ↔ {1} 一致" -f $hf, $bestName) -ForegroundColor DarkGray
-            }
-            else {
-                $drift++
-                Write-Host ("      · {0} ↔ {1} **差 {2} 行** —— 机器上跑的还是旧卡，开工作台重新载入" -f $hf, $bestName, $bestDiff) -ForegroundColor Yellow
-            }
-        }
+    # 7b ★ 装机卡 vs 仓库卡的漂移。
+    #   2026-10-15 审计实测：宿主 PERSONALITY.md 比仓库卡旧 6 行，而此前没任何门禁在看。
+    # ★ P7（2026-10-15）：改由独立 Python 脚本做，直接 import hosts.py 的 HOSTS。
+    #   不再在 relab2.ps1 里复制一份宿主表（PS 剪片把 omp 的 entry_base 解成空翻过车）。
+    $py = $null
+    foreach ($cand in @((Get-Command python -ErrorAction SilentlyContinue).Source,
+                        (Get-Command py -ErrorAction SilentlyContinue).Source)) {
+        if ($cand) { $py = $cand; break }
     }
-    if ($drift -gt 0) {
-        Add-Result '装机卡漂移' 'WARN' "$drift 个宿主入口文件与仓库卡不一致（工作台重新载入即可）"
+    if ($py) {
+        $o = & $py (Join-Path $RepoRoot 'skillpack\skills\scripts\check-card-drift.py') -Json 2>&1
+        $rc = $LASTEXITCODE
+        if ($rc -eq 0) {
+            Add-Result '装机卡漂移' 'OK' '已装宿主入口文件与仓库卡逐行一致'
+        }
+        elseif ($rc -eq 11) {
+            $o | Select-Object -Last 6 | ForEach-Object { Write-Host ('      ' + $_) -ForegroundColor Yellow }
+            Add-Result '装机卡漂移' 'WARN' '部分宿主入口形态未核对（不宣称全宿主覆盖）——原回上方行'
+        }
+        elseif ($rc -eq 10) {
+            $o | Select-Object -Last 12 | ForEach-Object { Write-Host ('      ' + $_) -ForegroundColor Yellow }
+            Add-Result '装机卡漂移' 'WARN' '部分宿主入口文件与仓库卡不一致（原回上方行）'
+        }
+        else {
+            $o | Select-Object -Last 8 | ForEach-Object { Write-Host ('      ' + $_) -ForegroundColor Red }
+            Add-Result '装机卡漂移' 'WARN' "漂移检查本身跑失败（rc=$rc）"
+        }
     }
     else {
-        Add-Result '装机卡漂移' 'OK' '宿主入口文件与仓库卡逐行一致'
+        Add-Result '装机卡漂移' 'WARN' 'PATH 里没有 python，跳过'
     }
 
     # 8 要求门（自带控制组）
@@ -238,6 +259,54 @@ function Invoke-Doctor {
         else { Add-Result '要求门 R1-R13' 'WARN' 'PATH 里没有 python，跳过' }
     }
     else { Add-Result '要求门 R1-R13' 'FAIL' '缺少 verify-project-requirements.py' }
+
+    # 9 行为门实跑台账（★ 2026-10-16）
+    #   门禁只验"配置形状"，能力只有实跑能证明。两个行为门在 CI 里从不带 `--run`
+    #   （要花钱开新会话），所以"能力就绪"此前没有任何自动证据。这里如实报
+    #   「上次实跑是什么时候、过没过」—— 从未跑 / 超期就是 WARN，不装作绿。
+    $runs = Join-Path $env:LOCALAPPDATA 'reverse-skill\behavior-runs.jsonl'
+    $last = $null
+    if (Test-Path -LiteralPath $runs) {
+        foreach ($line in (Get-Content -LiteralPath $runs -Encoding UTF8 -ErrorAction SilentlyContinue)) {
+            if (-not $line.Trim()) { continue }
+            try { $last = $line | ConvertFrom-Json } catch { }
+        }
+    }
+    if ($last) {
+        $days = [int]((Get-Date) - [datetime]$last.ts).TotalDays
+        if ($last.gate -eq 'test-trigger-rate') {
+            $detail = "{0}：{1} 个技能 / {2} 条不过" -f $last.gate, $last.skills, $last.failed
+        }
+        elseif ($null -eq $last.'pass') {
+            # ★ 2026-10-16：台账里 `pass: null` + `verified: false` 表示**本次未验**
+            #   （运行失败/超时，见 KNOWN-BOUNDARIES 第 18 条）。原来直接插值成空串，
+            #   显示成 `test-assault-behavior：/4`，看上去像"跑了但没结果"。
+            $detail = "{0}：**未验**（上次运行失败/超时，不是 0 分）" -f $last.gate
+        }
+        else {
+            $detail = "{0}：{1}/{2}" -f $last.gate, $last.'pass', $last.total
+        }
+        if ($days -le 30) {
+            Add-Result '行为门实跑' 'OK' ("上次 $($last.ts)（$days 天前）· $detail")
+        }
+        else {
+            Add-Result '行为门实跑' 'WARN' ("上次实跑 $($last.ts)（$days 天前，超 30 天）—— 能力证据已过期；跑 python skillpack\skills\tests\test-assault-behavior.py --run")
+        }
+    }
+    else {
+        Add-Result '行为门实跑' 'WARN' '从未实跑过 —— 行为门只验了「配置形状」，能力一条都没验；跑 python skillpack\skills\tests\test-assault-behavior.py --run'
+    }
+
+    # 10 换机剩余人工项（★ 2026-10-16）
+    #   一键路径只代劳 1–3 步 + MCP 注册；凭据与宿主入口文件按设计归人做。
+    #   归人做**不等于**可以不报：不报的话 doctor 会把"还差一步"说成全绿。
+    #   这里查的是**登没登**，不读任何凭据内容。
+    try {
+        $ghOut = & gh auth status 2>&1
+        if ($LASTEXITCODE -eq 0) { Add-Result 'GitHub CLI 登录' 'OK' 'gh auth status 通过（取 issue/PR/Actions 日志可用）' }
+        else { Add-Result 'GitHub CLI 登录' 'WARN' '未登录 —— 跑 gh auth login；否则查 PR/issue/Actions 日志会失败' }
+    }
+    catch { Add-Result 'GitHub CLI 登录' 'WARN' 'gh 不在 PATH —— 按 环境初始化.md §11.1-E 补凭据' }
 
     # 汇总
     $fail = @($Results | Where-Object { $_.结果 -eq 'FAIL' }).Count
@@ -289,7 +358,7 @@ function Invoke-Setup {
         if ($py) {
             $mcpArgs = @($mcpReg, '--skill-root', $RepoRoot)
             if ($DryRun) { $mcpArgs += '--dry-run' }
-            Write-Host '  MCP 注册（5 条通道，幂等 + 自动备份）' -ForegroundColor DarkGray
+            Write-Host '  MCP 注册（6 条通道，幂等 + 自动备份）' -ForegroundColor DarkGray
             # ★ 显式捕获再打印：直接 `& $py @args` 的输出在这个 PowerShell 里会被吞掉
             #   （2026-10-15 实测：调用方看不到任何输出，等于静默失败）。捕获 + 原样回显，错误也看得见。
             $mcpOut = & $py @mcpArgs 2>&1 | Out-String
@@ -343,16 +412,66 @@ relab2 —— 本仓库唯一门面
   relab2 setup           一键接入：仓根定位 → 环境变量 → 技能挂载（幂等）
   relab2 setup -DryRun   只打印将要执行的每一行，不改任何东西
   relab2 update          换机/升级：git pull → 重跑 setup
+  relab2 known           看「已知边界」：本机/本项目的已知缺陷与待办（读 docs\KNOWN-BOUNDARIES.md）
 
 就绪之后：
   · 干活入口看 START-HERE.md
   · 卡片融合 / 跨智能体接入 开 kernel\04-console\start-console.bat
-  · 完工台账看 docs\FINAL-彻底完工交接-2026-10-15.md
+  · 想知道「到底做完没」→ 跑门禁与核验（入口见 docs\PROJECT-MAP.md）
+  · 想确认某件事是不是已知问题 → relab2 known（不要靠猜、不要靠记忆）
 '@
+}
+
+function Invoke-Known {
+    # ★ 2026-10-16：主人两次问过「怎么看已知边界」。答案应当是**一条命令**，不是"去翻文档"。
+    #   本命令只读、不改任何东西：打印 KNOWN-BOUNDARIES.md 的每条编号条目（缺陷/边界/约定），
+    #   并给出全文路径。--Json 时输出结构化清单。
+    $p = Join-Path $RepoRoot 'docs\KNOWN-BOUNDARIES.md'
+    if (-not (Test-Path -LiteralPath $p)) {
+        # ★ 2026-10-16：这里**不能**用 `return 2` —— PowerShell 的 `return 2` 会把 `2` 打进
+        #   **输出流**（消费者会读到一个孤零零的 `2`）。要退码就直接 `exit`。
+        Write-Host "找不到 $p（仓库不完整？）" -ForegroundColor Red
+        exit 2
+    }
+    $lines = Get-Content -LiteralPath $p -Encoding UTF8
+    # 条目行形如： | 13 | **标题** | 证据 | 现状 |
+    $items = @($lines | Where-Object { $_ -match '^\|\s*\d+\s*\|' })
+    if ($Json) {
+        $out = @()
+        foreach ($l in $items) {
+            $c = $l.Trim('|').Split('|')
+            if ($c.Count -ge 2) {
+                $out += [pscustomobject]@{ n = $c[0].Trim(); title = ($c[1] -replace '\*\*', '').Trim() }
+            }
+        }
+        $out | ConvertTo-Json -Depth 3
+        return                                   # ★ 不写 `return 0`（会把 0 打进输出流）
+    }
+    Write-Head "已知边界（docs\KNOWN-BOUNDARIES.md）"
+    Write-Host ("  共 {0} 条编号条目。" -f $items.Count) -ForegroundColor Gray
+    Write-Host "  每条的完整证据与现状见文件正文；下面只列编号 + 标题。" -ForegroundColor DarkGray
+    Write-Host ""
+    foreach ($l in $items) {
+        $c = $l.Trim('|').Split('|')
+        if ($c.Count -ge 2) {
+            $n = $c[0].Trim().PadLeft(3)
+            $t = ($c[1] -replace '\*\*', '').Trim()
+            if ($t.Length -gt 88) { $t = $t.Substring(0, 88) + '…' }
+            Write-Host ("  {0}. {1}" -f $n, $t)
+        }
+    }
+    Write-Host ""
+    Write-Host ("  全文： {0}" -f $p) -ForegroundColor Cyan
+    Write-Host "  ★ 遇到「是不是已知问题」先查这里，别猜、别凭记忆。" -ForegroundColor Yellow
+    # 自然结束即可；**不写 `return 0`**（会把 0 打进输出流，污染 `known -Json` 的 JSON）。
 }
 
 switch ($Command) {
     'doctor' { exit (Invoke-Doctor) }
+    # ★ 2026-10-16：**不能**写成 `exit (Invoke-Known)` —— `(…)` 会把函数的**输出流**捕获成
+    #   `exit` 的参数，于是 `known -Json` 的 `ConvertTo-Json` 结果被整段吞掉（实测：输出为空）。
+    #   `doctor` 没暴露这问题，是因为它只走 `Write-Host`（不经管道）。这里改成先跑完再 exit。
+    'known' { Invoke-Known; exit 0 }
     'setup' { exit (Invoke-Setup) }
     'update' { exit (Invoke-Update) }
     default { Show-Help; exit 0 }

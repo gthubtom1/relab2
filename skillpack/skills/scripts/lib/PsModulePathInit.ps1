@@ -39,5 +39,5 @@ if (-not (Get-Variable -Name PSModulePathHealed -Scope Script -ErrorAction Silen
                 $env:PSModulePath = $want
             }
         }
-    } catch { }
+    } catch { }   # scan-ok: PSModulePath 自愈是 best-effort（本文件头部注释写明）；失败=没自愈，不影响返回值与结论
 }

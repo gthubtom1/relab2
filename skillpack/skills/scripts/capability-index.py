@@ -131,6 +131,9 @@ RULES: list[tuple[str, str, str]] = [
     (r"mitmdump|mitmproxy|burp|^fiddler|charles", "proxy", "中间人代理"),
     (r"^curl$|^curl\.exe|^httpx|^httpie|^wget", "http-client", "HTTP 客户端"),
     (r"^node\.exe$|^deno$|^bun(\.exe)?$|quickjs", "js-runtime", "JS 运行时"),
+    # P2 追问：npm/npx 是 JS 工具链的实际入口（`npx -y playwright-mcp` 这类启动方式
+    #   写在 tool-registry.md §2），但旧规则只识 node/deno/bun，导致 cli\npm.cmd 落 unknown。
+    (r"^npm(\.cmd|\.ps1)?$|^npx(\.cmd|\.ps1)?$|^pnpm|^yarn", "js-runtime", "npm / npx"),
     # 无线 / 云 / 沙箱
     (r"gnuradio|^urh|inspectrum|^hackrf|^rtl_|^ubertooth|kismet", "sdr", "SDR 工具"),
     (r"kubectl|^k9s|trivy|kube-bench|^aws|^az\.cmd|gcloud", "cloud", "云/K8s"),
@@ -138,25 +141,234 @@ RULES: list[tuple[str, str, str]] = [
 ]
 
 # help 文本关键词 → 能力（给「规则认不出的新工具」兜底）
+#
+# ★★ 2026-10-15 独立审查 P1 —— 这张表之前是坏的（整条路径永远不可能用）。
+# 现象：classify_by_help 要求同一能力命中 ≥2 条关键词才认，而旧表里 17 个能力每个恰好只有 1 条
+#   正则，于是 hits[cap] 长度最多为 1、>=2 永假：本机实测 23 次探测 0 命中。
+# 根因不是「命中条数少」，而是关键词多义（fzf 的 fuzzy → 目录爆破、rg 的 pattern → YARA、
+#   ffprobe 的 hash → 口令破解）。所以正确的修法是换特异词，让每个能力真的有 ≥2 条可用。
+# 维护规则：每个能力至少 2 条；条与条之间尽量不共享单词；不要单独用多义词做判据。
+# 改完必须跑回归：capability-index.py --selftest-help
 HELP_HINTS: list[tuple[str, str]] = [
-    (r"firmware|filesystem|squashfs|jffs2|ubifs|extract.*(image|firmware)", "firmware-unpack"),
-    (r"disassembl|decompil|pseudocode|control flow", "static-decompile"),
-    (r"debugger|breakpoint|step into|attach to process", "dynamic-debug"),
-    (r"packer|entropy|detect .*(packer|compiler)", "triage"),
-    (r"sql injection|sqli|injectable", "websqli"),
-    (r"port scan|service detection|syn scan", "portscan"),
-    (r"directory|brute ?forc|fuzz|wordlist", "fuzz-web"),
-    (r"vulnerabilit|template|scanner|cve-", "webscan"),
-    (r"hashcat|hash|wordlist|crack", "crack"),
-    (r"yara|rule match|pattern match", "yara"),
-    (r"pcap|packet capture|dissect", "capture"),
-    (r"proxy|intercept|man.in.the.middle", "proxy"),
-    (r"apk|dalvik|smali|android", "apk"),
-    (r"hook|inject|instrument|frida", "hook"),
-    (r"dump.*memory|memory dump|iat", "memory-dump"),
-    (r"rop|gadget", "rop"),
-    (r"emulat|symbolic|concolic", "emulate"),
+    (r'squashfs|jffs2|ubifs|cramfs|yaffs2', r'firmware-unpack'),
+    (r'(extract|dump|unpack).{0,20}(firmware|router|flash image|rom image)', r'firmware-unpack'),
+    (r'(firmware|image).{0,20}(filesystem|rootfs)', r'firmware-unpack'),
+    (r'pseudocode|pseudo-code', r'static-decompile'),
+    (r'(decompil|disassembl).{0,24}(binary|function|native|executable)', r'static-decompile'),
+    (r'control.?flow graph|cfg.{0,12}(generat|build|produce)', r'static-decompile'),
+    (r'breakpoint', r'dynamic-debug'),
+    (r'step into|step over|single.?step', r'dynamic-debug'),
+    (r'attach to (a )?(process|running|debuggee)', r'dynamic-debug'),
+    (r'detect.{0,12}(packer|protector|compiler|packed)', r'triage'),
+    (r'(packed|packer).{0,20}(detect|identif)', r'triage'),
+    (r'entropy.{0,20}(section|packed|analysis)', r'triage'),
+    (r'sql injection|sqli', r'websqli'),
+    (r'injectable.{0,20}(parameter|url|request)', r'websqli'),
+    (r'(union|boolean|time.?based).{0,12}(select|injection|sqli)', r'websqli'),
+    (r'port scan|portscan', r'portscan'),
+    (r'service detection|service version detection', r'portscan'),
+    (r'syn scan|half.?open scan|host discovery', r'portscan'),
+    (r'directory.{0,12}(brute|enumeration|listing|discover)', r'fuzz-web'),
+    (r'virtual ?hosts?|vhosts?', r'fuzz-web'),
+    (r'(content|path|dir).{0,12}discover.{0,20}(wordlist|word.?list)', r'fuzz-web'),
+    (r'cve-\d{4}-\d{4,}', r'webscan'),
+    (r'(vulnerabilit|finding).{0,20}(template|scan|detect)', r'webscan'),
+    (r'(nuclei|poc).{0,12}template', r'webscan'),
+    (r'(md5|sha1|sha256|sha512|ntlm|bcrypt|scrypt)', r'crack'),
+    (r'password.{0,16}(crack|recover|attack)', r'crack'),
+    (r'(brute.?force|dictionary attack).{0,24}(password|hash|passphrase)', r'crack'),
+    (r'malware.{0,20}(rule|signature|detection)', r'yara'),
+    (r'indicator.{0,16}(rule|match)', r'yara'),
+    (r'\.yar\b|\.yara\b', r'yara'),
+    (r'\.pcap|\.pcapng|packet capture', r'capture'),
+    (r'dissect.{0,20}(packet|frame|protocol)', r'capture'),
+    (r'live capture|promiscuous mode', r'capture'),
+    (r'mitm|man.in.the.middle', r'proxy'),
+    (r'intercept.{0,20}(request|response|traffic|https)', r'proxy'),
+    (r'(proxy|upstream).{0,20}(intercept|tamper|modify|replay)', r'proxy'),
+    (r'dalvik|smali', r'apk'),
+    (r'\.apk\b|android (package|app )', r'apk'),
+    (r'dex2jar|jadx|apktool', r'apk'),
+    (r'frida', r'hook'),
+    (r'(inline|api|function).{0,12}hook', r'hook'),
+    (r'(instrument|interpose).{0,20}(native|runtime|library)', r'hook'),
+    (r'import address table|\biat\b.{0,12}(rebuild|fix|repair)', r'memory-dump'),
+    (r'(dump|extract).{0,20}(process|module).{0,20}memory', r'memory-dump'),
+    (r'unmap.{0,20}(pe|module)|dump unpacked', r'memory-dump'),
+    (r'rop gadget|return.?oriented', r'rop'),
+    (r'gadget.{0,20}(search|chain)', r'rop'),
+    (r'gadget finder|find gadgets', r'rop'),
+    (r'printable strings|extract strings', r'strings'),
+    (r'(obfuscat|decoded|stack).{0,16}strings', r'strings'),
+    (r'\bfloss\b|strings.{0,12}(extract|dump|scan)', r'strings'),
+    (r'\badb\b|android debug bridge', r'device-bridge'),
+    (r'(fastboot|idevice|scrcpy)', r'device-bridge'),
+    (r'(screen|device).{0,16}(mirror|capture|screenshot)', r'device-bridge'),
+    (r'\.net (assembly|运行时|runtime)', r'dotnet'),
+    (r'\b(IL|MSIL|CIL)\b.{0,20}(code|assembly|opcode)', r'dotnet'),
+    (r'(de4dot|ilspy|dnspy|dotpeek)', r'dotnet'),
+    (r'(javascript|node|deno|bun).{0,20}(runtime|execute|run script)', r'js-runtime'),
+    (r'execute (javascript|js) (code|script|file)', r'js-runtime'),
+    (r'\b(npm|npx)\b.{0,20}(run|install|package)', r'js-runtime'),
+    (r'(unpack|decompress).{0,20}(packed executable|protector|shell)', r'unpack'),
+    (r'dump unpacked|unpacked (module|binary|image)', r'unpack'),
+    (r'\bupx\b.{0,20}(unpack|decompress|d)', r'unpack'),
+    (r'(unpack|restore).{0,24}(original entry point|oep|import table)', r'unpack'),
+    (r'symbol.??migration|migrate function names', r'binary-diff'),
+    (r'(diff|compare).{0,24}(two|old|new|before|after).{0,24}(binar|build|version)', r'binary-diff'),
+    (r'bindiff|diaphora|ghidriff', r'binary-diff'),
+    (r'attack.{0,12}(capabilit|technique).{0,12}(identif|detect|map)', r'capability-map'),
+    (r'att&ck|mitre att', r'capability-map'),
+    (r'behaviour.{0,12}(catalog|capabilit)', r'capability-map'),
+    (r'kubernetes|k8s|kube.?bench', r'cloud'),
+    (r'(iam|role|policy).{0,20}(misconfig|audit|escalat)', r'cloud'),
+    (r'container.{0,16}(escape|image|registry).{0,16}(audit|scan)', r'cloud'),
+    (r'objdump|readelf', r'disasm-cli'),
+    (r'(disassembl|inspect).{0,24}(object file|elf|macho|section)', r'disasm-cli'),
+    (r'radare2|r2 cli', r'disasm-cli'),
+    (r'qemu.{0,12}(system|user).{0,12}(emulat|run)', r'firmware-emulate'),
+    (r'(firmadyne|firmware).{0,20}(emulat|simulat|boot)', r'firmware-emulate'),
+    (r'full.?system emulation|emulate router firmware', r'firmware-emulate'),
+    (r'jtag|spi.{0,12}(flash|program)|uart.{0,12}(serial|console)', r'hardware'),
+    (r'openocd|jlink|st-link|flashrom', r'hardware'),
+    (r'(read|dump|extract).{0,20}(nor|nand).?flash', r'hardware'),
+    (r'httpie|curl.{0,20}(request|send|call)', r'http-client'),
+    (r'(send|replay).{0,20}(http request|api call|get|post) request', r'http-client'),
+    (r'api (client|debugger|testing tool)', r'http-client'),
+    (r'(http|api).{0,12}(client|debugging tool).{0,20}(endpoint|request|url)', r'http-client'),
+    (r'kernel.?mode debug|driver debug', r'kernel-debug'),
+    (r'windbg|cdb|kd.{0,12}(kernel|dump)', r'kernel-debug'),
+    (r'(crash|kernel).{0,16}dump.{0,16}(analyz|debug)', r'kernel-debug'),
+    (r'(bypass|defeat).{0,20}(ssl.?pinning|certificate.?pinning|root detect)', r'mobile-runtime'),
+    (r'frida.{0,20}(ios|android|mobile|app)', r'mobile-runtime'),
+    (r'jailbreak.{0,16}(detect|bypass)|objection', r'mobile-runtime'),
+    (r'sandboxie|firejail|cuckoo|cape sandbox', r'sandbox'),
+    (r'(isolat|quarantin).{0,20}(execut|run|analyz).{0,20}(sample|malware|binary)', r'sandbox'),
+    (r'detonat.{0,16}(sample|malware|binary)', r'sandbox'),
+    (r'sdr|software.?defined radio', r'sdr'),
+    (r'gnuradio|gqrx|urh|inspectrum|rtl-sdr', r'sdr'),
+    (r'hackrf|usrp|bladerf|limesdr', r'sdr'),
+    (r'(emulate|emulation).{0,24}(cpu|instruction|architecture|firmware|binary)', r'emulate'),
+    (r'concolic|constraint solv|\bz3\b', r'emulate'),
 ]
+
+
+# ---- P1 回归样本（2026-10-15 独立审查） ----
+# 正向：名字与目录名都没见过的工具，靠 --help 文本必须被认出来。
+# 反向：三个历史误报（fzf→目录爆破、rg→YARA、ffprobe→口令破解）必须落回 unknown。
+HELP_NEGATIVE_CONTROLS = {'fzf': 'fzf is a general-purpose command-line fuzzy finder. Filter lines interactively.', 'ripgrep': 'ripgrep recursively searches directories for lines matching a pattern.', 'ffprobe': 'ffprobe gathers information from multimedia streams and prints per-packet hash.'}
+HELP_NEGATIVE_WRONG_CAPS = {'fzf': 'fuzz-web', 'ripgrep': 'yara', 'ffprobe': 'crack'}
+# ---- P1 回归样本（2026-10-15 独立审查；2026-10-15 外部审查补满 33 能力全覆盖） ----
+# 正向：名字与目录名都没见过的工具，靠 --help 文本必须被认出来。
+# 反向：三个历史误报（fzf→目录爆破、rg→YARA、ffprobe→口令破解）必须落回 unknown。
+HELP_POSITIVE_CASES = {
+    "MyAdb": ('SomeAdb 1.0 - Android debug bridge: connect to a device over adb, install an APK, mirror the screen with scrcpy, and list packages.', "device-bridge"),
+    "MyApkTool": ('MyApkTool 1.0 - Unpack an APK, disassemble smali, read dalvik bytecode of an android app.', "apk"),
+    "MyBinDiff": ('MyBinDiff 1.0 - Compare two builds and migrate function names from the old version to the new one.', "binary-diff"),
+    "MyCapa": ('MyCapa 1.0 - Identify the attack capabilities in a binary and map them to ATT&CK techniques; a behaviour catalog for capability detection.', "capability-map"),
+    "MyCapture": ('MyCapture 1.0 - Live capture on a network interface; dissect each frame; writes .pcap.', "capture"),
+    "MyCloudAudit": ('MyCloudAudit 1.0 - Audit kubernetes RBAC and detect IAM role misconfigurations.', "cloud"),
+    "MyCracker": ('MyCracker 1.0 - Password recovery for md5 / sha256 / ntlm hashes with brute force.', "crack"),
+    "MyDbg": ('MyDbg 1.0 - Interactive debugger: set a breakpoint, step into, attach to a running process.', "dynamic-debug"),
+    "MyDecomp": ('MyDecomp 1.0 - Decompile a binary function to pseudocode and print the control flow graph.', "static-decompile"),
+    "MyDotnet": ('MyDotnet 1.0 - Decompile a .NET assembly to pseudocode and read the IL opcode listing.', "dotnet"),
+    "MyDumper": ('MyDumper 1.0 - Dump process memory and rebuild the import address table of an unpacked module.', "memory-dump"),
+    "MyEmu": ('MyEmu 1.0 - Symbolic execution and concolic solving of constraint paths; emulate CPU instructions of a firmware binary.', "emulate"),
+    "MyFirmwareTool": ('MyFirmwareTool 1.0 - Extract firmware images and dump the filesystem (squashfs / jffs2) from a router image.', "firmware-unpack"),
+    "MyFuzz": ('MyFuzz 1.0 - Directory brute and virtual host discovery using a wordlist.', "fuzz-web"),
+    "MyFwEmu": ('MyFwEmu 1.0 - Boot and emulate router firmware with full-system emulation (QEMU).', "firmware-emulate"),
+    "MyHooker": ('MyHooker 1.0 - Inline hook of native library functions at runtime; instrument native code and interpose library calls.', "hook"),
+    "MyHttp": ('MyHttp 1.0 - Send an HTTP request and replay an API call; a small API client / debugger for endpoints.', "http-client"),
+    "MyHwProbe": ('MyHwProbe 1.0 - Read NOR flash over SPI and talk to the UART serial console via JTAG.', "hardware"),
+    "MyJs": ('MyJs 1.0 - JavaScript runtime to execute a JS script file; npm run / npx to install packages.', "js-runtime"),
+    "MyKd": ('MyKd 1.0 - Kernel-mode debugger: analyse a kernel crash dump with WinDbg-style commands.', "kernel-debug"),
+    "MyMobileHook": ('MyMobileHook 1.0 - Frida hook of an android app; bypass SSL pinning and root detection.', "mobile-runtime"),
+    "MyObjdump": ('MyObjdump 1.0 - Disassemble an ELF object file and inspect its sections and symbols.', "disasm-cli"),
+    "MyPortScan": ('MyPortScan 1.0 - Fast port scan with service detection and syn scan.', "portscan"),
+    "MyProxy": ('MyProxy 1.0 - Intercept https traffic and modify requests (man-in-the-middle proxy).', "proxy"),
+    "MyRop": ('MyRop 1.0 - ROP gadget finder: search gadgets in an ELF and build a gadget chain.', "rop"),
+    "MySandbox": ('MySandbox 1.0 - Detonate a malware sample in an isolated sandbox and record its behaviour; fine-grained sandboxie containers for executables.', "sandbox"),
+    "MySdr": ('MySdr 1.0 - Software defined radio: capture IQ with a HackRF and demodulate with GNU Radio.', "sdr"),
+    "MySqlScanner": ('MySqlScanner 2.0 - Detect SQL injection in request parameters; supports union select, boolean and time-based injection.', "websqli"),
+    "MyStrings": ('MyStrings 1.0 - Extract printable strings, including obfuscated and decoded strings, from a binary.', "strings"),
+    "MyTriage": ('MyTriage 1.0 - Detect packer and compiler of an executable; reports section entropy analysis.', "triage"),
+    "MyUnpacker": ('MyUnpacker 1.0 - Unpack a packed executable: restore the original entry point and dump the unpacked module to disk.', "unpack"),
+    "MyVulnScan": ('MyVulnScan 3.0 - Vulnerability template scanner driven by CVE-2024-1234 templates.', "webscan"),
+    "MyYara": ('MyYara 1.0 - Run malware detection rules from .yar files.', "yara"),
+}
+
+
+def _classify_text(text: str):
+    """与 classify_by_help 同一套命中逻辑，但作用于一段内存文本（不跑子进程）。"""
+    hits: dict[str, list[str]] = {}
+    for pat, cap in HELP_HINTS:
+        if re.search(pat, text, re.IGNORECASE):
+            hits.setdefault(cap, []).append(pat)
+    if not hits:
+        return None
+    best = max(hits.items(), key=lambda kv: len(kv[1]))
+    return best[0] if len(best[1]) >= 2 else None
+
+
+def selftest_help() -> int:
+    """P1 回归：正向样本必须命中；三个历史误报必须落回 unknown。另断言全覆盖（每个能力≥2 条 help 正则 + 都有正向样本）。"""
+    fails: list[str] = []
+
+    # 全覆盖断言（外部审计追问）：
+    #   · 每个能力至少 2 条 help 正则（<2 时 classify_by_help 的 >=2 阈值结构上永远命中）；
+    #   · 每个能力都有正向样本（块掉了也没人知道）。
+    #   2026-10-15 之前 17/4 个能力没有兑底正则，而毫无门禁报错。
+    from collections import Counter as _C
+    per = _C(c for _, c in HELP_HINTS)
+    sampled = set(w for _t, w in HELP_POSITIVE_CASES.values())
+    for cap in CAPABILITIES:
+        if per.get(cap, 0) < 2:
+            fails.append(f"能力 {cap} 只有 {per.get(cap, 0)} 条 help 正则"
+                         f"（<2 时该路径结构上永远命中）")
+        if cap not in sampled:
+            fails.append(f"能力 {cap} 没有正向样本（块掉了也没人知道）")
+    extra = sampled - set(CAPABILITIES)
+    if extra:
+        fails.append(f"样本指向不存在的能力：{sorted(extra)}")
+    for tool, (text, want) in sorted(HELP_POSITIVE_CASES.items()):
+        got = _classify_text(text)
+        if got != want:
+            fails.append(f"正向样本 {tool}: 期望 {want}，实得 {got}")
+    for tool, text in sorted(HELP_NEGATIVE_CONTROLS.items()):
+        got = _classify_text(text)
+        wrong = HELP_NEGATIVE_WRONG_CAPS.get(tool)
+        if got == wrong:
+            fails.append(f"历史误报复现 {tool}: 又被判成 {wrong}（正是 2026-10-15 修的那个 bug）")
+
+    # ★ 2026-10-16：规则层控制组 —— 包入口目录（venv 的 `Scripts\`）里的**无关包脚本**
+    #   不得因为"路径里有个叫 angr 的 venv"就被算成符号执行。这些名字都来自实测假阳。
+    for name, want in (("pai.exe", None), ("idna.exe", None),
+                       ("distro.exe", None), ("cart.exe", None),
+                       ("angr.exe", "emulate"), ("z3.exe", "emulate"),
+                       # httpx 是**真的** HTTP 客户端：名字匹配命中 http-client 是对的，
+                       # 不能因为它在 venv 里就否掉 —— 规则层只否"靠路径蹭来的"归类。
+                       ("httpx.exe", "http-client")):
+        probe = Path("D:/Tools/venv-angr-mcp/Scripts") / name
+        hit = classify_by_rules(probe)
+        got = hit[0] if hit else None
+        if got != want:
+            fails.append(f"规则层包入口用例 {name}：期望 {want}，实得 {got}"
+                         f"（包安装目录只是安装位置，不是能力证据）")
+    # 反向：**不在**包入口目录时，路径规则仍然要能用（别把整条路径匹配关掉）
+    hit = classify_by_rules(Path("D:/Tools/disasm/wireshark/extcap/strato.exe"))
+    if not hit or hit[0] != "capture":
+        fails.append(f"路径规则回归：wireshark/extcap 下的 strato.exe 应为 capture，实得 {hit}")
+
+    if fails:
+        print("capability-index help 兜底自检: FAIL")
+        for f in fails:
+            print("   " + f)
+        return 1
+    print(f"capability-index help 兜底自检: PASS"
+          f"（{len(HELP_POSITIVE_CASES)} 个未见名工具全部识别；"
+          f"{len(HELP_NEGATIVE_CONTROLS)} 个历史误报全部落回 unknown）")
+    return 0
+
 
 SKIP_DIR_PARTS = {"node_modules", "__pycache__", ".git", "_dl", "docs", "db", "dist-info",
                   "site-packages", "include", "lib", "share", "templates", "examples",
@@ -171,11 +383,23 @@ GENERIC_STEMS = {"mcp", "python", "pythonw", "pip", "pip3", "run", "uninstall", 
                  "start", "setup", "install", "update", "main", "app", "cli", "test",
                  "loaddll", "injector", "example0", "example400", "example500"}
 
+# ★ 2026-10-16：**包入口目录** —— 这里面的可执行文件是 pip/venv 生成的 console script，
+#   名字与能力无关（pai / idna / httpx / distro / normalizer …）。命中这些目录时，
+#   只按**文件名**判能力，绝不按路径判 —— 否则"某个 venv 叫 angr-mcp-venv"会让它
+#   目录下所有包脚本都被算成「符号执行」（实测 5 个假阳）。
+_PKG_ENTRY_MARKERS = ("\\scripts\\", "/scripts/", "\\site-packages\\", "/site-packages/",
+                      "\\bin\\", "/bin/")
+
 # ★ help 探测**绝不碰**这些名字：它们是 GUI 版，跑 `--help` 会弹窗（本包纪律：不得拉起 GUI）。
 #   与 `TOOLS.md` 的「GUI / CLI 孪生对照」同源。
 GUI_HINTS = {"ida", "ida64", "die", "x64dbg", "x32dbg", "x96dbg", "wireshark", "dnspy",
              "ghidrarun", "jadx-gui", "mitmweb", "charles", "fiddler", "pe-bear",
-             "exeinfope", "ollydbg", "jeb", "androidkiller", "inspectrum", "urh"}
+             "exeinfope", "ollydbg", "jeb", "androidkiller", "inspectrum", "urh",
+             # ★ 2026-10-16 逐工具实测补：`ghidra` 是 **GUI 启动器**（不是 CLI）——
+             #   跑 `ghidra --version` 实测 **15s 不返回**（杀树才结束）。命令行版是
+             #   `ghidra_headless` / `analyzeHeadless`。写进名单后：help 探测不碰它，
+             #   模型也不会照着探测层给的 Command 直接调（那会像 `diec --extended` 一样卡死）。
+             "ghidra"}
 
 # ★★ 2026-10-15 事故后加的死名单（**永远不许执行**）：
 #   help 探测曾经撞上 `D:\Tools\net\nmap\Uninstall.exe` —— 跑一次 `--help` **直接弹出了 Nmap 的卸载向导**，
@@ -278,7 +502,14 @@ def scan_candidates(roots: list[Path], max_depth: int = 5) -> list[Path]:
                         continue
                     if _deny_hit(str(p), deny_re):
                         continue
-                    if p.stem.lower() in deny_roots and p.suffix.lower() in (".cmd", ".bat", ".ps1"):
+                    # P2 (2026-10-15 audit): notHere is a snapshot of "last seen absent", NOT a
+                    # permanent ban. A wrapper that exists on disk must reach the rules; only a
+                    # genuinely missing stem is skipped. Before this, cli/sqlmap.cmd and friends
+                    # were invisible to the capability layer and find_capability reported the
+                    # machine as "no SQL injection tool" while sqlmap 1.10.10 was right there.
+                    if (p.stem.lower() in deny_roots
+                            and p.suffix.lower() in (".cmd", ".bat", ".ps1")
+                            and not p.exists()):
                         continue
                     k = str(p).lower()
                     if k in seen:
@@ -296,8 +527,15 @@ def classify_by_rules(p: Path) -> tuple[str, str] | None:
     """先拿**文件名**匹配（规则里的 ^ 才是有意义的），再退到**完整路径**匹配
     （有些能力只体现在目录名上，例如 `\\wireshark\\` 下的 exe）。
     **例外**：通用启动器名（`mcp` / `run` / `python` …）**只拿文件名匹配** ——
-    否则 `...\\angr-mcp-venv\\Scripts\\mcp.exe` 会因为路径里有 `\\angr` 被误判成「符号执行」。"""
+    否则 `...\\angr-mcp-venv\\Scripts\\mcp.exe` 会因为路径里有 `\\angr` 被误判成「符号执行」。
+    ★ 2026-10-16 补：**包入口目录**（venv 的 `Scripts\\`、`site-packages`）也一样只按名字判 ——
+    实测 `...\\venv-...\\Scripts\\pai.exe`（args 包）、`idna.exe`、`httpx.exe`、`distro.exe`
+    都因为"路径里含有 angr 的某个 venv"被算成「符号执行」。那是**安装位置**，不是能力证据。"""
     generic = p.stem.lower() in GENERIC_STEMS
+    if not generic:
+        low = str(p).lower()
+        if any(m in low for m in _PKG_ENTRY_MARKERS):
+            generic = True
     for pat, cap, why in RULES:
         try:
             if re.search(pat, p.name, re.IGNORECASE):
@@ -357,7 +595,10 @@ def classify_by_help(p: Path) -> tuple[str, str] | None:
                 try:
                     proc.kill()
                     proc.wait(timeout=3)
-                except Exception:                       # noqa: BLE001
+                except (OSError, subprocess.TimeoutExpired):
+                    # 进程已经 kill 过，这里只是尽力收尸：收不到不影响结论 ——
+                    # 下面 continue = 该工具**没有信息**（不是"探测成功"），
+                    # 上层照样会把它算成"未命中/缺件"。真正的信号（超时）已经单独处理。
                     pass
                 continue
             tmp.seek(0)
@@ -472,7 +713,12 @@ def main() -> int:
     ap.add_argument("--find", metavar="CAP", help="按能力查工具")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--list-capabilities", action="store_true")
+    ap.add_argument("--selftest-help", action="store_true",
+                    help="P1 回归：验证 help 兜底路径能识别未见名工具，且不重演 fzf/rg/ffprobe 三个历史误报")
     a = ap.parse_args()
+
+    if a.selftest_help:
+        return selftest_help()
 
     global PROBE_ANYWHERE
     PROBE_ANYWHERE = bool(a.probe_help_anywhere)

@@ -202,12 +202,12 @@
       "script": "scripts/validate-integration.py",
       "args": [],
       "blocking_exits": [
-        1
+        20
       ],
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "Registry paths, frontmatter and license warnings. CI must call it WITHOUT --release: the release mode is T04's deliverable and is not wired by T10.",
-      "ci_note": "spec T10 forbids widening or deleting assertions; T04 owns scripts/validate-integration.py and owns --release."
+      "ci_note": "spec T10 forbids widening or deleting assertions; T04 owns scripts/validate-integration.py and owns --release. ★ 2026-10-16 修登记口径：脚本 `validate-integration.py` 的退出码实测只有 0(EXIT_OK) 与 20(EXIT_BLOCKED)（grep 全部 return：249/254/309 → 20，323 → 0），**从不返回 1，也不返回 10**；而本清单原写 `blocking_exits: [1]`。后果：坏输入时脚本返回 20，runner 只能归到 `exit 20 is not a code this gate documents; treating as failure` —— **仍然是红，但红因不可读**（未来有人按 blocking_exits 收敛时易误改）。已改为 [20]，与脚本 0/20 口径对齐（见 work/_full-audit/report-gate-falsifiability.md §3）。"
     },
     {
       "id": "verify-doc-links",
@@ -342,9 +342,12 @@
       "blocking_exits": [
         1
       ],
-      "non_blocking_exits": [],
+      "non_blocking_exits": [
+        10
+      ],
       "executes_vendor_code": false,
-      "why": "证据门 —— 把 ops/analysis-decision-framework.md ADF-R4* 与 templates/assault.md 的'状态列只能升到证据列支撑的高度' 从纸面规矩变成会红的门。查三件事：① functions 表状态升到「对照一致」必须有 diff/<F-ID>.md 证据；② findings 表每行证据列非空且引用的 E-nnn 真实存在；③ 块格式 status=validated 需 ≥2 条独立证据（单条须显式写 residual_risk + 人工确认）。★ 自带自检控制组（1 正例 + 5 反例必须全部转红）—— 因为真实案例在用户项目目录、不在仓里，只扫仓库会让这道门永远绿；一道永远不会红的门比没有门更坏（虚假安全感）。同一惯例见 experience-cards 的反例控制组。"
+      "why": "证据门 —— 把 ops/analysis-decision-framework.md ADF-R4* 与 templates/assault.md 的'状态列只能升到证据列支撑的高度' 从纸面规矩变成会红的门。查三件事：① functions 表状态升到「对照一致」必须有 diff/<F-ID>.md 证据；② findings 表每行证据列非空且引用的 E-nnn 真实存在；③ 块格式 status=validated 需 ≥2 条独立证据（单条须显式写 residual_risk + 人工确认）。★ 自带自检控制组（1 正例 + 5 反例必须全部转红）—— 因为真实案例在用户项目目录、不在仓里，只扫仓库会让这道门永远绿；一道永远不会红的门比没有门更坏（虚假安全感）。同一惯例见 experience-cards 的反例控制组。",
+      "ci_note": "exit 10 = SKIP(no input)：未找到 assault.md/REPORT.md，本次什么也没审。与 PASS(0) 拆开是有意的（2026-10-15 审查 P11）——「没东西可审」不许读成「审过且通过」，本仓四个假绿前科全是这个形态。有输入且全过仍是 0。"
     },
     {
       "id": "run-regression",
@@ -400,6 +403,118 @@
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "★ 防「偏移」的护栏 —— 这道门回答的是「为什么每一轮优化都会偏移」。本仓历史上偏移发生过三次，形状完全一样：新改动破坏了旧承诺（破甲卡混进流程 / hub 卡与内核冲突 / 给 20 张卡加授权停门），而**没有任何机制因此变红**。根因不是记忆、也不是文档不清晰——规则写下来了，但规则不会红；写下来的规则不是护栏，能红的门才是护栏。本门把主人的硬要求变成可执行检查（R1 铁律①破甲卡无流程 / R2 铁律②技能包无停门型拒绝策略 / R4 无固定流程 / R5 成品导向 / R6 无卡密不当前置 / R7 只留两张卡 / R8 换机适配面+≥5门 / R9 跨智能体 / R10 技能数正常 / R11 存在行为门 / R12 无旧机残留），换任何模型、丢任何上下文，踩了要求就红。自带控制组（每条规则的必然违规样本必须全红 + 合规样本不得误红）——没有控制组的门等于没有门（本仓另两个行为门就是这么坏的：一个假红、一个假绿）。已登记的偏离会每次运行大声报出（ACCEPTED_DEVIATIONS），不是偷偷放行。"
+    },
+    {
+      "id": "verify-card-drift-forms",
+      "script": "skills/tests/verify-card-drift-forms.py",
+      "args": [],
+      "blocking_exits": [
+        3
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "装机卡漂移门的五种形态判据（console / bundle / 原样直写），用合成负控钉死；不依赖本机装了哪些宿主"
+    },
+    {
+      "id": "verify-no-forbidden-reads",
+      "script": "skills/tests/verify-no-forbidden-reads.py",
+      "args": [],
+      "blocking_exits": [
+        20
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "P9 禁读令的执行者：_归档-禁读-历史文档/ 一个字都不许读。静态查每个会遍历仓库的门禁源码里有没有排除；动态用 Python 审计钩子实跑门禁、记录它真的 open() 过哪些文件，命中禁读目录即判红。为什么需要它：2026-10-15 之前，禁令只写在给人的文档里（START-HERE.md ⛔），verify-doc-links.py（49 个 .md）与 verify-project-requirements.py 的 R12（20 个文件）都会读到它 —— 于是「照着手跑全套门禁」这个动作本身就成了违规，且不报错、不红、静默。自带控制组：必然违规样本转红 / 合规样本不误红。"
+    },
+    {
+      "id": "check-readme-scale",
+      "script": "skills/tests/check-readme-scale.py",
+      "args": [],
+      "blocking_exits": [
+        20
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "P5 README 规模数字核对。审计实测：README 手写的「技能模块 50 / 行为卡片 42 / ~2500 文件 / ~25 MB」四个数全错（实际 57 顶层+6 嵌套 / 10 / 3083 / 43.0 MB），而 START-HERE.md 又写「46 顶层 + 4 wrapper」——同一仓库两份口径且都与代码不符。手写规模数字必然腐烂，所以 README 的数字改由本门现算核对：不一致即红。预计不会误报：数字变化（加技能、加卡）时按报错信息更新 README 那一行即可。"
+    },
+    {
+      "id": "verify-capability-help",
+      "script": "skills/tests/verify-capability-help.py",
+      "args": [],
+      "blocking_exits": [
+        20
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "P1：capability-index 的 help 兜底路径必须被门禁守着。这条路径曾整条烂掉（HELP_HINTS 的 >=2 阈值配上每能力 1 条正则 → 永假；本机实测 23 次探测 0 成功，索引里 help-probe 条目 0 条）而没有任何门变红，因为 --selftest-help 没有调用方。本门跑两件：① capability-index --selftest-help；② 造一棵合成工具树（名字与目录名都不在任何规则里，只有 --help 描述能力），跑真实 build(probe_help=True)，断言 help-probe 真能识别 —— 内存级自检证明不了子进程那条路。自带控制组：判据退化（HELP_HINTS=[]）必须被本门抓到。"
+    },
+    {
+      "id": "test-tools-mcp-capture",
+      "script": "skills/scripts/relab2-tools-mcp.py",
+      "args": [
+        "--selftest"
+      ],
+      "blocking_exits": [
+        1
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "工具桥的有界捕获与分页取回（2026-10-16）。改之前：`Ctx.run` 全量 capture 后 stdout[:20000]，`run_tool` 再对**整段 JSON** 切 [:24000] —— 实测 stdout 达 20000 字符时序列化 24134 字符，切片必然产生**无法解析的 JSON**（越需要输出的场景越拿不到结果）；超时路径连已捕获内容都不返回；triage_target 逐步丢 stderr。本门断言：逐流字节数与 SHA-256、逐页 base64 拼回后哈希一致、非 UTF-8/NUL 保真、非零退出保留前缀、超时不遗留子进程（杀进程树）、handle 只认 32 位十六进制且拒绝路径、单流上限如实标 capture_complete=false、返回体永远是合法 JSON。解析链用例（表外工具也能调得动）只在有 PowerShell 探测层的平台跑。"
+    },
+    {
+      "id": "test-tool-recipes",
+      "script": "skills/tests/test-tool-recipes.py",
+      "args": [],
+      "blocking_exits": [
+        1
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "把「工具该怎么调」**真的跑一遍**（2026-10-16）。此前 37 道门全是文本形状门，没有一道真的执行过工具链路 —— 于是 `triage_target` 里写成 `diec --extended`（TOOLS.md 写的是 `-d -e -j`）这种参数错，从写下那天起就**必然挂死**（进程永不返回、只刷 libpng 警告、卡满 240s 超时并留下 ghost 进程）而没有任何门变红。本门读 `skills/config/tool-recipes.json`（调用形态的唯一事实源），对每条配方真执行：在时限内返回 + 退出码在允许集 + 有最小输出量；超时即 `taskkill /T` 杀整棵树并判红。工具不在本机 → SKIP（换机后没装的工具不该让 CI 红，但换机后装上了它就会从 SKIP 变 PASS —— 这是『刀真的能挥』的判据）。"
+    },
+    {
+      "id": "test-new-tool-discovery",
+      "script": "skills/tests/test-new-tool-discovery.py",
+      "args": [],
+      "blocking_exits": [
+        1
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "要求2『换一台装了名字没见过的同类软件，也认得出来、用得上』的可运行判据（2026-10-16）。2026-10-15 审计实测这条**两头都断**：① 能力发现的 help 兜底结构上不可能命中（每能力 1 条正则 vs 判据要求 ≥2 → 永假），审计造 3 个虚构工具跑真实 build()，3 个全落 unknown；② 就算认出来也调不动 —— run_tool 只查 57 条硬编码 id，表外一律回「没有可用工具」。本门造一棵合成工具根（虚构名字、只有 --help 文本是能力线索），断言：能力发现能归位 + 解析链找得到 + run_tool 真能跑出输出；并带**反例**（名字像工具但 help 无能力线索 → 必须落 unknown，禁止瞎猜）。"
+    },
+    {
+      "id": "verify-leaves",
+      "script": "skills/tests/verify-leaves.py",
+      "args": [],
+      "blocking_exits": [
+        1
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "逐树杈核验：树干只是骨架，要保证的是**每一片叶子都是通的**（主人 2026-10-16 原话：「你要把树状图做好…保证每一个树杈都是通的…不停地去核验」）。本门查的是 `verify-doc-links.py` 看不到的那一半：那个门只查「链接指向的东西在不在」，本门查「**在的东西有没有入口**」——存在但没有任何 md/脚本/门禁指向它 = 模型的树杈断了。★ 2026-10-16 更新实测口径：**合计 1897 片叶子 / 0 片断**（contracts 29 · kb-index 现象行 198 · 技能卡内引用 1099 等），本门现在**是绿的**。（原文写「1620 片 / 131 片断 …… 本门现在应当是红的」已过期：那 131 片已各得其位。判红能力由负控证明 —— 注入 1 片孤儿叶子立刻报「1898 片，其中 1 片断了入口」并 rc=1，见 report-gate-falsifiability.md #17。）"
+    },
+    {
+      "id": "verify-powershell-syntax",
+      "script": "skills/tests/verify-powershell-syntax.py",
+      "args": [],
+      "blocking_exits": [
+        1
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "所有 `.ps1` 必须能被 PowerShell 语言解析器解析（2026-10-16 真事故）。我给 `relab2.ps1` 的 doctor 加一行输出时写错了字符串格式，**仓库里没有任何门发现它** —— 直到真跑 `doctor` 才看到 6 个语法错误、整个入口崩掉。这类错误解析器就能静态抓住，不需要「跑一遍才知道」。排除禁读区 / work / _archive / _history / community-raw。"
+    },
+    {
+      "id": "verify-ps1-bom",
+      "script": "skills/tests/verify-ps1-bom.py",
+      "args": [],
+      "blocking_exits": [
+        1
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "非 ASCII 的 .ps1 必须带 UTF-8 BOM（2026-10-16 真事故，见 docs/KNOWN-BOUNDARIES.md 第 21 条）。Windows PowerShell 5.1 加载无 BOM 的 .ps1 时按系统 ANSI 码页解码：本机 936 下含中文的脚本被解错字节边界，直接 ParserError，**换机第一步就是死的**（HEAD 上 4 个 .ps1 缺 BOM → 干净 clone 的 `relab2.ps1 doctor` 与 `setup -DryRun` 都 rc=1，而 selfcheck 还报「通过 6/失败 0」）。已有的 verify-powershell-syntax 门拦不住它：那道门为了让 PS5.1 能看见错误，显式按 UTF-8 读入再 ParseInput（见其注释），恰好绕开了「PS5.1 自己加载时会怎样」。所以 BOM 必须由独立门来查。判据与 ci.yml 的 `Non-ASCII .ps1 must carry a UTF-8 BOM` 步骤一致。"
     }
   ]
 }

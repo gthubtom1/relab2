@@ -89,7 +89,7 @@ kubectl get clusterrolebindings
 | `nuclei` | dashboard / 组件暴露模板 | `nuclei -u <k8s-dashboard-url> -t http/exposures/`；模板命中 ≠ 已利用 |
 | `ffuf` | dashboard / API 路由枚举 | 只有 200 且 `Content-Type: application/json` 才算真暴露面 |
 
-探测层（唯一路径入口）：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name kubectl`。
+探测层（唯一路径入口）：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name kubectl`。
 `Get-Command kubectl` 返回空 ≠ 本机没装（PATH 快照会过期）。
 容器里带的是 stripped 原生二进制（sidecar/agent/Operator）时，静态分析走 `idapro` / `pyghidra` MCP：
 **要用到哪个通道时才**跑 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1`

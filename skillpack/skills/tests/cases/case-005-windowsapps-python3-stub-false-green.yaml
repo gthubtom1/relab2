@@ -1,0 +1,53 @@
+id: case-005-windowsapps-python3-stub-false-green
+date: 2026-10-13
+domain: fix-bug
+task_verbatim: |
+  约两天一次，某个 bash 脚本会**打开微软商店去下载 Python**。不是真去下载——
+  只是弹出商店页面。主人问是不是中枢有问题。
+constraint: |
+  auth_basis: own_system（本仓库自身脚本与探测层）
+  network_profile: offline
+  本机 PATH 事实：`LOCALAPPDATA\Microsoft\WindowsApps\python3.exe` 是 **0 字节**的
+  App Execution Alias。三种表现：本会话 `python3 -c "print(1)"` → rc=0 + **零输出**；
+  别的环境 → 真弹商店；进管道 / `$(...)` → 静默失败，下游拿到空串
+  硬判据：「`command -v` / `Get-Command` 成功 ≠ 能执行」—— 必须真跑一次解释器打印 marker
+  硬约束：`test-bootstrap-manifest.sh` 的 no-python 场景必须保持"安装 python 分支"覆盖，
+  扫盘必须可关（`RELAB_PYTHON_NO_FULLSCAN=1`）
+
+expect_chain:
+  - fix-bug                                        # R59：先复现→修根因→先红后绿
+  - write-tests                                    # 失败路径要能指出"改回哪一行会重新变红"
+  - verify-done                                    # 验收点：round 真跑而非假绿
+  - ops/rebuild-gates.md                           # 失败来自环境/引导而不是业务逻辑
+  - scripts/lib/Bootstrap.ps1                      # 解释器探测唯一入口（Resolve-ReversePython）
+  - scripts/test-routing.sh                        # 回归载体（此前"205/205 全绿"是假绿）
+  - field-journal/2026-10-13_windowsapps-python3-stub-false-green.md
+
+expect_deliverable: |
+  形态：根因修复（解释器探测唯一入口 + bash 侧候选顺序倒转 + 执行验证）+ 真的回归证据
+  落点：`skillpack/skills/scripts/lib/Bootstrap.ps1` 的 `Resolve-ReversePython`（四级递进、跳 WindowsApps）、
+  `scripts/master-route.sh` / `scripts/test-routing.sh` / `scripts/bootstrap-reverse.sh` 的候选循环
+  最小验收命令：`PATH` 只剩 stub 时 `Resolve-ReversePython` 仍返回真 python（第 4 级兜住）；
+  另跑 `bash skillpack/skills/scripts/test-routing.sh` → `TOTAL=205 PASS=205 FAIL=0`（真跑约 65 秒，不能是零输出 + rc=0）
+
+known_failures:
+  - "同一个环境限制**撞过两次**，两次都只写进文档（`GOAL-PROMPT-PATCH-2026-10-13.md` 等：「已知：bash 侧默认目录治理——本机 python3 是 WindowsApps 占位符，exit 49」）—— 把环境限制记成「本机未实测」的借口，而不是修掉它。**这正是本表要治的病**"
+  - "修完 master-route.sh 后复跑 test-routing.sh 拿到**零行输出 + rc=0**，起初当成修好了，实际是 test-routing.sh 自己有同一个 bug；**此前文档里多次记录的「test-routing.sh 205/205 全绿」是假绿**。rc=0 + 零输出 = 静默失败，不是通过"
+  - "探测层（lib/Bootstrap.ps1）只管逆向工具、完全没管解释器 —— 这是漏洞本身：占位解释器就在 PATH 上，`Get-Command` / `command -v` 照样返回它"
+  - "顺带抓到的真 bug：`Get-ReversePythonCandidates` 用 `Get-ChildItem -LiteralPath -Recurse -Include`，实测 `-Include` 对 `-LiteralPath` 不可靠（目录命中时被忽略，根下所有文件都返回，包括 MANIFEST.json/README.md）"
+  - "第 4 级扫盘差点打掉测试覆盖：`test-bootstrap-manifest.sh` 的 no-python 场景故意造无解释器 PATH，若执意扫盘会扫到 IDA 自带 python311 → 永远不进安装分支 → 安装逻辑零覆盖；必须补 `RELAB_PYTHON_NO_FULLSCAN=1` 开关"
+  - "遗留未修（如实记，未掩蔽、未跳过）：`test-bootstrap-manifest.sh` 的 parser-bootstrap 场景仍失败 `no-python-bin/bash: error while loading shared libraries`，根因在该测试器自身 L139 `exec \"$REAL_PYTHON\" \"$JQ_STUB_PY\"`（Git-bash 下 exec 一个 Windows 原生 exe 并把脚本内容当参数传）；`git stash` 复现证明不是本次引入"
+
+note: |
+  ★ fix-bug 技能自己把这篇 journal 列为「真实用例」第一条（`fix-bug/SKILL.md` §真实用例），
+  本条就是那条用例的回归化：判据从"现象消失"改成"同一失败路径先红后绿 + 换掉占位解释器后不再静默"。
+  与 case-002（正控）的对照价值：case-002 证明"流程对"，本条证明"**绿也可能是假的**"——
+  rc=0 + 零输出必须判红，这是回归表存在的另一半理由。
+  status 记为 open 的原因：遗留的 parser-bootstrap 场景未收敛（测试器自身 exec 缺陷，已单列）。
+
+lesson_refs:
+  - "skillpack/skills/field-journal/2026-10-13_windowsapps-python3-stub-false-green.md（根因三表现 / 我们自己的代码四处同款 / 三处修法 / 实测四条 / 意外抓到的假绿 / 遗留未修）"
+  - "skillpack/skills/fix-bug/SKILL.md §When to Pivot（复现命令退出码为 0 却什么都没输出 → 先换掉占位解释器再判）"
+  - "skillpack/skills/scripts/test-bootstrap-manifest.sh:139（遗留失败点的 exec 用法）"
+
+status: open

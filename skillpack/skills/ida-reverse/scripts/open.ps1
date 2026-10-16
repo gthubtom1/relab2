@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Open binary file via IDA HTTP API (bypass MCP schema issue)
 
@@ -278,7 +278,7 @@ try {
                 Write-Output "OK:${name}:${sid}${tag}"
                 exit 0
             }
-        } catch {}
+        } catch {}   # scan-ok: 轮询探测——异常=这一轮还没就绪，循环会继续重试；总超时由下面 ERR:open_timeout 统一报出
 
         $now = Get-Date
         if (($now - $lastProgressAt).TotalSeconds -ge $ProgressIntervalSeconds) {
@@ -303,7 +303,7 @@ try {
                 Write-Output "OK:${name}:${sid}${tag}"
                 exit 0
             }
-        } catch {}
+        } catch {}   # scan-ok: 同上一处轮询——失败只是"这次没就绪"；下面 ERR:open_timeout 才是结论
 
         Write-Output "ERR:open_timeout_${TimeoutSeconds}s"
         exit 1

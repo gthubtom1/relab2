@@ -61,7 +61,7 @@ $SmokeHostExe = $null
 try {
     $procPath = (Get-Process -Id $PID -ErrorAction Stop).Path
     if ($procPath -and (Test-Path -LiteralPath $procPath)) { $SmokeHostExe = $procPath }
-} catch { }
+} catch { }   # scan-ok: 同 HostRuntime —— 取不到就退回下面的 Get-Command pwsh，两者都空才失败
 if (-not $SmokeHostExe) {
     $cmd = Get-Command pwsh -ErrorAction SilentlyContinue
     if ($cmd -and $cmd.Source) {
@@ -240,4 +240,4 @@ if ($fail.Count -gt 0) {
 }
 Write-Host 'OVERALL: ALL PASS' -ForegroundColor Green
 exit 0
-
+

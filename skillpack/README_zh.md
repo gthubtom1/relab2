@@ -77,7 +77,7 @@
 
 | 路由规则 | 回归基准 | 核心 Skill | CI 平台 | 客户端模型 |
 |---:|---:|---:|---|---|
-| 51 条（R0–R52，缺 R42/R43） | 199 条用例 | 核心模块 + 命名空间适配层 | Windows + Ubuntu（[信任边界](docs/CI-TRUST-BOUNDARY.md)：runner YAML 从未在真实 runner 上执行；Linux/macOS 未验证） | 平台无关 |
+| 63 条（R0–R64，缺 R42/R43） | 247 条用例 | 核心模块 + 命名空间适配层 | Windows + Ubuntu（[信任边界](docs/CI-TRUST-BOUNDARY.md)：runner YAML 从未在真实 runner 上执行；Linux/macOS 未验证） | 平台无关 |
 
 路由核心由单一结构化配置驱动，通过跨平台 CI 验证，并与各客户端的可选适配层保持分离。
 
@@ -232,12 +232,12 @@ cd relab2
 | [skills/routing.md](skills/routing.md) | 路由矩阵（场景 → Skill） |
 | [skills/SKILL.md](skills/SKILL.md) | 总控入口 |
 | [skills/INDEX.md](skills/INDEX.md) | 自动生成的平台无关 Skill 导航索引 |
-| [skills/config/routing.json](skills/config/routing.json) | 路由单一事实源（51 条规则，R0–R52（缺 R42/R43）） |
-| [`skillpack/skills/TOOLS.md`](`skillpack/skills/TOOLS.md`) | 本机工具索引（自动生成） |
+| [skills/config/routing.json](skills/config/routing.json) | 路由单一事实源（63 条规则，R0–R64，缺 R42/R43） |
+| [skills/TOOLS.md](skills/TOOLS.md) | 工具**装法说明书**（机器无关的"怎么装"，不是本机路径索引；本机路径一律现查探测层） |
 | [skills/scripts/master-route.ps1](skills/scripts/master-route.ps1) | 一键分诊 |
 | [skills/scripts/case-init.ps1](skills/scripts/case-init.ps1) | 作战 case 目录（scope/timeline） |
 | [skills/case-review/](skills/case-review/) | 只读 Evidence 图审查与 artifact fixity 校验 |
-| [skills/scripts/test-routing.ps1](skills/scripts/test-routing.ps1) | 199 条路由回归基准 |
+| [skills/scripts/test-routing.ps1](skills/scripts/test-routing.ps1) | 247 条路由回归基准 |
 | [skills/scripts/verify-routing-coherence.ps1](skills/scripts/verify-routing-coherence.ps1) | 结构一致性与供应链版本固定门禁 |
 | [skills/ops/](skills/ops/) | Scope / 证据链 / 角色 / 时间线 / skill 供应链安全 |
 | [skills/references/community-security-skills.md](skills/references/community-security-skills.md) | 社区安全 skill 生态对照（借鉴不并库） |

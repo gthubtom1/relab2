@@ -62,7 +62,7 @@ if (-not (Test-Path -LiteralPath $Benchmark)) {
 $bm = Get-Content -LiteralPath $Benchmark -Raw -Encoding UTF8 | ConvertFrom-Json
 
 # ---- 控制组（**前置检查**）：拿「故意写错期望值」的用例跑一遍，必须判红 ----
-# ★ 2026-10-15：第一版写成「替换 $bm 然后 exit」—— 那会把 227 条真实基准整个跳过。
+# ★ 2026-10-15：第一版写成「替换 $bm 然后 exit」—— 那会把全部真实基准整个跳过（当时 227 条，2026-10-16 已是 247 条 —— 条数别写死在注释里，真值看基准文件）。
 #   正确姿势：控制组只是**前置自检**，跑完立刻恢复真基准，继续跑全量。
 $SelftestActive = -not $NoSelftest
 

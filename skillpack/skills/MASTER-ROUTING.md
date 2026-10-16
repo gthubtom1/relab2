@@ -87,7 +87,7 @@ python skills/case-review/scripts/review_case.py work/<case> --verify-hashes --s
 > 顺序必须与 `config/routing.json` 的 `priority` 数组一致。改路由只改 JSON，再改本表。`verify-routing-coherence.ps1` 会解析本表。
 
 > R46–R49 是社区路由：`master-route.ps1` / `master-route.sh` 只给出 wrapper 入口
-> （`skills/community/<hack-hub|ctf-hub|delivery|apk-extension>/SKILL.md`（本包未落地）），293 条适配明细必须另跑
+> （`skills/community/<hack-hub|ctf-hub|delivery|apk-extension>/SKILL.md`，本包已落地），293 条适配明细必须另跑
 > `python skills/scripts/community-route.py --hint "<同一句话>"` 才拿得到。
 > 主框架输出 `confidence: low` / R0 / "No strong keyword hit" 时改走社区侧；
 > 社区侧 `matched` 可用，`needs_review` 需确认，中文 `no_match`（0 候选）换英文关键词重查，

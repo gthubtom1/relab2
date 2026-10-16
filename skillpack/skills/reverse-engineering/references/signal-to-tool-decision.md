@@ -115,7 +115,7 @@ flowchart TD
     Bypass --> Dyn
     Dyn --> Beh{行为信号}
 
-    Beh -->|内存读写| MemHack["capa -r process-injection<br/>+ cdb!ntdll!NtRead/WriteVirtualMemory"]
+    Beh -->|内存读写| MemHack["capa -q -r process-injection<br/>+ cdb!ntdll!NtRead/WriteVirtualMemory"]
     Beh -->|进程注入| Inj["pe-sieve /pid + NtCreateThreadEx 断点"]
     Beh -->|网络通信| Net[抓包线 · 见 §6]
     Beh -->|加密密文| Crypto{算法}
@@ -179,7 +179,7 @@ flowchart TD
    或 idat64.exe -A -B -S<script.py> <file>   （脚本须 idc.qexit(0)）
   ↓
 4. 能力识别
-   capa -r 'anti-debug/evasion' -r 'process-injection' <file>
+   capa -q -r 'anti-debug/evasion' -r 'process-injection' <file>
   ↓
 5. 按 §2 流程图分支到具体工具
 ```
@@ -276,7 +276,7 @@ iOS 设备：mobile-reverse/SKILL.md
 │                               obpo-plugin / d810-ng / angr deflat
 ├─ 虚假控制流 (bcf)          → d810-ng 不透明谓词消除；或符号执行
 ├─ 字符串加密                → floss <file>  ; r2 -qc '/x <sbox前16字节>' <file> 定位解密循环
-├─ 调用混淆 / IAT hide       → capa -r 'obfuscation' 确认 → 动态抓 API
+├─ 调用混淆 / IAT hide       → capa -q -r 'obfuscation' 确认 → 动态抓 API
 └─ 反反编译                  → 换工具（analyzeHeadless 与 idat64 交叉）或直接动态
 ```
 
@@ -294,7 +294,7 @@ iOS 设备：mobile-reverse/SKILL.md
 信号: 附加调试器后样本退出 / 抛异常 / 行为改变
   ↓
 先静态确认检测点
-  capa -r 'anti-debug/evasion' <file>
+  capa -q -r 'anti-debug/evasion' <file>
   r2 -qc 'ii~IsDebuggerPresent' <file>
   r2 -qc 'ii~NtQueryInformationProcess' <file>
   r2 -qc 'ii~NtSetInformationThread' <file>
@@ -357,7 +357,7 @@ $cf  = '<plan>.txt'
 python -c "import r2pipe"  之类不靠谱 —— 直接用 r2 搜字节：
   r2 -qc '/x 6367 7c77 7ef2 6b6f c516 3051' <file>    # AES S-box
   r2 -qc '/x 0123456789' ...                            # 太短，换更长的
-  capa -r 'data-encryption' <file>
+  capa -q -r 'data-encryption' <file>
   ↓
 提取四要素:
   ├─ 算法类型（AES-256-CBC / RSA-2048 / HMAC-SHA256 / 自定义）
@@ -451,7 +451,7 @@ r2 -qc 'ii~wininet'  <file>     # WinINet
 信号: 文件名 *.sys；节区名 PAGE；PECOFF Subsystem = NATIVE；导出 DriverEntry / IoCreateDevice
   ↓
 1. 静态: r2 -qc 'iE' <file>   → DriverEntry 的 RVA
-2. 静态: capa -r 'driver' <file>
+2. 静态: capa -q -r 'driver' <file>
 3. 动态: 需要 test-signing 的 VM
    bcdedit /set testsigning on  + 重启（这是改宿主状态，务必先跟用户确认）
 4. 重点看: IRP dispatch table / DeviceIoControl handler / 通信端口
@@ -476,7 +476,7 @@ $capa= (Resolve-ReverseToolSpec -Name 'capa').Command
 & $r2 -qc 'iI' $S          # 1. 结构
 & $r2 -qc 'ii' $S          # 2. 功能 API 一览
 & $r2 -qc 'izz' $S         # 3. 字符串
-& $capa $S                 # 4. 能力全景
+& $capa -q $S              # 4. 能力全景
 ```
 
 **判据**：4 条命令都返回可读输出，且 capa 输出里能点出至少 3 个具体能力名。

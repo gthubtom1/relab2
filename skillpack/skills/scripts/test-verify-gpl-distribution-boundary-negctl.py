@@ -94,10 +94,10 @@ def make_repo(tmp: str, name: str, license_text: str,
     env["GIT_CONFIG_GLOBAL"] = os.path.join(tmp, "gitconfig")
     env["GIT_CONFIG_SYSTEM"] = os.path.join(tmp, "gitconfig")
     subprocess.run(["git", "init", "-q", root], check=False,
-                   capture_output=True, env=env)
+                   capture_output=True, env=env, timeout=60)
     if remote:
         subprocess.run(["git", "-C", root, "remote", "add", "origin", remote],
-                       check=False, capture_output=True, env=env)
+                       check=False, capture_output=True, env=env, timeout=60)
     return root
 
 

@@ -226,7 +226,7 @@ function Invoke-Native {
                     Start-Sleep -Seconds 1
                     $secs++
                 }
-                if ($p -and -not $p.HasExited) { try { $p.Kill() } catch { } }
+                if ($p -and -not $p.HasExited) { try { $p.Kill() } catch { } }   # scan-ok: 等待预算（$WaitSec）到期就杀掉并保留已产出内容 —— 这是函数契约，不是"失败被当成成功"
                 # stdout 与 stderr **两个流一起收**：dumpcap / frida / aapt2 的
                 # 有用输出大量在 stderr（实测 dumpcap 的 stdout **完全为空**，
                 # 进度与 captured 计数全在 stderr）。只收 stdout 会把
@@ -244,8 +244,26 @@ function Invoke-Native {
                 Remove-Item -LiteralPath $o, $e -Force -ErrorAction SilentlyContinue
             }
         } else {
-            $script:NativeOut = @(& $Exe @NativeArgs 2>&1)
-            $script:NativeRc = $LASTEXITCODE
+            # ★ 2026-10-16 修（跨 PowerShell 版本，CI 用 pwsh 而本机默认 5.1）：
+            #   这里原来是 `@(& $Exe @NativeArgs 2>&1)`。`2>&1` 会把 stderr 合成
+            #   ErrorRecord 对象，**两流的先后顺序在 pwsh 7 下不保证** —— 实测假 exe
+            #   （stdout=`FAKE-STDOUT` / stderr=`FAKE-STDERR-DIAG`）在 pwsh 下第一行变成
+            #   stderr，于是调用方 `Select-Object -First 1` 取错了流：契约测试报
+            #   「退出码 3 时 stdout 文本仍可读 失败」，而同一份代码在 PS 5.1 下是绿的。
+            #   这正是"CI 红、本机绿"的一类真因。改成与长跑分支同款：两流各写一个文件，
+            #   再按 **stdout 在前、stderr 在后** 收（dumpcap/frida 的有用输出在 stderr，
+            #   不能只收 stdout —— 见上面长跑分支的注释）。
+            $o = [IO.Path]::GetTempFileName()
+            $e = [IO.Path]::GetTempFileName()
+            try {
+                & $Exe @NativeArgs 1> $o 2> $e | Out-Null
+                $script:NativeRc = $LASTEXITCODE
+                $script:NativeOut = @()
+                $script:NativeOut += @(Get-Content -LiteralPath $o -Encoding UTF8 -ErrorAction SilentlyContinue)
+                $script:NativeOut += @(Get-Content -LiteralPath $e -Encoding UTF8 -ErrorAction SilentlyContinue)
+            } finally {
+                Remove-Item -LiteralPath $o, $e -Force -ErrorAction SilentlyContinue
+            }
         }
     } finally {
         $ErrorActionPreference = 'Stop'
@@ -638,7 +656,11 @@ function Get-EmulatorInventory {
                 Pid     = 0
             })
         }
-    } catch { }
+    } catch {
+        # ★ 2026-10-16（D5）：原来静默 —— adb 输出解析到一半失败，候选列表会**少几条**，
+        #   而它跟"本来就没起这个模拟器"长得一模一样。报出来（后面还有 JSON / 端口扫描兜）。
+        Write-Warning ("adb 设备列表解析中断：{0}" -f $_.Exception.Message)
+    }
 
     # 去重：同一厂商同一序列号只留**信息最全**的一条（JSON > adb > 端口扫描）
     $rank = @{ 'mumu-json' = 3; 'vendor-cli' = 2; 'adb-devices' = 2; 'port-scan' = 1 }

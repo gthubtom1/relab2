@@ -48,7 +48,7 @@
   ],
   "fixture": {
     "path": "skillpack/skills/experience-cards/gate-self-must-prove-failure.json",
-    "sha256": "bb1edbc25f62de017a9d47467d4c7ccf290880da8a402f4944660004360c85db",
+    "sha256": "ed74e6ae9e003c7bf1d0048235d58c2b431a0f2c002b34cb3402ead70a3ee48a",
     "generator": null,
     "secretFree": true,
     "note": "同族卡：判据不得依赖自定义日志标记。本卡是其 cdb 特化子例。"
@@ -72,7 +72,7 @@
     "command": "cdb -cf <cmds> patched.exe（原子 @rip 打印 + GATE/PAYLOAD 双断点对照）"
   },
   "links": {
-    "skill": "reverse-engineering/references/anti-debug-and-integrity.md",
+    "skill": "reverse-engineering/references/anti-debug-bypass.md",
     "script": "",
     "journal": "skillpack/skills/field-journal/2026-10-13_assault-hostdependent-companion.md",
     "derivation": "web-protocol-reverse/references/contract/experience-card-schema.md"

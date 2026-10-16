@@ -244,6 +244,23 @@ def selftest() -> int:
     return 0 if ok else 1
 
 
+def record_run(scope: str, n_errs: int, n_skills: int) -> None:
+    """实跑台账 —— 与 test-assault-behavior 共用一份 jsonl，供 `relab2.ps1 doctor` 报"上次实跑"。"""
+    import time
+    from pathlib import Path
+    base = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~")
+    path = Path(base) / "reverse-skill" / "behavior-runs.jsonl"
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        rec = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), "gate": "test-trigger-rate",
+               "mode": "run", "scope": scope, "skills": n_skills, "failed": n_errs}
+        with path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        print(f"  实跑台账已记：{path}")
+    except OSError:
+        pass
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -319,6 +336,8 @@ def main() -> int:
                 print("    " + e)
         else:
             print(f"  PASS（结构检查通过；正例 ≥{MIN_POS} / 近邻负例 ≥{MIN_NEG}）")
+    if args.run:
+        record_run(args.only or "(all)", len(errs), len(results))
     return 1 if errs else 0
 
 

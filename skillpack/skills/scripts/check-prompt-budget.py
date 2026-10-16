@@ -174,7 +174,9 @@ def main() -> int:
                     help="跳过 route-scope.md 固定段的检查（只查 description）")
     args = ap.parse_args()
 
-    paths = sorted(glob.glob(os.path.join(args.root, "*", "SKILL.md")))
+    # ★ 2026-10-15 审计 P3：以前只看一层，嵌套技能（community/* 等 6 个）不被统计。
+    #   register-skills.ps1 已改递归，这里必须同口径。
+    paths = sorted(glob.glob(os.path.join(args.root, "**", "SKILL.md"), recursive=True))
     bad: dict[str, list[str]] = {}
     sizes: list[tuple[int, str]] = []
     for p in paths:

@@ -975,11 +975,11 @@ function Ensure-Capability {
                 $postParts = $definition.postInstall -split ' ', 2
                 $postCmd = Get-FirstCommandPath -Names @($postParts[0])
                 if (-not [string]::IsNullOrWhiteSpace($postCmd)) {
-                    if ($postParts.Count -gt 1) {
-                        & $postCmd $postParts[1].Split(' ')
-                    }
-                    else {
-                        & $postCmd
+                    if ($postParts.Count -gt 1) { & $postCmd $postParts[1].Split(' ') } else { & $postCmd }
+                    # ★ 2026-10-16（D4）：postInstall 失败旧写法被忽略，函数照样 `return $true`
+                    #   —— 上层会报"能力已就绪"，而 Playwright 浏览器其实一个都没装。
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "post-install command failed (exit $LASTEXITCODE): $($definition.postInstall)"
                     }
                 }
                 else {
@@ -987,6 +987,9 @@ function Ensure-Capability {
                     $npx = Get-NodeCommandPath -Name 'npx'
                     if ($npx) {
                         & $npx $definition.postInstall.Split(' ')
+                        if ($LASTEXITCODE -ne 0) {
+                            throw "post-install command failed via npx (exit $LASTEXITCODE): $($definition.postInstall)"
+                        }
                     }
                 }
             }
@@ -996,6 +999,10 @@ function Ensure-Capability {
                 if (Test-Path -LiteralPath $setupPath) {
                     $shell = Get-PreferredPowerShellPath
                     & $shell -NoProfile -ExecutionPolicy Bypass -File $setupPath -SkipBrowserInstall
+                    # ★ 2026-10-16（D4）：同上 —— setup 脚本失败不能算"能力就绪"。
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "setup script failed (exit $LASTEXITCODE): $setupPath"
+                    }
                 }
             }
             return $true

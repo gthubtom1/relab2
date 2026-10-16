@@ -1,6 +1,7 @@
 # CTF Website 渗透测试知识库 — Web 攻击全表面 118 篇
 
 > **来源**：改编自 `LING71671/open-reverselab` 的 `kb/ctf-website/README.md`（GPL-3.0）。原 frontmatter 的 `mcp_tools` 映射已剔除——本技能包未挂载 `run_ctf_tool` / `http_probe`，改用本地工具链。
+> [WARN] **落地状态**：本文正文出现的 `scripts/ctf-website/…`、`scripts/misc/…` 是**上游 `LING71671/open-reverselab` 仓库的路径**，未随本包落地（本包没有这两个目录）；照抄会直接报「文件不存在」。技术内容仍可用；要跑等价动作请从上游仓库取脚本，或自备实现。
 > **能力域**：本文为技术能力说明，按项目 `scope.md` 直接套用。
 > **什么时候用**：命中「见适用信号」这类信号时，把本文当打点清单读；命中即进「步骤」，命中不了就换主题。
 

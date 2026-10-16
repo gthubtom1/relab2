@@ -39,10 +39,13 @@ known_failures:
   - "挂硬件断点后进程自杀（它检查自己的调试寄存器 Dr0），这一反调试子类没有预案"
 
 lesson_refs:
-  - "D:/Project/wa/work/换肤6.9逆向/REPORT.md §7ter（explorer 启动的真相）"
-  - "D:/Project/wa/work/换肤6.9逆向/REPORT.md §7quinquies（保护器私有区）"
-  - "D:/Project/wa/work/换肤6.9逆向/REPORT.md §7nonies（硬件断点被检测）"
-  - "D:/Project/wa/work/换肤6.9逆向/REPORT.md §7sexies（两道关：本地格式 + 服务端判定）"
-  - "ops/analysis-decision-framework.md ADF-R2 / R31 / R43（换阶段前必查）"
+  # ★ 2026-10-16：前 4 条指向**另一台机器**（`D:\Project\wa`）上已归档的项目报告 ——
+  #   本仓永远解析不到，故显式标 `[外部]`（`run-regression.py` 只对**已标记**的放行，
+  #   未标记的绝对路径一律 FAIL，防止打错字的外部路径混进来当"已核验"）。
+  - "[外部] D:/Project/wa/work/换肤6.9逆向/REPORT.md §7ter（explorer 启动的真相）"
+  - "[外部] D:/Project/wa/work/换肤6.9逆向/REPORT.md §7quinquies（保护器私有区）"
+  - "[外部] D:/Project/wa/work/换肤6.9逆向/REPORT.md §7nonies（硬件断点被检测）"
+  - "[外部] D:/Project/wa/work/换肤6.9逆向/REPORT.md §7sexies（两道关：本地格式 + 服务端判定）"
+  - "skillpack/skills/ops/analysis-decision-framework.md（ADF-R2 / R31 / R43：换阶段前必查）"
 
 status: open

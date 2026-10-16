@@ -65,7 +65,7 @@ def make_repo(tmp: str, name: str, body: str) -> str:
     os.makedirs(wf, exist_ok=True)
     # 门禁用 git ls-files 加速；给它一个真的 git 仓库更接近 CI 实况
     subprocess.run(["git", "init", "-q", root], check=False,
-                   capture_output=True)
+                   capture_output=True, timeout=60)
     io.open(os.path.join(wf, "synthetic.yml"), "w",
             encoding="utf-8", newline="\n").write(body)
     return root

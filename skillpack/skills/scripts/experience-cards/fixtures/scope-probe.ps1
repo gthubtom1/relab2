@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
   经验卡 fixture：验证 $script: 作用域不可跨脚本块搬运这条规则。
 

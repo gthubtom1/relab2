@@ -152,14 +152,14 @@ def _unescape_double(value: str) -> str:
                     index += 6
                     continue
                 except ValueError:
-                    pass
+                    pass  # scan-ok: 这里 try 是**探测** `\uXXXX` 是否合法；不合法要按字面量处理（下面第 163 行就是那个分支），不是错误路径
             if nxt == "x" and index + 4 <= len(value):
                 try:
                     out.append(chr(int(value[index + 2:index + 4], 16)))
                     index += 4
                     continue
                 except ValueError:
-                    pass
+                    pass  # scan-ok: 同上 —— `\xHH` 非法就按字面量处理（下面第 163 行的分支），try 只用于探测合法性
             out.append(_DOUBLE_ESCAPES.get(nxt, nxt))
             index += 2
             continue

@@ -22,7 +22,7 @@ community-raw/{ctf-super-hub,hack-skills,ai-fullstack,apk-reverse-source}/**
 Consequence: a client that only walks `skills/**` for `ctf-hub/SKILL.md` finds exactly the
 46 canonical skills plus those four wrappers, and nothing else. Raw bodies are
 reachable only through `registry.json` (`skills[].path`, `adapted_path`). The move is
-recorded in `../../docs/community/DISCOVERY-ISOLATION.md`（本包未落地）, and `../INDEX.md` is
+recorded in `../../docs/community/DISCOVERY-ISOLATION.md`, and `../INDEX.md` is
 generated with an explicit exclusion for `community-raw/` so it can never list a raw
 entry again.
 

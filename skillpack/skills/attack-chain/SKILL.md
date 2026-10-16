@@ -620,6 +620,10 @@ touch -t 202301010000 /path/to/file
 ### 漏洞利用
 `nuclei` `sqlmap` `sstimap` `xsstrike` `burpsuite` `metasploit`
 
+> **本机实况**（2026-10-16 逐卡核验）：`nuclei` / `sqlmap` 可解析；**`burpsuite` / `metasploit` 本机未装**
+> —— 代理/改包走 `mitmproxy`（`mitmdump`/`mitmweb` 可解析），或 `pentest-tools` 卡里的 Reqable MCP；
+> 攻击载荷用 `nuclei` 模板 + `sqlmap` 覆盖。缺工具不要停，走替代路。
+
 ### 权限提升
 `winPEAS` `linpeas` `GodPotato` `PrintSpoofer` `watson`
 
@@ -686,7 +690,9 @@ touch -t 202301010000 /path/to/file
 
 ### `references/` — 根目录
 
-
+- `references/lifecycle-checklist.md` — 攻击链生命周期检查单（六阶段门闩，逐条 `[ ]` 可勾）
+- `references/attack-playbooks.md` — 攻击链 Playbook 速查（按目标类型选路径：外网 Web→域控、云、内网横向…）
+- `references/evasion-cheatsheet.md` — EDR/AV 绕过与隐蔽操作速查（检测层 → 对应绕过思路）
 
 ---
 
@@ -760,3 +766,7 @@ NEXT:       <继续 | 换技能 | 停止（附成本判据）>
 
 - `confirmed`：整条链每一跳都有独立的成功证据（不是从终点反推）
 - `low`：链中某跳依赖未验证的推断
+
+## 关联的社区扩展
+
+- [delivery](../community/delivery/SKILL.md) —— 全栈交付编排适配层：按目标/输入/角色工作流/验收推项目，安全与逆向阶段**交还**本技能的路由

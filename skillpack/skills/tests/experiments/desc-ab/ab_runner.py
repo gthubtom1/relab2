@@ -66,7 +66,7 @@ def menus():
     old = {}
     for d in new:
         p = f"{OLD_REF}:skillpack/skills/{d}/SKILL.md"
-        r = subprocess.run(["git", "-C", ROOT, "show", p], capture_output=True)
+        r = subprocess.run(["git", "-C", ROOT, "show", p], capture_output=True, timeout=60)
         if r.returncode != 0:
             continue
         old[d] = parse_desc(r.stdout.decode("utf-8-sig", "replace"))
@@ -141,7 +141,7 @@ def evaluate(tag: str, menu: dict[str, str], cases: list[dict], r2s: dict[str, s
             try:
                 by_i[int(p["i"])] = str(p.get("skill", "")).strip()
             except Exception:
-                pass
+                pass  # scan-ok: 坏条目**不会**算成功——下面 by_i.get(i, "<missing>") 会把它记成未命中并判 ok=False，raw_bad 另记解析失败
         for i, c in enumerate(chunk):
             want = r2s.get(c["expect"], "?")
             got = by_i.get(i, "<missing>")

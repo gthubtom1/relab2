@@ -53,7 +53,7 @@ $cdb   = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
 
 ```powershell
 & $diec -j .\sample.exe
-& $capa .\sample.exe
+& $capa -q .\sample.exe
 ```
 
 实测输出（自建的 `kbgame_probe.exe`，SHA256 `ba9f5388ac28866d68a078eefc2771a48f16894c301d40b590ab0315ca7d5572`）：

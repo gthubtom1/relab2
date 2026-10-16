@@ -383,7 +383,7 @@ Suggested Chinese phrasing when recovering ambiguous intent:
 >
 > **判据的类型差别（用之前先看）**：**F2 / F3 / P2 是逐字型**——表里的行几乎是题面逐字复述，
 > 可按字面匹配使用；**F4 是语境型**——必须人工读语境，机械匹配（正则、关键词命中）会失效。
-> 依据（`../../kernel/07-kernel-sweep/REPORT.md`（本包未落地）（本包未落地）（本包未落地）（本包未落地） §6④ 的独立盲读统计）：那轮 19 条里 12 条判对中
+> 依据（`../../kernel/07-kernel-sweep/REPORT.md` §6④ 的独立盲读统计）：那轮 19 条里 12 条判对中
 > 11 条来自逐字型（F2 4 + F3 5 + P2 3，N259 双算），**只有 2 条来自语境型 F4（2/7）**。
 > 早前那次"机械化成正则跑出 13 翻转"的漂亮数字，是因为复判的正好是逐字型那批。
 
@@ -438,7 +438,7 @@ Suggested Chinese phrasing when recovering ambiguous intent:
 **F2 无真实目标锚点 → 题型分流（对应 14 条 `ctf-*`，且必须先过 F2 的门）**：
 
 **F2 门**：题面里**没有任何强锚点**，而是给了**一个待分析的附件或样本**，或**一个只有身份线索的对象**。
-锚点分两栏（依据 `../../kernel/07-kernel-sweep/REPORT.md`（本包未落地）（本包未落地）（本包未落地）（本包未落地） §6③——原 F2 门把"带所有权/环境的词"和
+锚点分两栏（依据 `../../kernel/07-kernel-sweep/REPORT.md` §6③——原 F2 门把"带所有权/环境的词"和
 "裸载体词"混在一起，边界不清）：
 
 | 栏 | 词表 | 作用 |
@@ -468,7 +468,7 @@ Suggested Chinese phrasing when recovering ambiguous intent:
 - **设备与链路取证不适用 F2**：`memory-forensics-volatility`（R46）与 `traffic-analysis-pcap`（R46）
   拿的是主机内存镜像、交换机流量；这类即使没有"客户"字样，只要主体是**自己的主机 / 交换机 / 链路**，
   仍判 R46，不进 F2。F2 只在题面把它当**题目附件**（"附件是个内存镜像"+"flag"）时才成立。
-- F2 的判断是**读题面语境**，不是关键词匹配；把它写成裸词表会大面积误吸（实测见 `../../kernel/07-kernel-sweep/REPORT.md`（本包未落地）
+- F2 的判断是**读题面语境**，不是关键词匹配；把它写成裸词表会大面积误吸（实测见 `../../kernel/07-kernel-sweep/REPORT.md`
   的负向对照一节）。
 
 **F3 工具化动作（ctf 侧独有的 7 条记录，R46 无对应记录）**——这是**唯一**能把"题面完全没有比赛词"
@@ -505,7 +505,7 @@ Suggested Chinese phrasing when recovering ambiguous intent:
 补问一句"这是比赛 / 靶场 / flag 语境，还是真实目标的测试？"，按本文件 `needs_review` 处理，
 不许拿"缺强锚点"当理由硬猜 R47。
 
-**F4 同句冲突的裁决规则（补，依据 `../../kernel/07-kernel-sweep/REPORT.md`（本包未落地）（本包未落地）（本包未落地）（本包未落地） §6①，修 N276）**：
+**F4 同句冲突的裁决规则（补，依据 `../../kernel/07-kernel-sweep/REPORT.md` §6①，修 N276）**：
 同一句里同时出现两类标记时，**以收尾分句的动作为准**——观察在前、下一步待做在后 → **R47**。
 例（N276 原句）：「站内有个跳转参数，改成外面地址**居然真跳**，**得确认影响**」——
 前半"居然…了"是已观察现象（R46 标记），收尾"得确认影响"是下一步待做（R47 标记），两者都是 F4 原文示例 →
@@ -567,9 +567,9 @@ Suggested Chinese phrasing when recovering ambiguous intent:
 | 改完包服务端不认、认客户端指纹 | `server-side behaviour` + `API probing` |
 | 老系统 / 老机器装不上，要动点手脚让它跑起来 | `repack` + wrapper 的 `packaging / install` 脚本组 |
 
-> ⚠️ **P2「挂上调试就装乖」这一行的判据卫生警示（依据 `../../kernel/07-kernel-sweep/REPORT.md`（本包未落地）（本包未落地）（本包未落地）（本包未落地） §6⑥）**
+> ⚠️ **P2「挂上调试就装乖」这一行的判据卫生警示（依据 `../../kernel/07-kernel-sweep/REPORT.md` §6⑥）**
 >
-> **结论：R49 覆盖反调试/检测点定位，按本表 P2 判 R49；`work/natural-300/cases.json` 里若干条
+> **结论：R49 覆盖反调试/检测点定位，按本表 P2 判 R49；`work/natural-300/cases.json`（「仓库外」：本包同级工作区的 `work/natural-300/`，不在本包内，见 `docs/CAPABILITY-REPORT.md`）里若干条
 > `expect_note` 声称的"R49/apk-extension does NOT cover …anti-debug or startup callbacks"是错的，勿采信。**
 >
 > 核实依据（`registry.json` `community-apk-reverse-community-293` 的 `legacy_description` 逐字原文）：

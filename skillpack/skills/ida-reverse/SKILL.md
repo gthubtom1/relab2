@@ -169,6 +169,8 @@ ERR:open_timeout_600s
 
 ## 核心工具列表
 
+> 本表是最常用的子集；**完整工具速查（含启动/会话、逐工具参数与返回、常见报错处理）**见 `references/ida-mcp-cheatsheet.md`。
+
 ### 概况分析（先摸清它到底是什么）
 - `idapro_survey_binary(detail_level="minimal")` — 快速概况：函数数、字符串、段、入口点、导入分类（加密/网络/文件IO）
 - `idapro_list_funcs(queries)` — 列出函数（分页、按名称过滤）

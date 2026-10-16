@@ -239,5 +239,5 @@ print(f"Label: {route['label']} | confidence: {confidence}")
 for note in notes:
     print(f"NOTE: {note}")
 print(f"Wrote {out_dir / 'route-scope.md'}")
-print("ACTION: Open PRIMARY SKILL.md now and execute ACTION REQUIRED.")
+print(f"ACTION: Open skills/{primary_path} now and follow its instructions.")
 PY

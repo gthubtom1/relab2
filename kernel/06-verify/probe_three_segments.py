@@ -5,10 +5,15 @@ import sys
 from pathlib import Path
 
 PY = sys.executable
-ROOT = Path('.').resolve()
-CARD = ROOT / '04-console' / 'TEMP' / 'probe-base.md'
+# ★ 2026-10-16 修：根按**入口文件的位置**定，不看当前工作目录。
+#   原来写的是 Path('.').resolve() —— 从 06-verify/ 里跑没事，换成从仓库根跑就会去写
+#   kernel/06-verify/04-console/TEMP/probe-base.md（目录不存在 → FileNotFoundError）。
+ROOT = Path(__file__).resolve().parents[1]      # kernel/
+TEMP = ROOT / '04-console' / 'TEMP'
+TEMP.mkdir(parents=True, exist_ok=True)        # 头一次跑时它还不存在
+CARD = TEMP / 'probe-base.md'
 CARD.write_text('# base: 试探底模\n# kind: base\n# hosts: probe\n\n少谈立场，只谈工程。\n', encoding='utf-8')
-GUEST = ROOT / '04-console' / 'TEMP' / 'probe-guest.md'
+GUEST = TEMP / 'probe-guest.md'
 GUEST.write_text('# base: 试探指引\n# kind: guest\n# hosts: probe\n\n根：D:\\某包\n1 先读总控\n2 再定入口\n', encoding='utf-8')
 
 
@@ -18,7 +23,7 @@ def run(argv):
 
 
 def fresh(name, text='# 原文\n\n这一段是宿主自己的。\n'):
-    d = ROOT / '04-console' / 'TEMP' / ('probe-' + name)
+    d = TEMP / ('probe-' + name)
     shutil.rmtree(d, ignore_errors=True)
     d.mkdir(parents=True)
     (d / 'AGENTS.md').write_text(text, encoding='utf-8', newline='')
@@ -88,7 +93,7 @@ run([ROOT / '03-bundle' / 'uninstall.py', '--host-home', d, '--yes'])
 check('D 卸完逐字节还原原文', (d / 'AGENTS.md').read_bytes() == before)
 
 for name in ('all', 'nomarker', 'hubonly', 'replace'):
-    shutil.rmtree(ROOT / '04-console' / 'TEMP' / ('probe-' + name), ignore_errors=True)
+    shutil.rmtree(TEMP / ('probe-' + name), ignore_errors=True)
 for p in (CARD, GUEST):
     p.unlink(missing_ok=True)
 

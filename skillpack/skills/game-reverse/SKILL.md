@@ -136,7 +136,7 @@ description: 游戏客户端逆向与反作弊机制评估：Unity IL2CPP/Mono �
 | 触发证据 | 换到 |
 |---|---|
 | 客户端是自研引擎且封包已定位，帧布局还原成主任务 | `../protocol-reverse/SKILL.md` |
-| Unity 包体要 APK 层处理（拆包、去壳、DEX/native 提取） | `../apk-reverse/` + `references/native/il2cpp-offset-discovery.md` 在同目录 |
+| Unity 包体要 APK 层处理（拆包、去壳、DEX/native 提取） | `../apk-reverse/` + `../apk-reverse/references/native/il2cpp-offset-discovery.md` |
 | IL2CPP/Mono 已恢复，深入 `libil2cpp.so` native 分析 | `../ida-reverse/` / `../reverse-engineering/` |
 | Unreal UObject 之外要啃 UE 的 native 反射序列化 | `../reverse-engineering/languages-compiled.md` |
 | 反作弊是驱动级、评估转内核对抗 | `../edr-bypass-re/` |

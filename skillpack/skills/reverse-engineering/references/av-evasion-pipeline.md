@@ -23,7 +23,7 @@
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $gcc = 'D:\Tools\runtime\mingw64\bin\gcc.exe'   # 本机 gcc 15.2.0
 $py  = (Resolve-ReverseToolSpec -Name 'pyre').Command
-$die = (Resolve-ReverseToolSpec -Name 'diec').Command
+$diec = (Resolve-ReverseToolSpec -Name 'diec').Command
 $capa = (Resolve-ReverseToolSpec -Name 'capa').Command
 $pe   = '(Resolve-ReverseToolSpec -Name 'pe-sieve').Command'
 ```
@@ -37,14 +37,14 @@ $pe   = '(Resolve-ReverseToolSpec -Name 'pe-sieve').Command'
 **跳过这一步的免杀都是盲改。** 必须知道 payload 原始状态下被什么规则命中。
 
 ```powershell
-$die = (Resolve-ReverseToolSpec -Name 'diec').Command
+$diec = (Resolve-ReverseToolSpec -Name 'diec').Command
 $hash = [System.BitConverter]::ToString(
     [System.Security.Cryptography.SHA256]::Create().ComputeHash(
         [IO.File]::ReadAllBytes('.\payload.bin'))).Replace('-','').ToLower()
 Write-Host "sha256 = $hash"
 
-& $die -j .\payload.bin          # 壳/编译器识别
-& $capa .\payload.bin             # 能力映射，看命中哪些 ATT&CK 规则
+& $diec -d -e -j .\payload.bin   # 壳/编译器识别
+& $capa -q .\payload.bin          # 能力映射，看命中哪些 ATT&CK 规则
 ```
 
 ★ **`Get-FileHash` 在某些受限上下文不可用** —— 用上面的 .NET `SHA256` 写法，

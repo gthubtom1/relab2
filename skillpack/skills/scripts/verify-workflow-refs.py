@@ -50,6 +50,13 @@ GENERATED_SUFFIX = (
 )
 
 
+# ★ 2026-10-15 独立审查 P9：`_归档-禁读-历史文档/` 一个字都不许读。
+#   本脚本只把这份集合当“路径存在性表”用（不打开正文），但即使如此，
+#   把禁读文件的路径当成“可引用目标”也是一种暴露。
+#   这里在集合层就剔掉，路径都不取。
+FORBIDDEN_PREFIXES = ("_归档-禁读-历史文档/",)
+
+
 def git_tracked(repo: str) -> set[str]:
     try:
         out = subprocess.run(
@@ -58,7 +65,8 @@ def git_tracked(repo: str) -> set[str]:
         )
     except (OSError, subprocess.SubprocessError):
         return set()
-    return {p.decode("utf-8") for p in out.stdout.split(b"\0") if p}
+    return {p.decode("utf-8") for p in out.stdout.split(b"\0") if p
+            and not p.decode("utf-8").startswith(FORBIDDEN_PREFIXES)}
 
 
 def refs_in(text: str) -> set[str]:

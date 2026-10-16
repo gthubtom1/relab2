@@ -249,6 +249,7 @@ Platform-specific docs:
 | [docs/HOSTING-CHECKLIST.md](docs/HOSTING-CHECKLIST.md) | **托管清单**：把本包放到你自己的 GitHub 之前要改什么、留什么、以及公开前的许可判断 |
 | [docs/MERGE-KICKOFF.md](docs/MERGE-KICKOFF.md) | **开工词**：把新技能包融进本包时，整段复制给 AI 即可开一次（细节见 [docs/MERGE-GUIDE.md](docs/MERGE-GUIDE.md)） |
 | [RULES.md](RULES.md) | Global routing rules (scope gate before ACT) |
+| [docs/](docs/) 的 `T##` / `wave` / `WORK-BOARD` / `INTEGRATION-*-SPEC` 等 | **融合期施工记录（过程件）**：逐卡交付、协调板、规范章节 —— 记的是**当时怎么融的**，**不是现行规则**。要改行为只改这三处：`RULES.md` + `skills/SKILL.md` + `skills/config/routing.json` |
 | [skills/MASTER-ROUTING.md](skills/MASTER-ROUTING.md) | PRIMARY fast ladder |
 | [skills/routing.md](skills/routing.md) | Task → skill routing matrix |
 | [skills/SKILL.md](skills/SKILL.md) | Master entry point |

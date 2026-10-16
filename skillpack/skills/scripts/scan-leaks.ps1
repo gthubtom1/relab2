@@ -72,9 +72,17 @@ function Test-EmailAllowed {
   return $false
 }
 
+# ★ 2026-10-15 独立审查 P9：`_归档-禁读-历史文档/` 一个字都不许读。
+#   本脚本会递归读取 *.md/*.txt/*.json 的正文，若 -Path 指到仓根，
+#   它会把该目录下的字符串当成待扫样本。CI 只传 field-journal（安全），
+#   但参数契约允许这个违规动作，而没有任何东西阻止它。
+$ForbiddenDirName = '_归档-禁读-历史文档'
+
 $targets = @()
 if (Test-Path $Path -PathType Container) {
-  $targets = Get-ChildItem -Path $Path -Recurse -File -Include *.md,*.txt,*.json | Sort-Object FullName
+  $targets = Get-ChildItem -Path $Path -Recurse -File -Include *.md,*.txt,*.json |
+    Where-Object { $_.FullName -notmatch [regex]::Escape($ForbiddenDirName) } |
+    Sort-Object FullName
 } elseif (Test-Path $Path -PathType Leaf) {
   $targets = @(Get-Item $Path)
 } else {

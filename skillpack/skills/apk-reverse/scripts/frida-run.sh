@@ -24,6 +24,12 @@ PAUSE=false
 LIST_DEVICES=false
 LIST_PROCESSES=false
 
+usage() {
+    echo "用法: $0 --package <pkg> --script <js> [--usb] [--spawn]"
+    echo "  或: $0 --list-devices"
+    echo "  或: $0 --list-processes [--usb]"
+}
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --package|-p) PACKAGE="$2"; shift 2 ;;
@@ -35,6 +41,7 @@ while [[ $# -gt 0 ]]; do
         --pause) PAUSE=true; shift ;;
         --list-devices) LIST_DEVICES=true; shift ;;
         --list-processes) LIST_PROCESSES=true; shift ;;
+        -h|--help) usage; exit 0 ;;
         -*) echo "未知选项: $1"; exit 1 ;;
         *) echo "未知参数: $1"; exit 1 ;;
     esac
@@ -84,9 +91,7 @@ fi
 
 TARGET="${PACKAGE:-$PROCESS}"
 if [[ -z "$TARGET" ]]; then
-    echo "用法: $0 --package <pkg> --script <js> [--usb] [--spawn]"
-    echo "  或: $0 --list-devices"
-    echo "  或: $0 --list-processes [--usb]"
+    usage
     exit 1
 fi
 

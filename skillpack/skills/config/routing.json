@@ -1004,7 +1004,7 @@
       "skill": "digital-forensics/SKILL.md",
       "keywords": [
         {
-          "must": "forensic|volatility|memory.?dump|plaso|timeline.?explorer|取证|内存.?转储|应急.?响应.?取证|手机.?取证|磁盘.?取证|autopsy|sleuth|encase|dump.?内存|内存.?dump|应急.?响应|incident.?response",
+          "must": "forensic|volatility|memory.?dump|plaso|timeline.?explorer|取证|内存.?转储|应急.?响应.?取证|手机.?取证|磁盘.?取证|autopsy|sleuth|encase|dump.?内存|内存.?dump|应急.?响应|incident.?response|内存抓|抓.{0,4}内存|内存印象|内存镜像|机器.{0,8}被搞",
           "exclude": "ctf|misc|夺旗",
           "note": "应急响应/内存转储归数字取证；ctf-apk-diag B类：CTF/misc语境不抢（C23回R41）"
         },
@@ -1243,14 +1243,14 @@
       "skill": "macos-reverse/SKILL.md",
       "keywords": [
         {
-          "must": "macos|mach-?o|codesign|objective-?c|swift.?reverse|xpc|mac.?逆向|苹果.?桌面"
+          "must": "macos|mach-?o|codesign|objective-?c|swift.?reverse|xpc|mac.?逆向|苹果(电脑|桌面|笔记本|机)"
         },
         {
           "must": "launchagent|dylib|公证.?绕过|mac.?木马|(?<![a-z0-9_])tcc(?![a-z0-9_])|(?<![a-z0-9_])jtool2(?![a-z0-9_])",
           "note": "macos SKILL.md: LaunchAgent/dylib/公证签名/macOS恶意软件/TCC/jtool2"
         },
         {
-          "must": "没.?签名|未签名|自启动|launchdaemon|app.?bundle|隐私.?权限|dropped a launchdaemon",
+          "must": "没.?签名|未签名|自启动|launchdaemon|app.?bundle|隐私.?权限|dropped a launchdaemon|启动项|签名.{0,6}(怎么|是|哪)",
           "mustAll": [
             "苹果|mac|app|dmg|pkg|安装包|程序|工具|权限|bundle|daemon"
           ],
@@ -1861,6 +1861,26 @@
           "must": "(bug|问题|缺陷|报错|异常|崩溃).{0,10}(怎么修|如何修|怎么解决|怎么办|修一下|修下|怎么改)",
           "exclude": "逆向|反调试|脱壳|壳|靶场|渗透|漏洞利用|恶意|样本|卡密",
           "note": "实测原话「这个 bug 怎么修」落到 R0。原判据只认「修 bug」语序，不认「bug 怎么修」"
+        },
+        {
+          "must": "(git\\s*)?(merge|rebase|cherry.?pick)\\s*(冲突|失败|conflict)|合并冲突|解决不了冲突",
+          "note": "P10: 审计实测「git 合并冲突了怎么解」掉 R0（被送进逆向总卡）。版本控制冲突是日常开发最高频场景之一。"
+        },
+        {
+          "must": "(接口|api|页面|服务)\\s*(返回|报)?\\s*(500|502|503|504|404)|为什么(一直)?(报错|失败)|跑不起来|起不来",
+          "exclude": "逆向|渗透|脱壳|样本|靶场",
+          "note": "P10: 审计实测「帮我查一下为什么接口返回 500」掉 R0。排障归 fix-bug，不归逆向。"
+        },
+        {
+          "must": "(构建|build|编译|打包)\\s*(失败|报错|过不了)|CI\\s*(红|失败)|测试(挂|失败|不过)",
+          "exclude": "逆向|渗透|脱壳|样本",
+          "note": "P10: 构建/CI/测试失败是 fix-bug 的正题；此前无任何规则覆盖。"
+        },
+        {
+          "must": "(脚本|程序|工具|服务|任务|流程|中枢|引导|探测层).{0,12}(弹出|弹了|自己(去)?(下载|安装)|偷偷)|微软商店|应用商店|(商店|弹窗|窗口).{0,6}(页面|弹)",
+          "mustAll": "脚本|程序|工具|服务|项目|仓库|本机|中枢|引导|探测层|环境",
+          "exclude": "逆向|反调试|脱壳|壳|靶场|渗透|漏洞利用|恶意|样本|卡密|授权",
+          "note": "L2.2 e2e case-005 实测：「某个 bash 脚本会打开微软商店去下载 Python…主人问是不是中枢有问题」掉 R0。本机/本仓库自身脚本出现意料之外的动作（弹窗 / 自己下载安装）是 fix-bug 的正题。"
         }
       ]
     },

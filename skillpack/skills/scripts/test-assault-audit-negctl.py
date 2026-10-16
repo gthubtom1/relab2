@@ -166,7 +166,7 @@ def run_review(root):
     """Run the CLI a user would run; return (exit_code, parsed_json_or_None)."""
     proc = subprocess.run(
         [PY, REVIEW, root, "--format", "json"],
-        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300,
     )
     payload = None
     if proc.stdout.strip():

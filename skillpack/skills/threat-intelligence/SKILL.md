@@ -53,7 +53,7 @@ Xquik is an independent third-party service. Not affiliated with X Corp. "Twitte
 | `sigma` | 把 IOC 转成可落地检测线索 | 规则交 `../threat-hunting/` 验证，本技能不直接下阻断 |
 | `nuclei` | 仿冒站点 / 暴露面的模板化指纹核对 | 仅对已公开目标做低速率核对；技术面交 `../web-protocol-reverse/` |
 
-探测层（唯一路径入口）：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name curl`。
+探测层（唯一路径入口）：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name curl`。
 本机另跑 `mcp-status.ps1` 看 MCP 通道谁在监听；注册 ≠ 在监听；xquik 返回 401 时重走 OAuth，不猜端口。
 
 ## 工作流

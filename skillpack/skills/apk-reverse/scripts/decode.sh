@@ -20,6 +20,8 @@ SKIP_JADX=false
 SKIP_APKTOOL=false
 CLEAN=false
 
+usage() { echo "用法: $0 <apk_path> [--name <name>] [--out <dir>] [--skip-jadx] [--skip-apktool] [--clean]"; }
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --name) TASK_NAME="$2"; shift 2 ;;
@@ -27,13 +29,14 @@ while [[ $# -gt 0 ]]; do
         --skip-jadx) SKIP_JADX=true; shift ;;
         --skip-apktool) SKIP_APKTOOL=true; shift ;;
         --clean) CLEAN=true; shift ;;
+        -h|--help) usage; exit 0 ;;
         -*) echo "未知选项: $1"; exit 1 ;;
         *) APK_PATH="$1"; shift ;;
     esac
 done
 
 if [[ -z "$APK_PATH" ]]; then
-    echo "用法: $0 <apk_path> [--name <name>] [--out <dir>] [--skip-jadx] [--skip-apktool] [--clean]"
+    usage
     exit 1
 fi
 

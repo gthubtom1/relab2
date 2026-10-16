@@ -177,7 +177,7 @@ def canon_host(host: str) -> str:
     try:
         host = host.encode("idna").decode("ascii")
     except (UnicodeError, ValueError):
-        pass
+        pass  # scan-ok: IDNA 只是把 unicode 域转 punycode；转不了就按原串比 —— allow 集与候选都走本函数，规范化失败对两边对称，不会放宽允许集
     return host
 
 def check_url(url: str, allow_hosts: list[str], allow_ports: list[int] | None = None,

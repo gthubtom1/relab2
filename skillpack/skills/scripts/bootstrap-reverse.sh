@@ -71,20 +71,34 @@ if [[ -z "$PYTHON" && "${RELAB_PYTHON_NO_FULLSCAN:-}" != "1" ]]; then
     done < <(find -L "$_root" -maxdepth 6 -type f \( -name 'python.exe' -o -name 'python3.exe' \) 2>/dev/null | head -20)
   done
 fi
-if [[ -z "$PYTHON" ]]; then
-  echo "ERROR: no usable Python 3 interpreter found." >&2
-  echo "HINT: on Windows, 'python3' may be the 0-byte Microsoft Store stub at" >&2
-  echo "      %LOCALAPPDATA%\\Microsoft\\WindowsApps\\python3.exe, which opens the Store" >&2
-  echo "      instead of running code. Point PATH at a real interpreter." >&2
-  exit 2
-fi
-
 UNAME_S="$(uname -s 2>/dev/null || echo unknown)"
 case "$UNAME_S" in
   Darwin) PLATFORM="macos" ;;
   Linux) PLATFORM="linux" ;;
   *) PLATFORM="unknown" ;;
 esac
+
+# ★ 2026-10-16 修一处「注释说 A、代码做 B」的真矛盾（CI 的 sh-syntax job 因此永久红，
+#   连带把后面的 PSParser 语法门与 BOM 门一起 skip 掉 —— 见 docs/KNOWN-BOUNDARIES.md 第 21 条）：
+#   上面第 41-44 行的注释明写「RELAB_PYTHON_NO_FULLSCAN=1 时只信 PATH，期望 bootstrap 走
+#   『安装 python』分支」；但这里原来**无条件 `exit 2`**，于是永远到不了
+#   `ensure_python_interpreter()`（第 ~320 行）里的 `install_apt python3` / `install_brew python`。
+#   现在改成：Linux/macOS 上把"没有解释器"交给安装分支处理（那才是它存在的意义）；
+#   只有**装不了**的平台（Windows/unknown）才保持原来的硬报错 —— 那里确实没有可用的包管理器路径。
+if [[ -z "$PYTHON" ]]; then
+  case "$PLATFORM" in
+    linux|macos)
+      echo "NOTE: no Python 3 on PATH; will try the platform package manager." >&2
+      ;;
+    *)
+      echo "ERROR: no usable Python 3 interpreter found." >&2
+      echo "HINT: on Windows, 'python3' may be the 0-byte Microsoft Store stub at" >&2
+      echo "      %LOCALAPPDATA%\\Microsoft\\WindowsApps\\python3.exe, which opens the Store" >&2
+      echo "      instead of running code. Point PATH at a real interpreter." >&2
+      exit 2
+      ;;
+  esac
+fi
 
 START_SERVICES=false
 SKIP_REFRESH=false
@@ -309,11 +323,28 @@ ensure_python_runtime() {
 }
 
 ensure_python_interpreter() {
-  # 头部已做探测 + 真跑验证，正常路径这里 $PYTHON 非空。
-  # 防御：空串时 has_cmd "" 会退化成检查 PATH 上名为空的项，必须显式报错。
+  # ★ 2026-10-16：原来这里在 `$PYTHON` 为空时**直接 return 1** —— 于是"没有解释器"这条
+  #   路径永远到不了下面的 `install_apt python3` / `install_brew python`，与头部注释
+  #   （第 41-44 行）写的意图**相反**，也让 test-bootstrap-manifest.sh 的 no-python 负例
+  #   永远测不到安装逻辑。现在：先试装，装完重新探测。
   if [[ -z "$PYTHON" ]]; then
-    log_err "No usable Python 3 interpreter on PATH."
-    return 1
+    case "$PLATFORM" in
+      macos) install_brew python || true ;;
+      linux) install_apt python3 || true ;;
+      *) log_err "No usable Python 3 interpreter on PATH."; return 1 ;;
+    esac
+    # 装完重新探测（包管理器把新解释器放进了 PATH）
+    for candidate in python3 python; do
+      if has_cmd "$candidate" && "$candidate" -c 'import sys; sys.stdout.write("ok")' 2>/dev/null | grep -q '^ok$'; then
+        PYTHON="$candidate"
+        break
+      fi
+    done
+    if [[ -z "$PYTHON" ]]; then
+      log_err "No usable Python 3 interpreter on PATH."
+      return 1
+    fi
+    return 0
   fi
   if ! has_cmd "$PYTHON"; then
     case "$PLATFORM" in

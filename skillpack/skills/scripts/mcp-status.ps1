@@ -31,7 +31,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
+try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }   # scan-ok: 控制台编码设置失败只影响中文显示，不影响任何判定结果
 
 if (-not $AgentDir) { $AgentDir = if ($env:PI_CODING_AGENT_DIR) { $env:PI_CODING_AGENT_DIR } else { Join-Path $env:USERPROFILE '.omp\agent' } }
 if (-not $RepoRoot) { $RepoRoot = if ($env:REVERSE_SKILL_ROOT) { $env:REVERSE_SKILL_ROOT } else { 'C:\relab2' } }
@@ -132,7 +132,7 @@ foreach ($src in $sources) {
         $transport = if ($isLazy) { 'stdio·懒启' } elseif ($s.type) { [string]$s.type } elseif ($url) { 'http' } else { 'stdio' }
         $hostName = $null; $port = 0; $listening = $null
         if ($url) {
-            try { $u = [uri]$url; $hostName = $u.Host; $port = $u.Port; $listening = Test-Port -HostName $hostName -Port $port } catch { }
+            try { $u = [uri]$url; $hostName = $u.Host; $port = $u.Port; $listening = Test-Port -HostName $hostName -Port $port } catch { }   # scan-ok: 解析/探测失败=>该行 host/port 留空、listening 未知（下一步 $isLazy 分支本就把它置 $null）；不会冒充"在监听"
         }
         if ($isLazy) { $listening = $null }   # 懒启动：后端在不在都不影响可用性
         $rows.Add([pscustomobject]@{

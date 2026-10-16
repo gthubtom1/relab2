@@ -1,4 +1,4 @@
-#requires -Version 5
+﻿#requires -Version 5
 
 <#
 .SYNOPSIS
@@ -89,7 +89,7 @@ if (-not $SkipBrowserInstall) {
             $playwrightPath = $envBrowsersPath
         }
     }
-    catch {}
+    catch {}   # scan-ok: try 里只有环境变量读取与 Test-Path（本身不会抛）—— 防御性包裹；真拿不到路径时下面 if ($playwrightPath) 就不打印，不会假装记下了路径
 
     if ($playwrightPath) {
         Write-Step "Playwright browsers location: $playwrightPath"

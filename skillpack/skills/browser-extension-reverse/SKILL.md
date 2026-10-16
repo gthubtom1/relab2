@@ -93,7 +93,7 @@ description: 浏览器扩展逆向：crx/xpi 解包、manifest 权限、service_
 
 | 触发证据 | 换到 |
 |---|---|
-| 解压出重度混淆 JS（webpack bundle、JSVMP） | `../js-reverse/`（`references/ast-deobfuscation.md` 同类方法） |
+| 解压出重度混淆 JS（webpack bundle、JSVMP） | `../js-reverse/`（方法见 `../js-reverse/references/ast-deobfuscation.md`） |
 | 扩展逻辑走向 native（自带 node binary、helper 进程） | `../reverse-engineering/references/assault-entry.md` |
 | C2/数据外传面成主任务（域名/IP 落点、投递链） | `../malware-analysis/SKILL.md` + `../protocol-reverse/SKILL.md`（私有帧时） |
 | 供应链投毒 / 商店上架的恶意版本 | `../supply-chain-security/` |

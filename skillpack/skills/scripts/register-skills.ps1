@@ -42,7 +42,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
+try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }   # scan-ok: 控制台编码设置失败只影响中文显示，不影响注册结果
 
 # ---------------- 1. 定位技能包根（不写死绝对路径）----------------
 function Resolve-PackSkillsRoot {
@@ -73,13 +73,30 @@ if (-not $skills) {
     exit 2
 }
 
-$skillDirs = @(Get-ChildItem -LiteralPath $skills -Directory |
-               Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'SKILL.md') })
+# ★ 2026-10-15 审计 P3：以前只列一层目录，嵌套技能（6 个）不在列表里。
+#       api-security\SKILL.md          -> api-security
+#       community\ctf-hub\SKILL.md     -> community-ctf-hub
+#   Nested 按目录分隔符数判：TrimStart 后 1 个 = 顶层，2 个 = 嵌套。
+#   别用 Contains——顶层的 rel 也含分隔符，上次因此把 63 个全判成嵌套。
+$skillDirs = @(Get-ChildItem -LiteralPath $skills -Recurse -File -Filter SKILL.md -ErrorAction SilentlyContinue |
+               # 技能根自身的 SKILL.md（父目录就是 $skills）不算技能
+               Where-Object { $_.Name -eq 'SKILL.md' -and $_.DirectoryName -ne $skills } |
+               ForEach-Object {
+                   $rel = $_.FullName.Substring($skills.Length).TrimStart('\')
+                   $sep = ($rel.ToCharArray() | Where-Object { $_ -eq [char]92 }).Count
+                   $id = (($rel -replace '[\\/]', '-') -replace '\.md$', '') -replace '-SKILL$', ''
+                   [pscustomobject]@{
+                       Id        = $id
+                       Rel       = $rel
+                       Directory = $_.Directory.FullName
+                       Nested    = ($sep -ge 2)
+                   }
+               })
 if ($skillDirs.Count -eq 0) { Write-Host ("ERROR: {0} 下一个技能都没有。" -f $skills) -ForegroundColor Red; exit 2 }
 
 $descBytes = 0
 foreach ($d in $skillDirs) {
-    $t = Get-Content -LiteralPath (Join-Path $d.FullName 'SKILL.md') -Raw -Encoding UTF8
+    $t = Get-Content -LiteralPath (Join-Path $d.Directory 'SKILL.md') -Raw -Encoding UTF8
     $m = [regex]::Match($t, '(?s)^---\s*\n(.*?)\n---')
     if ($m.Success) {
         $dm = [regex]::Match($m.Groups[1].Value, '(?s)description:\s*(.*?)(?=\n[a-zA-Z_]+:|\z)')
@@ -159,26 +176,60 @@ if ($Doctor) {
             $recorded = @($mf.entries)
         } catch { Write-Host ("WARN: 清单解析失败 {0}" -f $manifestPath) -ForegroundColor Yellow }
     }
+    # P3: 逐条核对；target 比的不再是技能根，而是该技能自己的目录。
     foreach ($e in $recorded) {
         $st = 'OK'
+        $want = if ($e.PSObject.Properties['target']) { $e.target } else { $skills }
         if (-not (Test-Path -LiteralPath $e.path)) { $st = 'DANGLING(路径不存在)' }
         else {
             $t = Get-LinkTarget -p $e.path
             if (-not $t) { $st = 'NOT_A_LINK(被实体目录顶替)' }
-            elseif ((& $norm $t) -ne $mine) { $st = ('MISMATCH(指向 {0})' -f $t) }
+            elseif ((& $norm $t) -ne (& $norm $want)) { $st = ('MISMATCH(指向 {0})' -f $t) }
         }
         $rows.Add([pscustomobject]@{ agent = $e.agent; path = $e.path; state = $st })
     }
+    # P3: 反查“指向本包但清单里没有”的 link（每条都查，不只查整树）。
     foreach ($t in $targets) {
         if (-not $t.installed) { continue }
         if (-not (Test-Path -LiteralPath $t.path)) { continue }
-        $tgt = Get-LinkTarget -p $t.path
-        if (-not $tgt) { continue }
-        if ((& $norm $tgt) -ne $mine) { continue }
-        $hit = $false
-        foreach ($e in $recorded) { if ((& $norm $e.path) -eq (& $norm $t.path)) { $hit = $true } }
-        if (-not $hit) { $rows.Add([pscustomobject]@{ agent = $t.agent; path = $t.path; state = 'UNRECORDED(指向本包但清单里没有)' }) }
+        foreach ($d in $skillDirs) {
+            $lp = Join-Path $t.path $d.Id
+            if (-not (Test-Path -LiteralPath $lp)) { continue }
+            $tgt = Get-LinkTarget -p $lp
+            if (-not $tgt) { continue }
+            if ((& $norm $tgt) -ne (& $norm $d.Directory)) { continue }
+            $hit = $false
+            foreach ($e in $recorded) { if ((& $norm $e.path) -eq (& $norm $lp)) { $hit = $true } }
+            if (-not $hit) {
+                $rows.Add([pscustomobject]@{ agent = $t.agent; path = $lp;
+                                                 state = 'UNRECORDED(指向本包但清单里没有)' })
+            }
+        }
     }
+    # P3: 按预期集合核对（已装宿主 × 全部技能）。
+    #   只查 manifest 现存条目的问题：一旦 link 被删，重跑时 manifest
+    #   也只剩现存条目，缺失就被“洗掉”—— Doctor 永远不报。
+    foreach ($t in $targets) {
+        if (-not $t.installed) { continue }
+        foreach ($d in $skillDirs) {
+            $lp = Join-Path $t.path $d.Id
+            $st = $null
+            if (-not (Test-Path -LiteralPath $lp)) {
+                $st = 'MISSING(预期的 link 不存在)'
+            }
+            else {
+                $tgt = Get-LinkTarget -p $lp
+                if (-not $tgt) { $st = 'NOT_A_LINK(被实体目录顶替)' }
+                elseif ((& $norm $tgt) -ne (& $norm $d.Directory)) {
+                    $st = ('MISMATCH(指向 {0})' -f $tgt)
+                }
+            }
+            if ($st) {
+                $rows.Add([pscustomobject]@{ agent = $t.agent; path = $lp; state = $st })
+            }
+        }
+    }
+
     $dangling = @($rows | Where-Object { $_.state -ne 'OK' })
     if ($Json) {
         [pscustomobject]@{ manifest = $manifestPath; entries = @($rows); problems = $dangling.Count } | ConvertTo-Json -Depth 5
@@ -193,64 +244,126 @@ if ($Doctor) {
         if ($dangling.Count -gt 0) { Write-Host ("\n{0} 处有问题 —— 跑一次不带参数的 register-skills.ps1 重挂。" -f $dangling.Count) -ForegroundColor Red }
         else { Write-Host '全部正常。' -ForegroundColor Green }
     }
-    exit 0
+    # 2026-10-15 审计：有 dangling/mismatch 必须非零 —— 否则 relab2.ps1 doctor 只看退出码，会把缺链报成 OK。
+    exit $(if ($dangling.Count -gt 0) { 1 } else { 0 })
 }
 
 # ---------------- 3. 执行 ----------------
 $report = New-Object System.Collections.Generic.List[object]
 
 if ($Revert) {
-    foreach ($t in $targets) {
-        if (-not (Test-Path -LiteralPath $t.path)) { continue }
-        $tgt = Get-LinkTarget -p $t.path
-        if ($tgt -and (& $norm $tgt) -eq $mine) {
-            if (-not $WhatIf) { (Get-Item -LiteralPath $t.path -Force).Delete() }
-            $report.Add([pscustomobject]@{ agent = $t.agent; path = $t.path; action = 'removed'; ok = $true })
-        }
+    # P3: 按 manifest 逐条摘；只删 path 与 target 都吻合的 link。
+    #   旧写法只找整树 junction，对 252 条逐技能 link 静默不做事。
+    $rec = @()
+    if (Test-Path -LiteralPath $manifestPath) {
+        try {
+            $mf = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            $rec = @($mf.entries)
+        } catch { Write-Host ("WARN: 清单解析失败 {0}" -f $manifestPath) -ForegroundColor Yellow }
+    }
+    foreach ($e in $rec) {
+        if (-not (Test-Path -LiteralPath $e.path)) { continue }
+        $tgt = Get-LinkTarget -p $e.path
+        if (-not $tgt) { continue }
+        $want = if ($e.PSObject.Properties['target']) { $e.target } else { $skills }
+        if ((& $norm $tgt) -ne (& $norm $want)) { continue }   # 不是我们的（或被改过）→ 不动
+        if (-not $WhatIf) { (Get-Item -LiteralPath $e.path -Force).Delete() }
+        $report.Add([pscustomobject]@{ agent = $e.agent; path = $e.path; action = 'removed'; ok = $true })
     }
     if ($Json) { $report | ConvertTo-Json -Depth 5 } else { $report | Format-Table -AutoSize | Out-String | Write-Host }
     exit 0
 }
 
+# ★ P3 step2（2026-10-15）：一个技能一条 link。
+#   整目录 junction 让宿主只看得见顶层（omp 实测），逐个 link 让每个技能都是深度 1。
 foreach ($t in $targets) {
     if (-not $t.installed) {
         $report.Add([pscustomobject]@{ agent = $t.agent; path = $t.path; action = 'skip(未装)'; ok = $true }); continue
     }
-    if (Test-Path -LiteralPath $t.path) {
-        $tgt = Get-LinkTarget -p $t.path
-        if ($tgt -and (& $norm $tgt) -eq $mine) {
-            $report.Add([pscustomobject]@{ agent = $t.agent; path = $t.path; action = 'already'; ok = $true }); continue
-        }
+
+    # 目标路径处理三选一：
+    #   a) 不存在                    → 建实体容器（我们自己的）
+    #   b) 是我们建的 junction      → 拆掉改实体容器（迁移）
+    #   c) 真实同名目录（不是 link） → 一字不勿动，只报
+    $container = $t.path
+    $isOurJunction = $false
+    if (Test-Path -LiteralPath $container) {
+        $tgt = Get-LinkTarget -p $container
         if ($tgt) {
-            $report.Add([pscustomobject]@{ agent = $t.agent; path = $t.path; action = ("skip(已指向别处: {0})" -f $tgt); ok = $true }); continue
+            if ((& $norm $tgt) -eq $mine) { $isOurJunction = $true }
+            else {
+                $report.Add([pscustomobject]@{ agent = $t.agent; path = $container; action = ("skip(已指向别处: {0})" -f $tgt); ok = $true }); continue
+            }
         }
-        # 真实同名目录：不覆盖，只报
-        $cnt = @(Get-ChildItem -LiteralPath $t.path -Directory -ErrorAction SilentlyContinue).Count
-        if ($cnt -gt 0) {
-            $report.Add([pscustomobject]@{ agent = $t.agent; path = $t.path; action = ("skip(已有实体目录 {0} 项)" -f $cnt); ok = $true }); continue
+        # P3: 实体目录不再当成跳过理由。
+        #   否则“少一条 link / 指错一条”这种半装状态重跑也修不回来。
+        #   真实同名目录（skills）本身就是宿主的，里面的 link 逐条判。
+        #   指向别处的 link 一字不动（下面 per-link 分支负责判）。
+    }
+
+    if ($WhatIf) {
+        foreach ($d in $skillDirs) {
+            $report.Add([pscustomobject]@{ agent = $t.agent; path = (Join-Path $container $d.Id); action = 'would-link'; ok = $true })
         }
-        if (-not $WhatIf) { Remove-Item -LiteralPath $t.path -Force -Recurse }
+        continue
     }
-    $parent = Split-Path -Parent $t.path
-    if (-not $WhatIf) {
-        if (-not (Test-Path -LiteralPath $parent)) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
-        New-Item -ItemType Junction -Path $t.path -Target $skills | Out-Null
+
+    # 迁移：先拆旧 junction，再建实体容器
+    if ($isOurJunction) {
+        (Get-Item -LiteralPath $container -Force).Delete()
     }
-    $report.Add([pscustomobject]@{ agent = $t.agent; path = $t.path; action = 'linked'; ok = $true })
+    if (-not (Test-Path -LiteralPath $container)) {
+        New-Item -ItemType Directory -Force -Path $container | Out-Null
+    }
+
+    foreach ($d in $skillDirs) {
+        $linkPath = Join-Path $container $d.Id
+        $action = 'linked'
+        $conflict = $false   # P3: 每条 link 重新认，避免冲突后遗留 true
+        if (Test-Path -LiteralPath $linkPath) {
+            $ex = Get-Item -LiteralPath $linkPath -Force -ErrorAction SilentlyContinue
+            $exTgt = if ($ex -and $ex.LinkType) { ($ex.Target | Select-Object -First 1) } else { '' }
+            if ($ex -and -not $ex.LinkType) {
+                $action = 'skip(entity,not-ours)'
+            }
+            elseif ((& $norm $exTgt) -eq (& $norm $d.Directory)) {
+                $action = 'already'
+            }
+            else {
+                # P3 fail-safe（2026-10-15 外部审计）：别人的链接一字不动。
+                #   旧代码在这里无条件 .Delete() 再重建，会把用户手工建的同名
+                #   link 删掉。现在：只报告（ok=$false，让 Doctor/MISSING 发红），不改磁盘。
+                $action = "skip(conflict,target=$exTgt)"
+                $conflict = $true
+            }
+        }
+        else {
+            New-Item -ItemType Junction -Path $linkPath -Target $d.Directory | Out-Null
+        }
+        $report.Add([pscustomobject]@{ agent = $t.agent; path = $linkPath; action = $action; ok = (-not $conflict) })
+    }
+    $report.Add([pscustomobject]@{ agent = $t.agent; path = $container; action = 'container'; ok = $true })
 }
 
 # ---------------- 3.5 落 manifest（junction 是环境副作用，必须留档）----------------
 # 这是机器状态，不是仓库事实：文件写在技能包里，但被 .gitignore 排除，
 # 免得把"A 机挂在哪"当成配置提交、换机后互相打架。审计入口是 -Doctor。
 if (-not $WhatIf -and -not $Revert) {
+    # P3: 一个技能一条 link，manifest 也按条记。
+    #   旧写法只记 $t.path（现在是实体容器，不是 link）→ entries=0 → -Doctor 假绿。
     $entries = @()
     foreach ($t in $targets) {
         if (-not $t.installed) { continue }
-        if (-not (Test-Path -LiteralPath $t.path)) { continue }
-        $tgt = Get-LinkTarget -p $t.path
-        if (-not $tgt) { continue }
-        if ((& $norm $tgt) -ne $mine) { continue }
-        $entries += [pscustomobject]@{ agent = $t.agent; scope = $t.scope; path = $t.path; target = $skills }
+        foreach ($d in $skillDirs) {
+            $lp = Join-Path $t.path $d.Id
+            if (-not (Test-Path -LiteralPath $lp)) { continue }
+            $tgt = Get-LinkTarget -p $lp
+            if (-not $tgt) { continue }
+            if ((& $norm $tgt) -ne (& $norm $d.Directory)) { continue }
+            $entries += [pscustomobject]@{ agent = $t.agent; scope = $t.scope
+                                             path = $lp; target = $d.Directory
+                                             skillId = $d.Id; nested = [bool]$d.Nested }
+        }
     }
     $mf = [pscustomobject]@{
         schemaVersion = '1.0'

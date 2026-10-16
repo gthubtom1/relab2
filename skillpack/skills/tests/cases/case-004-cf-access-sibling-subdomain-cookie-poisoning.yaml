@@ -1,0 +1,52 @@
+id: case-004-cf-access-sibling-subdomain-cookie-poisoning
+date: 2026-05-25
+domain: pentest
+task_verbatim: |
+  一个自有 Web 服务 `chrome.{target_proxy_root}`，受 Cloudflare Access (Email OTP) 严格保护；
+  用户授权"主动探测、非破坏"。任务目标：**找能进入后台的漏洞**。
+constraint: |
+  auth_basis: own_system（个人自有资产，用户显式授权主动探测、非破坏）
+  network_profile: 在线（目标在 Cloudflare Zero Trust 之后：104.21/172.67 段、TTL=5s）
+  硬约束：非破坏；不得用 YesCaptcha 这类打码服务绕 SSO（Email OTP 无 captcha，也绕不了）
+  事实源约束：wildcard DNS 下"能解析"完全不代表"子域存在"→ 只能靠 CT 日志 + HTTP 响应内容指纹
+  工具约束：本机 Windows PowerShell 5.1 的 Invoke-WebRequest 不可靠，Web 渗透一律走 curl
+
+expect_chain:
+  - pentest-tools                                  # R11：渗透工具与侦察
+  - pentest-tools/references/recon-pipeline.md      # 侦察流水线 + 证据门
+  - web-protocol-reverse                            # 代理/HTTP 协议行为差异（Set-Cookie 透传、scheme 白名单）
+  - web-protocol-reverse/references/state/cookie-provenance-playbook.md
+  - api-security                                    # 越权/SSRF/CORS 面
+  - api-security/references/ssrf/ssrf.md
+  - api-security/references/cors-csp/01-csp-bypass.md
+  - docs-generator                                  # 正式报告（漏洞清单 + 修复段）
+  - case-review                                     # 交报告前复核证据链
+
+expect_deliverable: |
+  形态：可回放的漏洞报告（V1–V7 清单 + PoC 命令 + Worker 修复代码）
+  落点：field-journal 日志 + 报告里的漏洞清单/修复段（Worker 头白名单 + Application 改 wildcard）
+  最小验收命令：`curl -c jar.txt 'https://cross.{root}/?url=<attacker>/set-cookie'` 后
+  `curl -b jar.txt 'https://cross.{root}/?url=https://httpbin.org/cookies'`
+  → 回显 `{"cookies":{"CF_Authorization":"{attacker_jwt}"}}`（父域 Set-Cookie 确实被透传）
+
+known_failures:
+  - "开局把「攻 CF Access 本体」当主路线：所有路径 302 到登录、POST/PUT/OPTIONS/路径遍历/Host 头/X-Forwarded-Host 全 302 或 403、Email OTP 无 captcha 但邮箱必须在 allow-list —— 「配置面审计（兄弟子域 / wildcard 证书覆盖 / Application 作用域）」没有进初始假设，突破口是撞出来的，不是分流出来的"
+  - "SSRF 段无脑试 IP 编码：`2130706433` / `0x7f000001` / `0177.0.0.1` / `127.1` / IPv6 `[::1]` 逐个撞 CF Error 1003；日志自己写明「CF Worker `fetch()` 在最终目标层拦私网，编码/重定向都无效，节省时间不要无脑试 IP 混淆」—— 这一课是用时间换来的"
+  - "差点用 DNS 解析判子域是否存在：wildcard DNS 让每个枚举出来的子域都「解析成功」（`*.{target_proxy_root}` CNAME 指 CF），只能改用 certspotter CT 日志 + 代理页面内容指纹"
+  - "工具选错 / 环境咬手各浪费一次：Windows PowerShell 5.1 的 Invoke-WebRequest 处理 302 + 复杂头部抛 `Operation is not valid due to the current state of the object`；nmap 默认 raw socket 在 Win 上报 `pcap_activate(eth0) FAILED`，必须 `-sT` 走 TCP connect"
+  - "信息源单点：crt.sh 持续 502 才换 `api.certspotter.com`，没有一开始就多源；且 certspotter 对非公共 TLD 的主域查询会拒绝，得查二级子域"
+  - "日志自列的进化动作仍有 2 项未闭环：路由矩阵新增「CF Access / Cloudflare Zero Trust」条目、pitfalls 记录（certspotter 非公共 TLD 限制 / PS Invoke-WebRequest 302 bug / nmap Win 必 -sT）—— 同类目标下次仍要重踩"
+
+note: |
+  ★ 本条是本表里**第一条非逆向 case**，用来证明回归表覆盖的是「形成假设并验证」这套跨战场机制，
+  而不是只有逆向的坑：这里的偏差全是**顺序与假设**问题（先审计配置作用域，还是先攻认证本体）。
+  与 case-001 的对照价值：两条都是"没先判清边界就动手"，但 case-001 缺的是目标知识
+  （启动方式依赖、保护器私有区），本条缺的是侦察顺序与"哪些绕过根本无效"的先验。
+  漏洞本身也不是单点：V1/V3 都靠"代理原样透传 Set-Cookie / 响应头"，V4 靠
+  "CF Access Application 只配单子域、但证书是 wildcard"——是配置面 + 协议行为小差异的组合。
+
+lesson_refs:
+  - "skillpack/skills/field-journal/2026-05-25_pentest-cf-access-sibling-subdomain-cookie-poisoning.md（执行链路 14 步 / V1-V7 清单 / 踩坑记录 6 条 / 关键命令）"
+  - "skillpack/skills/field-journal/2026-05-25_pentest-cf-access-sibling-subdomain-cookie-poisoning.md §对本包的改进建议（路由矩阵新增条目 + 模式 Top 3）"
+
+status: open

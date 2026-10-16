@@ -23,7 +23,7 @@ B. 块格式（ops/evidence-finding-path.md 的字段契约）
     python skills/tests/verify-evidence-gate.py --root <dir>
 退出码：0 通过 / 1 有违规 / 2 用法错误
 
-设计约束：只读；不依赖 YAML 库；**找不到任何可检查记录时 PASS 并明说 "nothing to check"**
+设计约束：只读；不依赖 YAML 库；**找不到任何可检查记录时返回 SKIP(10) 并明说 "no input" —— 不返回 PASS（P11：无输入≠审过）**
 （不假装通过 —— 输出里会写明检查了几个文件）。
 """
 from __future__ import annotations
@@ -387,8 +387,14 @@ def main() -> int:
             targets.append(c)
 
     if not targets:
-        print("verify-evidence-gate: PASS (nothing to check —— 未找到 assault.md/REPORT.md)")
-        return exit_code
+        # ★ 2026-10-15 独立审查 P11：「没有可审的对象」与「审过了且全过」曾经都输出 PASS。
+        #   本仓已有四个「假绿」前科全是这个形态（run-ci-gates 的 docstring 自己写着
+        #   "an absent path must never read as a pass"；check-fences.py 也曾因扫到 0 个
+        #   文件报绿被记为故障）。这里拆开：无输入 = SKIP + 退出码 10（ci-gates.json 已把
+        #   10 登记为 non_blocking_exits，会被响亮地报出来而不是静默通过）。
+        print("verify-evidence-gate: SKIP (no input —— 未找到 assault.md/REPORT.md；"
+              "本次什么也没审，这不是「审过且通过」)")
+        return 10
 
     all_errs: list[str] = []
     files_checked = 0

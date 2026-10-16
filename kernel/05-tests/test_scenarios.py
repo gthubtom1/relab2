@@ -1434,9 +1434,12 @@ def scenario_9():
                 detail=str(g.get("changed_excluding_append_only"))[:160],
                 baseline_at=g.get("baseline_at"))
     else:
-        s.check("9.1 真仓库 guard check", False,
-                detail="rc=%d %s —— 侧车状态目录里没有基线，本轮不新建"
-                       "（会覆盖统筹的基线）" % (rc, so.strip()[:160]), rc=rc)
+        # ★ 2026-10-16 修正：这里原来 `s.check(..., False)` —— **判红**。但同一段注释自己写着
+        #   「本轮不新建（会覆盖统筹的基线）」，即"没有基线"是**预期状态**、是本测试有意为之。
+        #   把预期状态判成红 = 假红（这道门会永远红，然后没人看）。改成如实报告 + 不判红；
+        #   guard 本身有没有用，由下面的 **9.1e** 用合成产品真验（那才是行为验证）。
+        s.note("9.1 真仓库 guard check：rc=%d（侧车无基线 —— 本测试**有意不新建**，以免覆盖统筹的基线）"
+               % rc)
 
     # --- 9.1e guard 本身不是空转：真改一个字，它必须报出来
     if str(CTXISO_ROOT) not in sys.path:
@@ -1471,22 +1474,32 @@ def scenario_9():
             caught=c1.get("changed"), restored=c2.get("ok"))
 
     # --- 9.2 git status（只读）
-    # 2026-09-28 起：work/context-isolation 已入库（51f571c），
-    # 所以原来那个“只有 ?? work/context-isolation/”的前提过期了。
-    # 现在的信号应该是“工作区干净”：本轮测试自己没把仓库弄脏，也没人留着没提交的改动。
-    # 例外：测试自己的输出文件（RESULT.md、LAST-RUN.txt、LAST-STDERR.log）——
-    # 跑完必定被重写（含“生成时间”），把它也算脏，这道门就永远过不了。
-    # bundle-meta.json 同理：重打产物会刷新 built_at 时间戳。
+    # ★ 2026-10-16 修正判据：本条的**本意**是「**本轮测试自己**有没有把仓库弄脏」，
+    #   但旧实现拿的是「跑完后的绝对状态」→ 于是**任何人的未提交改动都会让它红**
+    #   （实测统筹当时有 130+ 处未提交改动 → 必然假红，那道门就废了：永远红=没人看）。
+    #   现在改成**前后对比**：`run_all.py` 跑前把 `git status --porcelain` 写进
+    #   `TEMP/.git-status-before`，这里只算**新增**的行。别人的改动不再误伤；
+    #   测试真的弄脏了仓库，仍会被抓住（这才是"门能判红"）。
     p = subprocess.run(["git", "status", "--porcelain"], cwd=str(REPO),
                        capture_output=True, encoding="utf-8", errors="replace", timeout=120)
     own_outputs = ("05-tests/RESULT.md", "05-tests/LAST-RUN.txt", "05-tests/LAST-STDERR.log",
                    "03-bundle/bundle-meta.json")
     lines = [x for x in (p.stdout or "").splitlines()
              if x.strip() and not any(o in x for o in own_outputs)]
-    s.check("9.2 git status --porcelain 工作区干净（测试自己的输出文件除外）",
-            lines == [],
-            detail="实际 %d 行：%s" % (len(lines), lines[:5]), lines=len(lines),
-            raw=" | ".join(lines[:5]))
+    before_file = TEMP / ".git-status-before"
+    if before_file.is_file():
+        before_lines = {x for x in before_file.read_text(encoding="utf-8", errors="replace").splitlines()
+                        if x.strip()}
+        new_lines = [x for x in lines if x not in before_lines]
+        s.check("9.2 本轮测试没有把仓库弄脏（与跑前基线比，只算新增；别人的改动不计）",
+                new_lines == [],
+                detail="跑前已有 %d 行（别人改动，不计）· 本轮新增 %d 行：%s"
+                       % (len(before_lines), len(new_lines), new_lines[:5]),
+                lines=len(new_lines), baseline=len(before_lines),
+                raw=" | ".join(new_lines[:5]))
+    else:
+        # 降级：没有基线文件（单独跑本场景时）→ 只报数字，不判红
+        s.note("9.2 没有跑前基线（单独跑本场景？）→ 只报不判红：当前 %d 行未提交改动" % len(lines))
 
     # --- 9.3 旧系统仍能正常干活（真 state.py，只对假产品）
     fp = new_fake("fake-old-system")

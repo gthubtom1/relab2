@@ -399,6 +399,7 @@ $projectCaseName = 'verify-project-root-' + (Get-Date -Format 'HHmmss')
 & $HostExe -NoProfile -ExecutionPolicy Bypass -File $caseInit `
     -Hint 'apk jadx reverse' -CaseName $projectCaseName -PackageRoot $packageRoot `
     -ProjectRoot $projectRoot 2>&1 | Out-Null
+if ($LASTEXITCODE -ne 0) { Bad "case-init exit $LASTEXITCODE (explicit ProjectRoot)" }
 $projectCaseRoot = Join-Path $projectWork $projectCaseName
 if ((Test-Path (Join-Path $projectCaseRoot 'scope.md')) -and
     (Test-Path (Join-Path $projectCaseRoot 'timeline.md')) -and
@@ -413,6 +414,7 @@ try {
     Set-Location -LiteralPath $defaultProjectRoot
     & $HostExe -NoProfile -ExecutionPolicy Bypass -File $caseInit `
         -Hint 'apk jadx reverse' -CaseName $defaultCaseName 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) { Bad "case-init exit $LASTEXITCODE (default project root)" }
 } finally {
     Set-Location -LiteralPath $previousLocation
 }

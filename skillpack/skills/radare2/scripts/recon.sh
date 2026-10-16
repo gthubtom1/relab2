@@ -17,18 +17,21 @@ STRINGS_LIMIT=40
 IMPORTS_LIMIT=80
 RUN_ANALYSIS=false
 
+usage() { echo "用法: $0 <target_file> [--strings-limit N] [--imports-limit N] [--analyze]"; }
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --strings-limit) STRINGS_LIMIT="$2"; shift 2 ;;
         --imports-limit) IMPORTS_LIMIT="$2"; shift 2 ;;
         --analyze) RUN_ANALYSIS=true; shift ;;
+        -h|--help) usage; exit 0 ;;
         -*) echo "未知选项: $1"; exit 1 ;;
         *) TARGET="$1"; shift ;;
     esac
 done
 
 if [[ -z "$TARGET" ]]; then
-    echo "用法: $0 <target_file> [--strings-limit N] [--imports-limit N] [--analyze]"
+    usage
     exit 1
 fi
 

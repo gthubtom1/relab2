@@ -53,7 +53,7 @@ function Resolve-ReverseHostExe {
         if ($procPath -and (Test-Path -LiteralPath $procPath)) {
             $hostExe = $procPath
         }
-    } catch { }
+    } catch { }   # scan-ok: 取不到就退回下面的 Get-Command pwsh 分支；两者都拿不到才报错，不在这里假装成功
 
     if (-not $hostExe) {
         $cmd = Get-Command pwsh -ErrorAction SilentlyContinue

@@ -53,13 +53,13 @@
 
 | # | 文件 | 什么时候读 |
 |---|---|---|
-| 01 | `license-keygen-01-mechanism-classification.md` | **第一篇，无条件先读**。分类 A/B/C/D，决定后面怎么走 |
-| 02 | `license-keygen-02-validation-function-location.md` | 已判为本地校验（A/B/C）后，找校验函数 |
-| 03 | `license-keygen-03-key-algorithm-recovery.md` | 已定位校验函数，且确定是 A 类 → 还原算法写 keygen |
-| 04 | `license-keygen-04-signature-chain-pubkey-swap.md` | 已判为 B 类（签名链）→ 公钥替换 / 逻辑 patch |
-| 05 | `license-keygen-05-keygen-verification-loop.md` | **所有路线的共同出口**。算法还原后的实机验收 |
-| 06 | `license-keygen-06-cloud-license-hook.md` | 已判为 D 类（云端校验）→ keygen 不可行，走 hook / 状态伪造 |
-| 07 | `license-keygen-07-self-ref-convergence.md` | 已判为 C 类（自引用）→ 迭代收敛捷径 |
+| 01 | [license-keygen-01-mechanism-classification.md](license-keygen-01-mechanism-classification.md) | **第一篇，无条件先读**。分类 A/B/C/D，决定后面怎么走 |
+| 02 | [license-keygen-02-validation-function-location.md](license-keygen-02-validation-function-location.md) | 已判为本地校验（A/B/C）后，找校验函数 |
+| 03 | [license-keygen-03-key-algorithm-recovery.md](license-keygen-03-key-algorithm-recovery.md) | 已定位校验函数，且确定是 A 类 → 还原算法写 keygen |
+| 04 | [license-keygen-04-signature-chain-pubkey-swap.md](license-keygen-04-signature-chain-pubkey-swap.md) | 已判为 B 类（签名链）→ 公钥替换 / 逻辑 patch |
+| 05 | [license-keygen-05-keygen-verification-loop.md](license-keygen-05-keygen-verification-loop.md) | **所有路线的共同出口**。算法还原后的实机验收 |
+| 06 | [license-keygen-06-cloud-license-hook.md](license-keygen-06-cloud-license-hook.md) | 已判为 D 类（云端校验）→ keygen 不可行，走 hook / 状态伪造 |
+| 07 | [license-keygen-07-self-ref-convergence.md](license-keygen-07-self-ref-convergence.md) | 已判为 C 类（自引用）→ 迭代收敛捷径 |
 
 ## 坑：三条最容易走的弯路
 

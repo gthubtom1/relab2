@@ -194,11 +194,48 @@ anything_repo=$(json_value anything-analyzer repoUrl)
 anything_pin=$(json_value anything-analyzer pinnedCommit)
 
 # The manifest parser is bootstrapped before a Node-only sink, without installing pipx.
-NO_PYTHON_BIN="$SCRATCH/no-python-bin"
+#
+# ★ 2026-10-16 平台守卫：这个负例验的是「Linux/macOS 上没解释器 → 走 apt-get/brew 装」，
+#   所以它**只对 linux/macOS 有意义**。本机 git-bash 的 `uname -s` 是 `Windows_NT`
+#   （既非 Linux 也非 Darwin），脚本会判 PLATFORM=unknown 并正确地拒绝自动安装
+#   —— 那是**设计如此**，不是缺陷。原夹具没有这层守卫，于是在 Windows 上必然红，
+#   连带把 CI `sh-syntax` job 的 step5(PSParser) / step6(BOM) 一起 skip 掉。
+_CASE_UNAME="$(uname -s 2>/dev/null || echo unknown)"
+case "$_CASE_UNAME" in
+  Linux|Darwin) ;;    # 本负例适用
+  *)
+    echo "SKIP: no-python install-path fixture is Linux/macOS-only (uname -s=$_CASE_UNAME);"
+    echo "      on Windows the bootstrap correctly refuses to auto-install, so this is not a failure."
+    NO_PYTHON_BIN=""
+    ;;
+esac
+NO_PYTHON_BIN="${NO_PYTHON_BIN-$SCRATCH/no-python-bin}"
 PARSER_FIXTURE="$SCRATCH/parser-bootstrap"
+if [[ -n "$NO_PYTHON_BIN" ]]; then
 mkdir -p "$NO_PYTHON_BIN"
 for name in git node npm npx pipx pnpm sleep nc brew apt-get sudo nohup; do ln -s "$STUB_BIN/command-stub" "$NO_PYTHON_BIN/$name"; done
-for tool in bash uname dirname mktemp rm head tr basename mkdir cat ln; do ln -s "$(command -v "$tool")" "$NO_PYTHON_BIN/$tool"; done
+# ★ 2026-10-16 修夹具可移植性：原来把 `bash` 也 `ln -s` 进临时目录，而 **MSYS/git-bash 的
+#   bash 依赖同目录的 DLL**，链过去后一执行就报
+#   `bash: error while loading shared libraries: ?: cannot open shared object file`
+#   → 这个负例在 Windows/git-bash 上**必然失败**（CI 的 Linux 上不会）。
+#   后果很重：CI 的 `sh-syntax` job 里本步是 step4，它一红，后面的
+#   **step5 PSParser 语法门**与 **step6 「非 ASCII .ps1 必须带 BOM」门**就永远被 skip
+#   —— 于是"HEAD 上 4 个 .ps1 缺 BOM、全新 clone 在 936 机器上起不来"这个真缺陷
+#   一直没有任何门在拦（见 docs/KNOWN-BOUNDARIES.md 第 21 条）。
+#   修法：bash 用**真实绝对路径**暴露，而不是符号链接。用 `ln -s` 到真实路径同样会
+#   让 MSYS 找不到 DLL，所以这里改用"包装脚本"——它 exec 真 bash，DLL 由真 bash 自己解析。
+# ★ 2026-10-16：**所有** MSYS 工具都不能用 `ln -s` 暴露 —— git-bash 的
+#   coreutils/bash 都依赖同目录 DLL，链过去后一律
+#   `error while loading shared libraries: ?: cannot open shared object file`。
+#   统一改成"包装脚本 exec 真程序"（DLL 由真程序自己解析，与 PATH 位置无关）。
+_mk_wrapper() {
+  cat > "$NO_PYTHON_BIN/$1" <<WRAP
+#!/bin/sh
+exec "$(command -v "$1")" "\$@"
+WRAP
+  chmod +x "$NO_PYTHON_BIN/$1"
+}
+for tool in bash uname dirname mktemp rm head tr basename mkdir cat ln; do _mk_wrapper "$tool"; done
 mkdir -p "$PARSER_FIXTURE"
 cp "$BOOTSTRAP" "$PARSER_FIXTURE/bootstrap-reverse.sh"
 cp "$MANIFEST" "$PARSER_FIXTURE/bootstrap-manifest.json"
@@ -223,6 +260,7 @@ if grep -Fq '|pip|install|' "$CALL_LOG"; then
   echo "unexpected pip install invocation" >&2
   exit 1
 fi
+fi   # ← 闭合上面 `if [[ -n "$NO_PYTHON_BIN" ]]` 的平台守卫
 
 # A required empty manifest field fails before any package-manager sink.
 BROKEN_DIR="$SCRATCH/broken-bootstrap"

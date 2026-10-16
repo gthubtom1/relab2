@@ -49,7 +49,7 @@ description: 数据库安全评估：0.0.0.0 绑定、弱口令、权限过大�
 | `curl` | REST/管理 API（ES、CouchDB、ClickHouse HTTP 口） | `curl -s http://<host>:9200/_cat/indices` |
 | `Burp` | 经应用接口到达库的注入面 | 与 `../api-security/SKILL.md` 共用同一代理与请求记录 |
 
-探测层（唯一路径入口）：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name sqlmap`。
+探测层（唯一路径入口）：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name sqlmap`。
 `Get-Command sqlmap` 返回空 ≠ 本机没装（PATH 快照会过期）。云托管库一律先看实例的公开端点与控制面，再看引擎。
 
 ## 参考

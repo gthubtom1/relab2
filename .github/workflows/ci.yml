@@ -485,6 +485,17 @@ jobs:
         shell: bash
         run: python3 skillpack/skills/scripts/test-assault-audit-negctl.py
 
+      # ★ 2026-10-16 新增：diff-runner 的 `cases:` 解析负控（K1 防复发）。
+      #   K1 是 2026-10-16 E2E 审计里唯一的「照文档做就会卡死」项：
+      #   templates/assault.md 的 cases 写成单行文本，而 parse_assault 只认嵌套列表
+      #   → 按模板填完直接 `ERROR: no input given`、RC=2。修好后**没有任何门守护它**
+      #   （上面的 assault 负控验的是 review_case.py，不调 diff-runner）。
+      #   本负控直接 import parse_assault，喂「嵌套列表 / 单行文本 / 真实模板」三种输入，
+      #   断言前两种一过一不过、第三种与模板口径一致。
+      - name: diff-runner cases parsing negative controls
+        shell: bash
+        run: python3 skillpack/skills/scripts/test-diff-runner-parse-negctl.py
+
       # ★ 2026-10-10 新增：CI 引用的仓库内文件必须真实存在。
       #   审查时抓到 3 处指向空气的命令 —— ci.yml:227/231 与
       #   macos-bash-compat.yml:42 调的两个 .sh 脚本**从未存在过**
@@ -557,11 +568,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: VERSION matches latest CHANGELOG release
         shell: pwsh
+        # ★ 2026-10-16 修：版本事实源在 skillpack/ 下（skillpack/VERSION + skillpack/CHANGELOG.md）。
+        #   旧写法读仓根 VERSION/CHANGELOG.md —— 那两个文件在仓库里**不存在**，
+        #   于是干净 checkout 上这一步必然抛错、version-check 永远红。
+        #   路径错了要报错，但要在正确的路径上报错；不能靠 skip 把它变绿。
         run: |
-          $v = (Get-Content VERSION -Raw).Trim()
-          $cl = Get-Content CHANGELOG.md -Raw
+          $v = (Get-Content skillpack/VERSION -Raw).Trim()
+          $cl = Get-Content skillpack/CHANGELOG.md -Raw
           $m = [regex]::Match($cl, '(?m)^## \[(\d+\.\d+\.\d+)\]')
-          if (-not $m.Success) { Write-Error 'No version header found in CHANGELOG'; exit 1 }
+          if (-not $m.Success) { Write-Error 'No version header found in skillpack/CHANGELOG.md'; exit 1 }
           $latest = $m.Groups[1].Value
           if ($v -ne $latest) {
             Write-Error "VERSION ($v) does not match latest CHANGELOG release ($latest)"

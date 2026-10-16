@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 # reverse-skill PRIMARY router.
 # 规则单一事实源：skills/config/routing.json（勿在本脚本内硬编码路由表）。
 # CLI 兼容旧版：-Hint / -OutDir；输出 route-scope.md；退出码 0 成功 / 2 配置或技能缺失。
@@ -209,10 +209,19 @@ print('FUSE_JSON:' + json.dumps({'final': o['final'], 'why': o['why'], 'votes': 
                         [void]$notes.Add(("fuse-promote: {0} votes={1} (fuse-rescue; 已晋升 PRIMARY)" -f $fo.final, $fo.votes))
                     }
                 }
-            } else { try { $p.Kill() } catch { } }
+            } else {
+                # ★ 2026-10-16（D5）：fuse 3 秒没回 —— 原来只是静默杀掉，于是"fuse 没跑成"
+                #   和"fuse 跑了、结论就是没救"长得一模一样。记进 notes（会写进 route-scope.md）。
+                try { $p.Kill() } catch { }   # scan-ok: 收尸失败不改变结论——超时这件事已由下一行 note 记下，进程随后也不再被引用
+                [void]$notes.Add('fuse-timeout: 3s 内没返回（已杀进程；本轮按"无 fuse 结论"处理）')
+            }
             Remove-Item Env:\FUSE_HINT -ErrorAction SilentlyContinue; Remove-Item Env:\FUSE_FUSE -ErrorAction SilentlyContinue; Remove-Item Env:\FUSE_CFG -ErrorAction SilentlyContinue
         }
-    } catch { }
+    } catch {
+        # ★ 2026-10-16（D5）：fuse 整段失败（找不到解释器 / JSON 解析失败 / 进程起不来）原来静默
+        #   退回 fallback PRIMARY —— 人看不出"路由降级了"。这条 note 会进 route-scope.md。
+        [void]$notes.Add(('fuse-skip: {0}' -f $_.Exception.Message))
+    }
 }
 
 $primaryPath = $cfg.routes.$primary.skill
@@ -297,7 +306,18 @@ $entryTxt = if ($cfg.entry_menu -and $cfg.entry_menu.Count -gt 0) { (($cfg.entry
 [void]$sb.AppendLine('1. skills/MASTER-ROUTING.md')
 [void]$sb.AppendLine(("2. skills/{0}" -f $primaryPath))
 [void]$sb.AppendLine('3. skills/references/tool-registry.md   # 工具通道事实源：注册/监听/怎么起（HTTP MCP 按需，端口平时关着是设计）')
-[void]$sb.AppendLine('4. skills/reverse-engineering/references/triage-first-30-min.md   # 未知样本先 triage，再谈走哪个技能')
+# ★ 2026-10-15 独立审查 P10：第 4 项以前无条件写死「未知样本先 triage」（逆向分诊）。
+#   后果：一句日常开发请求（如「git 合并冲突了」「接口返回 500」）落到 R0 时，
+#   这份路由会命令模型先去读逆向分诊 —— 正好是主人说的「四大战场不平等」。
+#   现在：只有当提示词看上去不是日常开发/运维语境时，才指向 triage；
+#   否则指向 req-clarify / design-slice（先收敛需求再写代码）。
+$devCtx = $false
+if ($Hint -match '(?i)(bug|报错|崩了|上线|部署|合并|conflict|500|502|503|返回码|日志|打不开|安装|nginx|docker|git |CI|build|构建|测试|test|接口|api|网站|脚本|代码|PR|仓库)') { $devCtx = $true }
+if ($devCtx) {
+    [void]$sb.AppendLine('4. skills/req-clarify/SKILL.md   # 提示词像日常开发/运维；先收敛需求与验收再写代码，别先走逆向分诊')
+} else {
+    [void]$sb.AppendLine('4. skills/reverse-engineering/references/triage-first-30-min.md   # 未知样本先 triage，再谈跟哪个技能')
+}
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('## 怎么用这份路由（读一次，别忘）')
 [void]$sb.AppendLine('')
@@ -319,7 +339,7 @@ Write-Host ("PRIMARY -> skills/{0}" -f $primaryPath) -ForegroundColor Green
 Write-Host ("Label: {0} | confidence: {1}" -f $primaryLabel, $confidence)
 foreach ($n in $notes) { Write-Host ("NOTE: {0}" -f $n) -ForegroundColor Yellow }
 Write-Host ("Wrote {0}\route-scope.md" -f $OutDir)
-Write-Host 'ACTION: Open PRIMARY SKILL.md now and execute ACTION REQUIRED.' -ForegroundColor Yellow
+Write-Host ("ACTION: Open skills/{0} now and follow its instructions." -f $primaryPath) -ForegroundColor Yellow
 
 # --- R0 影子档 (fuse-shadow): 未晋升且 PRIMARY=R0 时复用晋升阶段的融合结果,只读打一行 ---
 # 约束: 晋升后不再打 SHADOW; votes<3 维持 R0 + SHADOW 行; route-scope.md/PRIMARY/confidence 以晋升后的为准; 失败静默跳过。
@@ -329,5 +349,5 @@ if ((-not $fusePromoted) -and ($primary -eq $fallbackId) -and (($Hint -replace '
         if ($null -ne $fuseCache -and $fuseCache.final -ne $fallbackId -and $fuseCache.why -eq 'fuse-rescue') {
             Write-Host ("SHADOW -> {0} {1} (fuse-rescue votes={2}; 影子建议,非 PRIMARY)" -f $fuseCache.final, $fuseCache.label, $fuseCache.votes) -ForegroundColor Cyan
         }
-    } catch { }
+    } catch { }   # scan-ok: 只包住一次 Write-Host（影子建议的展示）；写不出来不影响 PRIMARY 与结论，信息本身已在 notes 里
 }

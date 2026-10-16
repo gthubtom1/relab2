@@ -306,6 +306,12 @@ if ((Test-Path $routeScript) -and $Hint) {
     $tmp = Join-Path $tmpBase ("case-init-route-" + [guid]::NewGuid().ToString('n'))
     try {
         & $HostExe -NoProfile -ExecutionPolicy Bypass -File $routeScript -Hint $Hint -OutDir $tmp 2>$null | Out-Null
+        # ★ 2026-10-16（D4）：master-route 是**可选**的（失败就退回默认 PRIMARY），
+        #   但它的失败必须**说出来** —— 否则「路由没跑成」与「路由跑了、结论就是没建议」
+        #   长得一模一样，人会把降级当成正常。
+        if ($LASTEXITCODE -ne 0) {
+            Write-Warning ("master-route 退出码 {0}：保留默认 PRIMARY ($primary)，路由建议不可用" -f $LASTEXITCODE)
+        }
         $scopeRoute = Join-Path $tmp 'route-scope.md'
         if (Test-Path $scopeRoute) {
             . (Join-Path $scriptDir 'lib/RouteScope.ps1')

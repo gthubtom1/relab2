@@ -131,6 +131,12 @@ if (-not $env:APKDEBUG_SELFTEST_ADB) {
     # kill-server/start-server + 最多 15 秒设备握手（实测 110 秒才返回）。
     $__adbSpec = Resolve-ReverseToolSpec -Name 'adb' -ErrorAction SilentlyContinue
     if ($__adbSpec -and $__adbSpec.Available -and $__adbSpec.Command) {
+        # ★ 2026-10-16：这一段是**全程静默**的（kill-server → start-server →
+        #   等设备握手 → 补连模拟器端点），本机实测 94 秒才打印第一行
+        #   （历史最慢 110 秒）。不给提示的话：人以为卡死，agent 默认超时
+        #   ~120 秒、看到零输出就判「假死」并重跑 —— 每次白等 94 秒。
+        #   所以这里先打一行「正在干活」，输出本身不变、只是多一行提示。
+        Write-Host "  [..] 重启 adb daemon 并等待设备握手（本机实测约 94 秒，期间无其它输出属正常）…"
         # daemon 本来没跑时 kill-server 会往 stderr 打 `cannot connect to daemon`，
         # 那是**正常情况**不是故障。局部放宽 ErrorAction + 只重定向 stderr 即可，
         # 不要用 `2>&1`（会把正常 stderr 并进管道，PowerShell 报 NativeCommandError 红字）。
@@ -340,7 +346,12 @@ function Get-PackageName {
     param([string]$ApkPath)
     $aapt2 = Tool 'aapt2'
     if ($aapt2) {
-        $o = & $aapt2 'dump' 'badging' $ApkPath 2>&1
+        # ★ 2026-10-16：这里原来是 `& $aapt2 ... 2>&1`。`2>&1` 会把 native 的 stderr 合成
+        #   ErrorRecord，**两流先后顺序在 pwsh 7 下不保证**（CI 用 pwsh、本机 5.1）
+        #   —— 下面按文本模式 Select-String 就可能匹配到错误记录或顺序错乱。
+        #   badging 的有用输出在 stdout，错误流直接丢弃；同时补上退出码检查（失败别硬解析）。
+        $o = & $aapt2 'dump' 'badging' $ApkPath 2>$null
+        if ($LASTEXITCODE -ne 0) { $o = @() }
         $m = $o | Select-String -Pattern "^package:\s+name='([^']+)'" |
              Select-Object -First 1
         if ($m) { return $m.Matches[0].Groups[1].Value }
@@ -361,6 +372,9 @@ switch ($Action) {
         Step 'adb 设备'
         $adb = Require-Tool 'adb' ''
         & $adb devices -l
+        # ★ 2026-10-16（D4）：adb 失败（server 没起 / USB 没通 / 设备离线）时旧写法照样 exit 0，
+        #   人看到的是「一台设备都没有」而不是「adb 自己报错」。
+        if ($LASTEXITCODE -ne 0) { Die "adb devices 失败（exit $LASTEXITCODE）—— adb server 没起或设备通道不通" }
         break
     }
 
@@ -488,7 +502,7 @@ switch ($Action) {
             Write-Host ''
             if ($proc -and -not $proc.HasExited) {
                 Warn2 ("jadx 超时 {0}s，已保留已解出的部分。" -f $JadxTimeoutSec)
-                try { $proc.Kill() } catch { }
+                try { $proc.Kill() } catch { }   # scan-ok: 超时这件事已经在上一行 Warn2 报出；这里只是尽力收尸，收不到不改变已知事实
             }
             $javaCount = @(Get-ChildItem -LiteralPath $srcDir -Recurse `
                            -Filter '*.java' -ErrorAction SilentlyContinue).Count
@@ -522,7 +536,7 @@ switch ($Action) {
             Write-Host ''
             if ($proc -and -not $proc.HasExited) {
                 Warn2 ("apktool 超时 {0}s。" -f $ApktoolTimeoutSec)
-                try { $proc.Kill() } catch { }
+                try { $proc.Kill() } catch { }   # scan-ok: 同 jadx 分支 —— 超时已 Warn2，这里只管收尸
             }
             $smali = @(Get-ChildItem -LiteralPath $apktoolOut -Recurse -Directory `
                        -Filter 'smali*' -ErrorAction SilentlyContinue).Count
@@ -636,6 +650,9 @@ scrcpy 只在**你本人**想看着手机操作时有用。
         $dev = Get-Device
         Step "scrcpy 投屏 $dev"
         & $scrcpy '-s' $dev
+        # ★ 2026-10-16（D4）：非 0 = scrcpy 自己失败（设备没找到 / 编解码不支持）；
+        #   用户主动关窗是 0。这里只报不判死 —— 交互会话里用户的动作不该把脚本判成失败。
+        if ($LASTEXITCODE -ne 0) { Warn2 "scrcpy 退出码 $LASTEXITCODE（投屏异常退出，看上面 scrcpy 的输出）" }
         break
     }
 
@@ -647,7 +664,15 @@ scrcpy 只在**你本人**想看着手机操作时有用。
         Step "frida 附加 $Target"
         if (-not $fridaPs) { Warn2 'frida-ps 缺失，无法确认进程是否存在' }
         else {
-            $hit = & $fridaPs '-Uai' 2>&1 | Select-String -Pattern [regex]::Escape($Target)
+            # ★ 2026-10-16：同 Get-PackageName —— `2>&1` 混流在 pwsh 7 下顺序不保证。
+            #   而且这里更该分清两件事：**frida-ps 自己失败**（退出码非 0）与
+            #   **设备上确实没有这个进程**（退出码 0、输出里没有）。以前两者都表现为"找不到进程"。
+            $psOut = & $fridaPs '-Uai' 2>$null
+            $psRc = $LASTEXITCODE
+            $hit = $psOut | Select-String -Pattern [regex]::Escape($Target)
+            if ($psRc -ne 0) {
+                Warn2 "frida-ps 退出码 $psRc —— 它自己没跑成（设备没连上 / frida 没起），不是「进程不存在」"
+            }
             if (-not $hit) {
                 Die @"
 设备上找不到 $Target 的进程。
@@ -663,9 +688,13 @@ Frida 挂的是**运行中的进程**，所以顺序必须是：
             if (-not (Test-Path -LiteralPath $Script)) { Die "脚本不存在: $Script" }
             Say "加载脚本: $Script"
             & $frida '-U' '-p' $Target '-l' $Script
+            # ★ 2026-10-16（D4）：非交互调用，非 0 就是真失败（脚本语法错 / 目标没起）。
+            if ($LASTEXITCODE -ne 0) { Die "frida 退出码 $LASTEXITCODE —— 脚本没跑成（看上面 frida 的输出）" }
         } else {
             Say '无 -Script，进入交互 REPL（Ctrl+D 退出）'
             & $frida '-U' '-p' $Target
+            # ★ 2026-10-16（D4）：交互会话 —— 报出来，但不把用户的退出判成脚本失败。
+            if ($LASTEXITCODE -ne 0) { Warn2 "frida REPL 退出码 $LASTEXITCODE（附加/会话异常，看上面输出）" }
         }
         break
     }

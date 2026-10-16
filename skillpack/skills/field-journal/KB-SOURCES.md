@@ -15,8 +15,8 @@
 | 上游 License | **GPL-3.0** |
 | 原始副本（本机留存） | `<工具根>\kb-open-reverselab\` |
 | 副本规模 | **221 篇 markdown**，约 3.0 MB |
-| 副本板块 | `pe-reverse/`（33）· `apk-reverse/`（27）· `general/`（17）· `ctf-website/`（~150）· `windows/`（2） |
-| 已改编落盘 | **206 篇技术正文**（2026-10-10 实测，见 `KB-INDEX.md` §0；口径=排除 SKILL/README/index，全包 md 共 625 篇） |
+| 副本板块 | `pe-reverse/`（35）· `apk-reverse/`（27）· `general/`（20）· `ctf-website/`（133）· `windows/`（3）· `ai-findings/`（1）· 根目录（2）= **221 篇**（2026-10-16 现算；旧表写的 33/27/17/~150/2 合计 229，与 221 自相矛盾，已改） |
+| 已改编落盘 | **209 篇技术正文**（2026-10-16 复测；口径 = `skills/*/references/**` 里带**标准来源声明行**的文件，与 `skillpack/NOTICE` 同判据、可现算；历史值 206/218/221 都是旧快照，勿引用） |
 
 **原副本保留不动**。所有对照、diff、回溯都指向 `<工具根>\kb-open-reverselab\`，
 不要去改它 —— 它是 GPL 原始来源，改了就失去溯源意义。
@@ -123,7 +123,7 @@ GPL-3.0 允许复制与衍生，前提是**保留许可与声明**。本技能�
 | 23 | GUI 工具可以同步调用看输出 | GUI 前端**零 stdout、进程永不退出**，同步拉起会卡死整轮且模型察觉不到 | `_map.json` 的 deny 段挡住；一律走 CLI 孪生（`die.exe`→`diec`、`ida.exe`→`idat`、`Wireshark.exe`→`tshark`、`x64dbg.exe`→headless） |
 | 24 | stdio MCP server 用 `ReadToEnd()` 探测 | **永不退出**，`ReadToEnd()` 永远不返回，表现为「超时、零输出、像没装」 | 必须 `StreamReader.ReadLine()` 逐行读 |
 | 25 | IDA MCP 用 stdio 形态 | `idalib-mcp --help` 写明默认 **HTTP 8745**，`--stdio` 才走 stdio；技能包给的是 13337 HTTP 通道 | 配 13337 HTTP，形态配错表现为「握手一直 TIMEOUT」 |
-| 26 | 读中文 `.md`（本包未落地） 直接 `read` 就行 | Windows 默认 936 码页，不加编码会读出乱码并**误判成文件不存在** | `[IO.File]::ReadAllText($p, [Text.Encoding]::UTF8)` / PS 的 `-Encoding UTF8` |
+| 26 | 读中文 `.md` 直接 `read` 就行 | Windows 默认 936 码页，不加编码会读出乱码并**误判成文件不存在** | `[IO.File]::ReadAllText($p, [Text.Encoding]::UTF8)` / PS 的 `-Encoding UTF8` |
 | 27 | 读结构体失败就当数据无效 | 指令里嵌 `\\E` 之类路径时，docstring 未用 `r"""` 会触发 `SyntaxWarning: invalid escape sequence` | 文档字符串一律用 `r"""` |
 
 **这张表会继续长。** 每次在改编或实战中实测推翻了源文档，就加一行 —— 它的价值就是「不重复踩同一个坑」。

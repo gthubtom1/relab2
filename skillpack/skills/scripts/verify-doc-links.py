@@ -227,6 +227,7 @@ def in_git_worktree():
         capture_output=True,
         text=True,
         check=False,
+        timeout=120,   # ★ 2026-10-16：git 卡住（锁/网络盘）不该把整道门拖死
     )
     return result.returncode == 0 and result.stdout.strip() == "true"
 
@@ -291,6 +292,7 @@ def snapshot_paths():
             ],
             capture_output=True,
             check=True,
+            timeout=120,
         ).stdout.decode("utf-8")
         files = {os.path.normpath(p).replace(os.sep, "/") for p in out.split("\0") if p}
     else:
@@ -317,7 +319,7 @@ def read_text(path):
             return handle.read()
     if USE_GIT:
         result = subprocess.run(
-            ["git", "-C", ROOT, "show", f":{path}"], capture_output=True, check=False
+            ["git", "-C", ROOT, "show", f":{path}"], capture_output=True, check=False, timeout=120
         )
         if result.returncode == 0:
             return result.stdout.decode("utf-8-sig")
@@ -446,14 +448,34 @@ def resolve(md, target):
 #   正确做法是整个文件不参与活链接审计 —— 它是历史，不是文档。
 EVIDENCE_SNAPSHOT_PREFIX = "kernel/03-bundle/patches/_acceptance/"
 
+# ★ 2026-10-15 独立审查 P9：`_归档-禁读-历史文档/` 是主人明令「一个字都不许读」的目录
+#   （目录名即禁令，START-HERE.md ⏹ 段有全文）。本门此前的文件集是
+#   `git ls-files --cached --others --exclude-standard`，会把该目录下 49 个 .md
+#   全部打开正文做链接解析 —— 于是「照着 README 跑全套门禁」这个动作本身
+#   就成了违反禁令的动作，审计员与 agent 都会因此读到已作废的旧计划。
+#   根因：禁读只写在给人的文档里，没有变成代码里的排除项。
+#   处置：在这里做成硬排除，并由门禁 verify-no-forbidden-reads.py 着着不许回归。
+FORBIDDEN_READ_PREFIXES = (
+    "_归档-禁读-历史文档/",
+)
+
+# skip 名单（机器可读，供报告与门禁自检列出）
+SKIPPED_PREFIXES = (EVIDENCE_SNAPSHOT_PREFIX,) + FORBIDDEN_READ_PREFIXES
+
+
 def collect(files, dirs):
     """Return (broken, all_targets, unreadable) for every Markdown file."""
     broken = []
     all_targets = {}
     unreadable = []
+    skipped_forbidden = []
     for md in sorted(p for p in files if p.endswith(".md")):
         # 证据快照不进活链接审计（理由见 EVIDENCE_SNAPSHOT_PREFIX 的注释）
         if md.startswith(EVIDENCE_SNAPSHOT_PREFIX):
+            continue
+        # ★ 禁读目录：一个字都不读（2026-10-15 审查 P9）
+        if md.startswith(FORBIDDEN_READ_PREFIXES):
+            skipped_forbidden.append(md)
             continue
         try:
             text = read_text(md)
@@ -486,6 +508,10 @@ def collect(files, dirs):
                 }
             )
         all_targets[md] = targets
+    if skipped_forbidden:
+        # 那些文件一个字都没读；把数量打出来，让“跳过”不自己静默。
+        print("[verify-doc-links] 跳过禁读目录 %d 个 .md（%s/）——一个字都没读"
+              % (len(skipped_forbidden), FORBIDDEN_READ_PREFIXES[0]), file=sys.stderr)
     return broken, all_targets, unreadable
 
 def display_path(path):

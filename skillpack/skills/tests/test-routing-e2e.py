@@ -56,7 +56,13 @@ def run_master_route(hint: str) -> dict:
         subprocess.run(
             ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps,
              "-Hint", hint, "-OutDir", out],
-            capture_output=True, text=True, timeout=180, cwd=SKILLS_ROOT)
+            # ★ 2026-10-16：原来只有 `text=True`，没指定 encoding —— Windows 下子进程
+            #   （powershell 在 GBK 码页）会输出非 UTF-8 字节，Python 用 UTF-8 解码时
+            #   在**读取线程里**抛 UnicodeDecodeError（实测：`0xd7 ... invalid continuation byte`）。
+            #   后果：门仍能判（判据取自 utf-8-sig 的 route-scope.md），但会刷两屏线程 traceback，
+            #   看上去像门坏了。加 encoding + errors="replace" 即可（判据不受影响）。
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=180, cwd=SKILLS_ROOT)
         f = os.path.join(out, "route-scope.md")
         if not os.path.isfile(f):
             return {}

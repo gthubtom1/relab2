@@ -14,6 +14,30 @@ The registry keeps its own frozen version key: `skills/community/registry.json`
 → `schemaVersion: "1.0"` (4.0: the key name may not change and no
 `schema_version` synonym may be added).
 
+## Who reads each contract (callers checked against the tree, 2026-10)
+
+This directory is entered from the skill layer by `skills/ops/README.md`
+(contract-layer hub, section 机器契约) and `skills/SKILL.md` (关联资源). The column on
+the right is the file that actually loads or enforces each contract — every schema here
+has a live reader, and no reader depends on a schema that is not in this table.
+
+| file | what it fixes | who reads / who enforces it |
+|---|---|---|
+| `auth-profile.json` | the shape of `work/<case>/auth-profile.json`: approver, targets, actions, validity window, proof, execution limits | `skills/scripts/verify-auth-profile.py:11-12,192` — the rules are implemented in code; a missing field, an expired window or a placeholder proof exits 20 and no default is ever filled in |
+| `case-attestation.json` | the shape of `work/<case>/attestation.json`: the offline-reviewable binding the gate re-verifies | `skills/scripts/verify-auth-profile.py:13-15,292` — recomputes the digest chain (a copied `ready_for_act` line never recomputes) and `--issue-attestation` writes the record |
+| `canonical-base-lock.json` | the T21 base-lock fields added to the single `source_kind=canonical-base` SourceRecord | `scripts/verify-canonical-base-lock.py` (`--require-signatures` exits 20 on an unsigned tree); cited by `skills/scripts/test-contract-v2.py:240` |
+| `carrier-manifest.json` | the carrier manifest (4.0 table, T23) | `skills/scripts/test-contract-v2.py:564,607` (`load_schema`, plus a negative sample) |
+| `community-handoff-input.json` | HandoffInput (4.4) | `skills/scripts/test-contract-v2.py:605`; `skills/scripts/community-route.py:1119`; `input_schema` of the wrappers in `skills/community/registry.json` |
+| `community-handoff-output.json` | HandoffOutput (4.5) | `skills/scripts/test-contract-v2.py:606`; `skills/scripts/community-route.py:1121`; `output_schema` of the wrappers in `skills/community/registry.json` |
+| `community-routing-signals.json` | the community routing-signal table (T26) | `skills/scripts/verify-routing-signals.py:65`; `skills/scripts/test-routing-signals.py:64` |
+| `release-candidate.json` | the release candidate a build produces (the candidate declares this schema itself) | `scripts/build-release-candidate.py:235` (writes `"schema": "schemas/release-candidate.json"`); `scripts/verify-release-approval.py` |
+| `release-approval.json` | the human approval record under `release-approvals/` | `.github/workflows/release.yml` (`environment: release-approval` gate); `scripts/verify-release-approval.py` |
+
+`auth-profile.json` and `case-attestation.json` are shape declarations: no script loads
+those two schema files, because `skills/scripts/verify-auth-profile.py` implements the
+same rules directly — so a schema and its gate cannot drift apart. The other seven are
+loaded as data by the scripts named above.
+
 ## What actually runs today
 
 * `python skills/scripts/test-contract-v2.py` — loads the real registry, checks every

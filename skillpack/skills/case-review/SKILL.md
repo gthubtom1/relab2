@@ -71,7 +71,9 @@ It MUST NOT perform reconnaissance, exploitation, dynamic instrumentation, or ta
    (proves the audit catches 状态虚高 / 对照表缺行 / Coverage 缺项 / 记录字节不一致 /
    命令不可复现 / 老格式记录 warning, and still passes a complete table and a case without `rebuild.md`).
    When the case carries `update.md`, the update checks follow the same gates file
-   (`../ops/rebuild-gates.md` [更新阶段]): a three_lines field that is empty or still
+   (`../ops/rebuild-gates.md` [更新阶段]) and the same table template
+   (`../templates/update.md` — the sections this audit parses, produced by
+   `case-init -Preset update`): a three_lines field that is empty or still
    the template placeholder, a `function_delta` that misses any F-ID from
    `rebuild.md` (or invents one without action=new), a `verification` row that
    leaves a column empty, a row asserting 一致 whose `diff-update/` record is
@@ -108,7 +110,7 @@ It MUST NOT perform reconnaissance, exploitation, dynamic instrumentation, or ta
 | 哈希固定 | `sha256sum evidence\<file>`（或 PowerShell `Get-FileHash -Algorithm SHA256`），与记录里的 `content_hash` 逐字符比 | 不一致 → 先查改写来源，见上节第一条 |
 | 改动溯源 | `git log -p -- evidence/<file>`、`git diff --stat work/<case>` | 判「证据是否被改写」的唯一凭据 |
 | 证据产生工具 | 逆向类应点名 `IDA` / `Ghidra` / `rabin2` / `radare2` / `x64dbg`；移动类 `jadx` / `apktool` / `frida`；固件类 `binwalk`；网络类 `nmap` / `nuclei` / `sqlmap` / `curl` / `Burp`；流量类 `tshark` / `Wireshark`；样本类 `yara`；口令类 `hashcat` | 用探测层解析工具名；解析不到 → 该记录不可复现，回产生它的卡重跑 |
-| 路径探测 / 通道 | `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name tshark`；通道状态 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` | `Get-Command` 查空 ≠ 缺工具；HTTP 型 MCP 平时 `closed` 是设计 |
+| 路径探测 / 通道 | `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name tshark`；通道状态 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` | `Get-Command` 查空 ≠ 缺工具；HTTP 型 MCP 平时 `closed` 是设计 |
 | 报告链接口径 | `python skillpack\skills\scripts\verify-doc-links.py`（报告里出现的仓库内相对路径） | 断链数不为 0 → 交 `../docs-generator/SKILL.md` 之前必须先修 |
 
 ## Tool dependencies

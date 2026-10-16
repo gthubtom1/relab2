@@ -41,17 +41,22 @@ Exit codes: 0 all gates ok, 1 at least one gate blocked or failed, 2 the runner
 itself could not be trusted (bad manifest, missing file, unusable interpreter).
 
 Standard library only. Read-only with respect to the repository: temporary files
-are created under the platform temp directory and removed on exit.
+are created under the platform temp directory and removed on exit. The one thing
+that outlives the run is the failure log of a non-ok gate (see dump_gate_log),
+written under %LOCALAPPDATA%\\reverse-skill\\ci-gates\\ -- outside the repo, on
+purpose: a red gate must leave a scene someone can inspect afterwards.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 from typing import Any
 
@@ -184,6 +189,26 @@ def diagnosis(text: str) -> str:
             return line[:400]
     return " | ".join(lines[-3:])[:400]
 
+
+def dump_gate_log(gate_id: str, code: int, out: str, err: str) -> Path | None:
+    """★ 2026-10-16：非 ok 的门，把**完整输出**落到仓库外，并返回路径。
+
+    起因：一次 `test-tool-recipes` 红过（只留下一行 fail=1），事后**查不出红的是哪条** ——
+    门只在屏幕上刷一遍 `diagnosis()` 那 400 个字符，其余全丢。红门不可回放 = 红门等于噪声。
+    目录可用环境变量 RELAB2_GATE_LOG_DIR 覆盖；写不进去不影响门本身的结果。
+    """
+    base = os.environ.get("RELAB2_GATE_LOG_DIR")
+    root = Path(base) if base else Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "reverse-skill" / "ci-gates"
+    try:
+        root.mkdir(parents=True, exist_ok=True)
+        path = root / f"{time.strftime('%Y%m%d-%H%M%S')}-{gate_id}.log"
+        path.write_text(f"gate: {gate_id}\nexit: {code}\n--- stdout ({len(out or '')}B) ---\n{out}\n"
+                        f"--- stderr ({len(err or '')}B) ---\n{err}\n", encoding="utf-8")
+        return path
+    except OSError:
+        return None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--manifest", default=str(DEFAULT_MANIFEST),
@@ -256,24 +281,40 @@ def main(argv: list[str] | None = None) -> int:
                 rows.append((gate["id"], "skipped", 0, skipped))
                 continue
             argv_run = command_for(gate, pwsh)
-            completed = subprocess.run(
-                argv_run, cwd=str(ROOT), capture_output=True, text=True,
-                encoding="utf-8", errors="replace", check=False,
-                env={**__import__("os").environ, "PYTHONIOENCODING": "utf-8",
-                     "PYTHONDONTWRITEBYTECODE": "1", "TEMP": scratch, "TMP": scratch},
-            )
-            verdict, reason = classify(gate, completed.returncode)
-            rows.append((gate["id"], verdict, completed.returncode, reason))
+            gate_out, gate_err = "", ""      # ★ 两分支都要赋值：门挂住时 completed 根本不存在
+            gate_rc = -1                     # ★ 同上：失败现场日志要写清退出码
+            # ★ 2026-10-16：这里原来**没有 timeout** —— 任何一道门挂住，整个门禁就挂住
+            #   （不是"红"，是"永远不返回"）。现在给每道门 30 分钟硬上限：超了就把这道门
+            #   判成 blocked 并写清"它挂了"，其余门继续跑完 —— 挂死不该拖垮整轮。
+            try:
+                completed = subprocess.run(
+                    argv_run, cwd=str(ROOT), capture_output=True, text=True,
+                    encoding="utf-8", errors="replace", check=False, timeout=1800,
+                    env={**__import__("os").environ, "PYTHONIOENCODING": "utf-8",
+                         "PYTHONDONTWRITEBYTECODE": "1", "TEMP": scratch, "TMP": scratch},
+                )
+                gate_out, gate_err = completed.stdout, completed.stderr
+                gate_rc = completed.returncode
+                verdict, reason = classify(gate, completed.returncode)
+                rows.append((gate["id"], verdict, completed.returncode, reason))
+            except subprocess.TimeoutExpired:
+                verdict = "blocked"
+                reason = "★ 这道门 1800s 内没结束（挂住了）—— runner 已终止它，其余门继续"
+                gate_err = "(门挂住，未拿到输出)"
+                rows.append((gate["id"], verdict, -1, reason))
             if verdict == "ok":
                 print(f"[PASS]   {gate['id']:30} {reason}")
             elif verdict == "non_blocking":
                 print(f"[WARN]   {gate['id']:30} {reason}")
-                print(f"         {diagnosis(completed.stdout)}")
+                print(f"         {diagnosis(gate_out)}")
             else:
                 print(f"[{verdict.upper():6}] {gate['id']:30} {reason}")
-                print(f"         {diagnosis(completed.stdout)}")
-                if completed.stderr:
-                    print(f"         stderr: {diagnosis(completed.stderr)}")
+                print(f"         {diagnosis(gate_out)}")
+                if gate_err:
+                    print(f"         stderr: {diagnosis(gate_err)}")
+                log_path = dump_gate_log(gate["id"], gate_rc, gate_out, gate_err)
+                if log_path:
+                    print(f"         完整现场（可回放）：{log_path}")
 
     blocked = [r for r in rows if r[1] == "blocked"]
     failed = [r for r in rows if r[1] == "failed"]

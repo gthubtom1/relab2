@@ -33,6 +33,9 @@ note: |
 lesson_refs:
   - "skillpack/skills/field-journal/2026-10-13_assault-prng-upx-l1l4.md"
   - "work/assault-prng-upx/assault.md（§functions / §findings / §diff_baseline 全表填实）"
-  - "skillpack/skills/field-journal/seed-005 等 seed 系列（正控语料）"
+  # ★ 2026-10-16 删掉原第 3 条 `skillpack/skills/field-journal/seed-005 等 seed 系列（正控语料）`：
+  #   ① `seed-005` 的真实文件名是 `seed-005_ad-certipy-esc1.md`（ADCS ESC1），与本 case 的
+  #      PRNG/UPX 主题**毫无关系**；② 全 17 篇 seed-0xx 里 grep `upx|prng|加壳` **零命中**
+  #      —— 也就是说这条"正控语料"的说法**没有对应的真实文件**。宁可少一条，不留悬空引用。
 
 status: resolved

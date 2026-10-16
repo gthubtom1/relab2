@@ -116,7 +116,7 @@ gcc -O2 -o prng_probe.exe prng_probe.c
 实测输出（`prng_probe.exe 0`，原生 `rand()`）：
 
 ```
-7584 19164 25795 22125 5828 23433 30399 17530
+7584 19164 25795 22125 5828 23405 27477 5413 29072 23404 14959 14800
 ```
 
 识别结果（**必须带 `--seed`**）：
@@ -266,7 +266,7 @@ MT19937 的判据最强：`预测的后续 4 个输出匹配 4/4`。这是**因�
 9. **`--demo` 只有 5 个**（borland/glibc/minstd/musl/mt19937），
    没有 MSVCRT demo —— 因为 MSVCRT 需要 seed，跑不了 `--demo`。要测它请用真实样本。
 10. **脚本 docstring 里的 Windows 路径要写成 `C:\\...`**。
-    非 raw string 里 `C:\relab2` 的 `\r` 会被当成回车，
+    非 raw string 里 `<仓根>` 的 `\r` 会被当成回车，
     实测每次运行都刷 `SyntaxWarning: invalid escape sequence '\E'`。
     现已修成正则要用时前面加反斜杠。用 `-W error::SyntaxWarning` 自查：
 

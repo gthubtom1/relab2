@@ -114,7 +114,7 @@ description: 桌面厚客户端测试：信任边界、凭证存储、IPC/命名
 | `asar`（`npx @electron/asar`） | Electron 解包 | `asar extract app.asar out/`；解出的 JS 交 `../js-reverse/` |
 | 通道自检 | MCP | `mcp-status.ps1` 三列（注册/监听/怎么起）；IDA(x64dbg) 联动要起 `idapro`(13337)/`x64dbg`(9094) |
 
-路径唯一入口：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>`；
+路径唯一入口：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>`；
 `Get-Command` 查空 ≠ 缺工具。
 
 硬判据：

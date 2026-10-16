@@ -27,6 +27,17 @@ DO_INSTALL=false
 REINSTALL=false
 CLEAN=false
 
+usage() {
+    echo "用法: $0 <apktool_project_dir> [options]"
+    echo "  --out <dir>        输出目录（默认: 项目父目录）"
+    echo "  --name <base>      输出文件名前缀"
+    echo "  --keystore <path>  签名密钥库（默认: ~/.android/debug.keystore）"
+    echo "  --install          签名后安装到设备"
+    echo "  --reinstall        覆盖安装"
+    echo "  --device <serial>  指定设备"
+    echo "  --clean            清理旧产物"
+}
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --out) OUT_DIR="$2"; shift 2 ;;
@@ -39,20 +50,14 @@ while [[ $# -gt 0 ]]; do
         --install) DO_INSTALL=true; shift ;;
         --reinstall) REINSTALL=true; DO_INSTALL=true; shift ;;
         --clean) CLEAN=true; shift ;;
+        -h|--help) usage; exit 0 ;;
         -*) echo "未知选项: $1"; exit 1 ;;
         *) PROJECT_DIR="$1"; shift ;;
     esac
 done
 
 if [[ -z "$PROJECT_DIR" || ! -d "$PROJECT_DIR" ]]; then
-    echo "用法: $0 <apktool_project_dir> [options]"
-    echo "  --out <dir>        输出目录（默认: 项目父目录）"
-    echo "  --name <base>      输出文件名前缀"
-    echo "  --keystore <path>  签名密钥库（默认: ~/.android/debug.keystore）"
-    echo "  --install          签名后安装到设备"
-    echo "  --reinstall        覆盖安装"
-    echo "  --device <serial>  指定设备"
-    echo "  --clean            清理旧产物"
+    usage
     exit 1
 fi
 

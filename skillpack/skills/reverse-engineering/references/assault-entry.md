@@ -67,7 +67,7 @@
 
 | 看什么 | 怎么看出来 | 去向 |
 |---|---|---|
-| **壳/虚拟化** | `diec -d -e -j` 报 VMP/Themida/Enigma；入口只有 `jmp` 跳板；函数计数异常低；节区高熵 | `vmp-virtualization-analysis.md` / `unpack-and-memory-dump.md`；**先判形态再动手**，别在壳层改字节 |
+| **壳/虚拟化** | `diec -d -e -j` 报 VMP/Themida/Enigma；入口只有 `jmp` 跳板；函数计数异常低；节区高熵。★ `-e` 输出里**文件级**的 `status` 字段可能是 `not packed`（整体熵口径），与节级 `packed`（例：`UPX1` 熵 7.74）自相矛盾 —— 以 **detect 的 `Packer:` 行 + 节名 + 节熵**为准，别拿文件级 `status` 当结论（2026-10-16 E2E 实测：UPX 壳的 `-d -e -j` 输出里文件级 `status=not packed`） | `vmp-virtualization-analysis.md` / `unpack-and-memory-dump.md`；**先判形态再动手**，别在壳层改字节 |
 | **自检（反调试）** | attach 即退/秒退、`IsDebuggerPresent`/`CheckRemoteDebuggerPresent` 命中、单步异常、时间差测量、父进程名校验 | `anti-debug-bypass.md`（自检表 §1 + ScyllaHide 专项）；过层判据：peb/crdp/dbgport 三项归零 + 程序运行 >10s |
 | **工具通道** | 要用某个通道时**先看它起没起**（不做事前自检）：`powershell -NoProfile -ExecutionPolicy Bypass -File <技能包根>\skills\scripts\mcp-status.ps1` 三列「谁注册 / 谁在 LISTEN / 怎么起」；通道 `closed` 就照它给的命令自己起，起完重跑确认 `LISTEN` 再 attach。**注册 ≠ 在监听；冷启是设计不是故障** | 端点事实源 `references/tool-registry.md`；不许假装看不见工具，也不许让用户手改 `mcp.json` |
 
@@ -123,7 +123,7 @@
 |---|---|---|
 | **A. 正常开发 / 维护** | 代码是我方写的，或任务是：写新功能 / 修 bug / 重构 / 部署 / 写文档 / 写脚本 / 加参数 / 做工具 | **走既有路由与技能，本卡一行不必再读** |
 | **B. 逆向 / 破解 / 分析** | 目标是**不是我方写的**程序：PE/ELF/APK/IPA/.NET/固件/JS/Web 客户端；任务含：分析、破解、脱壳、绕过、提取、复刻、patch | 进 Q1–Q3 |
-| **C. 已拿到源码** | 源码在手，任务是读懂 / 改它 / 复刻它 | 走 `code-audit` / 复刻路径（`docs/DELIVERY-GOAL-2026-10-12.md`） |
+| **C. 已拿到源码** | 源码在手，任务是读懂 / 改它 / 复刻它 | 走 `code-audit`（源码在手先按 `code-audit/SKILL.md` 建档）/ 复刻路径 |
 
 **主人是零基础，他不会说术语——「说一句人话」也必须能命中。** 人话对照表：
 

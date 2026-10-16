@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""register-mcp.py —— 把本包的 5 条 MCP 通道**一键注册**进宿主（幂等 + 备份 + 干跑）。
+"""register-mcp.py —— 把本包的 6 条 MCP 通道**一键注册**进宿主（幂等 + 备份 + 干跑）。
 
 为什么存在（2026-10-15，独立审计实测）：
   审计判定「换机 = 一条命令」不满足：`relab2.ps1 setup` 只代劳了 10 步里的 3 步，
   第 8 步「重写 MCP 注册」还得人手工逐条改。于是把它自动化。
 
-出厂 5 条通道（两类形态，见 环境初始化.md §11.1-B 第 10 条）：
-  ① 直连 stdio   pyghidra-mcp / angr-mcp / relab2-tools   —— 宿主按会话自动拉起
+出厂 6 条通道（两类形态，见 环境初始化.md §11.1-B 第 10 条）：
+  ① 直连 stdio   pyghidra-mcp / angr-mcp / relab2-tools / rea   —— 宿主按会话自动拉起
   ② stdio·懒启   idapro / x64dbg-mcp                        —— 走 mcp-lazy-http.py，后端被调用时才起
+
+★ rea（2026-10-16 接入）：REA 是独立 npm 程序（`rea-agents`，bin = rea/rea-agents），
+  它的 MCP 子命令 `rea mcp` 就是一条 stdio 服务器（实测 `tools/list` = 207 个工具 + 6 个 prompt）。
+  与上面几条不同：它**一半的分析能力要外部 provider**（Ghidra 12.1.x / IDA / Hopper），
+  本机没配只会让相应工具报 provider 不可用，**不影响这条通道本身起得来**。
+  实测边界与可用能力清单见 `skillpack/skills/references/rea-integration.md`。
 
 本脚本不猜路径：Python 解释器靠**实测 import** 认（哪个 venv 里真有 pyghidra_mcp / angr 就用哪个），
 x64dbg 的 Bearer token 靠**读它自己的实例配置**拿。找不到就跳过并报出来，绝不写一个假路径。
@@ -95,9 +101,76 @@ def read_x64dbg_token(tool_root: pathlib.Path) -> str | None:
     return None
 
 
+def _run_capture(cmd: list[str], timeout: int = 60) -> subprocess.CompletedProcess | None:
+    """跑一条命令、收全部输出；起不来就返回 None（不把异常抛给调用方）。"""
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
+                              creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+
+
+def find_rea_entry(skills: pathlib.Path, tool_root: pathlib.Path) -> dict | None:
+    """REA 的 MCP 通道 —— **经本仓的筛选桥**，不是直连。
+
+    ★ 2026-10-16 两条实测教训 + 一条决策：
+      · **不走 PATH 上的 .cmd shim**：Windows 上 CreateProcess 不能直接起 .cmd
+        （`subprocess.run(["npm", "root", "-g"])` 实测 WinError 2），要么用 `cmd.exe /d /c`，
+        要么直连 node.exe —— 后者才是宿主该拿到的稳定命令。
+      · 全局包装在 `<npm root -g>`（本机因为 npm 就在 node 目录里，所以 = node 根），
+        同级是否有 node.exe **必须实跑 `--version` 验真**，否则会把一个起不来的路径写进宿主配置。
+      · ★ **走桥，不直连**：直连 = `tools/list` 返回 **207 个工具**，宿主每次会话都常驻；
+        而本机实测真正能用的只有 30 组 / 77 个（其余要 Ghidra 12.1.x / IDA / adb / jadx…）。
+        桥（`scripts/rea-bridge-mcp.py`）只放行本机真能用、且与四大战场相关的 33 个，
+        清单外的调用会被明确拦下并说明原因（见 `references/rea-integration.md` §4）。
+    返回 None = 没装（宁可不注册，也不写假路径）。"""
+    npm_root = None
+    r = _run_capture(["cmd.exe", "/d", "/c", "npm root -g"])
+    if r and r.returncode == 0 and r.stdout.strip():
+        p = pathlib.Path(r.stdout.strip())
+        if p.exists():
+            npm_root = p
+    if not npm_root:
+        return None
+    rea_mjs = npm_root / "rea-agents" / "scripts" / "rea.mjs"
+    if not rea_mjs.exists():
+        return None
+    node = None
+    for cand in (os.environ.get("REA_NODE"), npm_root.parent / "node.exe"):
+        if cand and pathlib.Path(cand).exists():
+            node = pathlib.Path(cand)
+            break
+    if not node:
+        return None
+    v = _run_capture([str(node), str(rea_mjs), "--version"])
+    if not v or v.returncode != 0 or not re.match(r"\d+\.\d+", (v.stdout or "").strip()):
+        return None
+    bridge = skills / "scripts" / "rea-bridge-mcp.py"
+    # ★ 2026-10-16 实测：本机有两个 mcp —— `python-venv`=1.30.0（有 lowlevel `Server.list_tools`）、
+    #   `angr-mcp-venv`=**2.3.0**（2.x 删掉了这些装饰器）。只验"能 import mcp"是不够的：
+    #   桥指到 2.3.0 那个 python 时，起服务器直接 AttributeError。
+    #   所以这里**必须验 API**，而不是验包在不在。
+    py = None
+    for cand in (find_python_with("mcp", tool_root, []), pathlib.Path(sys.executable)):
+        if not cand:
+            continue
+        chk = _run_capture([str(cand), "-c",
+                            "from mcp.server.lowlevel import Server;"
+                            "assert hasattr(Server,'list_tools');"
+                            "assert hasattr(Server,'list_prompts')"])
+        if chk and chk.returncode == 0:
+            py = cand
+            break
+    if bridge.is_file() and py:
+        return {"command": str(py),
+                "args": [str(bridge), "--node", str(node), "--rea-mjs", str(rea_mjs)]}
+    # 桥或能 import mcp 的 python 不在 → 退化为直连（并把原因写在 note 里，由调用方决定）
+    return {"command": str(node), "args": [str(rea_mjs), "mcp"], "env": {"REA_DIRECT": "1"}}
+
+
 def build_entries(skill_root: pathlib.Path, tool_root: pathlib.Path,
                   quiet: bool = False, existing: dict | None = None) -> tuple[dict, list[str]]:
-    """造出 5 条注册项。返回 (entries, 缺件说明)。
+    """造出 6 条注册项。返回 (entries, 缺件说明)。
     ★ 已存在的宿主配置里那些**本机专属 env**（JAVA_HOME / GHIDRA_INSTALL_DIR…）要保下来 ——
       它们可能只写在 mcp.json 里、而不在进程环境里；直接覆盖会**把能跑的配置改坏**。"""
     existing = existing or {}
@@ -175,6 +248,16 @@ def build_entries(skill_root: pathlib.Path, tool_root: pathlib.Path,
     else:
         notes.append(f"x64dbg-mcp：缺 {lazy} 或 {x64_start} —— 跳过")
 
+    # ⑥ rea（经筛选桥；直连会把 207 个工具全塞进宿主上下文，见 find_rea_entry 的说明）
+    rea = find_rea_entry(skills, tool_root)
+    if rea:
+        env = dict((existing.get("rea") or {}).get("env") or {})
+        if env:      # 保下调用方自选的 REA_* 覆盖（输入/输出 schema 档、响应字节上限…）
+            rea["env"] = env
+        entries["rea"] = rea
+    else:
+        notes.append("rea：找不到 node.exe + rea-agents/scripts/rea.mjs —— 跳过（没装：npm i -g rea-agents）")
+
     return entries, notes
 
 
@@ -230,7 +313,7 @@ def merge_into(path: pathlib.Path, entries: dict, dry: bool, quiet: bool) -> Non
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="把本包 5 条 MCP 通道一键注册进宿主")
+    ap = argparse.ArgumentParser(description="把本包 6 条 MCP 通道一键注册进宿主")
     ap.add_argument("--skill-root", default=os.environ.get("REVERSE_SKILL_ROOT") or ".",
                     help="技能包根/仓根（含 skillpack/skills）")
     ap.add_argument("--tool-root", default=os.environ.get("REVERSE_TOOL_ROOT") or r"D:\Tools")

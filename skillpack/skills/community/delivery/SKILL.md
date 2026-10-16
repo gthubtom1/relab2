@@ -1,6 +1,6 @@
 ---
 name: community-delivery-workflow
-description: 全栈软件交付编排适配层。按目标、输入、角色工作流、验收和文档沉淀推进项目，并在安全/逆向阶段交还 canonical reverse-skill 路由。
+description: 全栈交付编排适配层。用于：按目标、输入、角色工作流、验收与文档沉淀推项目，并在安全/逆向阶段交还 skill 路由时。
 ---
 
 # Community delivery workflow adapter
@@ -21,7 +21,7 @@ description: 全栈软件交付编排适配层。按目标、输入、角色工�
 
 ## Canonical boundaries
 
-- 全局安全规则仍由根 `../../../RULES.md`（上游文件，未随本包落地） 管理。
+- 全局安全规则仍由根 `../../../RULES.md` 管理。
 - 路由仍由 `skills/config/routing.json` 管理。
 - 项目产物放在项目自己的工作根；安全 case 产物放在 `work/<case>`。
 - 上游仓库没有 LICENSE，当前适配仅用于本地融合，发布前必须补授权或移除内容。
@@ -36,4 +36,4 @@ description: 全栈软件交付编排适配层。按目标、输入、角色工�
 - 置信度 `confidence = best_score / hint 词数`，低于 0.35 为 `low_confidence`；
   首尾 wrapper 分差 ≤20% 为 `ambiguous_tie`，两者都进 `needs_review`。
 - 超预算后的确认格式：报出收窄后的 hint 与 `--source` 取值，等人工确认后再查。
-- 完整数字与 policy manifest 变更请求见 `../../../docs/community/LOADING-BUDGET.md`（本包未落地）。
+- 完整数字与 policy manifest 变更请求见 `../../../docs/community/LOADING-BUDGET.md`。

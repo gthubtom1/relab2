@@ -197,9 +197,18 @@ def copy_blob(src: Path, dst: Path):
 
 
 def collect_skill_names():
-    """把素材里真实存在的技能名收成一份禁名清单，写进包内给 verify 的 (d) 用。
+    """把**技能系统**里真实存在的技能名收成一份禁名清单，写进包内给 verify 的 (d) 用。
 
     有了它，(d) 就是拿真名单逐条比对，不是凭感觉说「看着没有技能名」。
+
+    ★ 2026-10-16 修：不再把包自己的 `workflows/*.md` 与 `docs/methods/*.md` 名字算进来。
+      标记块内联的就是中枢自己的 `AGENTS.md` 全文（`_bundle_lib.py` 的 `rule_text()`），
+      而它的「六套工作流」与「产品线 → 关键物理门」两张表**必然**出现这六个产品线名，
+      也必然出现 `docs/methods/review.md` 这类**包内相对指针**。
+      把包自己的零件名当禁名，(d) 就恒红（实测：标记块 24048 B，
+      命中 6 个产品线名 + `review`）；而 SPEC 第 0 节硬约束 5「不碰 Skill 系统」
+      针对的是**技能系统**的名字，不是本包自己出货的产品线与方法书。
+      所以禁名清单只留技能系统那一侧。
     """
     names = set()
     # 技能夹是**上一版**中枢的东西，本仓没有，也不该依赖。留着这两个候选路径只为
@@ -209,12 +218,6 @@ def collect_skill_names():
             for p in base.iterdir():
                 if p.is_dir():
                     names.add(p.name)
-    # 产品线名与方法书名同样是「技能名」，一并算进去
-    if HUBCORE.is_dir():
-        for p in (HUBCORE / "workflows").glob("*.md"):
-            names.add(p.stem)
-        for p in (HUBCORE / "docs" / "methods").glob("*.md"):
-            names.add(p.stem)
     # 过短的目录名（如 pi、dsh）比单个字母还容易误报，剔除；>=4 字符的才是有意义的技能名
     return sorted(n for n in names if len(n) >= 4)
 

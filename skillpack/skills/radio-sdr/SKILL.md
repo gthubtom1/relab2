@@ -63,7 +63,7 @@ description: RF/SDR 信号研究：调制识别、GNU Radio/URH/Inspectrum 解�
 | `nmap` | 网关/桥接设备的管理面（单机低速） | 探测 id `nmap`；段扫不是本卡的事 |
 
 > **空口硬件装没装，先探再动手。**
-> `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>`，拿到 `Command` 后用它给的完整路径调用；
+> `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>`，拿到 `Command` 后用它给的完整路径调用；
 > `Get-Command` 查空不是缺工具的证据（PATH 快照陷阱，见 `../references/env-selfcheck.md`），四级探测全 `Available=False` 才可报缺，装法见 `../TOOLS.md`。
 > RTL-SDR/HackRF/URH/GNU Radio 这类接收链多在实验台而非本机；宿主侧通道用
 > `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` 看三列（注册了哪些 / 谁在监听 / 怎么起），**注册不等于在监听**。

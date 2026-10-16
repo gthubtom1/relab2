@@ -32,12 +32,11 @@ except ImportError:
 
 PKG_DIRNAME = L.PKG_DIRNAME
 
-# 标记块里不该出现的词。技能名取素材里真实存在的那批（pack.py 写进 bundle-meta.json），
-# 这里放的是不依赖任何源仓的兜底最小集。
+# 标记块里不该出现的词，指的是**技能系统**那一侧的名字（SKILL 夹名 / 旧中枢技能名），
+# 不是本包自己出货的产品线与方法书名 —— 标记块内联的就是中枢自己的 `AGENTS.md` 全文，
+# 那两张表**必然**点名六个产品线（见 pack.py:collect_skill_names 的 2026-10-16 修）。
 FALLBACK_SKILL_NAMES = (
-    "desktop-product", "web-service", "cli-tool", "source-takeover",
-    "exe-rebuild", "protocol-automation", "anti-crack-build", "INVARIANTS",
-    "user-skills", "skills-hub", "副插件", "底模",
+    "anti-crack-build", "INVARIANTS", "user-skills", "skills-hub", "副插件", "底模",
 )
 PATHY = ("D:\\", "D:/", "临时项目", "context-isolation", "hub-dock",
          "user-skills", ".agents/skills", ".agents\\skills", "skills-hub", "gthubtom1")
@@ -204,8 +203,13 @@ def check_d(host_home: Path, skill_names):
             % (len(block.encode("utf-8")), entry, len(raw.encode("utf-8")) - len(block.encode("utf-8"))))
     if bad:
         return False, head + "\n" + "\n".join("  " + b for b in bad)
-    tail = ("；块内零技能名 / 零开发目录 / 零远端地址；"
-            "出现的绝对路径只有本宿主家目录，已抹成 <HOST_HOME> 后再验；")
+    if skill_names:
+        clean = "；块内零技能名 / 零开发目录 / 零远端地址；"
+    else:
+        # 本机没有技能夹 → 没有可比的真名单。明说这一维没验，不假称「已验为干净」。
+        clean = ("；块内零开发目录 / 零远端地址；技能名一维没有真名单可比"
+                 "（本机既无 hub/.agents/skills 也无 user-skills），这一维**没验**；")
+    tail = clean + "出现的绝对路径只有本宿主家目录，已抹成 <HOST_HOME> 后再验；"
     if card_name:
         return True, head + tail + "块内规则正文来自中枢内核卡「%s」（不含 12 块底线，已跳过该判据）" % card_name
     return True, (head + tail + "12 块底线（%s）逐条短语全在位"
@@ -338,7 +342,10 @@ def main(argv=None):
     if not meta:
         print("提示：没找到 %s，用 verify.py 自带的兜底表（覆盖面更窄）" % L.META_NAME)
     forbidden = list(meta.get("forbidden_strings") or FORBIDDEN_FALLBACK)
-    skill_names = list(meta.get("skill_name_denylist") or FALLBACK_SKILL_NAMES)
+    # 技能名清单**空就是空**：本机没有旧技能夹时清单本来就是空的，
+    # 用 `or FALLBACK` 会被兜底表顶掉 —— 那等于把「没有可比的真名单」偷偷换成一份写死的名单。
+    names = meta.get("skill_name_denylist")
+    skill_names = list(FALLBACK_SKILL_NAMES if names is None else names)
 
     workdir = Path(tempfile.mkdtemp(prefix="hubcore-verify-"))
     try:

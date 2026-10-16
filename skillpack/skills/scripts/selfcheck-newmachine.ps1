@@ -7,8 +7,10 @@
   再加上工具根/技能包根没设、代码页是 936 —— 这三样合起来会产生**大量假 MISSING**
   （「工具不存在」「文件不存在」），而真因其实是环境没通。
 
-  本脚本**只测量、不修改**：不装任何东西，不改环境变量，不改执行策略。
+  本脚本**不以修改环境为目的**：不装任何东西，不改环境变量，不改执行策略。
   它自己用 -ExecutionPolicy Bypass 绕策略，所以策略是 Restricted 也能跑。
+  ★ 唯一落盘的是**本机工具清单缓存** `<仓根>\skillpack\.hub\tools.local.json`（第 6 节）——
+  那是"本机读数"，不是配置，删掉自动重建；除此之外它不写任何东西。
 
 .EXAMPLE
   # 推荐：走仓库根封装入口（自动解析技能包根/工具根再调本脚本）
@@ -157,7 +159,7 @@ if (-not (Test-Path $boot)) {
       if ($realToolRoot -and $realToolRoot -ne $ToolRoot) {
         Ok ("工具根（探测层求得）= " + $realToolRoot)
       }
-    } catch { }
+    } catch { }   # scan-ok: 内层探测失败不静默——外层 catch（紧邻的下一行）会 Bad「探测层载入失败」
   } catch {
     Bad ("探测层载入失败: " + $_.Exception.Message)
     Bad "若报「禁止运行脚本」，是执行策略 —— 用 -ExecutionPolicy Bypass 启动本脚本"
@@ -252,6 +254,25 @@ try {
   if ($missing.Count -and $toolRootExists) {
     Write-Host ("      - 未就绪: " + ($missing -join ', ')) -ForegroundColor Yellow
     Write-Host '        逐条核实：四级探测全失败才算真缺，见 references/env-selfcheck.md' -ForegroundColor Gray
+  }
+  # ★ 2026-10-16（审计 R1「假安全」）：上面那个分母**只含逆向工具** ——
+  #   「25/25 全绿」给不出一句"固件/渗透/安卓能不能干活"的答案。这里把**每个战场**的
+  #   分母都摆出来，哪个战场是 0 一眼就能看见，不用等下一次真任务才暴露。
+  if ($snap.ToolGroups -and $snap.ToolGroups.Keys) {
+    # ★ 注意：ToolGroups 是 OrderedDictionary（不是 PSCustomObject）——
+    #   用 PSObject.Properties 遍历会枚举出 Count/Keys/Values 这些**字典自身的属性**，
+    #   第一版就这么错过一次（输出成了 "Count/·Keys/·Values…"）。必须走 .Keys。
+    $parts = @()
+    foreach ($k in $snap.ToolGroups.Keys) {
+      $g = $snap.ToolGroups[$k]
+      $parts += ("{0} {1}/{2}" -f $k, $g.Available, $g.Total)
+    }
+    Write-Host ("      分战场分母: " + ($parts -join ' · ')) -ForegroundColor Gray
+    foreach ($k in $snap.ToolGroups.Keys) {
+      if ($snap.ToolGroups[$k].Available -eq 0) {
+        Write-Host ("        ★ 「{0}」战场本机 0 把刀：{1}" -f $k, ($snap.ToolGroups[$k].Missing -join ', ')) -ForegroundColor Yellow
+      }
+    }
   }
   foreach ($k in $snap.Mcp.Keys) {
     $entry = $snap.Mcp[$k]

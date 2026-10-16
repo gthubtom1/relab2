@@ -105,7 +105,7 @@ For writing style, tone, and voice guidance, follow the in-repo rules in `refere
 | 工具点名 | 逆向类 `Ghidra` / `IDA` / `radare2` / `rabin2` / `diec`；移动类 `jadx` / `apktool` / `frida`；固件类 `binwalk`；网络类 `nmap` / `nuclei` / `sqlmap` / `curl` / `Burp`；流量类 `tshark` / `Wireshark`；样本类 `yara`；口令类 `hashcat` | 报告里写清哪段结论/哪张图由哪个工具产出 |
 | 链接与引用 | `python skillpack\skills\scripts\verify-doc-links.py`；外部 URL 用 `curl -sI` 看状态码 | 断链或 4xx/5xx → 修或删，不留死链 |
 | 图表渲染 | 图源先本地渲一次再嵌：Mermaid 走 `mmdc`，DOT 走 `dot -Tsvg`（`../diagram-generator/scripts/render_diagram.py` 会按扩展名分派） | 没渲过的图源不许贴进交付文档；渲染器探测不到就只交图源并写明 |
-| 路径探测 / 通道 | `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name mmdc`；通道状态 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` | `Get-Command` 查空 ≠ 缺工具（四级探测第 2 级而已） |
+| 路径探测 / 通道 | `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name mmdc`；通道状态 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` | `Get-Command` 查空 ≠ 缺工具（四级探测第 2 级而已） |
 
 ---
 

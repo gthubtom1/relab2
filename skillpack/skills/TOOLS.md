@@ -21,7 +21,7 @@
 ```powershell
 # 1. 走探测层（唯一正确入口，内含四级递进 + PATH/DOTNET_ROOT 自愈）
 #    探测层自定位（本文件在 skills\ 下）：相对本文件载入，不需要任何环境变量
-. ..\scripts\lib\Bootstrap.ps1   # 相对本文件（skillpack/skills/TOOLS.md）走，不用写死绝对路径；万一这台机器还没建好、该文件不存在，回退到本文件所在目录的 .\scripts\lib\Bootstrap.ps1
+. .\scripts\lib\Bootstrap.ps1   # 相对本文件（skillpack/skills/TOOLS.md）走，不用写死绝对路径；万一这台机器还没建好、该文件不存在，改为从仓库根起算的 skillpack\skills\scripts\lib\Bootstrap.ps1
 $r = Resolve-ReverseToolSpec -Name <工具id>
 $r.Available; $r.Command; $r.Via
 
@@ -46,10 +46,10 @@ $r.Available; $r.Command; $r.Via
 
 ```powershell
 # 按能力问本机有谁能干这件事
-python <仓根>\skillpack\skills\scripts\capability-index.py --find firmware-unpack   # 谁能解固件
-python <仓根>\skillpack\skills\scripts\capability-index.py --find portscan          # 谁能扫端口
-python <仓根>\skillpack\skills\scripts\capability-index.py --list-capabilities      # 能力词表
-python <仓根>\skillpack\skills\scripts\capability-index.py --scan                    # 换机后重建索引
+python C:\relab2\skillpack\skills\scripts\capability-index.py --find firmware-unpack   # 谁能解固件
+python C:\relab2\skillpack\skills\scripts\capability-index.py --find portscan          # 谁能扫端口
+python C:\relab2\skillpack\skills\scripts\capability-index.py --list-capabilities      # 能力词表
+python C:\relab2\skillpack\skills\scripts\capability-index.py --scan                    # 换机后重建索引
 ```
 
 索引落在 `%LOCALAPPDATA%\reverse-skill\capabilities\`（**机器状态，不入库**），换机后第一次调用会自动重建。
@@ -74,7 +74,7 @@ python <仓根>\skillpack\skills\scripts\capability-index.py --scan             
 脚本里直接用探测层，不要自己写查找：
 
 ```powershell
-. ..\scripts\lib\Bootstrap.ps1   # 相对本文件（skillpack/skills/TOOLS.md）走，不用写死绝对路径；万一这台机器还没建好、该文件不存在，回退到本文件所在目录的 .\scripts\lib\Bootstrap.ps1
+. .\scripts\lib\Bootstrap.ps1   # 相对本文件（skillpack/skills/TOOLS.md）走，不用写死绝对路径；万一这台机器还没建好、该文件不存在，改为从仓库根起算的 skillpack\skills\scripts\lib\Bootstrap.ps1
 $r = Resolve-ReverseToolSpec -Name 'idat'
 $r.Available   # 有没有
 $r.Command     # 在哪（用完整路径调用，不要依赖 cwd）
@@ -200,6 +200,8 @@ GUI 程序弹窗等输入、零 stdout、进程永不退出。**agent 不得经 
 | `radare2 -g` | `-g` 属 GUI，**禁用** |
 
 无 CLI 孪生的（**PE-bear、Scylla、010 Editor、JEB**）：只能人工在桌面侧操作，agent 不得拉起。
+
+> ★ **工具参数的唯一事实源是 `skills/config/tool-recipes.json`**：本文件与各技能卡里的命令示例（如 `diec` 用 `-d -e -j`、`capa` 必须带 `-q`）若与它不一致，**一律以配方为准**；用 `python skills/tests/test-tool-recipes.py --list` 列出全部已登记配方（去掉 `--list` 会把每条真跑一遍）。
 
 ---
 
@@ -497,11 +499,17 @@ python .\skillpack\skills\scripts\experience-card.py validate
 
 ## 8. 逆向 MCP 通道（按需启停）
 
+> **本表是"有哪几条通道、怎么起"，不是"本机注册了几条"。** 事实源 =
+> `skills/scripts/register-mcp.py`（出厂 **6 条**）+ `references/tool-registry.md`（端点登记）；
+> 本机注册数现查宿主 `mcp.json`（命令见 §8.1）。`idalib-mcp` 是**可选项，不在出厂 6 条里**。
+
 | 通道 | 端点 | 启停 |
 |---|---|---|
-| **idalib-mcp** | stdio | 装完直接注册；依赖 `IDADIR` 指向 IDA 本体 |
+| **pyghidra-mcp** | stdio（本机 omp）或 `127.0.0.1:9111/mcp` | **按需启动，没有常驻守护**；HTTP 形态冷启 7–10s，幂等 |
+| **angr-mcp** | stdio（`python -m angr.mcp`） | 宿主按会话自动拉起；走专用 `angr-mcp-venv`（别用普通 venv 的旧 angr） |
+| **relab2-tools** | stdio | 宿主按会话自动拉起。把**本机工具链**给模型：`local_tools` / `run_tool` / `triage_target` / `find_capability` / `read_tool_output` |
+| **rea** | stdio（经本仓桥 `skills/scripts/rea-bridge-mcp.py`） | 宿主拉起桥，后端由桥按需拉起；能力边界见 `references/rea-integration.md` |
 | **idapro** | `127.0.0.1:13337` | 插件在 IDA GUI 内自动监听；**按需**，用 `ida-reverse/scripts/start.ps1` 拉起 |
-| **pyghidra-mcp** | stdio 或 `127.0.0.1:9111/mcp` | **按需启动，没有常驻守护**；HTTP 形态冷启 7–10s，幂等 |
 | **x64dbg-mcp** | `127.0.0.1:9094`（x64）/ 9095（x32） | **按需**：插件活在被调试进程里，**必须拉 GUI x64dbg**；带 Bearer token |
 
 > ⚠️ **`headless.exe` 起不了 x64dbg MCP。** 三组对照实测：快目标 2.1s 退出、慢目标（Sleep 60s）**同样 2.1s** 退出 ——
@@ -512,29 +520,38 @@ python .\skillpack\skills\scripts\experience-card.py validate
 > **端口必须实测确认，不得猜。** 尤其 **9095 是 x32 的服务口不是控制口**，别向它发 STOP。
 > **启停由 agent 自己完成**，不要要求用户手改 `mcp.json`。
 
-### 8.1 双模切换：日常轻量 vs 全量专精（2026-10-11 实测）
+### 8.1 `daily` / `full` 登记（★ 2026-10-16 更正：两模式已等价，旧的"裁剪 Schema"设计已下线）
 
-全量挂载 5 个 MCP 服务时，每次请求都要带 ~28,000~32,000 Tokens 的工具
-Schema。装不装得下工具是小事，**首字延迟和工具幻觉是实打实的成本**。
-用 `switch-mcp.ps1` 在两种配置之间一键切：
+> ⚠ **本节上一版写的是「`daily` 只留 pyghidra（20 工具）/ `full` 全 5 个（140+ 工具）」——
+> 那两张表已经不成立了，两个数也都是错的。** 现行语义看 `switch-mcp.py` 源码：
+> `2026-10-15：daily 与 full 已合并（懒启动代理上线后不再需要切来切去）`，
+> 两者都走同一个 `merge_and_apply()`，**结果一致：把出厂 6 条通道全部登记进活跃配置**。
+>
+> 为什么废掉裁剪：旧版是「整份拷贝 `mcp.all.json` 覆盖 `mcp.json`」，
+> 会把**只存在于活跃配置里的通道静默删掉**（本机实测被删的是 `rea`）——
+> 那不是切模式，是删配置。现在改成合并语义：`mcp.all.json` 为准，
+> `mcp.json` 独有的通道**一律保留**并回写进 `mcp.all.json`，两个文件不再漂移。
 
 ```powershell
-.\skillpack\skills\scripts\switch-mcp.ps1 daily   # 日常：只留 pyghidra（20 工具）
-.\skillpack\skills\scripts\switch-mcp.ps1 full    # 攻坚：全 5 个（140+ 工具）
-.\skillpack\skills\scripts\switch-mcp.ps1 show    # 看当前是哪个
+.\skillpack\skills\scripts\switch-mcp.ps1 show    # 先看当前登记了哪几条（推荐第一步）
+.\skillpack\skills\scripts\switch-mcp.ps1 daily   # 登记全部通道（幂等，不删任何通道）
+.\skillpack\skills\scripts\switch-mcp.ps1 full    # 与 daily 等价
 ```
 
-| 模式 | 活跃服务 | 工具数 | 每轮注入 | 适用 |
-|---|---|---|---|---|
-| `daily` | pyghidra-mcp | 20 | ~4K | 日常开发、文档、APK 静态拆包 |
-| `full` | 全部 5 个 | 140+ | ~30K | PE 深度逆向、动态调试 |
+**当前登记数一律现查，不要背本节数字**：
 
-切换后**要重开 agent 会话**才生效。原始全量配置永久留存在
-`~/.omp/agent/mcp.all.json`，`daily` 随时能退回，不会丢东西。
+```powershell
+python -c "import json,os;p=os.path.expanduser('~/.omp/agent/mcp.json');print(list(json.load(open(p,encoding='utf-8'))['mcpServers'].keys()))"
+```
 
-> **按需启停与双模切换是两件事。** §8 讲的是「MCP 服务进程要不要起」，
-> 本节讲的是「这次会话要不要挂它们的工具 Schema」。
-> 前者是端口，后者是 Token —— 都省，但省的不是同一份开销。
+全量登记时，**每次请求都要带全部通道的工具 Schema**（Token 是实打实的成本：
+2026-10-11 按 5 通道口径实测 ~28,000~32,000，**6 通道后未复测 —— 引用前先重测**）。
+目前**没有**脚本级开关可以少注入一部分通道；`show` 只报状态，不改配置。
+切换后**要重开 agent 会话**才生效。
+
+> **按需启停与"双模"是两件事。** §8 讲的是「MCP 服务进程要不要起」（端口成本），
+> 本节讲的是「这次会话挂了几条通道的工具 Schema」（Token 成本）—— 都省，但省的不是同一份开销。
+> 注意：**现在只有登记一个动作**，没有"只挂一部分"的档位；真要省 Token，得在宿主侧自己动手。
 
 ---
 

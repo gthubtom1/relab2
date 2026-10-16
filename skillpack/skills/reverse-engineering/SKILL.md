@@ -152,7 +152,7 @@ floss --language dotnet binary.exe
 # 规则集用随包分发的 <包根>/_tools/capa-rules/capa-rules-master，或 `capa --help` 看本机 -r 默认值。
 CAPA_EXE=$(command -v capa)
 CAPA_RULES=${CAPA_RULES:-<包根>/_tools/capa-rules/capa-rules-master}
-"$CAPA_EXE" -r "$CAPA_RULES" -j binary
+"$CAPA_EXE" -q -r "$CAPA_RULES" -j binary
 
 # 安全字符串提取（用 r2 的 iz；要用 rabin2 前先跑 `rabin2 -v` 验 argv[0] 分发）
 radare2 -q -c "iz" binary | grep -i "flag"

@@ -128,16 +128,68 @@ PROBE_SUFFIX = (
 )
 
 
-def run_session(case: dict, model: str, timeout_s: int, probe: bool = False) -> str:
+def run_session(case: dict, model: str, timeout_s: int, probe: bool = False) -> tuple[str, str]:
+    """开新会话实跑。返回 (答复正文, 运行错误说明或空串)。
+
+    ★ 2026-10-16 修两个真缺陷（BehaviorRun 实跑 35 分钟抓到，父代理复核）：
+
+      ① **超时形同虚设**：原来用 `subprocess.run(..., capture_output=True, timeout=…)`。
+         Windows 上 `omp` 会拉起孙进程（bun/node），孙进程**继承了 stdout/stderr 管道**；
+         父进程被 kill 后管道仍有写端开着 → `communicate()` 永远等不到 EOF →
+         **脚本挂死 2104 秒（35 分钟）**，`--timeout 600` 完全没生效，
+         最后要靠人工 `taskkill /PID … /T /F` 才返回。
+         （本仓早有同类教训：`skills/scripts/test-subprocess-capture-deadlock.py`。）
+         → 改成：输出**落到临时文件**（不占管道）、超时后 **杀进程树**、再读文件。
+         这样"超时就真的超时"，且**超时前已产生的输出仍然拿到**。
+
+      ② **失败被当成答复打分（假分）**：原来失败时 `return "<运行失败: …>"`，
+         调用方照常 `score()` → 输出 `1/4 条通过`，看上去像"模型只做到 1/4"，
+         实际是**根本没跑成**。这类假分比假绿更坏（会让人去改 SKILL.md 判据）。
+         → 改成返回 `(正文, 错误说明)`，调用方**发现错误就判红并明确写"未验"**，不打分。
+    """
     prompt = str(case.get("task_verbatim", "")) + "\n\n【硬约束】" + str(case.get("constraint", ""))
     if probe:
         prompt += PROBE_SUFFIX
+    import tempfile
+    with tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace") as out:
+        try:
+            proc = subprocess.Popen(
+                ["omp", "-p", "--no-session", "--model=" + model, prompt],
+                stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.STDOUT,
+                cwd=find_repo_root(),
+                creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
+        except OSError as exc:
+            return "", f"{type(exc).__name__}: {exc}"
+        try:
+            proc.wait(timeout=timeout_s)
+        except subprocess.TimeoutExpired:
+            _kill_tree(proc)
+            out.seek(0)
+            partial = out.read()
+            return partial, (f"超时 {timeout_s}s（已杀进程树）—— 下面是超时前已产生的部分输出，"
+                             f"{len(partial)} 字符；**本次未验**，不要把它当答复打分")
+        out.seek(0)
+        return out.read(), ""
+
+
+def _kill_tree(proc) -> None:
+    """杀整棵进程树（Windows 用 taskkill /T；其它平台 killpg 兜底）。"""
     try:
-        r = subprocess.run(["omp", "-p", "--no-session", "--model=" + model, prompt],
-                           capture_output=True, text=True, timeout=timeout_s, cwd=find_repo_root())
-        return (r.stdout or "") + "\n" + (r.stderr or "")
-    except Exception as exc:  # noqa: BLE001
-        return f"<运行失败: {exc}>"
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+                           capture_output=True, timeout=30)
+        else:
+            import signal
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+    except Exception:  # noqa: BLE001
+        try:
+            proc.kill()
+        except Exception:  # noqa: BLE001
+            pass
+    try:
+        proc.wait(timeout=15)
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def selftest() -> int:
@@ -184,6 +236,32 @@ def selftest() -> int:
     return 0 if ok else 1
 
 
+def record_run(case: str, n_pass: int | None, total: int) -> None:
+    """把这次**实跑**的结果写进本机台账（`%LOCALAPPDATA%\\reverse-skill\\behavior-runs.jsonl`）。
+
+    ★ 2026-10-16：这道门在 CI 里从不带 `--run`（要花钱开新会话），于是"能力就绪"永远没有
+    自动证据，只有下一次真任务会暴露问题。台账不能替你把门跑绿；它让 `relab2.ps1 doctor`
+    如实报出「上次实跑是什么时候、过没过」——**过期就是 WARN，不是沉默**。
+
+    `n_pass=None` 表示**本次未验**（运行失败/超时）—— 与"0 分"必须区分开：前者是门没跑成，
+    后者才是"模型一条都没做到"。台账里写 `"pass": null` + `"verified": false`。
+    """
+    import time
+    from pathlib import Path
+    base = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~")
+    path = Path(base) / "reverse-skill" / "behavior-runs.jsonl"
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        rec = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), "gate": "test-assault-behavior",
+               "mode": "run", "case": case, "pass": n_pass, "total": total,
+               "verified": n_pass is not None}
+        with path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        print(f"  实跑台账已记：{path}")
+    except OSError:
+        pass
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -226,12 +304,28 @@ def main() -> int:
         print("  " + "!" * 66)
         return trust
 
-    answer = run_session(case, args.model, args.timeout, probe=args.probe)
+    answer, run_err = run_session(case, args.model, args.timeout, probe=args.probe)
+
+    # ★ 2026-10-16：运行失败/超时**不是"模型不行"** —— 不许打分。
+    #   原来这里会拿失败占位符去 score()，打出 `1/4 条通过` 这种假分（实测踩过）。
+    if run_err:
+        msg = f"test-assault-behavior: 未验（{run_err}）"
+        if args.json:
+            print(json.dumps({"case": args.case, "verified": False, "error": run_err,
+                              "answer_len": len(answer)}, ensure_ascii=False, indent=2))
+        else:
+            print(msg)
+            print("  ⚠️  这不是「模型只做到 0/4」—— 是**本次根本没跑成**，四条标准一条都没验。")
+            if answer.strip():
+                print(f"  超时前部分输出 {len(answer)} 字符（仅存证，不参与判分）。")
+        record_run(args.case, None, len(CRITERIA))
+        return 2
+
     results = score(answer)
     n_pass = sum(1 for r in results if r["pass"])
 
     if args.json:
-        print(json.dumps({"case": args.case, "pass": n_pass, "total": len(results),
+        print(json.dumps({"case": args.case, "verified": True, "pass": n_pass, "total": len(results),
                           "results": results, "answer_len": len(answer)}, ensure_ascii=False, indent=2))
     else:
         print(f"test-assault-behavior: {n_pass}/{len(results)} 条通过（case={args.case}）")
@@ -240,6 +334,7 @@ def main() -> int:
         if n_pass < len(results):
             print("  未过的标准：把上面 FAIL 的那几条写进对应 SKILL.md 的判据段，再复跑。")
 
+    record_run(args.case, n_pass, len(results))
     return 0 if n_pass == len(results) else 1
 
 

@@ -94,7 +94,7 @@ def run_verifier(document: dict | None = None,
         argv += ["--schema", str(schema_path)]
         completed = subprocess.run(
             argv, capture_output=True, text=True, encoding="utf-8",
-            cwd=ROOT, check=False,
+            cwd=ROOT, check=False, timeout=300,
         )
         lines = (completed.stdout or "").strip().splitlines()
         return completed.returncode, (lines[-1] if lines else

@@ -187,7 +187,7 @@ print("confirmed by BOTH sources: %d" % len(STATIC & BEHAVIOR))
  1  Load Image          C:\relab2\_kbverify\target.exe
  1  Load Image          C:\Windows\System32\ntdll.dll
  1  Load Image          C1-Windows\System32\kernel32.dll
- 1  CreateFile          C:\relab2
+ 1  CreateFile          <仓根>
  1  WriteFile           C:\relab2\_kbverify\peek.dat
  1  QueryNameInformationFile
  2  Thread Create

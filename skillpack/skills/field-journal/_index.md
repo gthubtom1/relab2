@@ -59,7 +59,7 @@
 
 ### iOS 逆向
 
-- [[种子] seed-009_ios-jailbr&#101;ak-detect-bypass](./seed-009_ios-jailbr65ak-detect-bypass.md`（文件名含 %65 编码，实为 `break`）`)
+- [[种子] seed-009_ios-jailbreak-detect-bypass](./seed-009_ios-jailbreak-detect-bypass.md)
 
 ### 工具链与环境
 

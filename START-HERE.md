@@ -42,56 +42,33 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2.ps1 doctor
 ```
 
 `doctor` 逐项报：仓根 / 环境变量 / selfcheck / **MCP 通道**（注册了几条、哪条是懒启、后端在不在监听）/ 技能挂载 /
-技能卡数 / 门禁清单 / 破甲卡 / 要求门 R1–R13。**它就是「换机 = 一条命令」的那条命令。**
+技能卡数 / 门禁清单 / 破甲卡 / 要求门 R1–R13 / **行为门实跑**（上次什么时候跑的、过没过）/ **GitHub CLI 登录**。
+**它就是「换机 = 一条命令」的那条命令。**
 
 > ⚠️ 它只证明「**本机配置**就绪」，**不证明「能力」就绪** —— 能力只由真实验收证明。
 
 **第 1 步 · 读 [`环境初始化.md`](环境初始化.md) ★ 这是你最重要的一份文档**
 
-**先看它的 §11「换机适配面」** —— 那是**完整清单**，照它过一遍再动手：
-
-| §11 的分组 | 涵盖什么 |
-|---|---|
-| **A 根与环境变量** | `REVERSE_SKILL_ROOT` / `REVERSE_TOOL_ROOT` / `IDADIR` / `GHIDRA_INSTALL_DIR` / `JAVA_HOME` / `DOTNET_ROOT` / `GOROOT` / `RELAB_SKILL_ROOT` / `X64DBG_MCP_TOKEN` |
-| **B ★ 宿主装载** | 哪个宿主家目录真的存在、**两张卡**（底模卡 + 指引卡）要重装、MCP 注册要重写、`cmd-guard` 要拷贝 |
-| **C 工具根映射** | `_map.json` 要核对（不是重建）、`MANIFEST.json` / `SHA256SUMS.txt` 要重算 |
-| **D 系统级常驻** | 计划任务 / 开机自启 / 服务 / Run 键 —— **本包不注册任何**，新机上也要确认没有 |
-| **E 凭据** | ssh 私钥 / API key / 商业 license / 破甲横扫的端点与令牌 |
-| **11.2 旧状态** | 会被旧机缓存污染的目录（`hostlist` / `state` / `.hub` 快照 / worktree…）—— **清掉** |
-| **11.3 自动适配** | 不用你管的（工具路径 / 端口 / 版本号 / `%TEMP%`） |
-| **11.4 永远不动** | 技能正文 / `routing.json` / 门禁 / 中枢本体 |
-| **11.5 顺序** | 换机第一天：**先走一键路径**（`relab2.ps1 setup -DryRun` → `setup` → `doctor`），再按 4–10 步补人做的部分 |
-| **11.6 三个已知坑** | ① `toolmap.default.json` 的生成器**不存在**（自称「请勿手工编辑」，其实要手改）② 文档里的「本机读数」**不是配置**（换机后整表重测）③ **宿主入口文件缺失 = 首次安装，不是错误**（工作台会直接建出来再写） |
-| **11.7 四个新组件** | `relab2.ps1`（门面）/ `mcp-lazy-http.py`（懒启动代理）/ `relab2-tools-mcp.py`（工具箱 MCP）/ `capability-index.py`（能力发现）—— **全属「永远不动」**；但它们的缓存（`%LOCALAPPDATA%\reverse-skill\` 下的 `capabilities\`、`mcp-lazy\`、`tools-mcp\`、`ida-mcp\`）**换机要清**，让新机器重新生成 |
+**先看它的 §11「换机适配面」** —— 那是**完整清单**（§11.1 必改 / §11.2 清旧状态 / §11.3 自动适配 /
+§11.4 永远不动 / §11.5 第一天顺序 / §11.6 三个坑 / §11.7 新组件），照它过一遍再动手。
+> 这里**不再列出 §11 的分组表** —— 分组的权威写法就是 §11 本身，抄一份在这里只会两边各自漂移。
 
 其余章节是验收与排查手册：§1 四步入口链 / §2 摸底四件 / §4 工具怎么被找到 /
-§5 宿主接入与 MCP / §7 四道验收门 / §10 路径纪律。
+§5 宿主接入与 MCP / §7 验收门 / §10 路径纪律。
 
 需要**建设**一台空机（不是适配，是从零装）→ 读 [`环境建设.md`](环境建设.md)。
 
-**第 1.5 步 · 确认这台机器上没有「不该常驻的东西」**
+**第 1.5 步 · 确认这台机器上没有「不该常驻的东西」→ 见 [`环境初始化.md`](环境初始化.md) §11.1-D**
 
-```powershell
-# ★ 按 Action 查，不要按名字查 —— -match 'ida' 会误命中 Windows 自带的 License Validation
-Get-ScheduledTask | Where-Object {
-  ($_.Actions.Arguments + $_.Actions.Execute) -match 'relab2|ida-reverse|watchdog|reverse-skill|hubcore'
-} | Select-Object TaskName,State
-```
-
-**应该输出空。** 本包不注册任何计划任务 / 看门狗 / 开机自启 ——
-MCP 一律**按需启动**，端口平时关着是设计，不是故障。
+那一条给了现成命令（**按 Action 查，不要按名字查** —— `-match 'ida'` 会误命中 Windows 自带的 License Validation）。
+**应该输出空**：本包不注册任何计划任务 / 看门狗 / 开机自启；MCP 一律**按需启动**，端口平时关着是设计，不是故障。
 见到遗留任务先报给主人，别自己删也别让它继续跑（它会周期性弹窗，而且指的多半是上一台机器的路径）。
 
-**第 2 步 · 定位包根 + 摸底自检**
+**第 2 步 · 定位包根 + 摸底自检 → 见 [`环境初始化.md`](环境初始化.md) §1.2–§1.3**
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2-root.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\selfcheck.ps1
-```
-
-> 这两个脚本是**换机专用的**，不要手工重做它们已经做的事。
-> 它们也是「工具明明装了、却说没有」这类**假 MISSING** 的排查入口。
-> ⚠️ `selfcheck` 退出码 0 **只代表已登记的都正常，不代表该有的都有** —— 继续第 3 步。
+`relab2-root.ps1`（定位包根）与 `selfcheck.ps1`（摸底自检）的命令与判据在那边 ——
+这两个脚本是**换机专用的**，不要手工重做它们已经做的事；它们也是「工具明明装了、却说没有」这类**假 MISSING** 的排查入口。
+⚠️ `selfcheck` 退出码 0 **只代表已登记的都正常，不代表该有的都有** —— 继续第 3 步。
 
 **第 3 步 · 按 [`环境建设.md`](环境建设.md) §3-§4 把缺的装上**
 
@@ -112,7 +89,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\selfcheck.ps1
 | 层 | 解决什么 | 入口 | 必需 |
 |---|---|---|---|
 | **① 行为卡片层** | agent **怎么做事** —— 身份、纪律、输出契约 | `kernel/04-console/cards/guest/全能专精指引.md` | 是 |
-| **② 能力路由层** | agent **会做什么** —— 50 个技能模块（46 顶层 + 4 community wrapper）的方法论与工具用法 | `skillpack/skills/SKILL.md` | 是 |
+| **② 能力路由层** | agent **会做什么** —— 63 张技能卡（57 个顶层技能目录 + 6 个嵌套卡）的方法论与工具用法（★ 真值由 `skills/tests/check-readme-scale.py` 现算并写进 `README.md` §规模 的 scale 行 —— 这类数**手写必腐烂**，别在这里改数） | `skillpack/skills/SKILL.md` | 是 |
 | **③ 物理兜底层** | agent **卡住时有人拉它一把** —— 补 timeout、拦 GUI 二进制 | `extensions/pi/cmd-guard/README.md` | 否（仅 pi 宿主） |
 
 ③ 是 **pi 专有扩展**，换别的宿主就没有这层，①②照样完整可用 ——
@@ -121,10 +98,32 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\selfcheck.ps1
 
 ---
 
+## 0.6 想知道"项目由哪些层组成、怎么核验" → 读 [`docs/PROJECT-MAP.md`](docs/PROJECT-MAP.md)
+
+那是**十五层功能线路**的权威说明（入口/技能/路由/工具/MCP/门禁/工作流/换机/**知识库**/
+kernel 行为层/经验卡/社区/扩展/契约/依赖），每层都给了**核验命令**。
+
+**核验工具箱的完整清单（8 条命令 + 每条回答什么）就在那份文件的 §2** —— 本节不再抄第二份，
+抄出来的第二份一定会各自漂移。
+
+> ⚠️ `docs/_snapshots/` 里是**生成快照**（会过期，读前先重跑命令）；**现状**永远以跑命令为准。
+
+---
+
 ## 0.5 想确认「项目是不是做完了」先看这里
 
-**技术侧已闭环**，剩下的边界（Linux/macOS 未实跑、vendored 内容未逐测、
+**别说"已完成"——用命令核验**（这几条谁绿才算谁完成；文档里的形容词一律不算证据）：
+
+```powershell
+python skillpack/skills/tests/run-ci-gates.py          # 全量门禁：应 blocked=0 failed=0
+python skillpack/skills/tests/verify-leaves.py         # 逐树杈：每片叶子都要有入口
+python skillpack/skills/tests/full-simulation.py --full # 逐线路真跑（含 MCP 真起）
+python skillpack/skills/tests/test-tool-recipes.py     # 工具调用配方真跑
+```
+
+剩下的边界（Linux/macOS 未实跑、vendored 内容未逐测、
 GPL 分发待拍板等）全部记在 [`docs/KNOWN-BOUNDARIES.md`](docs/KNOWN-BOUNDARIES.md)。
+**一条命令列全**：`.\relab2.ps1 known`（加 `-Json` 出结构化；**条数以它实际输出为准，别写死**）。
 
 那份文档专门回答「**哪些事这个项目做不到，以及为什么**」——
 是为了让接手的人（或 agent）不必反复撞同一堵墙，
@@ -163,25 +162,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ". .\skillpack\skills\scr
 # $r.Command     # 在哪（用完整路径调用，不要依赖 cwd）
 # $r.Via         # 从哪找到的：env / PATH / map / scan
 
-# 只想快速问一句「装没装」（注意：这一条只是四级里的第 2 级，返回空不等于没装，见下表）
+# 只想快速问一句「装没装」（注意：这条只是四级探测里的第 2 级，返回空 ≠ 没装 —— 四级表见 TOOL-CHAIN.md §2）
 (Get-Command <工具id> -ErrorAction SilentlyContinue).Source
 ```
 
-**★ 换机必踩的坑**（都实测复现过，不是理论）：
+**★ 换机必踩的坑（7 类现象 → 真因 → 处置）→ 见 [`环境初始化.md`](环境初始化.md) §2 与 §4**
 
-| 现象 | 真因 | 怎么办 |
-|---|---|---|
-| 「在此系统上禁止运行脚本」 | 执行策略 `Restricted` | 加 `-ExecutionPolicy Bypass`，**别当成工具缺失** |
-| 明明装了却报 `Available=False` | 用了 `-Name 'xxx.exe'` | 用不带扩展名的 id：`'idat'`→True，`'idat.exe'`→False |
-| `Via=PATH` 指向一个陌生/废弃目录 | 第 2 级 `Get-Command` 会返回 PATH 里任何东西 | **当它不存在**，继续走第 3、4 级 |
-| **`Get-Command` 对所有工具同时返回空** | **进程持有启动时的旧 PATH 快照**：工具迁过目录、注册表已更新，但**已运行的进程不会自动刷新环境** | 比对进程 PATH 与注册表 PATH；探测层已内置自愈，走 `Resolve-ReverseToolSpec` 即自动修复。**绝不能就此判定「本机缺工具」** |
-| **exe 找得到却跑不起来、静默无输出** | **环境变量指向死目录**（`IDADIR`/`DOTNET_ROOT`/`JAVA_HOME`/`GHIDRA_INSTALL_DIR`） | 探测式修正：`$env:DOTNET_ROOT=(Get-Command dotnet).Source.Replace('\dotnet.exe','')` |
-| **探测返回 GUI 版**（`die.exe`/`ida.exe`/`Wireshark.exe`/`x64dbg.exe`） | PATH 里 GUI 与 CLI 并存，**PATH 级命中早于 `_map.json` 级** | 确认文件名是 CLI 孪生：`diec`/`idat`/`tshark`/`headless` |
-| python 命令指向的 venv 里没有 `angr`/`z3` | venv 目录进了 PATH，抢走全局 `python` | 用系统解释器绝对路径调用 |
+那张速查表（执行策略 `Restricted` / 假 `Available=False` / `Via=PATH` 指向废弃目录 /
+`Get-Command` 对所有工具同时返回空 / exe 静默无输出 / 探测返回 GUI 版 / venv 抢走 `python`）
+**权威版在换机手册里**，本节不再复制第二份 —— 复制出来的第二份一定会各自漂移。
 
 **为什么不能只靠 `Get-Command`**：商业工具（IDA / JEB）躺在
 `D:\Tools\disasm\IDA Pro 9.3\` 里，目录名不等于工具名，不在 PATH 上。
-所以完整探测是四级递进 —— 见 `TOOL-CHAIN.md` 第 2 节。
+所以完整探测是四级递进 —— 正本见 `TOOL-CHAIN.md` §2。
 
 **环境自检手册**：`skillpack/skills/references/env-selfcheck.md` —— 换机、PATH 漂移、
 「查不到工具」时的完整排查流程与 10 分钟自检清单。**排查前先读它，别从零试。**
@@ -210,8 +203,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ". .\skillpack\skills\scr
 2. **GUI / 交互式二进制禁入 bash**。这类程序弹窗等输入、零 stdout、进程永不退出 —— 同步等它 = 模型全程不出 token 且不自愈。
    - 已实测替换：`die.exe`→`diec`、`Wireshark.exe`→`tshark`、`ida.exe`→`idat64`/`pyghidra-mcp`/`analyzeHeadless`
    - ⚠️ **`x64dbg.exe` → 走 MCP，不要用 headless**：实测 headless 的 command loop 无命令即自杀
-     （慢目标 60s 也只撑 2.1s），`-cf` 脚本是空壳。x64dbg 只能用 MCP（`x64dbg-automate-mcp`），
-     或人在桌面侧手开 GUI。详见 `环境建设.md` §6.7
+     （慢目标 60s 也只撑 2.1s），`-cf` 脚本是空壳。x64dbg 只能用 MCP（`x64dbg-mcp`）：先跑
+      `x64dbg-reverse/scripts/start.ps1`（它把 headless 归一成 GUI 并**脱离父 shell** 拉起；起不来就 `exit 2`），
+      失败或没有桌面会话时**才**由人在桌面侧手开 GUI。详见 `环境建设.md` §6.7
    - 无 CLI 孪生的（PE-bear、Scylla、010 Editor 等）**只能人工在桌面侧操作，agent 不得拉起**
 3. **一条命令只做一件事**：链式 `&&`/`;`/`|` ≤ 8 段。
 4. **长操作后台 + 轮询**，禁止同步阻塞。
@@ -228,6 +222,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ". .\skillpack\skills\scr
 - **不管理虚拟机**：建工作机 / 打快照是人的活
 - **工具装之前先报告，然后直接装**：官方免费软件直接装，不要反复停下来问。
   只有四类才需要停下来：商业许可 / 账号登录 / 需要管理员而你没有 / 装了两条路都不通。
-  详见 `环境建设.md` §0.2 与 §门5
+  详见 `环境建设.md` §0.2 与 §1「R4 的正确理解」，以及 §5 的「攒问题，最后一次问完」（★ 环境建设的门号与
+  `环境初始化.md` §7 的门号是**两套**，别混）。
 - **卡片载入是「写文件」，不是「改模型」**
 - 报告里的 `x/x` 必须带分母定义，未通过项逐条列出，不许用「已完成」覆盖

@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0",
   "subject": "skills/tests/ci-gates.json",
-  "subject_digest": "sha256:c2b1e583af192a539b077cd61bab7de925d424675363fbf5c55d338769d42f77",
-  "gates_total": 32,
+  "subject_digest": "sha256:6a097406d32add9b81bf1f000c381671f36a4d5313a711debff8c51d0423b8a4",
+  "gates_total": 42,
   "gate_ids": [
     "verify-spec-structure",
     "audit-discovery-surface",
@@ -35,7 +35,17 @@
     "test-routing-e2e",
     "test-trigger-rate",
     "test-assault-behavior",
-    "verify-project-requirements"
+    "verify-project-requirements",
+    "verify-card-drift-forms",
+    "verify-no-forbidden-reads",
+    "check-readme-scale",
+    "verify-capability-help",
+    "test-tools-mcp-capture",
+    "test-tool-recipes",
+    "test-new-tool-discovery",
+    "verify-leaves",
+    "verify-powershell-syntax",
+    "verify-ps1-bom"
   ],
   "note": [
     "Digest lock for the CI gate manifest. verify-gate-wiring.py fails when the",

@@ -67,6 +67,10 @@ description: 二进制差分/符号迁移：旧版符号迁到新版、更新后
 
 ## Prompt 模板
 
+> 独立副本（同一段 prompt + Python 批量调用骨架 + API 配置建议，便于复制到脚本或另一会话）：
+
+`references/prompt-template.md`
+
 ### 标准比对 Prompt
 
 ```text
@@ -305,7 +309,7 @@ found_struct_offset → idapro_set_comments(addr=insn_va, comment="{struct_name}
 
 ## 工具与通道（本机口径）
 
-> 动手前先定位工具与通道：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` 之后 `Resolve-ReverseToolSpec -Name <id>`（返回的 `Command` 是完整路径，别依赖 cwd）；
+> 动手前先定位工具与通道：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` 之后 `Resolve-ReverseToolSpec -Name <id>`（返回的 `Command` 是完整路径，别依赖 cwd）；
 > 通道用 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` 看三列（注册了哪些 / 谁在监听 / 怎么起）。**注册 ≠ 在监听**。
 
 | 环节 | 工具与调用口径 |

@@ -28,7 +28,8 @@ def run(hint: str, source: str | None = None, limit: int | None = None, expect_e
         command.extend(["--source", source])
     if limit is not None:
         command.extend(["--limit", str(limit)])
-    completed = subprocess.run(command, cwd=ROOT, check=False, capture_output=True, text=True, encoding="utf-8")
+    completed = subprocess.run(command, cwd=ROOT, check=False, capture_output=True, text=True,
+                               encoding="utf-8", timeout=300)
     payload = json.loads(completed.stdout)
     if expect_exit is not None:
         require(completed.returncode == expect_exit,

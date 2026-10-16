@@ -1,6 +1,6 @@
 ---
 name: reverse-skill-router
-description: Routes reverse engineering, exploitation, penetration testing, malware, mobile, firmware, browser automation, documentation, and security tasks to the appropriate specialist skill. Use when a task spans modules or the correct reverse-skill entrypoint is unclear.
+description: 技能总路由入口。用于：任务跨模块或不详该走哪个 skill 时，先读本文件再选主路由与工具通道时。
 ---
 # Reverse Engineering Skills Master Control
 
@@ -30,7 +30,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 
 - 现象 → **该进哪个技能**：`SYMPTOM-INDEX.md`
 - 现象 → **进了技能之后该读哪一篇技术文档**：`field-journal/KB-INDEX.md`
-  （206 篇改编自外部知识库 `LING71671/open-reverselab` 的技术正文；来源与改编规则见同目录 `KB-SOURCES.md`）
+  （209 篇改编自外部知识库 `LING71671/open-reverselab` 的技术正文；来源与改编规则见同目录 `KB-SOURCES.md`）
 
 **这不是"开局读一次"的东西** —— 它和技能一样，是**反复回读**的：这一篇不对，就按现象换下一篇。
 **什么时候必须回去查**（八类信号：迷茫 / 换完技能 / 结论矛盾 / 文档和本机对不上 …）见
@@ -50,8 +50,8 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 1. `NOW`：跑平台原生 router（Windows `scripts/master-route.ps1`；Linux/macOS/Kali `scripts/master-route.sh`），从 `config/routing.json` 定 PRIMARY；疑难再读 `routing.md` 三轴附录。
 2. `NOW`：平台原生 `case-init` 落地当前分析项目的 `work/<case>/scope.md` —— 记录目标、网络档、产出物（本包不设目标授权门；产物一律落调用者项目，见 `../RULES_zh.md`）。本地离线样本使用 `offline-sample` preset + explicit sample。
 3. `ACT`：立即打开 PRIMARY `SKILL.md` 执行 ACTION REQUIRED。
-4. `NEXT`：工具路径**当场探测本机** —— 唯一入口是探测层。先按仓内相对路径 dot-source `..\scripts\lib\Bootstrap.ps1`（即 `<技能包根>\skills\scripts\lib\Bootstrap.ps1`），然后 `Resolve-ReverseToolSpec -Name <工具id>`（`env → PATH → 别名表 → 工具根递归` 四级递进，返回 `Available`/`Command`/`Via`，调用前自动自愈 PATH 与 `DOTNET_ROOT`）。
-   **当前部署在 `C:\relab2`（工具根 `D:\Tools`），但这不是约定**（2026-10-10 修正）：2026-10-10 全项目审查给 30 个入口脚本去掉了硬编码 `C:\relab2\...`，全部改成按 `$PSScriptRoot` 逐级上溯定位；`relab2-root.ps1` 也会在多个常见位置里找仓根。**所以换机可以 clone 到任何位置，命令里不要写死路径。**
+4. `NEXT`：工具路径**当场探测本机** —— 唯一入口是探测层。先按仓内相对路径 dot-source `scripts\lib\Bootstrap.ps1`（相对本文件，即 `<技能包根>\skills\scripts\lib\Bootstrap.ps1`），然后 `Resolve-ReverseToolSpec -Name <工具id>`（`env → PATH → 别名表 → 工具根递归` 四级递进，返回 `Available`/`Command`/`Via`，调用前自动自愈 PATH 与 `DOTNET_ROOT`）。
+   **当前部署在 `<仓根>`（工具根 `D:\Tools`），但这不是约定**（2026-10-10 修正）：2026-10-10 全项目审查给 30 个入口脚本去掉了硬编码 `C:\relab2\...`，全部改成按 `$PSScriptRoot` 逐级上溯定位；`relab2-root.ps1` 也会在多个常见位置里找仓根。**所以换机可以 clone 到任何位置，命令里不要写死路径。**
    （若某台机器上相对路径找不到：设 `REVERSE_SKILL_ROOT` 指向技能包根 / 仓库根 / skills 根——探测层三种写法都认。都没有就把情况报出来问人，不许自己找地方新建一份。）
    - ⚠️ **`Get-Command <id>` 返回空 ≠ 本机缺该工具**（2026-10-08 实测事故：工具整体迁目录后注册表已更新，但 agent 进程仍持有启动时的旧 PATH 快照，`Get-Command` 对 `diec`/`r2`/`idat`/`ghidraRun` 全部返回空，agent 据此误判「本机缺工具」并直接停手，实际工具全都在）。**排除办法见 `references/env-selfcheck.md`。**
    - 只有当**四级探测全部 `Available=False`**、且已排除「PATH 快照」「环境变量错位（如 `IDADIR`/`DOTNET_ROOT` 指向死目录时 exe 静默失败）」「GUI/CLI 孪生选错」三种情况后，才允许报「本机缺该工具」。禁止伪造路径。
@@ -67,7 +67,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 
 > **本节是命令纪律的唯一事实源。** 卡片（`<本仓库>/kernel/04-console/cards/guest/全能专精指引.md`）
 > 只是**指向本文件**的路由指针，它不承载纪律内容、不重复本节；如两者冲突，**以本文件为准**。
-> `../指引卡.md`（本包未落地） 同样只是指针。
+> `../指引卡.md` 同样只是指针。
 > ⚠️ 不要再去引仓库外的旧副本（`<开发根>\hubcore\04-console\cards\guest\`）：那份 §1 写的是「必须在隔离虚拟机执行，严禁在宿主机拉起」，与本包「单机·无跨机假设」**完全相反**。
 > 事故背景：2026-10-04 会话 `01a107ea` 两次无响应停顿，根因是本包 `die.exe` 漏登记导致拉起 GUI 版（弹窗、零 stdout、进程不退）。工具执行是**同步阻塞**的：命令不返回，模型不会运行、不会有任何 token 产出，终端计时器继续走。**没有模型能察觉自己的命令卡住**，因此约束必须前置到命令本身。
 
@@ -131,7 +131,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
    **铁律**：反编译 IL 必须使用 `--md <token>` 输出到标准输出（例如 `dnSpy.Console.exe target.dll --il --md 0x06000001`）。
 5. **.NET ilspycmd 运行环境陷阱**：
    `ilspycmd.exe` 为 .NET tool，若未设置 `DOTNET_ROOT` 会因找不到 runtime 退出。
-   **铁律**：调用前必须确保环境变量 `DOTNET_ROOT` 指向本机 .NET runtime 根，路径靠探测、不写死：先 `(Get-Command dotnet -ErrorAction SilentlyContinue).Source` 拿到 `dotnet.exe` 真实路径，取其所在目录作为 `DOTNET_ROOT`，再设 `$env:DOTNET_ROOT = <该目录>`。**禁止在文档或命令里写死任何绝对盘符路径（`X:\...` 形式），一律改为探测式表述或占位符。**
+   **铁律**：调用前必须确保环境变量 `DOTNET_ROOT` 指向本机 .NET runtime 根，路径靠探测、不写死：先 `(Get-Command dotnet -ErrorAction SilentlyContinue).Source` 拿到 `dotnet.exe` 真实路径，取其所在目录作为 `DOTNET_ROOT`，再设 `$env:DOTNET_ROOT = <该目录>`。**禁止把「探测到的运行时路径」写进文档或命令（`X:\...` 形式的工具路径一律改为探测式表述或占位符）。但有两个例外，MUST NOT 被"统一"掉：`C:\relab2`（仓根）与 `D:\Tools`（工具根）是主人定死的约定路径，换机之后依然是这两个 —— 文档/技能卡里直接写它们不是缺陷；换了盘只改环境变量与宿主 `mcp.json`，不改文档。** 判据与理由见 `环境初始化.md` §10 与 `docs/KNOWN-BOUNDARIES.md` 第 10 条。
 6. **工具「无输出 / 超时」≠「该事件没发生」（MUST NOT 当否证）**：
    Frida/调试器**静默、超时、hook 被目标自擦除抹掉**时，只能得出「**未知**」，**不能**读成「该路径未发生」。
    **铁律**：静默/超时的结论只能是 `未观测到（unobserved）`，要下"没发生"必须换一个**不依赖该工具**的独立判据复测；
@@ -153,7 +153,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 ## EXECUTION ENVIRONMENT（运行环境）
 
 > 架构（2026-10-05 起）：**单机 · 无跨机假设**。你只操作自己运行所在的这一台机器，不存在宿主↔客户机的跨设备控制。
-> **技能包根与工具根：当前这台机器是 `C:\relab2` 与 `D:\Tools`，但**不要**当约定写死**（2026-10-10 修正）。30 个入口脚本已改成按 `$PSScriptRoot` 上溯定位，`relab2-root.ps1` 也会在多个常见位置找仓根，换机可以 clone 到任何路径。用相对路径或 `REVERSE_SKILL_ROOT`，别拼绝对路径。
+> **技能包根与工具根：当前这台机器是 `<仓根>` 与 `D:\Tools`，但**不要**当约定写死**（2026-10-10 修正）。30 个入口脚本已改成按 `$PSScriptRoot` 上溯定位，`relab2-root.ps1` 也会在多个常见位置找仓根，换机可以 clone 到任何路径。用相对路径或 `REVERSE_SKILL_ROOT`，别拼绝对路径。
 > 但**工具具体在哪个子目录**不靠声明 —— `winget` 装的进 `C:\Program Files\`、pip 的进用户 `Scripts\`、SDK 的进 `%LOCALAPPDATA\`，所以工具的**具体路径**一律用探测层现场求，不要自己拼子目录。
 > 正确做法：用探测层 —— dot-source `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（配置好的机器；若不存在则从本文件往上两级找 `scripts\lib\Bootstrap.ps1`），调 `Resolve-ReverseToolSpec -Name <工具id>`，它按 `env` → `PATH` → 别名表（仓内 `scripts/lib/toolmap.default.json`，本机 `D:\Tools\_map.json` 可覆盖）→ 工具根递归 四级递进，返回 `Available` / `Command` / `Via`。
 > `Via=scan` 的可信度最低（靠文件名扫出来的），用之前先实跑一次版本输出确认身份。四级说明见 `TOOLS.md` §0；MCP 通道见 `references/tool-registry.md`。
@@ -179,7 +179,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
    - **idalib-mcp / idapro**：IDA Pro 无头 stdio 及 GUI 插件通道（72 个工具）。
    - **jshook / reqable-mcp / playwright-mcp / chrome-devtools**：前端与网络/浏览器分析 MCP 服务。
 2. **已验证通过的 CLI / 无头工具（第二首选）**：
-   - 侦察识别：`diec.exe -d -e -j <file>`（DIE CLI）、`capa.exe -r <规则路径> -j <目标>`（能力与恶意行为匹配）、`floss.exe <目标>`（提取静态/混淆/解密字符串，.NET 带 `--language dotnet`）。
+   - 侦察识别：`diec.exe -d -e -j <file>`（DIE CLI）、`capa.exe -q -r <规则路径> -j <目标>`（能力与恶意行为匹配）、`floss.exe <目标>`（提取静态/混淆/解密字符串，.NET 带 `--language dotnet`）。
    - 静态反解：`ilspycmd <dll> -p -o <outdir>`（.NET 反编译，前置 `DOTNET_ROOT`，按上文铁律由本机 `Get-Command dotnet` 探测得出）、`dnSpy.Console.exe <dll> --md <token>`（IL 检查）、`radare2.exe -q -c 'iI' <file>`（r2 CLI 分析）。
    - 动态排查：`cdb.exe -z <dump> -c "!analyze -v; q"`（WinDbg 命令行 crash dump 分析）、`pe-sieve.exe /pid <PID>`（进程注入与 inline hook 扫描）。
    - 仿真与约束求解：`python` 专精库 `angr`（符号执行）、`qiling`（OS 级仿真执行）、`z3`（Z3-solver 约束求解）、`lief`（PE/ELF 头部注入修改）、`objection`（Frida 自动化）。
@@ -191,7 +191,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 凡进入逆向攻坚任务，必须依循以下四阶状态机推进：
 
 - **阶段一：目标侦察与保护层排查 (Recon & Triage)**
-  - 动作：调用 `diec.exe -d -e -j` 检测架构与加壳；调用 `floss.exe` 提取静态与解码字符串；调用 `capa.exe -r <rules> -j <target>` 识别加密、网络与恶意能力分支。
+  - 动作：调用 `diec.exe -d -e -j` 检测架构与加壳；调用 `floss.exe` 提取静态与解码字符串；调用 `capa.exe -q -r <rules> -j <target>` 识别加密、网络与恶意能力分支。
   - 产出：明确 Entry Point、编译器/混淆类型、加密/哈希特征与初步脱壳路线。
 - **阶段二：动静反解与关键逻辑定位 (Disassembly & Logic Trace)**
   - 动作：优先调用 `pyghidra-mcp`（20 tools；**端点按 `references/tool-registry.md` 的 `pyghidra-mcp` 行取，启动方式用四级探测现场求，不要写死脚本名**；实测全仓与本机都不存在 `start-ghidra-mcp.bat` 这个文件）或 `idalib-mcp` / `idapro` 反编译关键函数；C#/.NET 目标调用 `ilspycmd` 或 `dnSpy.Console --md`；CLI 侦察调用 `radare2.exe -q -c 'iI'`。
@@ -202,13 +202,13 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
   - 产出：抓取运行时解密密钥、明文通信数据、动态导出函数与跳转判断值。
 - **阶段四：仿真验证与资产固化 (Emulation & Crystallization)**
   - 动作：跨架构或复杂反分析时使用 `qiling` 框架仿真执行；约束路径分支使用 `angr` / `z3` 求解；二进制修补使用 `lief` 打补丁；算法使用 Python 独立脚本还原并对账验证。
-  - 产出：在项目根目录生成标准化 `REVERSE-MAP.md`（本包未落地），沉淀函数偏移、特征码、密钥算法与复验指令。
+  产出：在项目根目录生成标准化 `REVERSE-MAP.md`，沉淀函数偏移、特征码、密钥算法与复验指令。
 
 ### 端口与地址（MUST）
 端口/地址 MUST 来自 Tool Registry（`references/tool-registry.md`）或实测发现，**禁止猜**。
 
 ### 输出纪律（MUST）
-产物（`REVERSE-MAP.md`（本包未落地） / 分析脚本 / dump / patched 样本 / pcap / 日志）**MUST 先落盘到工作目录并校验哈希**，之后才允许清理；不得在产物落盘前删除工作目录或覆盖原始样本。
+产物（`REVERSE-MAP.md` / 分析脚本 / dump / patched 样本 / pcap / 日志）**MUST 先落盘到工作目录并校验哈希**，之后才允许清理；不得在产物落盘前删除工作目录或覆盖原始样本。
 **失败分支**：落盘或哈希校验失败 → 停下报告，不许继续下一步，也不许「先清理再说」。
 
 ## 指令语义级别（RFC 2119）
@@ -282,7 +282,7 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 1. 平台原生 router（Windows `scripts/master-route.ps1`；Linux/macOS/Kali `scripts/master-route.sh`）→ PRIMARY（`config/routing.json`）
 2. 平台原生 `case-init` → `pentest-tools/templates/scope.md`
 3. 打开 PRIMARY `SKILL.md`
-4. 疑难时读 `routing.md`；需要本机工具路径时**走探测层**：`. ..\scripts\lib\Bootstrap.ps1`（相对本文件） → `Resolve-ReverseToolSpec -Name <工具id>`（`Get-Command` 只是其中一级，返回空不等于缺工具，见 `references/env-selfcheck.md`；`TOOLS.md` 是装法说明书，不是路径索引）
+4. 疑难时读 `routing.md`；需要本机工具路径时**走探测层**：`. scripts\lib\Bootstrap.ps1`（相对本文件） → `Resolve-ReverseToolSpec -Name <工具id>`（`Get-Command` 只是其中一级，返回空不等于缺工具，见 `references/env-selfcheck.md`；`TOOLS.md` 是装法说明书，不是路径索引）
 
 社区适配层只在 `R46`–`R49` 或 canonical 专项 wrapper 已选中后按需读取：
 `skills/community/registry.json` 是 provenance/maturity/risk 目录，
@@ -336,8 +336,9 @@ description: Routes reverse engineering, exploitation, penetration testing, malw
 
 - **流量抓包与代理逆向手册**: `protocol-reverse/references/traffic-proxy.md`（`mitmproxy` 证书与 8080 端点、Wireshark/Fiddler、Frida 证书绑定绕过）
 - **装法说明书**: `TOOLS.md`（干什么用 / 哪个 skill 要 / 装法 / 许可。**不含本机路径**，也没有生成器 —— 直接手改）
+- **机器契约（JSON Schema）**: `../schemas/README.md`（冻结给脚本 / CI 读的契约：谁生产、谁校验、什么格式）；逐条调用方清单在 `ops/README.md` 的「机器契约」一节
 - 本机还有 **anything-analyzer**（端口 23816）MCP 服务器，提供浏览器自动化、HTTP 捕获和 AI 分析能力
-- 包根目录下的 `Readme.md`（本包未落地） 提供面向各代码 AI 客户端的通用安装与接入说明
+- 包根目录下的 `../Readme.md` 提供面向各代码 AI 客户端的通用安装与接入说明
 
 ## 按需自举
 

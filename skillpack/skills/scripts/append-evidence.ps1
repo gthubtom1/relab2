@@ -220,7 +220,7 @@ try {
 }
 
 $index = Join-Path $evDir 'INDEX.md'
-$line = "- $idSafe | $sev | $st | $titleLine | $fileName"
+$line = "| $idSafe | $sev | $st | $titleLine | $fileName |"
 if (-not (Test-Path -LiteralPath $index)) {
     $hdr = @"
 # Evidence index

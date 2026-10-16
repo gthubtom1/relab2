@@ -6,6 +6,8 @@ description: APK 逆向：jadx/apktool 解包、改 smali/AndroidManifest、重�
 ## ACTION REQUIRED（读完后立刻执行）
 
 > 端点提取/Frida 自适应等社区对照：../references/community-security-skills.md；动态分析要先连上设备（真机开 USB 调试，或模拟器走 `references/emulator-lab.md`）。
+>
+> **技法分篇导航**（按现象找不到正文时从这里进）：全库篇目索引 `references/apk-reverse-index.md`（23 篇按 dex-java / native / crypto / network / dynamic / packer / patch-repack 分类）；拿到包不知道走哪条路 → 分叉决策图 `references/attack-network.md`；Frida 脚本速查 `references/frida-cookbook.md`、通用绕过框架 `references/frida-bypass-kit.md`；Native/Frida 高级用法/pinning/root/脱壳/Flutter 综合面 `references/android-advanced.md`；踩坑与可复用打法按 `references/ai-findings.md` 的格式回写一条。
 
 1. `NOW`: 读 `../field-journal/precedent-reverse.md` —— 本机做过多轮的常规操作清单，直接照做，不要停在犹豫上
 2. `NOW`: 确认当前任务是否命中本 skill 的适用范围
@@ -487,3 +489,7 @@ APK 实例常用写法：
 
 - `confirmed`：同一结论在 **jadx 反编译的 Java 层** 与 **smali 层** 各看到一次（或 Java + Frida 运行时 Hook 各一次），且两处指向同一类/方法
 - `low`：仅有 `jadx` 反编译结果、混淆或反编译失败导致 smali 未交叉核对；或只凭 `aapt dump badging` 的权限列表推断行为
+
+## 关联的社区扩展
+
+- [apk-extension](../community/apk-extension/SKILL.md) —— APK 逆向能力扩展入口（新版 doctor / capability matrix / DEX/Dart/native / Frida / 重打包与证据脚本）

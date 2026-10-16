@@ -45,7 +45,7 @@ description: Wi-Fi 安全评估：监听模式、WPA/WPA2 握手/PMKID、aircrac
 | `nmap` / `curl` | 有线侧端口、captive portal 取页 | `curl -i http://<gw>/portal` 看跳转字段；门户 Web 面漏洞不属本技能 |
 | `sigma` | 流氓 AP / 异常 beacon 的 WIDS 检测规则 | 同 SSID 双 BSSID、异常 OUI；规则交 `../threat-hunting/` 落地 |
 
-探测层（唯一路径入口）：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name tshark`。
+探测层（唯一路径入口）：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name tshark`。
 `Get-Command` 查空 ≠ 缺工具（四级递进：env → PATH → `_map.json` → 工具根扫描）；MCP 通道是否在监听用 `mcp-status.ps1` 看，注册 ≠ 在监听。
 
 ## 参考

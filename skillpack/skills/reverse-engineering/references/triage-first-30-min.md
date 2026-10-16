@@ -253,7 +253,7 @@ $floss = (Resolve-ReverseToolSpec -Name 'floss').Command
 
 # 能力识别 + ATT&CK 映射（可 -r 只跑某条规则，快很多）
 $capa = (Resolve-ReverseToolSpec -Name 'capa').Command
-& $capa -r 'create file' -r 'create process' -r 'anti-debug/evasion' $S 2>$null |
+& $capa -q -r 'create file' -r 'create process' -r 'anti-debug/evasion' $S 2>$null |
   Tee-Object -FilePath "$Out\capa.txt"
 ```
 

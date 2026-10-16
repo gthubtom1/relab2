@@ -74,7 +74,7 @@ function Probe-IdaMcp {
         if ($count -gt 0) {
             return @{ Status = 'stale'; Count = $count; Owners = $owners; GuiOwners = $guiOwners }
         }
-    } catch {}
+    } catch {}   # scan-ok: REST 探测失败**本身**就是判据——下面按 listening / guiOwners 分流成 busy/down，不会冒充 healthy
 
     if ($guiOwners.Count -gt 0) {
         return @{ Status = 'gui_busy'; Count = 0; Owners = $owners; GuiOwners = $guiOwners }
@@ -488,7 +488,7 @@ try {
     if ($create -and $create.ReturnValue -eq 0 -and $create.ProcessId) {
         $procId = [int]$create.ProcessId
     }
-} catch {}
+} catch {}   # scan-ok: 失败时 $procId 保持 0 → 下面还有第二/第三启动路径，最后 if ($procId -le 0) 统一报错退出
 
 if ($procId -le 0) {
     try {
@@ -506,7 +506,7 @@ if ($procId -le 0) {
         $psi.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
         $p = [System.Diagnostics.Process]::Start($psi)
         if ($p) { $procId = $p.Id }
-    } catch {}
+    } catch {}   # scan-ok: 同上 —— 这条也失败就到下面 if ($procId -le 0) 报错，不会静默成功
 }
 
 if ($procId -le 0) {

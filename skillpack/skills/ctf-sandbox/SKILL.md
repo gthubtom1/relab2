@@ -33,7 +33,7 @@ description: CTF/AWD 靶场入口：case-init 门禁 + sidecar orchestrator 选�
 工具路径一律现场探测，不猜：
 
 ```powershell
-. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1
+. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1
 $r = Resolve-ReverseToolSpec -Name pwntools   # 读 $r.Available / $r.Command / $r.Via
 ```
 
@@ -164,3 +164,7 @@ NEXT:       <继续 | 换技能 | 停止（附成本判据）>
 - `confirmed`：flag 已取得并有原始输出证据，且平台**接受了**该 flag（不是本地猜的格式）
 - `medium`：解法在本地靶场跑通，但目标环境版本/架构与之不符
 - `low`：仅推断出解法但未实际跑通，或题目分类仍有两轮无证据的假设
+
+## 关联的社区扩展
+
+- [ctf-hub](../community/ctf-hub/SKILL.md) —— CTF 任务分诊与教学适配层（自动分流 / 头脑风暴 / 比赛切题），接回本技能的 scope、case 与证据流程

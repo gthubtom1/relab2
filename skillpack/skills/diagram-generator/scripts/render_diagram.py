@@ -21,8 +21,24 @@ PLANTUML_EXTS = {".puml", ".plantuml"}
 SVG_EXTS = {".svg"}
 
 def run(cmd: list[str], cwd: Path | None = None) -> None:
+    """跑一个外部渲染器。
+
+    ★ 2026-10-16：这里原来没有 timeout —— 这是本仓唯一一处**真的**缺超时（其余被 D6 扫出来的
+      都是误报：`Popen` 不能传 `timeout=`，作者都用了 `wait(timeout=…)`；`mcp-lazy-http` 是
+      故意"发射后不管"）。渲染器里 `java -jar plantuml.jar` 碰上大图/内存不足会**挂住不放**，
+      没有超时就会把调用方一起卡死。默认 300s，可用环境变量 `REL2_RENDER_TIMEOUT` 覆盖。
+    """
     print("$ " + " ".join(cmd))
-    completed = subprocess.run(cmd, cwd=str(cwd) if cwd else None, text=True, capture_output=True)
+    try:
+        _timeout = int(os.environ.get("REL2_RENDER_TIMEOUT", "300"))
+    except ValueError:
+        _timeout = 300
+    try:
+        completed = subprocess.run(cmd, cwd=str(cwd) if cwd else None, text=True,
+                                   capture_output=True, timeout=_timeout)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"渲染器超过 {_timeout}s 未返回（已终止）：{' '.join(cmd[:3])} …"
+                           f" —— 大图可调大 REL2_RENDER_TIMEOUT") from None
     if completed.stdout:
         print(completed.stdout, end="")
     if completed.stderr:

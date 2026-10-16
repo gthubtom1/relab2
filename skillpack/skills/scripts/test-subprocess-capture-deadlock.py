@@ -97,7 +97,9 @@ def case_capture_hangs() -> tuple[bool, str]:
     t.join(timeout=60)
     try:
         proc.kill()
-    except Exception:
+    except OSError:
+        # 采集线程可能已经把这棵进程树收掉了 —— kill 报错在这里不携带信息，
+        # 结论由 outcome["eof"]（下面 30 行内）判定，不靠这一句。
         pass
     took = time.time() - started
 

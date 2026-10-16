@@ -56,7 +56,7 @@ $env:PATH = [Environment]::GetEnvironmentVariable('PATH','Machine') + ';' +
 里才是 IDA），单靠它必然漏。
 
 ```powershell
-$root = $env:REVERSE_SKILL_ROOT; if (-not $root) { $root = 'C:\relab2' }   # 换机先跑 relab2-root.ps1
+$root = $env:REVERSE_SKILL_ROOT; if (-not $root) { $root = '<仓根>' }   # 换机先跑 relab2-root.ps1
 . "$root\skillpack\skills\scripts\lib\Bootstrap.ps1"
 $r = Resolve-ReverseToolSpec -Name 'idat'
 $r.Available   # 有没有
@@ -154,7 +154,7 @@ Get-Item 'HKCU:\Environment' | Select-Object -ExpandProperty Property | ForEach-
   foreach ($seg in ($v -split ';')) { $p=$seg.Trim(); if ($p -and -not (Test-Path $p)) { "死路径: $n = $p" } } }
 
 # 2. 探测层覆盖率（把你要用的工具都列上）
-$root = $env:REVERSE_SKILL_ROOT; if (-not $root) { $root = 'C:\relab2' }   # 换机先跑 relab2-root.ps1
+$root = $env:REVERSE_SKILL_ROOT; if (-not $root) { $root = '<仓根>' }   # 换机先跑 relab2-root.ps1
 . "$root\skillpack\skills\scripts\lib\Bootstrap.ps1"
 foreach ($t in @('diec','r2','upx','idat','ghidra','x64dbg','capa','python')) {
   $r = Resolve-ReverseToolSpec -Name $t
@@ -162,6 +162,9 @@ foreach ($t in @('diec','r2','upx','idat','ghidra','x64dbg','capa','python')) {
 }
 
 # 3. 「能解析」不等于「能跑」——实跑版本
+#    ★ `diec -h` / `r2 -v` 是版本/帮助探针，**不在** skills/config/tool-recipes.json 里；
+#      本条只作「能跑」验证，实测两形态均安全（2026-10-16：`diec -h` 0.3s 打印 usage、`r2 -v` 0.3s 打印版本行）。
+#      真正干活时的参数以配方为准：`diec -d -e -j <file>`、`r2 -q -c 'iI;q' <file>`。
 diec -h; r2 -v; upx --version; java -version; dotnet --version
 
 # 4. 有 GUI 混入吗
@@ -183,7 +186,7 @@ python -c "import angr, z3, lief, capstone"   # 应无 ImportError
 
 | 根 | 本机已验证值 | 可覆盖的环境变量 |
 |---|---|---|
-| 仓库根 | `C:\relab2` | — |
+| 仓库根 | `<仓根>` | — |
 | 技能包根 | `C:\relab2\skillpack` | `REVERSE_SKILL_ROOT` |
 | 工具根 | `D:\Tools` | `REVERSE_TOOL_ROOT` |
 

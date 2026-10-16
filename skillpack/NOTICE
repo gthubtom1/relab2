@@ -65,8 +65,21 @@ Copyright (c) 2026 zhaoxuya520
 | `open-reverselab` | https://github.com/LING71671/open-reverselab | `e44c351032b2530c926b2aea224276bbee591b16` | `GPL-3.0` | `review-required` | `docs/community/open-reverselab-THIRD_PARTY_NOTICES.md` |
 | `spider-king-skill` | https://github.com/aoyunyang/spider-king-skill | `1ca713658524cadf5a1ca70cd3de3e1ec2b8073e` | `MIT` | `review-required` | `docs/community/spider-king-skill-THIRD_PARTY_NOTICES.md` |
 
-⚠ **`open-reverselab` 是 GPL-3.0（copyleft）**，改编内容 218 篇（2026-10-10 实测），
-全部位于 `skillpack/skills/*/references/` 下，零例外。
+⚠ **`open-reverselab` 是 GPL-3.0（copyleft）**，改编内容 **209 篇**（2026-10-16 现算），
+全部位于 `skillpack/skills/**/references/` 下，零例外。
+
+> **复算命令**（判据 = 文件头带**标准来源声明行**，且落在 `skills/**/references/` 下）：
+> ```bash
+> python skillpack/skills/scripts/verify-gpl-distribution-boundary.py   # 输出里「GPL 改编副本：209 篇」那一行
+> ```
+> 等价粗算（⚠ `skills/` 下有 junction，`grep -r` 可能把同一份文件数两遍；**以门禁现算为准**）：
+> ```bash
+> grep -rl '\*\*来源\*\*：改编自 `LING71671/open-reverselab`' skillpack/skills/*/references | wc -l
+> ```
+> ⚠ **别把两种口径混起来**：正文里"提到"过来源的文件是 **222** 篇（含索引/交叉引用的转述），
+> 而**真的是改编落盘副本**的只有 **209** 篇 —— 本行说的是后者。
+> 本数字随 KB 落盘只增不减，引用前重跑一次。门禁 `verify-gpl-distribution-boundary.py`
+> 已改为按同一判据**现算**（`count_adapted_files()`），不再写死；**旧值 218 是早先写死在门禁里的快照，别再引用**。
 
 **许可策略已决定（2026-10-10）：方案 C —— 保持现状。**
 该决定只在**不对外分发**的前提下成立：GPL-3.0 的分发义务在向他人交付时触发，

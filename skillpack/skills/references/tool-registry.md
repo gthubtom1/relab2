@@ -31,13 +31,29 @@ Test-ReverseTcpPort -Port <端口>     # 1 秒超时，不阻塞
 
 ## 1. 逆向方向 MCP 通道
 
+> 本表的事实源是 `skills/scripts/register-mcp.py`（**出厂 6 条**，分两类形态）。
+> 表里额外那条 `idalib-mcp` 是**可选项，不在出厂 6 条里** —— 它不会自动注册，
+> 要用得自己加。**别把本表的行数当"本机注册了几条"**，那个数现查：
+> `python -c "import json,os;print(list(json.load(open(os.path.expanduser('~/.omp/agent/mcp.json'),encoding='utf-8'))['mcpServers']))"`
+
 | 通道 | 协议 | 端点 | 依赖 | 启动方式 |
 |---|---|---|---|---|
-| `idalib-mcp` | stdio | — | **IDA 本体** + `IDADIR` 环境变量指向它 | pip 装完直接注册即可，无需起服务 |
-| `idapro` | streamable-http | `127.0.0.1:13337/mcp` | IDA GUI 内插件 | **按需**：用到时跑 `<技能包根>\skills\ida-reverse\scripts\start.ps1`，健康则复用、没人听才起。**没有常驻、没有计划任务**；多实例端口递增，以 Output 窗口 `[MCP] port=` 日志为准 |
 | `pyghidra-mcp` | stdio（本机 omp）或 streamable-http | stdio 无端点；HTTP 形态 `127.0.0.1:9111/mcp` | **JDK 21** + Ghidra 本体 | **按需**：stdio 由宿主按会话拉起；HTTP 形态冷启 7–10 s。**不要设成常驻服务** |
+| `angr-mcp` | stdio（`python -m angr.mcp`） | — | Python + `angr`（本机走专用 `angr-mcp-venv`，**不要用普通 venv 的旧 angr**） | 宿主按会话自动拉起 |
+| `relab2-tools` | stdio | — | Python（`mcp` SDK） | **宿主按会话自动拉起**。把**本机工具链**暴露给模型：`local_tools`（实时清单）/ `run_tool`（按 id 调工具，路径走探测层）/ `triage_target` / `find_capability`（按能力找工具）/ `read_tool_output`（按 handle 分页取回原始输出）。实现见 `skills/scripts/relab2-tools-mcp.py` |
+| `rea` | stdio（经本仓桥） | — | Node + `rea-agents`（npm） | **宿主按会话拉起本仓桥** `skills/scripts/rea-bridge-mcp.py`（`--node` / `--rea-mjs`），后端由桥按需拉起。形状与实测边界见 [`rea-integration.md`](rea-integration.md) |
+| `idapro` | streamable-http | `127.0.0.1:13337/mcp` | IDA GUI 内插件 | **按需**：用到时跑 `<技能包根>\skills\ida-reverse\scripts\start.ps1`，健康则复用、没人听才起。**没有常驻、没有计划任务**；多实例端口递增，以 Output 窗口 `[MCP] port=` 日志为准 |
 | `x64dbg-mcp` | http（`.dp64`/`.dp32` 插件） | x64=`127.0.0.1:9094`，x32=`127.0.0.1:9095` | x64dbg + 插件 + Bearer token | **按需**：插件活在被调试进程里，进程不在端口就不在。拉起方式见该技能自己的文档 |
-| `relab2-tools` | stdio | — | Python（`mcp` SDK） | **宿主按会话自动拉起**。把**本机工具链**暴露给模型：`local_tools`（实时清单）/ `run_tool`（按 id 调工具，路径走探测层）/ `triage_target` / `find_capability`（按能力找工具）。实现见 `skills/scripts/relab2-tools-mcp.py` |
+| `idalib-mcp`（**可选，非出厂**） | stdio | — | **IDA 本体** + `IDADIR` 环境变量指向它 | pip 装完直接注册即可，无需起服务；**不会自动注册，要用自己加** |
+
+> **★ 大输出语义（2026-10-16 起）**：`run_tool` / `triage_target` / `find_capability` 的返回**永远是有界且合法 JSON** ——
+> 每路输出只给**前 1 KiB 预览**，同时给 `stdout_bytes` / `stderr_bytes` / `stdout_sha256` / `stderr_sha256` /
+> `capture_complete` / `handle`。要读全文就 `read_tool_output(handle, "stdout"|"stderr", offset, length)`
+> —— 按**字节**偏移分页，返回 base64（保真非 UTF-8 与 NUL），带 `next_offset` / `eof`。
+> **不要把预览当全文**：`capture_complete=false` 表示这一路没被完整捕获（超时 / 超单流上限 32 MiB），
+> 它和"预览被截"是两回事。原始结果落在 `%LOCALAPPDATA%\reverse-skill\tools-mcp\results\<handle>\`，
+> 保留 24 h、总量上限 256 MiB：超限时**明确报限额**，不静默删旧 handle。
+> 验收命令（不需要目标工具，自带夹具）：`python skills/scripts/relab2-tools-mcp.py --selftest`。
 
 > **★ 上表是「通道本体」。本包出厂时**把 `idapro` 与 `x64dbg-mcp` 注册成
 > **stdio·懒启动代理**（`skills/scripts/mcp-lazy-http.py`）—— 这是为了治「模型不主动按开关」的病：
@@ -113,3 +129,13 @@ Test-ReverseTcpPort -Port <端口>     # 1 秒超时，不阻塞
 3. 在**本文件**登记端点与依赖。
 
 **不要**在本文件写「已装 / 未装 / 版本」—— 那是会腐烂的东西。
+
+---
+
+## 7. 通道实测记录（记录 ≠ 事实源）
+
+按上面流程真正接过一轮的通道，把「实测输出 + 踩到的坑 + 可用/不可用边界」单独落成一份记录，
+放在本目录下（**不在本文件里复述状态**）：
+
+- [`rea-integration.md`](rea-integration.md) — REA（`rea-agents`）MCP stdio 通道：启动形态怎么取、
+  `tools/list` 与 `tools/call` 的实测返回、以及本机**不可用**的那一路（原生反编译要外部 provider）。

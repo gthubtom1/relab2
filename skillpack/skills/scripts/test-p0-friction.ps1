@@ -78,6 +78,9 @@ $ci = Join-Path $scriptDir 'case-init.ps1'
     -TargetUrl 'https://app.example.invalid/' `
     -NetworkProfile 'authorized_target_only' 2>&1 |
     Tee-Object -FilePath $ciLog | Out-Null
+# ★ 2026-10-16（D4）：产物断言更强，但子进程退出码是第一手信号 —— 先判它，
+#   否则「case-init 崩了」会以「某个字段不对」的形态出现，排查要绕一圈。
+if ($LASTEXITCODE -ne 0) { Bad "case-init exit $LASTEXITCODE (authorized target)" }
 $caseRoot = Join-Path $PackageRoot ("work\{0}" -f $caseName)
 $scopePath = Join-Path $caseRoot 'scope.md'
 if (-not (Test-Path $scopePath)) { Bad "scope.md missing at $scopePath" }
@@ -103,6 +106,7 @@ else {
 # 3) bare case-init still pending defaults
 $bareName = 'p0-bare-' + (Get-Date -Format 'HHmmss')
 & $HostExe -NoProfile -ExecutionPolicy Bypass -File $ci -CaseName $bareName -PackageRoot $PackageRoot 2>&1 | Out-Null
+if ($LASTEXITCODE -ne 0) { Bad "case-init exit $LASTEXITCODE (bare defaults)" }
 $bareScope = Get-Content (Join-Path $PackageRoot ("work\{0}\scope.md" -f $bareName)) -Raw -Encoding UTF8
 if ($bareScope -match 'status:\s*pending' -and $bareScope -match 'ready_for_act:\s*false') {
     Ok 'bare case-init still pending/offline defaults'
@@ -126,6 +130,7 @@ $aeLog = Join-Path $ScratchDir 'append-evidence.log'
     -Status observed `
     -RawExcerpt 'HTTP/1.1 200 OK' 2>&1 |
     Tee-Object -FilePath $aeLog | Out-Null
+if ($LASTEXITCODE -ne 0) { Bad "append-evidence exit $LASTEXITCODE (E-001)" }
 $evFile = Join-Path $evCase 'evidence\E-001.md'
 if (-not (Test-Path $evFile)) { Bad 'E-001.md not written' }
 else {
@@ -146,6 +151,7 @@ $artifact = Join-Path $evCase 'evidence\fixture.bin'
     -ArtifactPath 'evidence\fixture.bin' `
     -Severity info `
     -Status observed 2>&1 | Out-Null
+if ($LASTEXITCODE -ne 0) { Bad "append-evidence exit $LASTEXITCODE (E-002 with artifact)" }
 $hashedEvidence = Join-Path $evCase 'evidence\E-002.md'
 if (-not (Test-Path $hashedEvidence)) { Bad 'E-002.md not written' }
 else {
@@ -210,6 +216,7 @@ $labName = 'p0-lab-' + (Get-Date -Format 'HHmmss')
     -TargetUrl 'https://ginandjuice.shop/' `
     -NetworkProfile 'lab_only' `
     -InScopeAssets @('https://ginandjuice.shop/', 'ginandjuice.shop') 2>&1 | Out-Null
+if ($LASTEXITCODE -ne 0) { Bad "case-init exit $LASTEXITCODE (multi-asset lab)" }
 $labScopePath = Join-Path $PackageRoot ("work\{0}\scope.md" -f $labName)
 $labScope = Get-Content $labScopePath -Raw -Encoding UTF8
 $labScope | Set-Content (Join-Path $ScratchDir 'scope-lab.md') -Encoding UTF8
@@ -228,6 +235,7 @@ $junkName = 'p0-junk-' + (Get-Date -Format 'HHmmss')
     -AuthStatus 'demo.owasp-juice.shop' `
     -TargetUrl 'https://example.invalid/' `
     -NetworkProfile 'lab_only' 2>&1 | Tee-Object -FilePath (Join-Path $ScratchDir 'case-init-junk-auth.log') | Out-Null
+if ($LASTEXITCODE -ne 0) { Bad "case-init exit $LASTEXITCODE (junk AuthStatus)" }
 $junkScope = Get-Content (Join-Path $PackageRoot ("work\{0}\scope.md" -f $junkName)) -Raw -Encoding UTF8
 $junkScope | Set-Content (Join-Path $ScratchDir 'scope-junk-auth.md') -Encoding UTF8
 if ($junkScope -match 'status:\s*granted' -and $junkScope -notmatch 'status:\s*demo\.owasp') {
@@ -303,6 +311,7 @@ if (Test-Path $recon) {
 $forceName = 'p0-forceonly-' + (Get-Date -Format 'HHmmss')
 & $HostExe -NoProfile -ExecutionPolicy Bypass -File $ci `
     -CaseName $forceName -PackageRoot $PackageRoot -ReadyForAct 2>&1 | Out-Null
+if ($LASTEXITCODE -ne 0) { Bad "case-init exit $LASTEXITCODE (ReadyForAct only)" }
 $forceScope = Get-Content (Join-Path $PackageRoot ("work\{0}\scope.md" -f $forceName)) -Raw -Encoding UTF8
 if ($forceScope -match 'ready_for_act:\s*false' -and $forceScope -match 'status:\s*pending') {
     Ok 'ReadyForAct alone does not bypass auth'

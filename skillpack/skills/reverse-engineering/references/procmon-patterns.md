@@ -172,7 +172,7 @@ target events     = 73
      1  RegQueryValue          HKLM\System\CurrentControlSet\Control\Nls\CustomLocale\zh-CN
      1  RegQueryValue          HKLM\System\CurrentControlSet\Control\Nls\ExtendedLocale\zh-CN
      1  RegQueryValue          HKLM\...\Control\Session Manager\RaiseExceptionOnOverflowCheck
-     1  CreateFile             C:\relab2
+     1  CreateFile             <仓根>
      1  QueryNameInformationFile
      1  WriteFile
 ```
@@ -181,7 +181,7 @@ target events     = 73
 1. **目标只加载了 4 个模块**（自己 + ntdll + kernel32 + KernelBase）—— 没有加密/混淆迹象。
 2. **注册表访问集中在 `Control\Nls\*`**（locale 探测）和 `Session Manager` —— 这是
    CRT 初始化的标准行为，**不是可疑行为**。不要把这些当 IOC。
-3. **唯一一次 `CreateFile` 是 `C:\relab2`（目录查询）** + 一次 `WriteFile` —— 落盘行为。
+3. **唯一一次 `CreateFile` 是 `<仓根>`（目录查询）** + 一次 `WriteFile` —— 落盘行为。
 
 ### 5. 过滤器配置（GUI，⚠️ 无 CLI）
 
@@ -291,7 +291,7 @@ for r in rows:
    **若 `Load Image` 数量远超模块数、或出现大量未知 DLL 加载 → 有隐藏加载/注入。**
    **若全是 `Control\Nls\*` / `Session Manager` → 那只是 CRT 初始化，不是 IOC。**
 3. **`CreateFile` / `WriteFile` 有具体路径**。判据形态是 `(op, path)` 去重表里出现具体文件路径
-   （实测 `CreateFile C:\relab2`）。**只有操作名没有路径 = 没抓到真正落盘行为。**
+   （实测 `CreateFile <仓根>`）。**只有操作名没有路径 = 没抓到真正落盘行为。**
 4. **时间线单调且间隔合理**。判据形态是按 `Time of Day` 排序后的事件序列。
    **同一毫秒内大量事件通常是枚举/扫描**，间隔拉长的事件才是有意义的动作。
 5. **采集体积在预期内**。实测 20 秒 = 540 MB。**超过 1 GB 说明没配过滤器**，

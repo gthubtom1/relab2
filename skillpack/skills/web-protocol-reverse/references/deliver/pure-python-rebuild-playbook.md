@@ -173,7 +173,7 @@ r = sess.post(url, data=body, headers=headers, cookies=jar)
 
 ## 示例 fixture（Example fixtures）
 
-`../examples/douyin-bdms-pure/` 里有一个「固定 trace 式纯 Python 签名维护」案例的基元向量与笔记（`../examples/douyin-bdms-pure/algorithm-notes.md`）。**把它当作 fixture 纪律与负面边界的示例**，不是路线选择器，也不是从零开始的完整说明书。
+`../examples/douyin-bdms-pure/` 里有一个「固定 trace 式纯 Python 签名维护」案例的基元向量与笔记（[algorithm-notes.md](../examples/douyin-bdms-pure/algorithm-notes.md)）。**把它当作 fixture 纪律与负面边界的示例**，不是路线选择器，也不是从零开始的完整说明书。
 
 ## 相关（Related）
 

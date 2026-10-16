@@ -1,6 +1,6 @@
 ---
 name: community-ctf-hub
-description: CTF 任务的友好分诊与教学适配层。把自动分流、头脑风暴、比赛和题解输出接到 reverse-skill 的 scope、case、证据和 CTF sandbox 流程。
+description: CTF 任务分诊与教学适配层。用于：要自动分流、头脑风暴、比赛切题和题解输出，接到 skill 的 scope、case、证据与 CTF sandbox 流程时。
 ---
 
 # Community CTF hub adapter
@@ -51,7 +51,7 @@ python skills/scripts/community-route.py --hint "<题面或附件描述>" --sour
 - 置信度 `confidence = best_score / hint 词数`，低于 0.35 为 `low_confidence`；
   首尾 wrapper 分差 ≤20% 为 `ambiguous_tie`，两者都进 `needs_review`。
 - 超预算后的确认格式：报出收窄后的 hint 与 `--source` 取值，等人工确认后再查。
-- 完整数字与 policy manifest 变更请求见 `../../../docs/community/LOADING-BUDGET.md`（本包未落地）。
+- 完整数字与 policy manifest 变更请求见 `../../../docs/community/LOADING-BUDGET.md`。
 
 ## Unified output
 

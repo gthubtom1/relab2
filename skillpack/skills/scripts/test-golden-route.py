@@ -94,7 +94,7 @@ def call(hint: str, source: str | None) -> tuple[dict, int, str]:
         command.extend(["--source", source])
     completed = subprocess.run(
         command, cwd=str(ROOT), check=False,
-        capture_output=True, text=True, encoding="utf-8",
+        capture_output=True, text=True, encoding="utf-8", timeout=300,
     )
     try:
         payload = json.loads(completed.stdout)
@@ -135,7 +135,7 @@ def call_master(hint: str) -> tuple[dict, str]:
                 ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
                  "-File", str(MASTER_ROUTE), "-Hint", hint, "-OutDir", outdir],
                 cwd=str(ROOT), check=False,
-                capture_output=True, text=True, encoding="utf-8",
+                capture_output=True, text=True, encoding="utf-8", timeout=600,
             )
         except (OSError, subprocess.SubprocessError) as error:
             return {}, f"master-route did not run: {error}"

@@ -577,9 +577,21 @@ def classify_sql(code, tmpdir, idx):
 
 
 
+def default_root() -> str:
+    """<仓根>/skillpack/skills，按本脚本位置上溯（scripts/ -> skills/ -> skillpack/ -> <仓根>）。
+
+    为什么不写死 C:\\relab2\\skillpack\\skills：2026-10-15 独立审查 P12 发现原来的默认值就是写死的。
+    后果不是“报错”，而是“在另一台机器上扫到 0 个文件、仍然 exit 0” ——
+    假绿。本仓历史已有四次同形故障（check-fences 的 --root 被忽略、默认根算错一层等）。
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(os.path.dirname(os.path.dirname(here)), "")
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--root", default=r"C:\relab2\skillpack\skills")
+    ap.add_argument("--root", default=None,
+                    help="扫描根；默认按本脚本位置自定位到 <仓根>/skillpack/skills。不写死盘符（换机 clone 到别处时，写死会让本门扫到 0 个文件而报绿）")
     ap.add_argument("--sample", default=None)
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--json", default=None)
@@ -593,11 +605,12 @@ def main():
             b"MZ" + b"\x00" * 60 +
             b"This program cannot be run in DOS mode.")
 
-    blocks, unclosed = extract_blocks(args.root)
+    root = args.root or default_root()
+    blocks, unclosed = extract_blocks(root)
     by_lang = {}
     for b in blocks:
         by_lang[b.lang] = by_lang.get(b.lang, 0) + 1
-    print("=== 抽取代码块（%s）===" % args.root)
+    print("=== 抽取代码块（%s）===" % root)
     print("   共 %d 块" % len(blocks))
 
     # ★ 未闭合围栏 = 从开块那一行到文件末尾**全部内容逃过审计**。

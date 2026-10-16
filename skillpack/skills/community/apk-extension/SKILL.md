@@ -1,6 +1,6 @@
 ---
 name: community-apk-extension
-description: APK 逆向能力扩展入口。把新版 apk-reverse 的 doctor、capability matrix、DEX/Dart/native、Frida、重打包和证据脚本接到 canonical apk-reverse 的统一 case 与工具门。
+description: APK 逆向能力扩展入口。用于：拿到新版 apk-reverse 的 doctor、capability matrix、DEX/Dart/native、Frida、重打包和证据脚本时，接回共云 apk-reverse 的 case 与工具门。
 ---
 
 # Community APK capability adapter
@@ -10,7 +10,7 @@ description: APK 逆向能力扩展入口。把新版 apk-reverse 的 doctor、c
 1. `NOW`: 确认 APK、设备/ABI、root/Frida/ADB、目标行为和交付形态，先走
    `SKILL.md` 的 scope 与 control-build gates。
 2. `NEXT`: 读取 `skillpack/community-raw/apk-reverse-source/evidence/capability-matrix.json`
-   和 `../../../community-raw/apk-reverse-source/evidence/known-limitations.md`（本包未落地）；`partial`
+   和 `../../../community-raw/apk-reverse-source/evidence/known-limitations.md`；`partial`
    要先声明缺口，`blocked` 直接停在边界说明。
 3. `NEXT`: 通过 canonical `../../TOOLS.md` 和 doctor/preflight 检查工具状态。
    不执行源仓库的隐式安装、固定机器路径、debug keystore 或未授权设备命令。
@@ -44,4 +44,4 @@ description: APK 逆向能力扩展入口。把新版 apk-reverse 的 doctor、c
 - 置信度 `confidence = best_score / hint 词数`，低于 0.35 为 `low_confidence`；
   首尾 wrapper 分差 ≤20% 为 `ambiguous_tie`，两者都进 `needs_review`。
 - 超预算后的确认格式：报出收窄后的 hint 与 `--source` 取值，等人工确认后再查。
-- 完整数字与 policy manifest 变更请求见 `../../../docs/community/LOADING-BUDGET.md`（本包未落地）。
+- 完整数字与 policy manifest 变更请求见 `../../../docs/community/LOADING-BUDGET.md`。

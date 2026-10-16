@@ -300,7 +300,7 @@ if (-not $spec.Available) {
 
 ### 7.4 更新 Kali RULES 触发关键词
 
-打开 `../kali/RULES-kali.md`（本包未落地）（本包未落地），在触发关键词列表中添加新 skill 相关的词。
+打开 `../kali/RULES-kali.md`，在触发关键词列表中添加新 skill 相关的词。
 
 ---
 
@@ -325,7 +325,7 @@ if (-not $spec.Available) {
 - [ ] `kali/scripts/bootstrap-manifest.json` 已注册新工具
 - [ ] `kali/scripts/lib/tool-discovery.sh` 的 `TOOL_CATALOG` 和 `SCRIPT_REFS` 已更新
 - [ ] `kali/scripts/bootstrap-reverse.sh` 的 `ensure_capability()` 已添加安装逻辑
-- [ ] `../kali/RULES-kali.md`（本包未落地）（本包未落地） 触发关键词已更新
+- [ ] `../kali/RULES-kali.md` 触发关键词已更新
 
 **通用（继续）**：
 - [ ] 入口脚本已接入 bootstrap（缺工具时自动补齐）

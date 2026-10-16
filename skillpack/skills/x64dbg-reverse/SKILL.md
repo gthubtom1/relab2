@@ -12,6 +12,7 @@ description: x64dbg 动态调试与 MCP 自动化：断点、单步、内存读�
 
 1. `NOW`：**查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
 2. `NOW`：**工具定位** —— 先载入探测层 `. $SK\skillpack\skills\scripts\lib\Bootstrap.ps1`，再 `Resolve-ReverseToolSpec -Name 'x64dbg'` 取 `Command`。**`Get-Command` 返回空 ≠ 缺工具**（见 `../references/env-selfcheck.md`）。
+   ★ **`Command` 只用来"知道它在哪"，不要把它当启动方式同步执行**：别名表的首选是 `headless.exe`（一次性批处理形态，**不加载 MCP 插件**），GUI 版经 bash 同步拉起则会卡死本轮。要起 MCP 一律走第 3 步的 `scripts/start.ps1` —— 它会自己解析路径、把 headless 归一到 GUI、并用脱离父进程的方式启动。
 3. `ACT`：**起服务** —— `powershell -NoProfile -ExecutionPolicy Bypass -File <本技能>/scripts/start.ps1`。
    端点与依赖的事实源是 `../references/tool-registry.md` 的 `x64dbg-mcp` 行；**本文件不写死端口之外的路径**。
 4. `ACT`：**先看目录再动手** —— `powershell -NoProfile -ExecutionPolicy Bypass -File ../scripts/mcp-status.ps1`，

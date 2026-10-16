@@ -148,6 +148,78 @@ def main() -> int:
             if not isinstance(f, str) or len(str(f).strip()) < 8:
                 errs.append(f"{fn} :: known_failures 有一条过短（<8 字符），像占位符：{f!r}")
 
+    # ★ 2026-10-16 新增：id 唯一 + 文件名与 id 一致。
+    #   起因：两个代理并行写 case，各自都用了 `case-004` / `case-005` —— **两条 case 同 id，
+    #   本门却静默 PASS**（旧实现从不看 id，只把它当必填字段）。回归表是"每条 case 一个身份"，
+    #   重号等于两条真实经历挤进一个身份，检索/对照/统计全部失真。文件名与 id 也要一致，
+    #   否则按文件名找 case 和按 id 找 case 会指向不同东西。
+    seen_ids: dict[str, str] = {}
+    for c in cases:
+        fn = c.get("_file", "?")
+        cid = str(c.get("id", "")).strip()
+        if not cid:
+            continue
+        if cid in seen_ids:
+            errs.append(f"{fn} :: id={cid!r} 与 {seen_ids[cid]} 重复（每条 case 必须有唯一身份）")
+        else:
+            seen_ids[cid] = fn
+        if os.path.splitext(fn)[0] != cid:
+            errs.append(f"{fn} :: 文件名与 id 不一致（id={cid!r}）—— 按文件名找与按 id 找会指向不同东西")
+
+    # ★ 2026-10-16 新增：lesson_refs 不许悬空。
+    #   起因：本门一直只校验 `expect_chain`（"下次该走到哪"），**从不校验 `lesson_refs`** ——
+    #   而后者同样是承诺（"这条经验是从哪来的"）。实测抓到 case-002 写着
+    #   `field-journal/seed-005 等 seed 系列（正控语料）`，而 `seed-005` 真名是
+    #   `seed-005_ad-certipy-esc1.md`（ADCS ESC1，与本 case 的 PRNG/UPX 无关），
+    #   全 17 篇 seed 里 grep `upx|prng|加壳` 零命中 —— 一条**没有对应文件的"经验来源"**。
+    #   判据比 expect_chain 宽：允许"路径（说明）"、`:行号`、`；` 分隔多条、泛指词跳过。
+    #   ★ 外部引用（另一台机器/另一个仓库的绝对路径）**必须显式标 `[外部]`** 才跳过：
+    #     本仓确实有几条 case 的经验来自已归档的外部项目报告，那些路径在本仓永远不存在。
+    #     但**不静默跳过** —— 不标就 FAIL，否则打错字的外部位路径会混进来当"已核验"。
+    GENERIC_REF_RE = re.compile(r"(等\s*\S*\s*系列|示例|同上|见上|待补)")
+    EXT_RE = re.compile(r"^\s*(\[外部\]|【外部】)")
+    ABS_RE = re.compile(r"^([A-Za-z]:[\\/]|\\\\)")
+
+    def _ref_resolvable(part: str) -> bool:
+        """把一条引用里可能夹着的说明/小节/范围后缀剥掉，再判是否存在。"""
+        cands = [part]
+        for sep in (" §", "（", "(", " ~", " ／", " / ", "：", ":"):
+            cands.append(part.split(sep)[0])
+        # "ops/x.md R2 / R4* / R43（说明）" → 取第一个空格前的路径
+        if " " in part:
+            cands.append(part.split(" ")[0])
+        for c in cands:
+            c = c.strip().strip("\"'")
+            c = re.sub(r":\d+$", "", c)
+            if c and chain_entry_exists(c, repo_root, skills_root):
+                return True
+        return False
+
+    for c in cases:
+        fn = c.get("_file", "?")
+        refs = c.get("lesson_refs") or []
+        if isinstance(refs, str):
+            refs = [refs]
+        if not isinstance(refs, list):
+            errs.append(f"{fn} :: lesson_refs 必须是列表")
+            continue
+        for r in refs:
+            for part in re.split(r"[；;]", str(r)):
+                raw = str(part).strip()
+                if not raw or GENERIC_REF_RE.search(raw):
+                    continue
+                if EXT_RE.match(raw):
+                    continue          # 显式标记的外部引用：接受（换机不可解析）
+                part2 = re.split(r"[（(]", raw)[0].strip().strip("\"'")
+                if not part2:
+                    continue
+                if ABS_RE.match(part2):
+                    errs.append(f"{fn} :: lesson_refs 是绝对路径且未标 `[外部]`：{part2!r}"
+                                f"（本仓无法解析；确认是外部项目就加 `[外部]` 前缀）")
+                    continue
+                if not _ref_resolvable(part2):
+                    errs.append(f"{fn} :: lesson_refs 指向不存在的目标：{part2!r}（悬空引用）")
+
     open_cases = [c for c in cases if str(c.get("status", "")).strip() == "open"]
     n_open_fail = sum(len(c.get("known_failures") or []) for c in open_cases)
     if args.strict:

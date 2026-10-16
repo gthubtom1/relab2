@@ -39,47 +39,29 @@ description: 漏洞点到可用 exploit 的利用链：栈溢出、堆/tcache、
 
 `reverse-engineering/` 关注"理解程序在干什么"（模式识别、协议还原、解 CTF 题里的奇怪机制）；本 skill 关注"把已经看懂的漏洞变成可执行的攻击"。两者经常配套使用，但分工清晰。
 
-## 核心工作流
+## 判据：手上有什么，就动哪一块
 
-```text
-Step 1: 确认漏洞类型 + 保护机制
-   ├─ checksec ./vuln（NX / Canary / PIE / RELRO / Fortify）
-   ├─ file ./vuln  + readelf -d ./vuln
-   ├─ 漏洞分类：栈溢出 / 格式化字符串 / 堆 (UAF/DF/OF) / 整数 / 竞态 / 内核
-   └─ → 决定走哪个 references/
+没有任何一条要求**按顺序**做完 —— 每一块的条件不成立，就直接跳到适用的那一块。
+（例：NX 关 + 无 ASLR → 第 2 块直接给 shellcode，第 3 块的 libc 准备整块跳过；堆题常常一开始就知道要走 glibc 版本那条路。）
 
-Step 2: 选择利用策略
-   ├─ NX 关 + 无 ASLR → 直接 shellcode
-   ├─ NX 开 + 给 libc → ret2libc / one_gadget
-   ├─ NX 开 + 不给 libc → leak 后 libc-database 反查
-   ├─ 堆 → 按 glibc 版本对应技术 (tcache/fastbin/unsorted/large)
-   └─ 内核 → commit_creds / modprobe_path / core_pattern
+| 手上的东西 | 该做的 | 做完会得到什么（可观察） |
+|---|---|---|
+| 一个会崩的输入 | 先定**漏洞类型 + 保护机制**：`checksec ./vuln`（NX/Canary/PIE/RELRO/Fortify）、`file ./vuln`、`readelf -d ./vuln`；分类：栈溢出 / 格式化字符串 / 堆（UAF/DF/OF）/ 整数 / 竞态 / 内核 | 一个明确的技术族 → 决定走哪个 `references/` |
+| 知道技术族 | 选**利用策略**：NX 关 + 无 ASLR → 直接 shellcode；NX 开 + 给 libc → ret2libc / one_gadget；NX 开 + 不给 libc → leak 后 libc-database 反查；堆 → 按 glibc 版本（tcache/fastbin/unsorted/large）；内核 → `commit_creds` / `modprobe_path` / `core_pattern` | 一句话能说清的利用路线 |
+| 策略需要 libc / 地址 | 准备 **libc + gadget**：`./find puts 0x6f0`（libc-database）、`ROPgadget --binary ./libc.so.6 --only "pop|ret"`、`one_gadget ./libc.so.6`；base = `leak_addr - libc.sym['puts']` | 可直接写进 payload 的地址 |
+| 地址齐了 | 写 pwntools 模板（**本地 `process` 先跑**）：`context.binary = ELF('./vuln')`、`p = process('./vuln')` 或 `gdb.debug`；`payload = cyclic(N) + p64(ret) + …`；`p.interactive()` | 本地能跑起来的 exploit 脚本 |
+| 本地通了 | 反复 attach 看寄存器、调 offset（pwndbg/GEF 的 `vmmap` / `heap` / `bins` / `telescope`），再切 `remote()` | offset 已实测，不是算出来的 |
 
-Step 3: 准备 libc + gadget
-   ├─ libc-database：./find puts 0x6f0
-   ├─ ROPgadget --binary ./libc.so.6 --only "pop|ret"
-   ├─ one_gadget ./libc.so.6
-   └─ 计算 base：leak_addr - libc.sym['puts']
+**远程稳定化判据**（哪个不满足就处理哪个，与上面的"块"无先后关系）：
 
-Step 4: 写 pwntools 模板（本地 process）
-   ├─ context.binary = ELF('./vuln')
-   ├─ p = process('./vuln')  /  p = gdb.debug('./vuln','b *main+xx')
-   ├─ payload = cyclic(N) + p64(ret) + ...
-   └─ p.interactive()
-
-Step 5: 本地通
-   ├─ 反复 attach + 看寄存器 + 调 offset
-   ├─ 用 pwndbg/GEF 的 vmmap / heap / bins / telescope
-   └─ 跑通后切 remote()
-
-Step 6: 远程稳定化
-   ├─ libc 偏移：用 leak 反查 libc-database，不要拍脑袋
-   ├─ 栈对齐：16-byte 不对齐 → movaps 崩 → 加一个 ret gadget
-   ├─ 远程网络延迟 → recvuntil 精确锚字符串，禁用模糊 sleep
-   ├─ 远程缓冲：sendlineafter 比 sendline 更稳
-   ├─ 堆喷成功率：放大 spray 数量 + 留 padding chunk 防合并
-   └─ 多次跑：写 while True 验证成功率 ≥ 95%
-```
+| 症状 | 处置 |
+|---|---|
+| libc 偏移对不上 | 用 leak 反查 libc-database，不要拍脑袋 |
+| `movaps` 崩 | 栈 16 字节没对齐 → 链里插一个 `ret` gadget |
+| 远程偶发失败 | 用 `recvuntil` 锚精确字符串，禁用模糊 `sleep` |
+| 发送被截断/丢字节 | `sendlineafter` 比 `sendline` 稳 |
+| 堆喷成功率低 | 放大 spray 数量 + 留 padding chunk 防合并 |
+| 声称"可以了"但没数据 | 写 `while True` 跑够次数，**成功率 ≥95%** 才算通 |
 
 ## 典型场景
 

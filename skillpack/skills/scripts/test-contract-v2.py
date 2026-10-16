@@ -688,7 +688,7 @@ def check_schemas(registry: dict, route_payload: dict, contract) -> None:
     try:
         validate({"x": "1"}, {"type": "object", "format": "date-time"})
     except UnsupportedKeyword:
-        pass
+        pass  # scan-ok: 这是**断言**本身——异常必须抛；真抛了才走这里，不抛则由下面的 else 记 FAILURES
     else:
         FAILURES.append("the validator must raise on an unsupported keyword instead of ignoring it")
 

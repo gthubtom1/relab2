@@ -51,6 +51,37 @@ HOST_RE = re.compile(
 )
 
 
+# 改编内容的判据：文件带**标准来源声明行**（NOTICE 登记的那一行），且落在 `skills/*/references/` 下。
+# ★ 2026-10-16：这里原来是写死的「218 篇」（早先的快照值，别再引用），而按本判据现算是 209 —— 写死的数字会腐烂，
+#   所以改成现算。注意两种口径差别很大，别混：
+#     · 带来源声明行（= 真的是改编落盘的副本）        → 210（其中 209 篇在 references/ 下）
+#     · 正文里**提到**过来源（含交叉引用/索引的转述） → 222
+#   NOTICE 说的「改编内容 N 篇 + 零例外」用的是前者。
+GPL_SOURCE_RE = re.compile(
+    r"\*\*来源\*\*\s*[：:]\s*改编自\s*`?LING71671/open-reverselab"
+)
+
+
+def count_adapted_files() -> int:
+    """数 `skillpack/skills/*/references/**` 里带标准来源声明的文件。读不到目录时返回 -1。"""
+    root = os.path.join(REPO, "skillpack", "skills")
+    if not os.path.isdir(root):
+        return -1
+    n = 0
+    for dirpath, _dirnames, filenames in os.walk(root):
+        if "/references/" not in (dirpath.replace("\\", "/") + "/"):
+            continue
+        for fn in filenames:
+            try:
+                with open(os.path.join(dirpath, fn), "r", encoding="utf-8",
+                          errors="ignore") as f:
+                    if GPL_SOURCE_RE.search(f.read()):
+                        n += 1
+            except OSError:
+                continue
+    return n
+
+
 def visibility_of(url: str) -> tuple[str, str]:
     """远端的可见性。返回 (state, detail)。
 
@@ -190,7 +221,8 @@ def main(argv: list[str] | None = None) -> int:
         for p in public:
             print("  %s" % p)
         print()
-        print("仓库含 GPL-3.0 改编内容（218 篇，见 skillpack/NOTICE）。")
+        print("仓库含 GPL-3.0 改编内容（%d 篇，见 skillpack/NOTICE；本数由本脚本现算）"
+              % count_adapted_files())
         print("GPL 的分发义务在**向他人交付**时触发。推到公开远端 = 交付。")
         print()
         print("必须在继续之前二选一：")
@@ -201,6 +233,9 @@ def main(argv: list[str] | None = None) -> int:
         print("决策记录与依据见 LICENSE 的「%s」一节。" % DECISION_MARKER)
         return 20
 
+    print()
+    print("  本仓 GPL 改编副本（带标准来源声明行）：%d 篇  <- 判据与 skillpack/NOTICE 同；本数由本脚本现算，别手抄进文档"
+          % count_adapted_files())
     print()
     print("OK verify-gpl-distribution-boundary: 决策已留痕，且当前无公开远端")
     print("   （方案 C 成立。推到公开远端时本门禁会 rc=20 阻断。）")

@@ -25,6 +25,7 @@ def in_git_worktree():
         capture_output=True,
         text=True,
         check=False,
+        timeout=120,   # ★ 2026-10-16：git 卡住（锁/网络盘）不该把整道门拖死
     )
     return result.returncode == 0 and result.stdout.strip() == "true"
 
@@ -420,7 +421,7 @@ def repo_prefix() -> str:
     try:
         out = subprocess.run(
             ["git", "-C", ROOT, "rev-parse", "--show-prefix"],
-            capture_output=True, text=True, check=True,
+            capture_output=True, text=True, check=True, timeout=120,
         ).stdout.strip()
     except Exception:
         return ""
@@ -432,8 +433,14 @@ REPO_PREFIX = repo_prefix()
 
 def git(*args: str) -> bytes:
     return subprocess.run(
-        ["git", "-C", ROOT, *args], capture_output=True, check=True
+        ["git", "-C", ROOT, *args], capture_output=True, check=True, timeout=120
     ).stdout
+
+# ★ 2026-10-15 独立审查 P9：禁读目录一个字都不许读。
+#   注意这里必须同样覆盖 **git 分支**：CI/ls-files 给出的路径集合里
+#   包含该目录下 51 个跟踪文件，只改 os.walk 那一支连它都防不住。
+FORBIDDEN_READ_PREFIX = "_归档-禁读-历史文档/"
+
 
 def tracked_entries() -> dict[str, str]:
     if USE_GIT:
@@ -443,12 +450,17 @@ def tracked_entries() -> dict[str, str]:
             if not record:
                 continue
             meta, path = record.split("\t", 1)
+            if path.startswith(FORBIDDEN_READ_PREFIX):
+                continue
             result[path] = meta.split()[0]
         return result
 
     result = {}
     for current, dirs, names in os.walk(ROOT):
-        dirs[:] = [directory for directory in dirs if directory != ".git"]
+        # ★ 2026-10-15 独立审查 P9：禁读目录一个字都不许读。本脚本会打开
+        #   所有文本文件扫密钥/注入，若不排除，它会把该目录下的字符串当成待扫样本。
+        dirs[:] = [directory for directory in dirs
+                   if directory != ".git" and directory != "_归档-禁读-历史文档"]
         for name in names:
             absolute = os.path.join(current, name)
             relative = os.path.relpath(absolute, ROOT).replace(os.sep, "/")

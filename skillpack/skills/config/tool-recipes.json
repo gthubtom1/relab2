@@ -1,0 +1,1060 @@
+{
+  "schemaVersion": "1",
+  "_why": "★ 唯一事实源：『这个工具该怎么调』只在这里写一次。以前 TOOLS.md 写 `-d -e -j`、relab2-tools-mcp.py 写 `--extended`、技能卡再写第三种，三方从不对账 —— 结果 triage 的第一步在这台机器上从写下那天起就必挂 240s（进程永不返回），而 37 道文本门没有一道看得见。凡是要调外部工具的地方，参数从这里取；test-tool-recipes.py 会**真的跑一遍**每条配方。",
+  "_how_to_add": "新配方：加一条 recipe，跑 python skillpack/skills/tests/test-tool-recipes.py 看它能不能在本机跑通。跑不通就说明这条调用形态在这台机器上不可用 —— 要么改参数（首选，通常是参数错），要么把该工具标成不可用并在 KNOWN-BOUNDARIES 记账。 反之，**不该有配方**的工具（GUI/启动器、本机实测不可用、别名孪生、本机没装）要写进 `_no_recipe` 并给理由 —— 缺口必须有着落，要么补配方，要么记原因。",
+  "_placeholders": {
+    "{target}": "调用方传入的目标文件（triage 配方用）；门自检时默认填 %SystemRoot%\\System32\\notepad.exe，找不到就 SKIP",
+    "{anyfile}": "任意可读小文件（默认 <仓根>\\skillpack\\VERSION）",
+    "{pcap}": "由 test-tool-recipes.py 现场生成的最小 pcap（一条 TCP SYN）",
+    "{rule}": "现场生成的最小 YARA 规则（匹配目标文件头的 `MZ`）；由 test-tool-recipes.py 造，不需要外部规则集"
+  },
+  "recipes": [
+    {
+      "id": "triage.format",
+      "tool": "diec",
+      "args": [
+        "-d",
+        "-e",
+        "-j",
+        "{target}"
+      ],
+      "timeout_s": 60,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 40,
+      "note": "DIE 3.x 的 CLI 只认 `-d -e -j`。★ 2026-10-16：写成 `--extended` 进程永不返回（只刷 libpng 警告），实测卡满 240s 超时且留下 ghost 进程。",
+      "expect_regex": "\"records\"|\"detects\"",
+      "expect_why": "diec 的 JSON 必须含 records/detects 结构"
+    },
+    {
+      "id": "triage.fileinfo",
+      "tool": "r2",
+      "args": [
+        "-q",
+        "-c",
+        "iI;q",
+        "{target}"
+      ],
+      "timeout_s": 60,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 40,
+      "note": "radare2 的 `iI` 给格式/位数/canary/PIE。注意 r2 **没有** `--version`（那样会报 Missing file）。",
+      "expect_regex": "arch\\s+\\w+",
+      "expect_why": "r2 iI 必须给出 arch（格式事实）"
+    },
+    {
+      "id": "triage.strings",
+      "tool": "floss",
+      "args": [
+        "{target}"
+      ],
+      "timeout_s": 300,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 200,
+      "note": "FLOSS 对 ~200KB 的 PE 约 30s；大样本可达数分钟，超时属正常，调用方要如实标。",
+      "expect_regex": "FLOSS|FLARE",
+      "expect_why": "floss 必须打出 FLARE FLOSS 标题"
+    },
+    {
+      "id": "triage.capabilities",
+      "tool": "capa",
+      "args": [
+        "-q",
+        "{target}"
+      ],
+      "timeout_s": 300,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 100,
+      "note": "★ `-q` 不是可选的：不带它 capa 9.4.0 在渲染结果表时以 0xC0000409 崩掉、stdout 0 字节。带 `-q` 同一样本 rc=0 / 约 22s。",
+      "expect_regex": "[│┌]|ATT&CK|capa",
+      "expect_why": "capa 必须打出结果表或规则名"
+    },
+    {
+      "id": "pcap.parse",
+      "tool": "tshark",
+      "args": [
+        "-r",
+        "{pcap}"
+      ],
+      "timeout_s": 90,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 20,
+      "note": "读 pcap 并逐包打印一行摘要。",
+      "expect_regex": "SYN|TCP|UDP|ICMP",
+      "expect_why": "tshark 必须解析出协议行"
+    },
+    {
+      "id": "portscan.local",
+      "tool": "nmap",
+      "args": [
+        "-sT",
+        "-Pn",
+        "-p",
+        "135,445",
+        "127.0.0.1"
+      ],
+      "timeout_s": 120,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 40,
+      "note": "只扫本机回环、只扫两个端口 —— 冒烟不该碰外部目标。",
+      "expect_regex": "Nmap done|PORT|open|closed",
+      "expect_why": "nmap 必须给出扫描结论"
+    },
+    {
+      "id": "yara.version",
+      "tool": "yara",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 60,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 3,
+      "note": "yara-x 的 CLI 是 `--version`。",
+      "expect_regex": "\\d+\\.\\d+",
+      "expect_why": "yara 必须打出数字版本"
+    },
+    {
+      "id": "yara.scan",
+      "tool": "yara",
+      "args": [
+        "scan",
+        "{rule}",
+        "{target}"
+      ],
+      "timeout_s": 60,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 5,
+      "expect_regex": "rel2_smoke",
+      "note": "★ 2026-10-16 新增：本机 yara 是 **YARA-X cli 1.21.0**，规则必须带 `scan` 子命令：`yara scan <rules> <target>`。旧式无子命令形态（`yara <rules> <target>`）在本机实测 rc=2，所以早前 tool-real-tasks 那一轮把它误记成失败 —— 是调用形态不对，不是工具不可用。规则与目标都由 test-tool-recipes.py 现场造/取自本机，不依赖外部样本。",
+      "expect_why": "yara-x 命中时必须打出规则名 rel2_smoke"
+    },
+    {
+      "id": "apk.decompile",
+      "tool": "jadx",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 90,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 3,
+      "note": "jadx 有 `--version`（1.5.3）。真反编译要 APK 样本，冒烟只验可调用性。",
+      "expect_regex": "\\d+\\.\\d+",
+      "expect_why": "jadx 必须打出数字版本"
+    },
+    {
+      "id": "js.runtime",
+      "tool": "python",
+      "args": [
+        "-c",
+        "import sys;print(sys.version.split()[0])"
+      ],
+      "timeout_s": 60,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 3,
+      "note": "开发战场的最小可调用性证明。",
+      "expect_regex": "\\d+\\.\\d+",
+      "expect_why": "python 必须打出版本号"
+    },
+    {
+      "id": "tool.apktool",
+      "tool": "apktool",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "\\d+\\.\\d+",
+      "note": "apktool 认 --version"
+    },
+    {
+      "id": "tool.binwalk",
+      "tool": "binwalk",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "binwalk\\s+\\d",
+      "note": "binwalk v3 认 --version"
+    },
+    {
+      "id": "tool.dotnet",
+      "tool": "dotnet",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "\\d+\\.\\d+",
+      "note": "dotnet SDK 版本"
+    },
+    {
+      "id": "tool.ffmpeg",
+      "tool": "ffmpeg",
+      "args": [
+        "-version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "ffmpeg version",
+      "note": "ffmpeg 用单横线 -version"
+    },
+    {
+      "id": "tool.frida",
+      "tool": "frida",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "\\d+\\.\\d+",
+      "note": "frida CLI"
+    },
+    {
+      "id": "tool.gcc",
+      "tool": "gcc",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "gcc|GCC",
+      "note": "MinGW gcc"
+    },
+    {
+      "id": "tool.gdb",
+      "tool": "gdb",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "GNU gdb",
+      "note": "GNU gdb"
+    },
+    {
+      "id": "tool.gh",
+      "tool": "gh",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "gh version",
+      "note": "GitHub CLI"
+    },
+    {
+      "id": "tool.go",
+      "tool": "go",
+      "args": [
+        "version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "go version",
+      "note": "★ go 不认 --version，要 `go version`（子命令）"
+    },
+    {
+      "id": "tool.git",
+      "tool": "git",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "git version",
+      "note": "git"
+    },
+    {
+      "id": "tool.hashcat",
+      "tool": "hashcat",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "v\\d+\\.\\d+",
+      "note": "hashcat"
+    },
+    {
+      "id": "tool.ilspycmd",
+      "tool": "ilspycmd",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "ilspycmd",
+      "note": ".NET 反编译器"
+    },
+    {
+      "id": "tool.java",
+      "tool": "java",
+      "args": [
+        "-version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "openjdk|version",
+      "note": "★ java 的版本走 stderr 且是单横线"
+    },
+    {
+      "id": "tool.jq",
+      "tool": "jq",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "jq-",
+      "note": "jq"
+    },
+    {
+      "id": "tool.mitmdump",
+      "tool": "mitmdump",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "Mitmproxy",
+      "note": "mitmproxy 命令行版"
+    },
+    {
+      "id": "tool.ncat",
+      "tool": "ncat",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "Ncat",
+      "note": "nmap 套件"
+    },
+    {
+      "id": "tool.node",
+      "tool": "node",
+      "args": [
+        "-v"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "v\\d+",
+      "note": "★ node 用 -v"
+    },
+    {
+      "id": "tool.nping",
+      "tool": "nping",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "Nping",
+      "note": "nmap 套件"
+    },
+    {
+      "id": "tool.npm",
+      "tool": "npm",
+      "args": [
+        "-v"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "\\d+\\.\\d+",
+      "note": "★ npm 用 -v"
+    },
+    {
+      "id": "tool.nuclei",
+      "tool": "nuclei",
+      "args": [
+        "-version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "Nuclei|v\\d",
+      "note": "nuclei 认 -version"
+    },
+    {
+      "id": "tool.objection",
+      "tool": "objection",
+      "args": [
+        "version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "objection",
+      "note": "★ objection 用子命令 version"
+    },
+    {
+      "id": "tool.pe-sieve",
+      "tool": "pe-sieve",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "\\d+\\.\\d+",
+      "note": "pe-sieve"
+    },
+    {
+      "id": "tool.ropper",
+      "tool": "ropper",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "Ropper",
+      "note": "ropper"
+    },
+    {
+      "id": "tool.ropgadget",
+      "tool": "ROPgadget",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "ROPgadget v\\d",
+      "note": "★ 2026-10-16 新增：本机解析到 cli\\ROPgadget.cmd（别名表 + deny，见 D:\\Tools\\_map.json）—— py --user 的 Scripts 目录里只有无扩展名 POSIX 脚本 ROPgadget，CreateProcess 它必报 WinError 193。实测 `ROPgadget --version` → `Version: ROPgadget v7.7` rc=0（走 stdin 关闭、无参数歧义）。"
+    },
+    {
+      "id": "tool.scrcpy",
+      "tool": "scrcpy",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "scrcpy",
+      "note": "scrcpy"
+    },
+    {
+      "id": "tool.scyllahide",
+      "tool": "scyllahide",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "Loaded VA for",
+      "note": "scyllahide 加载器（输出任意）\n★ 2026-10-16 真任务轮补记：注入的正确形态是 `InjectorCLIx64.exe pid:<pid> <dll> [nowait]`。**裸 pid 是错的** —— 它被当成进程名，找不到就打印 usage 后 **rc=0**（实测），且它启动时无条件先刷一遍 `Loaded VA for <API> = 0x...` 横幅，所以 rc=0 + 有输出**都不等于注入成功**。带 `pid:` 前缀的实测输出尾巴是 `Hook injection successful, image base 00380000`，核验看同目录 `scylla_hide.log`（里面逐条列出 ApplyNtdllHook/ApplyKernel32Hook/ApplyUserHook 挂的 hook）。★ 别用 `tasklist /m` 核验：HookLibrary 故意从模块表里消失，那正是 ScyllaHide 的功能。"
+    },
+    {
+      "id": "tool.sqlmap",
+      "tool": "sqlmap",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "\\d+\\.\\d+",
+      "note": "sqlmap（注意它会等按键，stdin 已置空）"
+    },
+    {
+      "id": "tool.upx",
+      "tool": "upx",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "upx\\s+\\d",
+      "note": "★ 2026-10-16 变更：本机 upx 首选已换成 **官方 UPX 5.2.1 win64**（D:\\Tools\\pack\\Unpackers\\upx-5.2.1-win64\\upx.exe，见 D:\\Tools\\_map.json aliases.upx）。旧首选 3.91w（Universal Extractor 自带）压-解往返产坏件 —— 解出的 exe 跑起来 0xC0000005（KNOWN-BOUNDARIES 第 11 条）。`upx --version` 两个版本都给 rc=0，参数形态不变。"
+    },
+    {
+      "id": "tool.httpx",
+      "tool": "httpx",
+      "args": [
+        "--help"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "next generation HTTP client",
+      "note": "★★ 2026-10-16 实测辨明身份：本机的 httpx 是 **PyPI 的 Python 版 httpx CLI（0.28.1）**，不是 ProjectDiscovery 的 Go 版（启动器里嵌的是 `from httpx import main`）。因此 **没有版本开关**：`--version` rc=2「No such option '--version'」、`-version` rc=2「No such option '-e'」、`-h` 是 --headers 的短选项（rc=2，还要求 2 个参数）。唯一安全的可用性自检 = `--help`（rc=0，横幅 `A next generation HTTP client.`、`Usage: httpx <URL> [OPTIONS]`）。版本只能从包元数据取：`python -c \"import httpx;print(httpx.__version__)\"` → 0.28.1。"
+    },
+    {
+      "id": "tool.ffuf",
+      "tool": "ffuf",
+      "args": [
+        "-V"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "ffuf version",
+      "note": "★ ffuf 用 -V"
+    },
+    {
+      "id": "tool.john",
+      "tool": "john",
+      "args": [
+        "--list=build-info"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "Version",
+      "note": "★ john 用 --list=build-info"
+    },
+    {
+      "id": "tool.rabin2",
+      "tool": "rabin2",
+      "args": [
+        "-v"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "rabin2",
+      "note": "★ rabin2 用 -v（--version 会要求文件）"
+    },
+    {
+      "id": "tool.radare2",
+      "tool": "radare2",
+      "args": [
+        "-v"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "radare2",
+      "note": "★ radare2 用 -v"
+    },
+    {
+      "id": "tool.7z",
+      "tool": "7z",
+      "args": [
+        "i"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "7-Zip",
+      "note": "★ 7z 用子命令 i（--version 是未知开关 rc=7）"
+    },
+    {
+      "id": "tool.cdb",
+      "tool": "cdb",
+      "args": [
+        "-version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "cdb version",
+      "note": "★ cdb 用 -version"
+    },
+    {
+      "id": "tool.idat",
+      "tool": "idat",
+      "args": [
+        "-h"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        2
+      ],
+      "min_stdout": 2,
+      "expect_regex": "Command line switches|IDA",
+      "note": "★ idat -h 给用法且退出码为 2（正常形态）\n★ 2026-10-16 真任务轮补记：批处理真分析形态 `idat -B -o<out.i64> <pe>` —— 实测产出 `s.asm`(552KB 真反汇编清单) + `s.i64`(757KB 库)，stdout 0B（它安静干活）。对照：GUI 二进制 `ida.exe -B` / `-A -B` 在本机 rc=0xC0000096（STATUS_PRIVILEGED_INSTRUCTION）且不产出任何库 —— **批量分析请用 idat，不要用 ida.exe**。"
+    },
+    {
+      "id": "tool.ghidra_headless",
+      "tool": "ghidra_headless",
+      "args": [
+        "--help"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        1
+      ],
+      "min_stdout": 2,
+      "expect_regex": "Headless Analyzer Usage",
+      "note": "★ 命令行版是 ghidra_headless（ghidra 是 GUI，已进 GUI_HINTS）\n★ 2026-10-16 真任务轮补记：真活是 `analyzeHeadless <dir> <proj> -import <pe> -deleteProject`，实测对真 PE 跑完自动分析并打印 `REPORT: Analysis succeeded` / `Save succeeded` / `Import succeeded`（12.9KB 输出，约 2 分钟）。`--help` 只是冒烟。"
+    },
+    {
+      "id": "tool.de4dot",
+      "tool": "de4dot",
+      "args": [
+        "--help"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 40,
+      "expect_regex": "de4dot v\\d",
+      "note": "★ 2026-10-16 新增（KNOWN_TOOLS 里有、配方表里一直缺）。`--help` 打完整用法 9843B rc=0，首行 `de4dot v3.1.41592.3405`。",
+      "expect_why": "de4dot 必须打出自身版本横幅"
+    },
+    {
+      "id": "tool.javac",
+      "tool": "javac",
+      "args": [
+        "-version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "javac",
+      "note": "★ 2026-10-16 新增：javac 走 bootstrap 解析（D:\\Tools\\runtime\\jdk21\\...\\bin\\javac.exe），此前只有 java 有配方。★ `javac -version` 走 **stdout**，而 `java -version` 走 stderr —— 两者不一样，别照抄。",
+      "expect_why": "javac 必须打出版本行"
+    },
+    {
+      "id": "tool.adb",
+      "tool": "adb",
+      "args": [
+        "version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 5,
+      "expect_regex": "Android Debug Bridge",
+      "note": "★ 2026-10-16 新增：探测层能解析（AndroidKiller_fix\\bin\\adb\\adb.exe）但配方表里没有。`adb version` 是唯一不需要连设备的安全自检形态（`adb devices` 在没设备时也会返回 0，但会起 server）。",
+      "expect_why": "adb 必须打出 Android Debug Bridge 横幅"
+    },
+    {
+      "id": "tool.aapt",
+      "tool": "aapt",
+      "args": [
+        "version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 5,
+      "expect_regex": "Android Asset Packaging",
+      "note": "★ 2026-10-16 新增：aapt 的版本子命令是 `version`（不是 --version）。本机它躺在**中文目录** `Android逆向助手_v2.2` 下 —— 正是本次修掉的『非 ASCII 路径经 PROBE_PS 变乱码』缺陷的现场：修之前 aapt/dexdump/zipalign/dex2jar 全部 WinError 2。\n★ 2026-10-16 真任务轮补记：真活 = 造/读真 APK。实测 `aapt package -f -M <裸 manifest> -F app.apk` 建出 345B 真 APK，`aapt d badging app.apk` 打出 `package: name='com.rel2.smoke'`（798B），`aapt l` 列出 AndroidManifest.xml。★ manifest 只要带 `android:` 命名空间属性就需要 `-I android.jar`，本机没有 → 用裸 manifest 即可绕过。",
+      "expect_why": "aapt 必须打出 Android Asset Packaging Tool 横幅"
+    },
+    {
+      "id": "tool.dexdump",
+      "tool": "dexdump",
+      "args": [],
+      "timeout_s": 30,
+      "expect_exit": [
+        2
+      ],
+      "min_stdout": 20,
+      "expect_stream": "any",
+      "expect_regex": "dexdump",
+      "note": "★ 2026-10-16 新增：**没有 help 开关** —— 不给文件就打印用法并以 rc=2 退出（用法走 stderr，491B）。`-h` 与不给参数输出完全相同，所以配方就用空参数（不假装有 -h）。",
+      "expect_why": "dexdump 必须打出自己的用法文本"
+    },
+    {
+      "id": "tool.dex2jar",
+      "tool": "dex2jar",
+      "args": [],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 5,
+      "expect_stream": "any",
+      "expect_regex": "dex2jar version",
+      "note": "★ 2026-10-16 新增：★ 注意 `--help` 在本机 rc=-1（0xFFFFFFFF，bat 包装层），而**空参数** rc=0 并打出 `dex2jar version: translator-0.0.9.15`——配方用空参数。\n★ 2026-10-16 真任务轮补记：真转换的正确形态是**裸调用** `dex2jar <classes.dex>` （rc=0，产物 `<name>_dex2jar.jar`，实测解出 `Hello.class`）。加 `-o out.jar` 反而 rc=-1 （bat 包装层把 `-o` 当输入文件）；该 shim 自己也提示 `this cmd is deprecated, use the d2j-dex2jar`。",
+      "expect_why": "dex2jar 必须打出自身版本横幅"
+    },
+    {
+      "id": "tool.zipalign",
+      "tool": "zipalign",
+      "args": [],
+      "timeout_s": 30,
+      "expect_exit": [
+        2
+      ],
+      "min_stdout": 20,
+      "expect_stream": "any",
+      "expect_regex": "Zip alignment utility|Usage",
+      "note": "★ 2026-10-16 新增：与 dexdump 同类 —— 不给参数即打用法、rc=2（stderr，395B）。\n★ 2026-10-16 真任务轮补记：真活 = `zipalign -f 4 in.apk out.apk` 后 `zipalign -c -v 4 out.apk` （实测 rc=0，打出 `Verifying alignment of ... (4)`）。",
+      "expect_why": "zipalign 必须打出用法文本"
+    },
+    {
+      "id": "tool.unsquashfs",
+      "tool": "unsquashfs",
+      "args": [
+        "-version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0,
+        1
+      ],
+      "min_stdout": 5,
+      "expect_regex": "unsquashfs version",
+      "note": "★ 2026-10-16 新增。squashfs-tools 4.7.5。★ `-version` 打印完就返回 **1**（不是 0）——这是它自己的老脾气，所以 expect_exit 收 0/1，真正的断言是 expect_regex。\n★ 2026-10-16 真任务轮补记：真活三连 —— `-s`（认超级块）、`-ll`（列内容）、`-d out`（解开）；对**真 OpenWrt 109MB rootfs** 也跑通（`-ll` 输出 135KB 清单）。",
+      "expect_why": "unsquashfs 必须打出版本行"
+    },
+    {
+      "id": "tool.mksquashfs",
+      "tool": "mksquashfs",
+      "args": [
+        "-version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 5,
+      "expect_regex": "mksquashfs version",
+      "note": "★ 2026-10-16 新增。★ 注意与孪生 unsquashfs 不同：`mksquashfs -version` 返回 **0**。\n★ 2026-10-16 真任务轮补记：真活 = 现场打一个目录再解回来。实测 mksquashfs rc=0（`Using 4 processors`），产物被 unsquashfs 认成 `SQUASHFS 4:0`，往返内容一致。",
+      "expect_why": "mksquashfs 必须打出版本行"
+    },
+    {
+      "id": "tool.openocd",
+      "tool": "openocd",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 5,
+      "expect_stream": "any",
+      "expect_regex": "Open On-Chip Debugger",
+      "note": "★ 2026-10-16 新增：JTAG/SWD 调试。xPack 版 0.12.0+dev。★ 版本行走 **stderr**（stdout 0B）。\n★ 2026-10-16 真任务轮补记：真活（无硬件时的上限）= `openocd -c \"adapter list\" -c shutdown`，实测 rc=0 输出 970B（xPack OpenOCD 0.12.0+dev）。真调试需要 JTAG/SWD 适配器。",
+      "expect_why": "openocd 必须打出 Open On-Chip Debugger 横幅"
+    },
+    {
+      "id": "tool.qemu-system-arm",
+      "tool": "qemu-system-arm",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 5,
+      "expect_regex": "QEMU emulator version",
+      "note": "★ 2026-10-16 新增：固件仿真（firmware-pentest 技能要用）。qemu-system-arm 11.1.0。\n★ 2026-10-16 真任务轮补记：本机**没有 ARM 内核/固件样本**，真开机跑不了；能做到的真活是 `-machine help`（5540B 机型清单，rc=0）。别把这一条写成『已仿真验证』。",
+      "expect_why": "qemu 必须打出 QEMU emulator version"
+    },
+    {
+      "id": "tool.qemu-system-mips",
+      "tool": "qemu-system-mips",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 5,
+      "expect_regex": "QEMU emulator version",
+      "note": "★ 2026-10-16 新增：路由器固件大多是 MIPS —— 这个比 arm 版本更常用。\n★ 2026-10-16 真任务轮补记：真开机实测通过 —— `qemu-system-mips -M malta -m 256 -kernel openwrt-23.05.5-malta-be-vmlinux-initramfs.elf -nographic -append \"console=ttyS0,38400n8r\"`，90s 窗口内四个标志全部命中（`Linux version 5.15` / `MIPS: machine is mti,malta` / `procd` / `br-lan`），抓到 12.7KB 启动日志。★ 判据提醒：开机成功的内核**不会自己退出**，所以审计脚本要「看到标志就自己杀」，否则会把成功误判成 HANG。",
+      "expect_why": "qemu 必须打出 QEMU emulator version"
+    },
+    {
+      "id": "tool.flashrom",
+      "tool": "flashrom",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 5,
+      "expect_regex": "flashrom v",
+      "note": "★ 2026-10-16 新增：SPI/NOR 刷写。flashrom v1.7.0。只打版本，**不碰任何硬件**。\n★ 2026-10-16 真任务轮补记：真活（无硬件时的上限）= `flashrom -L` 列支持芯片，实测 rc=0 输出 77KB。真正的读写需要编程器，本机没有。",
+      "expect_why": "flashrom 必须打出 flashrom v 版本行"
+    },
+    {
+      "id": "tool.jefferson",
+      "tool": "jefferson",
+      "args": [
+        "--help"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 5,
+      "expect_regex": "Usage: jefferson",
+      "note": "★ 2026-10-16 新增：JFFS2 解包（固件战场）。\n★ 2026-10-16 真任务轮补记：**rc=0 不可信**。喂真 squashfs 固件时它 rc=0 且打 `dumping fs to ... (endianness: >)`，实际解出 **0 个文件**（假成功）。核验必须盘点输出目录里的文件数，不能只看退出码。",
+      "expect_why": "jefferson 必须打出 Usage"
+    },
+    {
+      "id": "tool.ubireader",
+      "tool": "ubireader_extract_files",
+      "args": [
+        "--help"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 5,
+      "expect_regex": "ubireader_extract_files",
+      "note": "★ 2026-10-16 新增：UBI/UBIFS 镜像解包（SPI NAND 固件）。\n★ 2026-10-16 真任务轮补记：本机无 UBI/UBIFS 样本，也无 ubinize 造样本的能力。负向实测：喂真 squashfs 固件 → rc=1 `guess_start_offset Fatal: Could not determine start offset.`（正确判否）。正向解包未验证，明写在此。",
+      "expect_why": "ubireader_extract_files 必须打出自己的 usage"
+    },
+    {
+      "id": "tool.innoextract",
+      "tool": "innoextract",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 5,
+      "expect_regex": "innoextract \\d",
+      "note": "★ 2026-10-16 新增：Inno Setup 安装包解包（sample.exe 这类小 PE 常是 Inno —— 带壳挖矿/远控的常见壳）。\n★ 2026-10-16 真任务轮补记：本机**没有任何 Inno Setup 安装器样本**（全盘扫 332 个 >500KB 的 exe/msi，只命中 Inno 工具自身的字符串）。负向实测：喂真 NSIS 安装器 `-l` → rc=2 `Done with 1 error.`，判别正确。正向路径（真解包）在本机**未被验证**，明写在此。",
+      "expect_why": "innoextract 必须打出版本号"
+    },
+    {
+      "id": "tool.innounp",
+      "tool": "innounp",
+      "args": [
+        "-h"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 5,
+      "expect_regex": "Inno Setup Unpacker",
+      "note": "★ 2026-10-16 新增：Inno 解包的另一把刀（比 innoextract 老、兼容更旧的 Inno 版本）。\n★ 2026-10-16 真任务轮补记：同 innoextract —— 本机无 Inno 样本。负向实测：喂真 NSIS 安装器/真 PE `-v` → rc=2（正确判否）。正向解包未验证，明写在此。",
+      "expect_why": "innounp 必须打出 Inno Setup Unpacker 横幅"
+    },
+    {
+      "id": "tool.npx",
+      "tool": "npx",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "\\d+\\.\\d+",
+      "note": "★ 2026-10-16 新增：js-reverse 技能要用 npx 起工具（如 @babel、jsdom）。",
+      "expect_why": "npx 必须打出数字版本"
+    },
+    {
+      "id": "tool.bun",
+      "tool": "bun",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_regex": "\\d+\\.\\d+",
+      "note": "★ 2026-10-16 新增：本机装的是 bun 1.4.2（另一个 JS 运行时/包管理器）。",
+      "expect_why": "bun 必须打出数字版本"
+    },
+    {
+      "id": "tool.ssh",
+      "tool": "ssh",
+      "args": [
+        "-V"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 2,
+      "expect_stream": "any",
+      "expect_regex": "OpenSSH",
+      "note": "★ 2026-10-16 新增。★ 用**大写 `-V`**（小写 `-v` 是 verbose，会真的去连会话 —— 别在门里用）。★ 版本行走 **stderr**（stdout 0B）；实测 OpenSSH_for_Windows_7.7p1。",
+      "expect_why": "ssh 必须打出 OpenSSH 版本行"
+    },
+    {
+      "id": "tool.mitmproxy",
+      "tool": "mitmproxy",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 5,
+      "expect_regex": "Mitmproxy",
+      "note": "★ 2026-10-16 新增（KNOWN_TOOLS 里有、配方表里一直缺）。mitmproxy（交互 TUI）与 mitmdump（命令行）是两个 exe；`--version` 都安全退出 rc=0。",
+      "expect_why": "mitmproxy 必须打印 Mitmproxy 版本行"
+    },
+    {
+      "id": "tool.scyllahide-x86",
+      "tool": "scyllahide-x86",
+      "args": [
+        "--version"
+      ],
+      "timeout_s": 30,
+      "expect_exit": [
+        0
+      ],
+      "min_stdout": 5,
+      "expect_regex": "Loaded VA for",
+      "note": "★ 2026-10-16 新增：x86 版 ScyllaHide 加载器，与已有 tool.scyllahide（x64 版 InjectorCLIx64）同族。输出是它自己算出来的 hook VA（`Loaded VA for NtUserBlockInput = 0x...`），rc=0 —— 只打印、不注入任何进程。\n★ 2026-10-16 真任务轮补记：x86 版与 x64 版同一个 InjectorCLI 血统，形态/坑完全一致 —— `pid:<pid> <dll> [nowait]`，裸 pid 会 rc=0 打 usage（假成功），核验看 `scylla_hide.log` （必须注册到本机后才写），不要看 tasklist 模块表。",
+      "expect_why": "只要 rc=0 且有输出即证明加载器可调用"
+    }
+  ],
+  "_no_recipe_why": "★ 2026-10-16 工具层审计加的一节：**配方表覆盖不到、且不该由配方覆盖**的 id 与理由。凡在『探测层能解析』或 `KNOWN_TOOLS` 里出现、但配方表里没有的 id，都必须在这里有一条理由 ——要么是 GUI/启动器（`relab2-tools-mcp.py` 的 `_GUI_TOOL_IDS` 已禁执行），要么在本机实测不可用（HANG / 崩 / 坏 shim），要么是别名孪生，要么本机根本没装。**不给理由的缺口 = 漏项**；给不出理由就说明该补配方。（`_GUI_TOOL_IDS` 是这份表的**超集**：它还列了本机没装、但换了机器可能出现同名 GUI 的 id，如 imhex / pe-bear / ollydbg / charles / fiddler / mitmweb。）",
+  "_no_recipe": {
+    "die": "DIE 的 GUI。探测层把它解析到 `D:\\Tools\\pack\\die\\diec.exe`（**与 diec 同一路径**）—— 跑它等于跑 GUI。配方用 `triage.format`（工具 diec）。",
+    "ghidra": "Ghidra GUI 启动器 `ghidraRun.bat`。CLI 孪生 = `ghidra_headless`（配方 tool.ghidra_headless）。",
+    "ida": "IDA GUI。CLI 孪生 = `idat`（配方 tool.idat）。\n★ 2026-10-16 真任务轮补记：`ida.exe` 想无人值守是**不行**的 —— `ida -B` 与 `ida -A -B` 实测都是 rc=0xC0000096（STATUS_PRIVILEGED_INSTRUCTION）、不产出库文件。批处理一律走 `idat -B`（已实测出 s.asm/s.i64）。",
+    "ida64": "与 `ida` 同一个 `ida.exe`（位数/大小写别名）。",
+    "wireshark": "Wireshark GUI（KNOWN_TOOLS 里有，是为让 `local_tools` 能报出『装了，但请用 tshark』）。CLI 孪生 = `tshark`（配方 pcap.parse）。\n★ 2026-10-16 真任务轮补记：`Wireshark.exe -v` 实测 rc=0 且**有 stdout**（1577B，`Wireshark 4.6.0 (v4.6.0-0-gcdfb6721e77c).`）—— GUI 二进制也会往控制台打版本，别以为它只能点窗口。抓包真活仍归 tshark。",
+    "Wireshark": "同一个 GUI（大小写不同的别名）。",
+    "x32dbg": "x64dbg 的 32 位 GUI。",
+    "x32dbg-gui": "同上（显式别名）。",
+    "x64dbg": "★ 探测层把 `x64dbg` 解析到 `D:\\Tools\\cli\\start-x64dbg-mcp.ps1` —— **项目自己的启动器**，不是调试器本体；跑它 = 拉起 GUI。",
+    "x64dbg-gui": "x64dbg 的 64 位 GUI。",
+    "x96dbg": "x64dbg 的启动选择器 GUI。",
+    "dnSpy": "dnSpy GUI。",
+    "jd-gui": "jd-gui GUI 反编译器。CLI 孪生 = `jadx`。",
+    "jeb": "JEB GUI。CLI 孪生 = `jeb_wincon`（本机未登记，故也没有配方）。",
+    "androidkiller": "AndroidKiller GUI（apktool/adb 的图形外壳）。",
+    "gda": "GDA GUI 反编译器。",
+    "peid": "PEiD GUI 查壳器。CLI 孪生 = `diec`。",
+    "autoeye64": "AutoEye GUI 查壳器。",
+    "pyre": "python-venv 的解释器，语义含糊（`pyre` 本该是 Facebook 的 Python 类型检查器）—— 禁用于 run_tool。",
+    "x32dbg-headless": "调试**服务端**（`headless.exe {OPTIONS} [filename] --`），没有 help/version 开关：`--help` 只是『未知参数 + 打用法』的副作用形态（实测 3 连跑 rc=0、1489B、稳定），不适合当冒烟配方 —— 它的冒烟必须是 attach/run 真样本。",
+    "x64dbg-headless": "同上（64 位）。",
+    "dnSpy.Console": "★ 实跑 rc=0xE0434352（.NET 未处理异常 `System.IO.IOException: 句柄无效`，544B）——本机这个 Console 孪生起不来，不是参数问题。",
+    "afpiunpack": "★ 实测 **HANG**（25s 不返回，已 taskkill /T）：AFPI Unpacker 是 GUI 解包器。禁止进任何门。",
+    "idat32_83": "★ 实测 **HANG**（25s 不返回）：IDA 8.3 portable 的 32 位 CLI 起不来（疑似无有效许可证 → 弹窗等输入）。禁止进任何门；9.3 的 `idat` 才是本机可用形态。",
+    "idat64_83": "同上（64 位）。",
+    "analyzeHeadless": "与 `ghidra_headless` **同一个文件**（`D:\\Tools\\disasm\\ghidra\\support\\analyzeHeadless.bat`）—— 别名孪生，不重复配方。",
+    "pyghidra": "实跑 rc=1 且 stdout/stderr 皆空（0B）—— 本机不可用（它本该是 PyGhidra 的启动器）。",
+    "pnpm": "解析到的 shim 坏了：`node:internal/modules/cjs/loader:1433` rc=1 —— 本机不可用。（npm/npx 可用。）",
+    "apksigner": "★ 本机**没有**（探测层解析不到，`why` 为空）。装了就应当补配方（它是 Android 签名校验的 CLI 主力）。",
+    "unblob": "★ 本机**没有**（解析不到）—— 缺件，不是漏项。",
+    "burpsuite": "★ 本机**没有**（解析不到）。即便装上也是 GUI —— 冒烟应当走它的 REST API / CLI，不该点窗口。"
+  }
+}

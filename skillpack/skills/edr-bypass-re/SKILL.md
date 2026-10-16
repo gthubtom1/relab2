@@ -239,7 +239,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "&lt;SKILL_ROOT&gt;\skills\s
 
 ## 工具与通道（本机口径）
 
-> 动手前先定位工具与通道：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` 之后 `Resolve-ReverseToolSpec -Name <id>`（返回的 `Command` 是完整路径）；
+> 动手前先定位工具与通道：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` 之后 `Resolve-ReverseToolSpec -Name <id>`（返回的 `Command` 是完整路径）；
 > 通道用 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` 看三列（注册了哪些 / 谁在监听 / 怎么起）。
 > **注册 ≠ 在监听** —— `x64dbg-mcp` 是活在被调试进程里的插件，进程不在端口就不在；要动态调试就先起，起完重跑确认 `LISTEN`（`9095` 是 x32 的服务口，别向它发控制指令）。
 

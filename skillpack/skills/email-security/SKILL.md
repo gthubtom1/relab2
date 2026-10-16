@@ -47,7 +47,7 @@ description: 邮件安全与钓鱼分析：Received 链、SPF/DKIM/DMARC 校验�
 | `Burp` | 邮件里链接指向的自家应用取证 | 只读重放跳转链，不主动打点 |
 | `mitmdump` | 链接落地页/重定向链脚本化记录 | `mitmdump -w mail_urls.flow` |
 
-探测层（唯一路径入口）：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name tshark`。
+探测层（唯一路径入口）：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name tshark`。
 `Get-Command` 查空 ≠ 缺工具（四级递进：env → PATH → `_map.json` → 工具根扫描）。
 
 ## 参考

@@ -215,12 +215,24 @@ if (Test-Path -LiteralPath $toolRootCurrent -PathType Container) {
     if ((-not $env:GOROOT -or -not (Test-Path -LiteralPath $env:GOROOT -PathType Container)) -and (Test-Path -LiteralPath $goCandidate)) {
         $env:GOROOT = $goCandidate
     }
-    # 4. 确保 D:\Tools\cli 在会话 PATH 前端
+    # 4. 确保 D:\Tools\cli 在会话 PATH **最前端**
+    # ★ 2026-10-16 修一处真缺陷（工具层逐条实测抓到）：原逻辑是
+    #   `if ($pathList -notcontains $cliCandidate) { 前置 }` —— 也就是**只要 cli
+    #   已在 PATH 里就什么都不做**，不管它排第几。本机实测：`D:\Tools\cli` 在
+    #   PATH 第 **13** 位，而 `%APPDATA%\Python\Python314\Scripts`（里面有个
+    #   **无扩展名的 POSIX 脚本** `ROPgadget`）在第 **11** 位。
+    #   而 `Resolve-ReverseToolSpec` 是**四级递进、命中即停**：第 2 级 PATH 一命中
+    #   就返回，**永远轮不到第 3 级 `_map.json` 别名** —— 于是别名表里精心登记的
+    #   `cli\ROPgadget.cmd` 形同虚设，解析出无扩展名脚本 → `CreateProcess` 必报
+    #   `WinError 193`（`test-tool-recipes` 的 `tool.ropgadget` 因此长期红）。
+    #   修法：cli 不是**第一个** PATH 段时就把它挪到最前（幂等；已在最前则不动）。
     $cliCandidate = Join-Path $toolRootCurrent 'cli'
     if (Test-Path -LiteralPath $cliCandidate) {
-        $pathList = $env:PATH -split ';'
-        if ($pathList -notcontains $cliCandidate) {
-            $env:PATH = "$cliCandidate;$($env:PATH)"
+        $pathList = @($env:PATH -split ';' | Where-Object { $_ })
+        $alreadyFirst = ($pathList.Count -gt 0 -and $pathList[0].TrimEnd('\') -ieq $cliCandidate.TrimEnd('\'))
+        if (-not $alreadyFirst) {
+            $rest = @($pathList | Where-Object { $_.TrimEnd('\') -ine $cliCandidate.TrimEnd('\') })
+            $env:PATH = (@($cliCandidate) + $rest) -join ';'
         }
     }
 }
@@ -255,7 +267,7 @@ function Get-ReverseToolMap {
     if (Test-Path -LiteralPath $defaultPath -PathType Leaf -ErrorAction SilentlyContinue) {
         try {
             $defaultMap = Get-Content -LiteralPath $defaultPath -Raw -Encoding UTF8 | ConvertFrom-Json
-        } catch { }
+        } catch { }   # scan-ok: 这是三层兜底里的**种子**层（本地 toolmap 优先、它垫底）；解析失败=没有种子可补，不等于"解析成功"
     }
 
     # 3. 合并或择优：本地有则以本地为准（保留其 aliases/deny），默认垫底补充 twins 等知识
@@ -272,6 +284,56 @@ function Get-ReverseToolMap {
 }
 
 # deny 规则：某工具 id 在某路径上是否禁止使用（防误命中捆绑运行时，例如 IDA 自带的裸 Python）
+# ★ 2026-10-15 独立审查 P8：toolmap.default.json 的 prefer 失效没有任何东西在报。
+#   实测本机 68 条 prefer 里 53 条指向不存在的文件（只有 15 条命中）。本机不致命，
+#   因为 D:\Tools\_map.json 本机覆盖表 38 条全部存在；但换一台没有 _map.json 的机器，
+#   68 条里只有 15 条指得动，其余会静默落到第 4 级 scan（可信度最低、需确认身份）。
+#   而 toolmap.default.json 自称「由 scripts/gen-default-toolmap.py 生成」——那个生成器
+#   在仓库里不存在（环境初始化.md §11.6 已承认），所以这表是手工维护的，必然漂移。
+#   本函数把「失效 prefer 计数」变成可观测数字，供 doctor/selfcheck 报告。
+function Test-ReverseToolmapHealth {
+    [CmdletBinding()]
+    param()
+
+    $root = Get-ReverseToolRoot
+    if ([string]::IsNullOrWhiteSpace($root)) {
+        return [pscustomobject]@{ ok = $false; reason = 'tool-root-missing'; total = 0; missing = 0; missingIds = @() }
+    }
+
+    $defaultPath = Join-Path $PSScriptRoot 'toolmap.default.json'
+    if (-not (Test-Path -LiteralPath $defaultPath -PathType Leaf)) {
+        return [pscustomobject]@{ ok = $false; reason = 'default-map-absent'; total = 0; missing = 0; missingIds = @() }
+    }
+    try { $map = Get-Content -LiteralPath $defaultPath -Raw -Encoding UTF8 | ConvertFrom-Json } catch {
+        return [pscustomobject]@{ ok = $false; reason = "default-map-unparsable: $_"; total = 0; missing = 0; missingIds = @() }
+    }
+    if ($null -eq $map -or -not $map.PSObject.Properties['aliases']) {
+        return [pscustomobject]@{ ok = $false; reason = 'no-aliases'; total = 0; missing = 0; missingIds = @() }
+    }
+
+    $total = 0; $missing = 0; $missingIds = New-Object System.Collections.Generic.List[string]
+    foreach ($id in $map.aliases.PSObject.Properties.Name) {
+        $alias = $map.aliases.$id
+        foreach ($rel in @($alias.prefer)) {
+            if (-not $rel) { continue }
+            $total++
+            # 含未展开占位符（如 `<pyre venv>`）的 prefer 让 Test-Path 抛非法字符错，
+            # 而它本质就是「指不动」——直接计入 missing，不报错。
+            if ($rel -match '[<>]') { $missing++; if ($missingIds.Count -lt 10) { $missingIds.Add($id) }; continue }
+            $full = Join-Path $root $rel
+            if (-not (Test-Path -LiteralPath $full -PathType Leaf -ErrorAction SilentlyContinue)) {
+                $missing++
+                if ($missingIds.Count -lt 10) { $missingIds.Add($id) }
+            }
+        }
+    }
+    return [pscustomobject]@{
+        ok = ($missing -eq 0); reason = ''
+        total = $total; missing = $missing
+        missingIds = @($missingIds)
+    }
+}
+
 function Test-ReverseToolDenied {
     [CmdletBinding()]
     param([string]$ToolId, [string]$FullPath)
@@ -416,7 +478,7 @@ function Get-ReversePythonCandidates {
         [void]$roots.Add($env:REVERSE_TOOL_ROOT)
     }
     $toolRoot = $null
-    try { $toolRoot = (Get-ReverseToolRoot).TrimEnd('\') } catch { }
+    try { $toolRoot = (Get-ReverseToolRoot).TrimEnd('\') } catch { }   # scan-ok: 工具根**候选之一**；失败只是少一个候选，后面按实际命中的路径判断
     if ($toolRoot -and (Test-Path -LiteralPath $toolRoot)) { [void]$roots.Add($toolRoot) }
     # ★ 从 PATH 上任何 python* 的目录反推常见安装根。
     #   主人本机的真解释器在 (Resolve-ReverseToolSpec -Name 'pyre').Command —— 既不在 REVERSE_TOOL_ROOT
@@ -448,7 +510,7 @@ function Get-ReversePythonCandidates {
                     Select-Object -First 12 -ExpandProperty FullName
                 foreach ($h in $hits) { [void]$found.Add($h) }
             }
-        } catch { }
+        } catch { }   # scan-ok: 受预算 $budget 限制的 best-effort 目录扫描；某个根扫不动就跳过，其余根照扫（找不到会走调用方的"缺件"）
     }
     return ,$found.ToArray()
 }
@@ -498,7 +560,7 @@ function Resolve-ReverseToolSpec {
     # 0) 环境自愈：进程可能持有启动时的旧 PATH 快照（本机 2026-10-08 事故：工具从
     #    工具根迁移后注册表已改但进程未刷新）。不刷新的话下面第 2 级
     #    Get-Command 会全部返回空，进而让调用方误判「本机缺工具」。幂等且不抛异常。
-    try { [void](Sync-ReverseEnvironment) } catch { }
+    try { [void](Sync-ReverseEnvironment) } catch { }   # scan-ok: 幂等环境自愈（上面注释写明"不抛异常"）；失败只是没自愈，后续四级探测按现状继续
 
     # 1) 环境变量显式指定（设了但文件不在 -> 忽略，不静默沿用）
     $envKey = $Name.ToUpperInvariant().Replace('-', '_')
@@ -812,6 +874,34 @@ function Export-ReverseEnvironmentSnapshot {
         }
     }
 
+    # ★ 2026-10-16（审计 R1「假安全」）：上面那张 $ToolList 全是**逆向**工具，
+    #   于是「25/25 全绿」给不出一句"固件/渗透/安卓能不能干活"的答案 —— 分母不对，绿就是假安全。
+    #   这里按**战场**再报一组分母：每组 Total/Available/Missing 都写出来，
+    #   哪个战场是 0 一目了然，不用等下一次真任务才暴露。
+    $toolGroups = [ordered]@{
+        '逆向'   = @('ida', 'idat', 'ghidra', 'analyzeHeadless', 'x64dbg', 'x32dbg',
+                     'die', 'diec', 'r2', 'radare2', 'dnSpy', 'de4dot', 'ilspycmd', 'upx', 'capa', 'floss', 'angr')
+        '协议'   = @('wireshark', 'tshark', 'dumpcap', 'mitmdump', 'mitmproxy', 'fiddler', 'charles', 'httpx')
+        '渗透'   = @('nmap', 'ncat', 'nping', 'sqlmap', 'nuclei', 'ffuf', 'hashcat', 'john', 'burpsuite', 'yara')
+        '开发'   = @('java', 'javac', 'dotnet', 'go', 'git', 'python', 'node', 'npm', 'npx', 'gcc', 'make')
+        '安卓'   = @('jadx', 'apktool', 'frida', 'objection', 'adb', 'apksigner', 'scrcpy')
+        '固件'   = @('binwalk', 'unblob', 'qemu-system-arm', 'qemu-system-mips', 'openocd', 'flashrom')
+    }
+    $groupReport = [ordered]@{}
+    foreach ($g in $toolGroups.Keys) {
+        $ok = @()
+        $miss = @()
+        foreach ($t in $toolGroups[$g]) {
+            if ((Resolve-ReverseToolSpec -Name $t).Available) { $ok += $t } else { $miss += $t }
+        }
+        $groupReport[$g] = [ordered]@{
+            Total     = $toolGroups[$g].Count
+            Available = $ok.Count
+            OK        = $ok
+            Missing   = $miss
+        }
+    }
+
     $mcpStates = [ordered]@{}
     $mcpChecks = @(
         @{ Name = 'pyghidra-mcp'; Port = 9111 },
@@ -830,6 +920,7 @@ function Export-ReverseEnvironmentSnapshot {
         ToolRoot    = Get-ReverseToolRoot
         SkillRoot   = Get-ReverseSkillRoot
         Tools       = $tools
+        ToolGroups  = $groupReport
         Mcp         = $mcpStates
     }
 

@@ -1,0 +1,67 @@
+id: case-006-fix-bug-pwsh-host-and-r2-fallback
+date: 2026-08-17
+domain: fix-bug
+task_verbatim: |
+  （非用户原话 —— 本条为本仓库自身引导缺陷修复，取自本包 field-journal 的
+  「目标概述」原文，未改写）
+  修复本机引导过程中的三类被层层掩盖的缺陷：tool-index 把 radare2 主分析器 r2 误报为 no；
+  多个测试脚本硬编码 powershell 子进程调用在仅装 PowerShell 7+ 的机器上失败；
+  以及被该失败掩盖的 pin gate StrictMode 属性访问 bug。
+constraint: |
+  own_system（本仓库自身）；offline，无外部目标 ACT，无真实域名 / IP / 凭据
+  环境硬约束：本机只有 pwsh 7.6.4，无 powershell / powershell.exe
+  修复不许改变各门的判定语义（verify / routing / p0-friction 的通过线不变）
+
+expect_chain:
+  - fix-bug                                  # 先可重复失败，再改根因，收尾先红后绿
+  - ops/rebuild-gates.md                     # 失败来自引导 / 环境，不是业务逻辑
+  - radare2                                  # r2 入口事实（bin\radare2.exe + r2.bat 包装器）
+  - scripts/lib/HostRuntime.ps1              # Resolve-ReverseHostExe 统一子进程入口
+  - scripts/case-init.ps1
+  - scripts/test-routing.ps1
+  - scripts/test-p0-friction.ps1
+  - scripts/verify-routing-coherence.ps1     # pin gate 的 StrictMode 属性访问
+  - scripts/smoke.ps1                        # 收尾判据：三套件全绿
+  - ops/binary-model.md                      # 四战场共用的假设状态机
+  - verify-done
+  - docs-generator
+  - case-review
+
+expect_deliverable: |
+  形态：修好的引导脚本 + 三套件全绿（不是「看起来能跑」）
+  落点：scripts/lib/HostRuntime.ps1（新增的 Resolve-ReverseHostExe）、探测层 r2 的 fallback、
+        verify-routing-coherence.ps1 的 pin gate、4 个脚本的 & powershell 替换为 & $HostExe
+  最小命令：pwsh -File scripts/smoke.ps1 → ALL PASS；test-routing.ps1 → 166/166；
+            test-p0-friction.ps1 → FAIL_COUNT=0
+
+known_failures:
+  - 'r2 被 tool-index 误报 no：探测层 r2 的 Fallbacks 只找 r2.exe，而 radare2 Windows 发行版的入口是 r2.bat（内容 @"%~dp0\radare2" %*，转发给 radare2.exe），目录里根本没有 r2.exe —— 同目录 rabin2/rasm2/radiff2 等独立 exe 全 = yes，只有它一个 = no'
+  - '修完 r2 后 smoke 仍 FAIL：verify-routing-coherence.ps1:257 硬编码 & powershell，本机无 powershell，中断在第一步'
+  - 'powershell 改完后 verify 又倒在 :414 —— pin gate 在 Set-StrictMode -Version Latest 下访问 $cap.pinnedVersion 等不存在的属性抛错；这是被 257 掩盖至今的预存在 bug，两层叠着暴露'
+  - '第一轮 grep 只写了 powershell\s+(-NoProfile|-ExecutionPolicy|-File|-Command)，漏掉 Start-Process -FilePath powershell.exe 与 cmd /c 内嵌 powershell 两种写法，test-p0-friction:343/364 二次报错才补全'
+  - 'smoke.ps1:31-46 本来就有正确的 $SmokeHostExe 逻辑（当前进程 → pwsh → Windows PowerShell 路径兜底），但它只服务 smoke 自己；第 8 步扫全仓才发现另外 4 个脚本各写各的，共享函数是事后提取的'
+  - '三类缺陷是「改一处 → 重跑 → 撞出下一处」逐层剥出来的，没有在动手前先把它们当成一条依赖链（漏 .bat → 子进程入口失败中断 → 掩盖 StrictMode bug）'
+  - 'test-p0-friction 输出里大量 Exception: case-init.ps1:54 被当噪声忽略 —— 实际是测试 14b 故意用非法 CaseName 触发的预期异常，需另行确认才敢判「无需处理」'
+
+note: |
+  ★ 本案例补上回归表缺失的**修 bug 战场**（此前三条只有 reverse / ctf）。
+  它是「层层掩盖」的典型样本：探测层 fallback 漏 .bat → 子进程入口硬编码 powershell
+  导致中断 → 掩盖 pin gate 的 StrictMode 属性访问 bug；而兼容性 grep 又漏了
+  powershell.exe 字面。对 fix-bug 判据的检验点落在「先证红再证绿」：
+  这里的红是 smoke 的 FAIL，绿是 smoke ALL PASS + routing 166/166 + p0-friction FAIL_COUNT=0。
+  收敛现状（本仓实测核对）：scripts/lib/HostRuntime.ps1 存在；case-init.ps1 / smoke.ps1 /
+  test-routing.ps1 / test-p0-friction.ps1 / verify-routing-coherence.ps1 五处均用 $HostExe；
+  verify-routing-coherence.ps1 的 pin gate 已改用 $capMap（hashtable）索引访问，
+  与日志记的修法一致 → 记 resolved。
+  [INFERENCE] r2 的 .bat / .exe 双入口在本仓现在的形态是 scripts/lib/toolmap.default.json
+  的 r2 条目（exec=r2.exe，note 记「目录里同时有 r2.bat 和 r2.exe」），
+  与日志里改 ToolDiscovery Fallbacks 的写法不同 —— 未逐行核对是否同源，故仅记为观察。
+
+lesson_refs:
+  - "skillpack/skills/field-journal/2026-08-17_tool-index-r2-fallback-powershell-pwsh-host-fix.md"
+  - "skillpack/skills/field-journal/_index.md（第 67 / 83 / 107 行索引条目）"
+  - "scripts/lib/HostRuntime.ps1（本仓存续的修复产物）"
+  - "scripts/verify-routing-coherence.ps1（$capMap 的 pin gate 段）"
+  - "ops/analysis-decision-framework.md R6 / R41（负证据与有依据结论）"
+
+status: resolved

@@ -1,6 +1,6 @@
 ---
 name: community-hack-hub
-description: Web、API、主机和应用安全专题适配层。将 hack-skills 的分类和深度 playbook 接到 reverse-skill 的可执行路由、授权 scope、case 证据和报告合同。
+description: Web/API/主机/应用安全专题适配层。用于：把 hack-skills 的分类与深度 playbook 接到可执行路由、授权 scope、case 证据和报告合同时。
 ---
 
 # Community Hack Skills adapter
@@ -52,4 +52,4 @@ python skills/scripts/community-route.py --hint "<观察到的行为>" --source 
 - 置信度 `confidence = best_score / hint 词数`，低于 0.35 为 `low_confidence`；
   首尾 wrapper 分差 ≤20% 为 `ambiguous_tie`，两者都进 `needs_review`。
 - 超预算后的确认格式：报出收窄后的 hint 与 `--source` 取值，等人工确认后再查。
-- 完整数字与 policy manifest 变更请求见 `../../../docs/community/LOADING-BUDGET.md`（本包未落地）。
+- 完整数字与 policy manifest 变更请求见 `../../../docs/community/LOADING-BUDGET.md`。

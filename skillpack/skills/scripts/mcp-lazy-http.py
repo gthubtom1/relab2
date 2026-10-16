@@ -3,8 +3,8 @@
 """mcp-lazy-http.py —— 把「HTTP 型 MCP 通道」包成 stdio MCP 服务器，后端按需拉起。
 
 为什么存在（2026-10-15）：
-  本机注册的 4 条 MCP 通道里，pyghidra / angr 是 stdio —— 宿主自动拉起，模型随时看得见、调得动；
-  而 idapro(13337) / x64dbg-mcp(9094) 是 http —— **默认是关的**，模型不一定会想起来去按开关。
+  本机注册的 6 条 MCP 通道里，pyghidra / angr 是**直连 stdio** —— 宿主自动拉起，模型随时看得见、调得动；
+  而 idapro(13337) / x64dbg-mcp(9094) 的**后端**是 http —— **默认是关的**，模型不一定会想起来去按开关。
   这就是「拿着枪却不会用」的机械原因。REA 的做法是它的桥**自己拉起 provider**
   （"REA starts Hopper when an operation needs it"）。本脚本把这一能力补齐。
 
@@ -114,8 +114,10 @@ class Ctx:
         『新机第一会话看不见工具』会以静默失败的形式复现（2026-10-15 审计实测就是这样）。"""
         try:
             return json.loads(self.cache_file.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            pass
+        except (OSError, ValueError) as e:
+            # 本函数 docstring 的硬要求：返回空之前**必须**留下理由，否则
+            # 「新机第一会话看不见工具」会再次静默复现（2026-10-15 审计实测）。
+            self.log(f"cache read failed: {e}（回落种子/空表）")
         if self.seed_file and self.seed_file.exists():
             try:
                 data = json.loads(self.seed_file.read_text(encoding="utf-8"))
@@ -156,6 +158,9 @@ class Ctx:
                     stdin=subprocess.DEVNULL, stdout=lf, stderr=lf,
                     creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
                     | getattr(subprocess, "DETACHED_PROCESS", 0),
+                    # scan-ok: 刻意「发射后不管」——不能带 timeout（Popen 的参数只作用于子进程本身，
+                    # 这里的后端子进程会被启动器 detach，等它会挂死，见上面 145-148 行）；
+                    # 挂死上限由**下面**的端口轮询 deadline 强制：到期就返回 False。
                 )
         except OSError as e:
             self.log(f"launcher OSError: {e}")

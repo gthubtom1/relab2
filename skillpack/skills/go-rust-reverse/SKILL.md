@@ -54,7 +54,7 @@ Rust 侧形态学：单态化会让同一逻辑在 `.text` 里出现 N 份；先
 | `cdb` | 无 GUI 环境下的 Windows 调试兜底（脚本可复现） | 探测 id `cdb` |
 
 > **动手前先定位工具与通道。**
-> `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>`，用返回的 `Command` 全路径调（不要依赖 cwd）；
+> `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>`，用返回的 `Command` 全路径调（不要依赖 cwd）；
 > **`Get-Command` 查空 ≠ 缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`），四级探测全 `Available=False` 才允许报缺。
 > 通道另用 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` 看三列（注册了哪些 / 谁在监听 / 怎么起）：
 > **注册 ≠ 在监听**，idapro（`127.0.0.1:13337`）与 x64dbg（`127.0.0.1:9094`）平时 `closed` 是按需设计，用到再起。
