@@ -32,7 +32,11 @@ note: |
 
 lesson_refs:
   - "skillpack/skills/field-journal/2026-10-13_assault-prng-upx-l1l4.md"
-  - "work/assault-prng-upx/assault.md（§functions / §findings / §diff_baseline 全表填实）"
+  # ★ 2026-10-17：加 `[未入库]` 标记。`work/` 被 .gitignore 挡住、永不进仓 ——
+  #   这条引用是**有意**指向该 case 自己的运行时工作区，但它在新 clone 里必然不存在。
+  #   原来没标，于是这道门在开发机上绿（本机有那个目录）、在 CI 上判悬空
+  #   （`FAIL（1 条）`）。标记语义见 run-regression.py 的 WS_RE。
+  - "[未入库] work/assault-prng-upx/assault.md（§functions / §findings / §diff_baseline 全表填实）"
   # ★ 2026-10-16 删掉原第 3 条 `skillpack/skills/field-journal/seed-005 等 seed 系列（正控语料）`：
   #   ① `seed-005` 的真实文件名是 `seed-005_ad-certipy-esc1.md`（ADCS ESC1），与本 case 的
   #      PRNG/UPX 主题**毫无关系**；② 全 17 篇 seed-0xx 里 grep `upx|prng|加壳` **零命中**

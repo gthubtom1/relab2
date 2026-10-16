@@ -48,14 +48,37 @@ def find_repo_root() -> str:
     return os.getcwd()
 
 
+def _resolve_ps() -> list[str] | None:
+    """找到可用的 PowerShell 宿主（含宿主参数）。
+
+    ★ 2026-10-17：原来硬编码 `powershell`。GitHub 的 ubuntu runner **只装了 pwsh**
+    —— 于是这道门在 CI 的 integration gates 里以
+    `FileNotFoundError: 'powershell'` 抛 traceback、exit 1 永久红
+    （旧日志只印 `stderr: Traceback (most recent call last):`，看不出原因）。
+    顺序：Windows PowerShell（本机 PS 5.1 原生）→ PowerShell 7（pwsh）。
+    `-ExecutionPolicy` 只在 Windows PowerShell 上带。
+    """
+    exe = shutil.which("powershell")
+    if exe:
+        return [exe, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]
+    exe = shutil.which("pwsh")
+    if exe:
+        return [exe, "-NoProfile", "-File"]
+    return None
+
+
 def run_master_route(hint: str) -> dict:
     """跑 master-route，返回解析后的字段。"""
     out = tempfile.mkdtemp(prefix="rs-e2e-")
     try:
         ps = os.path.join(SKILLS_ROOT, "scripts", "master-route.ps1")
+        ps_host = _resolve_ps()
+        if ps_host is None:
+            raise RuntimeError(
+                "本机既没有 powershell 也没有 pwsh —— 无法驱动 master-route.ps1"
+                "（CI 的 ubuntu runner 预装 pwsh）")
         subprocess.run(
-            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps,
-             "-Hint", hint, "-OutDir", out],
+            ps_host + [ps, "-Hint", hint, "-OutDir", out],
             # ★ 2026-10-16：原来只有 `text=True`，没指定 encoding —— Windows 下子进程
             #   （powershell 在 GBK 码页）会输出非 UTF-8 字节，Python 用 UTF-8 解码时
             #   在**读取线程里**抛 UnicodeDecodeError（实测：`0xd7 ... invalid continuation byte`）。
@@ -135,7 +158,12 @@ def main() -> int:
         if not hint.strip():
             miss.append((c["_file"], "case 没有 task_verbatim"))
             continue
-        route = run_master_route(hint)
+        try:
+            route = run_master_route(hint)
+        except RuntimeError as exc:
+            # 没有 PowerShell 宿主时**明说**，不要抛 traceback（红门必须可读）
+            print(f"test-routing-e2e: FAIL（{exc}）")
+            return 1
         if not route:
             miss.append((c["_file"], "master-route 未产出 route-scope.md"))
             continue

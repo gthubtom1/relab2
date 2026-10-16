@@ -26,6 +26,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 
 try:
@@ -53,10 +54,61 @@ def find_repo_root() -> str:
     return os.getcwd()
 
 
+_TRACKED_CACHE: set[str] | None = None
+_TRACKED_DIRS: set[str] | None = None
+
+
+def _tracked_sets(repo_root: str):
+    """(跟踪文件集合, 跟踪目录集合)，仓库相对、正斜杠。
+
+    ★ 2026-10-17：引用解析改为**优先按 git 跟踪的文件**判存在，而不是工作树。
+    起因：`case-002-prng-upx.yaml` 的 lesson_refs 指向
+    `work/assault-prng-upx/assault.md` —— 那是 `.gitignore` 掉的运行时工作区，
+    **开发机上存在、全新 clone 里不存在**。于是这道门在开发机绿、在 CI 红
+    （`FAIL（1 条）`，且日志只印了那句汇总，看不到是哪一条）。
+    按跟踪集合判，两边一致。git 不可用（tarball 解包等）时返回空集合，
+    调用方回退到 os.path.exists —— 保持旧行为而不是让整门炸掉。
+    """
+    global _TRACKED_CACHE, _TRACKED_DIRS
+    if _TRACKED_CACHE is not None:
+        return _TRACKED_CACHE, _TRACKED_DIRS
+    files: set[str] = set()
+    try:
+        out = subprocess.run(["git", "-C", repo_root, "ls-files", "-z"],
+                             capture_output=True, check=False, timeout=120).stdout
+        files = {x.decode("utf-8").replace("\\", "/")
+                 for x in out.split(b"\0") if x}
+    except (OSError, subprocess.SubprocessError):
+        files = set()
+    dirs: set[str] = set()
+    for t in files:
+        parts = t.split("/")
+        for i in range(1, len(parts)):
+            dirs.add("/".join(parts[:i]))
+    _TRACKED_CACHE, _TRACKED_DIRS = files, dirs
+    return files, dirs
+
+
+def _tracked_candidates(e: str) -> list[str]:
+    """一个引用可能对应的仓库相对路径（按解析顺序）。"""
+    cands = []
+    for base in ("skillpack/skills/", "", "skillpack/"):
+        cands.append((base + e.replace("\\", "/")).lstrip("/"))
+    if "/" not in e:
+        cands.append("skillpack/skills/%s/SKILL.md" % e)
+    return cands
+
+
 def chain_entry_exists(entry: str, repo_root: str, skills_root: str) -> bool:
     """expect_chain 的一条是否指向真实存在的技能目录或文档。"""
     e = entry.strip()
     if not e:
+        return False
+    files, dirs = _tracked_sets(repo_root)
+    if files:
+        for c in _tracked_candidates(e):
+            if c in files or c in dirs:
+                return True
         return False
     if e in ("ctf-sandbox", "pwn-chain", "docs-generator", "case-review",
              "reverse-engineering", "x64dbg-reverse", "ida-reverse",
@@ -178,6 +230,12 @@ def main() -> int:
     #     但**不静默跳过** —— 不标就 FAIL，否则打错字的外部位路径会混进来当"已核验"。
     GENERIC_REF_RE = re.compile(r"(等\s*\S*\s*系列|示例|同上|见上|待补)")
     EXT_RE = re.compile(r"^\s*(\[外部\]|【外部】)")
+    # ★ 2026-10-17：与 `[外部]` 同构的第二类显式标记 —— **本机运行时产物（不入库）**。
+    #   起因：case-002 的一条经验来自 `work/assault-prng-upx/assault.md`（该 case 自己的
+    #   攻坚工作区）。`work/` 被 .gitignore 挡住、永不进仓 —— 引它是**有意的**，
+    #   但它在新 clone 里必然不存在。原来只认 `[外部]`，于是这条引用在 CI 上判悬空
+    #   （开发机上因为有那个目录反而是绿的）。不静默跳过：不标就 FAIL。
+    WS_RE = re.compile(r"^\s*(\[未入库\]|【未入库】)")
     ABS_RE = re.compile(r"^([A-Za-z]:[\\/]|\\\\)")
 
     def _ref_resolvable(part: str) -> bool:
@@ -210,6 +268,8 @@ def main() -> int:
                     continue
                 if EXT_RE.match(raw):
                     continue          # 显式标记的外部引用：接受（换机不可解析）
+                if WS_RE.match(raw):
+                    continue          # 显式标记的本机运行时产物：接受（永不入库，见上）
                 part2 = re.split(r"[（(]", raw)[0].strip().strip("\"'")
                 if not part2:
                     continue
