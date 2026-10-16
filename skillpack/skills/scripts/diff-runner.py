@@ -34,6 +34,17 @@
 `{input}` 是占位符，被每条 case 的 `input=` 值原样替换。两个 command 都用
 shell 执行（Windows 走 powershell，其余走 bash），因此写成命令行即可。
 
+`{tool:<id>}` 是第二个占位符（可选）：由**探测层**把它换成该工具在本机的真实路径
+（四级递进：环境变量 → PATH → 别名表 → 工具根），换机后 case 不用改。例：
+
+```
+- baseline_command: `{tool:python} ./baseline/original.py --mode a {input}`
+- rebuilt_command:  `{tool:r2} -q -c "iI;q" {input}`
+```
+
+没写 `{tool:}` 的命令完全走原路径（零开销）。解析不出来（本机没装 / 探测层不可用）
+时**判红并写明原因**，不会把带占位符的命令丢给 shell。
+
 ## 用法
 
 ```
@@ -59,8 +70,10 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -189,6 +202,90 @@ def shell_for(platform: str):
     if platform == "nt":
         return ["powershell", "-NoProfile", "-Command"]
     return ["bash", "-lc"]
+
+
+# ---------------------------------------------------------------- {tool:<id>} 占位符
+#
+# ★ 2026-10-17（K3）：命令里可以写 `{tool:r2}` / `{tool:python}`，由**探测层**
+#   （Bootstrap.ps1 的 Resolve-ReverseToolSpec，四级递进：env → PATH → 别名表 → 工具根）
+#   换成真实路径 —— 换机后 case 里的命令不用改。没写 `{tool:}` 的命令零开销、逐字节等价。
+#   解析失败**绝不**把带占位符的命令交给 shell：那只会得到一句 "command not found"，
+#   看起来像被测程序自己的问题。失败时判红并写明原因。
+
+TOOL_PLACEHOLDER = re.compile(r"\{tool:([A-Za-z0-9_.\-]+)\}")
+
+_BOOTSTRAP_PS1 = Path(__file__).resolve().parent / "lib" / "Bootstrap.ps1"
+
+_PROBE_ONE_PS = r"""
+$ErrorActionPreference='Continue'
+. "{bootstrap}"
+$r = $null
+try {{ $r = Resolve-ReverseToolSpec -Name '{name}' -ErrorAction Stop }} catch {{ }}
+if ($r -and $r.Available) {{
+  [pscustomobject]@{{ ok=$true; via=("" + $r.Via); cmd=("" + $r.Command) }} | ConvertTo-Json -Compress
+}} else {{
+  [pscustomobject]@{{ ok=$false; via=("" + $r.Via); cmd='' }} | ConvertTo-Json -Compress
+}}
+"""
+
+_TOOL_PATH_CACHE: dict[str, str] = {}
+
+
+def _ps_host() -> list[str] | None:
+    """Windows PowerShell 优先，其次 PowerShell 7（CI 的 ubuntu runner 只有 pwsh）。"""
+    exe = shutil.which("powershell")
+    if exe:
+        return [exe, "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
+    exe = shutil.which("pwsh")
+    if exe:
+        return [exe, "-NoProfile", "-Command"]
+    return None
+
+
+def resolve_tool_path(tool_id: str) -> str:
+    """问探测层要一个工具的真实路径；解析不出来返回空串。同进程内按 id 缓存。"""
+    if tool_id in _TOOL_PATH_CACHE:
+        return _TOOL_PATH_CACHE[tool_id]
+    resolved = ""
+    host = _ps_host()
+    if host and _BOOTSTRAP_PS1.is_file():
+        script = _PROBE_ONE_PS.format(
+            bootstrap=str(_BOOTSTRAP_PS1).replace("\\", "\\\\"), name=tool_id)
+        try:
+            proc = subprocess.run(host + [script], capture_output=True, text=True,
+                                  encoding="utf-8", errors="replace", timeout=120)
+            data = json.loads((proc.stdout or "").strip() or "{}")
+            if isinstance(data, list):
+                data = data[0] if data else {}
+            if data.get("ok") and data.get("cmd"):
+                resolved = str(data["cmd"])
+        except (OSError, subprocess.SubprocessError, ValueError):
+            resolved = ""
+    _TOOL_PATH_CACHE[tool_id] = resolved
+    return resolved
+
+
+def expand_tools(command: str) -> tuple[str, str]:
+    """把 {tool:<id>} 换成探测层解析出的真实路径。返回 (新命令, 错误说明)。
+
+    没有 `{tool:` 时原样返回（零开销、逐字节等价）。
+    """
+    ids = TOOL_PLACEHOLDER.findall(command)
+    if not ids:
+        return command, ""
+    out = command
+    missing: list[str] = []
+    for tool_id in dict.fromkeys(ids):
+        path = resolve_tool_path(tool_id)
+        if not path:
+            missing.append(tool_id)
+            continue
+        out = out.replace("{tool:" + tool_id + "}", path)
+    if missing:
+        return command, ("{tool:<id>} 解析失败：探测层给不出 %s 的路径"
+                         "（本机没装 / 探测层不可用）。命令里的占位符未展开，**没有执行**。"
+                         % ", ".join(missing))
+    return out, ""
 
 
 def run_command(command: str, cwd: Path, timeout: int):
@@ -385,6 +482,15 @@ def main(argv=None) -> int:
         inputs = [value for function_id, value in source["cases"] if function_id == args.function]
     if not inputs:
         print("ERROR: no input given and %s lists none for %s" % (source_name, args.function), file=sys.stderr)
+        return 2
+
+    # ★ 2026-10-17（K3）：`{tool:<id>}` 与 input 无关，先展开一次；失败就判红、不进循环。
+    #   不把带占位符的命令交给 shell —— 那只会得到一句 "command not found"，
+    #   看起来像被测程序自己的问题。
+    baseline_cmd, baseline_tool_err = expand_tools(baseline_cmd)
+    rebuilt_cmd, rebuilt_tool_err = expand_tools(rebuilt_cmd)
+    if baseline_tool_err or rebuilt_tool_err:
+        print("ERROR: " + (baseline_tool_err or rebuilt_tool_err), file=sys.stderr)
         return 2
 
     entries = []

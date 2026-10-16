@@ -64,6 +64,8 @@
 - diff_dir: `diff/`（对照运行产物；由 diff-runner 或手工执行生成）
 - baseline_command: `<驱动原程序的命令；{input} 占位>`
 - rebuilt_command: `<驱动新实现的命令；{input} 占位>`
+  两个命令都可用 `{tool:<id>}` 让探测层解析工具路径（例：`{tool:python}`、`{tool:r2}`），
+  换机后不用改；也可继续直接写命令行。解析不出来时该 case 判红，不会把占位符丢给 shell。
 - harness: `<可选：更复杂驱动脚本的说明>`
 - cases:
   - F-001 | input=`<第一组输入>`

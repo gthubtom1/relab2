@@ -164,6 +164,8 @@ foreach ($t in @('diec','r2','upx','idat','ghidra','x64dbg','capa','python')) {
 # 3. 「能解析」不等于「能跑」——实跑版本
 #    ★ `diec -h` / `r2 -v` 是版本/帮助探针，**不在** skills/config/tool-recipes.json 里；
 #      本条只作「能跑」验证，实测两形态均安全（2026-10-16：`diec -h` 0.3s 打印 usage、`r2 -v` 0.3s 打印版本行）。
+#      ★ 2026-10-17：**不要用 `diec --version`** —— 本机实测它不返回（参数被当文件路径，
+#        libpng warning 刷屏 + 240s 超时 + stdout 0 字节）。见 tool-recipes.json 的 `_no_recipe`。
 #      真正干活时的参数以配方为准：`diec -d -e -j <file>`、`r2 -q -c 'iI;q' <file>`。
 diec -h; r2 -v; upx --version; java -version; dotnet --version
 

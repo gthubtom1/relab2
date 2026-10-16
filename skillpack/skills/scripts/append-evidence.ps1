@@ -12,6 +12,13 @@
 #
 # NOTE: Nested `powershell -File` splits unquoted multi-word values. Prefer -RawExcerptFile
 # or call the script in-process: & .\append-evidence.ps1 -RawExcerpt 'full text here'
+#
+# Linking to a workitem (optional; K2):
+#   powershell -File skills/scripts/append-evidence.ps1 -CaseRoot work\my-case `
+#     -Id E-002 -Title "Confirmed bypass" -ReproCommand 'curl -sI https://example/' `
+#     -LinkedWorkitem WI-002
+#   Form must be WI-<digits> (e.g. WI-002); anything else is rejected before any file is
+#   written. Omitting the parameter keeps the previous byte-for-byte output (n/a).
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
@@ -35,7 +42,11 @@ param(
     [string] $Notes = '',
     [string] $NotesFile = '',
     [string] $ReproCommandFile = '',
-    [string] $ArtifactPath = ''
+    [string] $ArtifactPath = '',
+    # ★ 2026-10-17（K2）：把证据挂到工单上 —— **可选**，默认空 = 与改动前逐字节相同。
+    #   形态按 ops/evidence-finding-path.md 的 `WI-{nnn}` 约定（`WI-001`）。
+    #   只做形态校验，不改 workitems.md —— 链接的落点仍由 review_case.py 从证据记录里读。
+    [string] $LinkedWorkitem = ''
 )
 # ★ PSModulePath 自愈（2026-10-10 注入，路径由 inject-psmp.py 统一计算）：剔除 WindowsApps 版 PowerShell 7 的模块目录，否则 PS 5.1 会因 TypeData 重复定义失败而使 Get-FileHash / Get-ExecutionPolicy 不可用（已造成两次假绿 + 一次失败被吞）。重算/迁移后请重跑 work/envinit/inject-psmp.py
 # ★ 2026-10-10 去掉硬编码 `C:\relab2\...` 绝对路径。
@@ -99,6 +110,17 @@ function Read-OptionalFile([string] $path) {
 
 if (-not (Test-Path -LiteralPath $CaseRoot)) {
     throw "CaseRoot does not exist: $CaseRoot"
+}
+
+# ★ 2026-10-17（K2）：工单号形态校验放在**任何写入之前** —— 拒绝时不能留下半个 case。
+#   口径：ops/evidence-finding-path.md 写的是 `WI-{nnn}`（WI-001）。
+#   只校验，不改 workitems.md（链接的落点由 review_case.py 从证据记录里读）。
+$linkedWorkitemValue = 'n/a'
+if (-not [string]::IsNullOrWhiteSpace($LinkedWorkitem)) {
+    if ($LinkedWorkitem -notmatch '^WI-\d+$') {
+        throw ("LinkedWorkitem must match WI-<digits> (e.g. WI-002); got: {0}" -f $LinkedWorkitem)
+    }
+    $linkedWorkitemValue = $LinkedWorkitem
 }
 
 # File overrides beat inline strings (safe path for special characters under powershell -File)
@@ -186,7 +208,7 @@ $body = @"
 $reproBlock
 - raw_excerpt: |
 $excerptBlock
-- linked_workitem: n/a
+- linked_workitem: $linkedWorkitemValue
 - supersedes: none
 - notes: |
 $notesBlock

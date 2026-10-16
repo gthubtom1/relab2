@@ -1026,6 +1026,7 @@
   "_no_recipe_why": "★ 2026-10-16 工具层审计加的一节：**配方表覆盖不到、且不该由配方覆盖**的 id 与理由。凡在『探测层能解析』或 `KNOWN_TOOLS` 里出现、但配方表里没有的 id，都必须在这里有一条理由 ——要么是 GUI/启动器（`relab2-tools-mcp.py` 的 `_GUI_TOOL_IDS` 已禁执行），要么在本机实测不可用（HANG / 崩 / 坏 shim），要么是别名孪生，要么本机根本没装。**不给理由的缺口 = 漏项**；给不出理由就说明该补配方。（`_GUI_TOOL_IDS` 是这份表的**超集**：它还列了本机没装、但换了机器可能出现同名 GUI 的 id，如 imhex / pe-bear / ollydbg / charles / fiddler / mitmweb。）",
   "_no_recipe": {
     "die": "DIE 的 GUI。探测层把它解析到 `D:\\Tools\\pack\\die\\diec.exe`（**与 diec 同一路径**）—— 跑它等于跑 GUI。配方用 `triage.format`（工具 diec）。",
+    "diec-version-probe": "★ 2026-10-17 记账：`diec --version` 在本机**不返回**（非 diec 参数被当文件路径 → libpng warning 刷屏、240 s 超时、stdout 0 字节；与 KNOWN-BOUNDARIES 第 9 条的 `--extended` 同源）。要版本/帮助一律用 `diec -h`（实测 0.3 s 打印 usage）或 `diec -d -e -j` 的输出间接取。配方见 triage.format。",
     "ghidra": "Ghidra GUI 启动器 `ghidraRun.bat`。CLI 孪生 = `ghidra_headless`（配方 tool.ghidra_headless）。",
     "ida": "IDA GUI。CLI 孪生 = `idat`（配方 tool.idat）。\n★ 2026-10-16 真任务轮补记：`ida.exe` 想无人值守是**不行**的 —— `ida -B` 与 `ida -A -B` 实测都是 rc=0xC0000096（STATUS_PRIVILEGED_INSTRUCTION）、不产出库文件。批处理一律走 `idat -B`（已实测出 s.asm/s.i64）。",
     "ida64": "与 `ida` 同一个 `ida.exe`（位数/大小写别名）。",
