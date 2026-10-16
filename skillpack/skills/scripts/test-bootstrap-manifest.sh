@@ -11,7 +11,7 @@ set -Eeuo pipefail
 #   ★ 只在 `$-` 含 `e` 时出声 —— 那些**预期会失败**的探针（`set +e` 包着的 bootstrap 负例）
 #     不是缺陷，报出来只是噪声；而 `set -e` 生效时的那一次失败才是真的要 abort 的那次。
 #   判据与退出码一个字没改，只加诊断。
-trap 'case "$-" in *e*) rc=$?; echo "ASSERT FAILED (rc=$rc) at ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}" >&2 ;; esac' ERR
+trap 'case "$-" in *e*) rc=$?; echo "ASSERT FAILED (rc=$rc) at ${BASH_SOURCE[0]}:${LINENO} [${FUNCNAME[*]}]: ${BASH_COMMAND}" >&2 ;; esac' ERR
 
 # 断言失败要**自己说清楚是哪一条**：本文件原来有 12 处裸 `[[ ... ]]`，`set -e` 下
 # 失败即静默退出 —— CI 上实测跑了 11 秒、零输出、exit 1，只能靠猜。
