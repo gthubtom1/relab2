@@ -42,8 +42,11 @@ def _walk_files():
     排除项与 `.gitignore` 的运行时目录同源；只按**相对仓根**的段比，
     免得 runner 的 `/home/runner/work/...` 里那个 `work` 段把整棵树误伤。
     """
+    # 排除项与 `test-ci-negative-controls.py` 的 EXCLUDE（= `.gitignore` 里的运行时目录）
+    # 对齐，免得发布副本里那些目录被算进规模数字。
     skip_parts = {".git", "__pycache__", "node_modules", ".hub", ".candidates",
-                  ".worktrees", "work"}
+                  ".worktrees", "work", "_audit_tmp", "pyghidra_mcp_projects",
+                  "unpacking"}
     out: list[str] = []
     for root, dirs, files in os.walk(REPO_ROOT):
         rel_root = Path(root).relative_to(REPO_ROOT)
