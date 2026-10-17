@@ -49,6 +49,24 @@ description: OT/ICS 工控安全评估：Purdue 分区、PLC/RTU/SCADA 暴露面
 Purdue 分层不要凭设备名字填：用观察到的通信对（谁跟谁说话、走什么端口）反推层级，
 没观察到的跨层通道标「未观测」，不要画一条不存在的箭头。
 
+## 只读命令速查（先被动榨干，再限速只读）
+
+```bash
+# 被动：离线 PCAP 先榨干（只读、零注入，改任何字节都算越界）
+tshark -r plant.pcapng -Y "modbus.func_code == 6" -T fields -e ip.src -e modbus.reference_num -e modbus.value
+tshark -r plant.pcapng -Y "dnp3.al.func == 1" -T fields -e dnp3.al.src -e dnp3.al.dst -e dnp3.al.obj
+tshark -r plant.pcapng -Y "s7comm" -T fields -e s7comm.param.func -e s7comm.cpu_model
+
+# 只读主动：只在维护窗做，限速到 ≤10 包/秒、单端口、NSE 只做识别
+nmap -Pn -sT -p 502 --max-rate 10 --script modbus-discover 10.10.20.31
+
+# 固件 / 工程文件一律离线分诊（隔离机里做，别连现场控制器）
+binwalk -Me controller-fw.bin
+rabin2 -zz gateway-fw.bin | grep -i -e plant -e station
+```
+
+> 上面的 `10.10.20.31` 只是示例从站地址，换成你自己站点里观察到的从站 IP；`--max-rate`、端口、时间窗三样缺一不许发包。
+
 ## 工具链
 
 | 工具 | 用途 | 定位方式与关键细节 |

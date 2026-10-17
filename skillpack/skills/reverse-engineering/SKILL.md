@@ -31,7 +31,7 @@ metadata:
    （Q0 任务归类 / Q1 目标类型 / Q2 保护层次 / Q3 目标成品），按分流结果进入对应工序卡。
    日常开发 / 维护 / 修 bug / 部署 / 文档：Q0 判 A，本卡到此为止，零额外工序。
 5. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
-6. `NEXT`: **工具取用优先级：MCP 通道 > CLI 孪生 > GUI** —— `idalib-mcp`（stdio）/ `idapro`（http 13337，`scripts/start.ps1`）/ `pyghidra-mcp`（stdio 或 http 9111）/ `x64dbg-mcp`（http 9094，`mcp-status.ps1` 打印本机启动命令）；没有 MCP 就用 CLI 孪生（`idat`/`analyzeHeadless`/`r2`/`diec`，走探测层）；GUI 是同步阻塞的最后手段。**只在真要用某个通道时才启动它**；只有观测到阻塞（通道 `closed`、工具报错、拿不到结果）才跑 `../scripts/mcp-status.ps1` 诊断 —— 不做事前自检。**注册 ≠ 在监听；HTTP 型冷启是设计，不是故障**；不许让用户手改 `mcp.json`（端点事实源 `../references/tool-registry.md`）。
+6. `NEXT`: **工具取用优先级：MCP 通道 > CLI 孪生 > GUI** —— `idalib-mcp`（stdio）/ `idapro`（http 13337，`scripts/start.ps1`）/ `pyghidra-mcp`（stdio 或 http 9111）/ `x64dbg-mcp`（http 9094，`mcp-status.ps1` 打印本机启动命令）；没有 MCP 就用 CLI 孪生（`idat`/`analyzeHeadless`/`r2`/`diec`，走探测层）；GUI 是同步阻塞的最后手段。**只在真要用某个通道时才启动它**；只有观测到阻塞（通道 `closed`、工具报错、拿不到结果）才跑 `../scripts/mcp-status.ps1` 唤醒 —— **不预启动服务**。**但「盘点」按流程做，且是路线第 0 段**：开工先跑一次 `../scripts/mcp-status.ps1`，把三列「谁注册 / 谁在监听 / 没在监听的照它给的命令怎么起」写进 `route-scope.md`（受保护目标攻坚写进 `assault.md` 状态段）。**盘点 ≠ 事前自检**：盘点只读目录、不拉起任何服务；**未查到的通道只算"还没确认"，不许算"本机没有"**。**注册 ≠ 在监听；HTTP 型冷启是设计，不是故障**；不许让用户手改 `mcp.json`（端点事实源 `../references/tool-registry.md`）。
 7. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
 8. `ACT`: 按 `references/re-agent-workflow.md` 推进 —— 挑**当下适用**的那一条动手，不要停在确认状态
 
@@ -254,6 +254,9 @@ Use [field-notes.md](field-notes.md) after the first round of triage when you kn
 
 - [ ] 我是否执行了工作流中的每一步（而不是只阅读）？
 - [ ] 我是否走了**探测层四级递进**（`Resolve-ReverseToolSpec`）定位实际路径（而不是只跑一条 `Get-Command` 查空就报缺工具、也不是拿 `TOOLS.md` 里的装法当路径猜）？
+- [ ] 我是否在**开工第 0 段**跑过一次 `../scripts/mcp-status.ps1`，把「谁注册 / 谁在监听 / 没在监听的照它给的命令怎么起」写进 `route-scope.md`（攻坚写进 `assault.md` 状态段）？（**盘点 ≠ 启动**：只读目录、不预启服务；本轮不用的通道写"本轮未用"，未查到的写"还没确认" —— 都不是"本机没有"）
+- [ ] 我是否在路线**紧接第 0 段**的位置，把**「判壳 / 抓包」与「反调试 / 脱壳」两件事各写了一句**，并各带一条可观察判据（写成「看到什么 → 转什么」，如「DIE 报 VMProtect」「attach 后约 150ms 进程自退」）？（**要用这两个名字写**：只写"壳太硬""自检层"这类自造说法等于没说；判据表见 `references/assault-entry.md` 的「★ 定性两句话」）
+- [ ] 主人声明过「没有卡密 / 没有注册码 / 没有正版授权」时，我是否**没有再把该凭证写成任何路线的输入、前置或交付条件**，而是按 `references/assault-entry.md` 的「★ 无卡密」判据表直接选了路（本地算法还原 → keygen / 离线穷举 / 授权门绕过，各带一条收敛判据）？（**答复里只写「我怎么走」，不写「你怎么给」**：把凭证和主人拴在一句话里 —— 肯定式或否定式 —— 都是回头索要）
 - [ ] 我是否产出了可复现证据（命令/脚本/截图/报告）？
 - [ ] 我是否完成并回写了 RULES 要求的 Checklist 项？
 
@@ -285,6 +288,9 @@ Use [field-notes.md](field-notes.md) after the first round of triage when you kn
 本技能产出算"完成"的**外部可观测**条件（不许写形容词）：
 
 - `<case目录>/assault.md` 存在，且 §0 状态行可回答"现在到哪了、凭什么"；`## hypotheses` 每条 H-{nnn} 有 status 与 evidence_ids
+- 攻坚的 `route-scope.md` / `assault.md` 里有「工具通道」一节，三列齐全（谁注册 / 谁在监听 / 没在监听的怎么起；本轮不用的写"本轮未用"）—— 数据来自开工第 0 段跑过一次的 `../scripts/mcp-status.ps1`
+- 攻坚的 `route-scope.md` / `assault.md` 的路线里，**「判壳 / 抓包」与「反调试 / 脱壳」各有一句独立的定性 + 一条可观察判据**（「看到什么 → 转什么」；不是散在别处的同义词、也不是"壳太硬""自检层"这类自造说法）—— 加壳/反调试目标上缺这两句 = 路线不完整，见 `references/assault-entry.md` 的「★ 定性两句话」
+- 主人声明过「没有卡密 / 没有注册码 / 没有正版授权」时，**路线与答复里不含任何向主人索要该凭证的表述**（也不含把凭证与他拴在一句话里的否定式），且三条候选路（本地算法还原 / 离线穷举 / 授权门绕过）**各带一条收敛判据** —— 见 `references/assault-entry.md` 的「★ 无卡密」
 - `## diff_baseline`（Q3 = 复刻/补丁形态时）逐行有「原程序观察 → 新实现」对照，不是贴一堆结论
 - 三形态成品之一可执行：源码/可构建项目有构建命令；可运行复刻有最小运行命令；补丁原程序有 patch 前后文件与 diff
 - L2 判据（Q2）可复述：`r2 -qc 'ii'` 导入项数量与 `iS` 节区权限的实际输出已记录（过 L1 时）；反编译控制流可读

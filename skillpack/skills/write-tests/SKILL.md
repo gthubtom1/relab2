@@ -57,7 +57,20 @@ description: 判断该不该写测试、写只测行为不测实现的测试，�
 
 - 运行口径：`pytest -q`、`python -m pytest -k <expr>`、`go test ./...`、`npm test`
 - 三问①的实测：临时删一行关键实现（或改一个常量），确认测试变红，再还原
-- 回归证据：把「删行前红 / 删行后绿」两次输出一起贴进 PR / 日报
+- 回归证据：把「删行前红 / 删行后绿」两次输出一起贴进 PR / 日报；只贴绿的等于没证（命令见下「命令行速查」）
+
+## 命令行速查（三问①的实测与精跑）
+
+```bash
+# 三问①：临时抽掉被测实现，确认测试真会变红，再还原（不红就是测空气）
+git stash push -- src/parser.py && python -m pytest tests/test_parser.py -q ; git stash pop
+
+# 只跑受影响的用例（-k 表达式），别整库乱跑掩盖信号
+python -m pytest -k "checkout and not slow" -q
+
+# 单条用例：证明它断言的是行为（返回值/可观察副作用），不是实现细节
+python -m pytest tests/test_parser.py::test_rejects_empty_input -q
+```
 
 ## 定义完成
 

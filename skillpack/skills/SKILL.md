@@ -41,7 +41,9 @@ description: 技能总路由入口。用于：任务跨模块或不详该走哪�
 `idalib-mcp`（stdio，装好即用）/ `idapro`（http `127.0.0.1:13337`，起 `<技能包根>\skills\ida-reverse\scripts\start.ps1`）/
 `pyghidra-mcp`（stdio，或 http `127.0.0.1:9111`）/ `x64dbg-mcp`（http `127.0.0.1:9094`，启动命令 `mcp-status.ps1` 会打印）。
 没有 MCP 时用 CLI 孪生（`idat`/`analyzeHeadless`/`r2`/`diec`…，路径走探测层 `Resolve-ReverseToolSpec -Name <id>`）；GUI 是同步阻塞的最后手段。
-**只在真要用某个通道时才启动它**；只有观测到阻塞（通道 `closed` / 工具报错 / 拿不到结果）才去诊断或唤醒 —— 不做事前自检。
+**只在真要用某个通道时才启动它**；只有观测到阻塞（通道 `closed` / 工具报错 / 拿不到结果）才去唤醒 —— 不预启动服务。
+**盘点 ≠ 事前自检**：攻坚类任务（逆向 / 渗透 / 抓包 / 固件 / 样本 / CTF）开工先跑一次 `scripts/mcp-status.ps1`，
+把「谁注册 / 谁在监听 / 没在监听的照它给的命令怎么起」写进 `route-scope.md` 的「工具通道」一节 —— 这是**路线第 0 段**，不是可选项。
 
 ## 路由执行契约（点火时要跑，按顺序）
 

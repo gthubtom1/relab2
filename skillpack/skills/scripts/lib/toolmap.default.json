@@ -112,17 +112,19 @@
       "note": "Detect It Easy 命令行版（GUI 的 die.exe 不能进 bash）。"
     },
     "r2": {
-      "exec": "r2.exe",
+      "exec": "r2.bat",
       "prefer": [
+        "disasm/radare2/radare2-6.2.4-w64/bin/r2.bat",
         "radare2/bin/r2.exe"
       ],
-      "note": "目录里同时有 r2.bat 和 r2.exe，优先裸 exe 省一层 cmd 包装。radare2 本身的入口是 bin\\radare2.exe。\n\n★★ `/x` 完全可用，返回空是**字节序写反**或**通配符用错**，不是 r2 坏了。\n  实测：`/x 7ffe0320` 命中；`/x 2003fe7f` 返回空（文件里是 7f fe 03 20）。\n  通配符是 `.` 不是 `?`：`7ffe03..` 命中，`7ffe03??` 返回空。\n  `-qc '/x ...; q'` 里的 `;` 会截断命令，参数串只放一条。\n  （此前文档写「/x 在本机不可用」是编造结论，已于 2026-10-10 纠正并全库清除。）"
+      "note": "★ 2026-10-17 评估轮修正：原 prefer 写 `radare2/bin/r2.exe` —— 本机**根本没有** `<工具根>\\radare2`（实测 `ls D:\\Tools\\radare2` 报 No such file or directory），而且这一版 radare2 **没有 r2.exe**（`…\\radare2-6.2.4-w64\\bin` 下只有 `r2.bat` + `radare2.exe`；r2.bat 的内容就是转发到同目录 radare2）。原表 exec=r2.exe 与 prefer 两者同时指不动，本 id 于是只能落到第 4 级 scan（探测层自述最低可信度）。新 prefer 实测 `r2.bat -v` → `radare2 6.2.4 +1 abi:152 @ windows-x86_64`（0.06 s，rc=0）；`--version` 会报 Missing file（radare2 只认 -v）。radare2 本身的入口是同目录 radare2.exe。\n\n★★ `/x` 完全可用，返回空是**字节序写反**或**通配符用错**，不是 r2 坏了。\n  实测：`/x 7ffe0320` 命中；`/x 2003fe7f` 返回空（文件里是 7f fe 03 20）。\n  通配符是 `.` 不是 `?`：`7ffe03..` 命中，`7ffe03??` 返回空。\n  `-qc '/x ...; q'` 里的 `;` 会截断命令，参数串只放一条。\n  （此前文档写「/x 在本机不可用」是编造结论，已于 2026-10-10 纠正并全库清除。）"
     },
     "radare2": {
       "prefer": [
+        "disasm/radare2/radare2-6.2.4-w64/bin/radare2.exe",
         "radare2/bin/radare2.exe"
       ],
-      "note": "配 r2pipe 1.9.8 使用。"
+      "note": "配 r2pipe 1.9.8 使用。★ 2026-10-17 评估轮修正：原 prefer `radare2/bin/radare2.exe` 指不动（`<工具根>\\radare2` 不存在），真身在 `disasm\\radare2\\radare2-6.2.4-w64\\bin\\`。实测 `radare2 -v` → `radare2 6.2.4 +1 abi:152 @ windows-x86_64`（同 r2）。"
     },
     "git": {
       "prefer": [

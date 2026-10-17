@@ -33,7 +33,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SKILLS_ROOT = os.path.dirname(HERE)
 CASES_DIR = os.path.join(HERE, "cases")
 
-# 四条验收标准 → 判据（启发式；可用 --judge 让模型判）
+# 四条验收标准 → 判据（启发式：纯正则打分；模型判分**未实现** —— 本脚本没有 --judge 开关）
 CRITERIA = [
     {
         "id": "C1-自己提出抓包/判壳",

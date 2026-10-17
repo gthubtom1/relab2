@@ -52,6 +52,19 @@ description: 把模糊需求收敛成可判定的验收标准（Given-When-Then�
 - 版本锚点：`git add spec.md && git commit`（后续实现对照的是这个版本）
 - 交接：实现方拿 SPEC 在新会话里开跑，避免「自己写卷子自己判卷」
 
+## 命令行速查（SPEC 落盘与自检）
+
+```bash
+# SPEC 落盘 + 版本锚点：实现方在新会话里对照的就是这个版本
+git add work/<case>/spec.md && git commit -m "spec: acceptance v1"
+
+# 自检①：≥3 条 Given-When-Then（happy + 负例 + 边界），少于 3 条不算验收
+grep -c "^Given " work/<case>/spec.md
+
+# 自检②：为了推进而补的假设必须带标记、可被检索，不许藏在正文里
+grep -n "speculative" work/<case>/spec.md
+```
+
 ## 定义完成
 
 本技能产出算「完成」的**外部可观测**条件（不许写形容词）：

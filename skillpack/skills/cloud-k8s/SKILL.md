@@ -93,7 +93,7 @@ kubectl get clusterrolebindings
 `Get-Command kubectl` 返回空 ≠ 本机没装（PATH 快照会过期）。
 容器里带的是 stripped 原生二进制（sidecar/agent/Operator）时，静态分析走 `idapro` / `pyghidra` MCP：
 **要用到哪个通道时才**跑 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1`
-看"注册了哪些 / 谁在监听 / 怎么起"三列——HTTP 型平时 `closed` 是设计，要用的按它给的命令起，起完重跑确认 `LISTEN`（不做事前自检）。
+看"注册了哪些 / 谁在监听 / 怎么起"三列——HTTP 型平时 `closed` 是设计，要用的按它给的命令起，起完重跑确认 `LISTEN`（**盘点 ≠ 启动**：盘点只读目录、不预启动服务；攻坚类任务开工先盘一次）。
 
 ## 参考
 

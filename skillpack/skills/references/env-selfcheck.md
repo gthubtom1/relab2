@@ -161,13 +161,29 @@ foreach ($t in @('diec','r2','upx','idat','ghidra','x64dbg','capa','python')) {
   "{0,-12} {1,-6} {2,-6} {3}" -f $t,$r.Available,$r.Via,$r.Command
 }
 
-# 3. 「能解析」不等于「能跑」——实跑版本
-#    ★ `diec -h` / `r2 -v` 是版本/帮助探针，**不在** skills/config/tool-recipes.json 里；
-#      本条只作「能跑」验证，实测两形态均安全（2026-10-16：`diec -h` 0.3s 打印 usage、`r2 -v` 0.3s 打印版本行）。
-#      ★ 2026-10-17：**不要用 `diec --version`** —— 本机实测它不返回（参数被当文件路径，
-#        libpng warning 刷屏 + 240s 超时 + stdout 0 字节）。见 tool-recipes.json 的 `_no_recipe`。
+# 3. 「能解析」不等于「能跑」——实跑版本（用探测层解析出来的 Command，别靠裸名字）
+#    ★ 每个工具用**它自己的**探针，不要一个 `--version` 通吃。逐工具判据（可执行）：
+#      python skillpack/skills/tests/verify-tool-identity.py      # 本机 7 把刀逐条跑，分母自证
+#        r2   -v          → `radare2 6.2.4 +1 abi:152 @ windows-x86_64`（0.06 s）
+#                           ★ r2 **没有** `--version`，那样报 `ERROR: Missing file to open`
+#        diec --version   → `die 3.11`（0.06~0.13 s；-v / -h / --help 同样可用）
+#        upx  --version   → `upx 5.2.1`
+#        idat -h          → IDA 自己的开关表，**rc=2 是它的正常形态**
+#                           （`--version` 报 `Failed to initialize IDA as library`）
+#        ghidra --help    → `Headless Analyzer Usage: analyzeHeadless`（rc=1；ghidra 只登记 headless）
+#        x64dbg -help     → headless.exe 自己的 Help 块（rc=0；它没有版本开关）
+#        python --version → `Python 3.14.3`
+#    ★ 2026-10-17 评估轮更正：**`diec` 的判据是裸 `pack\die\diec.exe`，不是 `cli\diec.cmd` 包装器。**
+#      实测同一个 `cli\diec.cmd` 跑 `-h` / `--help` / `-v` / `--version` / `-?` / 无参数
+#      **全部不返回**（libpng warning 刷屏、stdout 0 字节，20~25 s 仍在跑；三次复现），
+#      而裸 exe 同参数 0.02~0.13 s 返回；`-d -e -j <file>` 两形态都正常。
+#      探测层现在靠 `_map.json` 的 deny(`*cli\diec.cmd`) + aliases.diec 落到裸 exe（Via=map）。
+#      本节此前写的「`diec -h` 0.3 s 打印 usage」是**包装器形态下的错记录**。
 #      真正干活时的参数以配方为准：`diec -d -e -j <file>`、`r2 -q -c 'iI;q' <file>`。
-diec -h; r2 -v; upx --version; java -version; dotnet --version
+$p = Resolve-ReverseToolSpec -Name 'diec'; & $p.Command --version
+& (Resolve-ReverseToolSpec -Name 'r2').Command -v
+& (Resolve-ReverseToolSpec -Name 'upx').Command --version
+java -version; dotnet --version
 
 # 4. 有 GUI 混入吗
 Resolve-ReverseToolSpec -Name 'die'    # 期望 diec.exe

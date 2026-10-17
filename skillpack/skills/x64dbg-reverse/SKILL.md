@@ -55,7 +55,7 @@ x64dbg-MCP-Server 是**活在被调试进程里的插件**，没有独立服务�
 | `scripts/start.ps1` | 幂等起 x64dbg（9094 监听）；已在听直接返回 |
 | `scripts/xdbg.py` | x64dbg MCP 客户端（从 `mcp_config.json` 读 token；`python xdbg.py <Tool> '<json>'`） |
 | `scripts/patchmem.py` | 进程外改内存（自动放开页保护），用于 `.text` 等只读页 |
-| `../scripts/mcp-status.ps1` | 三列目录：注册/监听/怎么起（**要用这个通道时先看**；不做事前自检） |
+| `../scripts/mcp-status.ps1` | 三列目录：注册/监听/怎么起（**攻坚开工先跑一次**，结果写进路线第 0 段；盘点 ≠ 启动，不预启动服务） |
 
 ## 交付要求
 

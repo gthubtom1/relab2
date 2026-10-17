@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 1 | **入口层** | `relab2.ps1` 的三个对外子命令：`doctor` / `setup` / `update` | `feature-tree.py` 清点 + `full-simulation.py --layer entry` 真跑 |
 | 2 | **技能层** | 57 张顶层技能卡（+6 嵌套），每张是"该怎么做"的方法论 | frontmatter 可解析 + 路由指向 + `verify-project-requirements.py` |
-| 3 | **路由层** | `config/routing.json` 的关键字规则 → 目标技能 | `verify-routing-coherence.ps1`（含真实原话基准） |
+| 3 | **路由层** | `skillpack/skills/config/routing.json` 的关键字规则 → 目标技能 | `verify-routing-coherence.ps1`（含真实原话基准） |
 | 4 | **工具层** | 探测层能解析的工具 id + 33 类能力 + **调用配方** | `test-tool-recipes.py`（**真跑**每条配方）+ `test-new-tool-discovery.py`（虚构工具也要认得出） |
 | 5 | **MCP 层** | 宿主注册的通道（含 REA 经**筛选桥**） | `full-simulation.py --layer mcp`（真起、报工具数） |
 | 6 | **门禁层** | `tests/ci-gates.json` 里的每道门 | `run-ci-gates.py`（一次跑完、汇总 blocked/failed） |
