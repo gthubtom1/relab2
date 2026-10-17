@@ -472,7 +472,9 @@ function Invoke-Setup {
 
     if (-not $DryRun) {
         Write-Host ''
-        Write-Host '  跑完请重跑一次 doctor 确认：' -ForegroundColor Cyan
+        Write-Host '  跑完请**新开一个终端**再跑 doctor 确认（环境变量写的是 User 级，' -ForegroundColor Cyan
+        Write-Host '  当前 shell 的进程级变量不会传给子进程 —— 同一终端连续跑会看到' -ForegroundColor Cyan
+        Write-Host '  「REVERSE_SKILL_ROOT 未设置」的假警告）：' -ForegroundColor Cyan
         Write-Host '    powershell -NoProfile -ExecutionPolicy Bypass -File relab2.ps1 doctor' -ForegroundColor Cyan
     }
     return $rc
