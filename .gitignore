@@ -104,3 +104,8 @@ hs_err_pid*.log
 replay_pid*.log
 jaccess*.log
 env.bat
+
+# proc_guard 运行时登记表
+**/.procs.json
+**/.procs.json.tmp.*
+**/.procs.json.lock
