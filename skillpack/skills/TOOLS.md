@@ -580,3 +580,38 @@ python -c "import json,os;p=os.path.expanduser('~/.omp/agent/mcp.json');print(li
 
 **不要**往任何文件写死本机绝对路径 —— 那正是本文件存在的理由要消灭的东西。
 「目录名 → 工具名」的映射写 `D:\Tools\_map.json`，不要写这里。
+---
+
+## 11. 路由前置分类器与进程守护（不是"工具"，但同样要按规矩用）
+
+### `scripts/preflight-classify.py`
+
+路由之前先看**目标本身**：魔数 / PE 节表与熵 / CLR(.NET) / 壳节名 / 反调试导入 /
+ELF 段 / zip 成员递归（含 .appx 再嵌一层）/ 固件签名，产出 `suggested_routes`。
+`master-route.ps1` 在 hint 里发现已存在路径时会自动调用它，把建议路由加权注入。
+
+```bash
+python skills/scripts/preflight-classify.py <样本路径>        # JSON
+python skills/scripts/preflight-classify.py <样本路径> --hint # 一行提示词
+```
+
+为什么必须走它：路由是纯关键词匹配，裸文件路径几乎不带关键词；实测 31 个真实靶标里
+**24 个** 因此落到 R0/low。整张 routing.json 里唯一的文件类型词是 R6 的 `\.so`。
+
+### `scripts/proc_guard.py`
+
+所有测试子进程的**唯一**启动入口（禁止裸 `subprocess.Popen` / `Start-Process`）。
+
+```bash
+python skills/scripts/proc_guard.py --run --timeout 8 --group <组> -- <exe> [args...]
+python skills/scripts/proc_guard.py --list          # 看登记表
+python skills/scripts/proc_guard.py --reap          # 清死条目
+python skills/scripts/proc_guard.py --sweep <root>  # 清该目录下的残留进程
+python skills/scripts/proc_guard.py --sweep-tools   # 关掉本登记过的长驻分析工具
+```
+
+保证：启动即登记 · 同 group 并发上限（默认 1）· 硬超时 · `finally` 无条件 `taskkill /T /F`。
+规矩与踩过的坑见 `references/tool-lifecycle.md`。
+
+**为什么不用 `subprocess.run(timeout=)`**：它只杀直接子进程，孙子进程会留下；靶机常自己
+`CreateProcess` 或由调试器拉起目标，必须 `/T`。

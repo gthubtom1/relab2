@@ -72,3 +72,35 @@ python proc_guard.py --list                                       # 确认 regis
 | `proc_guard.py` | 生命周期守护（run / list / reap / sweep / sweep-tools） |
 | `.procs.json` | 进程登记表（自动维护；崩了也能被 `--sweep` 兜住） |
 | `gui_check.ps1` | GUI 驱动，收尾改 `taskkill /T /F` |
+
+---
+
+## 附：调试器的 MCP 端口（32 位 / 64 位是两套）
+
+| 调试器 | 插件配置 | 端口 | AuthToken |
+|---|---|---|---|
+| `x64dbg.exe`（64 位目标） | `release/x64/mcp_config.json` | **9094** | 见该文件 |
+| `x32dbg.exe`（**32 位目标**） | `release/x32/mcp_config.json` | **9095** | 见该文件 |
+
+**这不是可选项**：把 32 位 PE 送进 x64dbg，它会直接提示「请使用 x32dbg 来调试这个程序」，
+`LoadBinary` 永远返回 `NO_TARGET` —— 而错误信息里**不会**说"架构不匹配"，只说没有目标，
+极易误判成"MCP 坏了"。
+
+两者可以同时运行（各占一个端口）。启动：
+
+```powershell
+# 64 位
+powershell -NoProfile -File D:\Tools\cli\start-x64dbg-mcp.ps1
+# 32 位（同一个启动器，换 Exe 和 Port）
+powershell -NoProfile -File D:\Tools\cli\start-x64dbg-mcp.ps1 `
+  -Exe D:\Tools\disasm\x64dbg\release\x32\x32dbg.exe -Port 9095
+```
+
+宿主侧要**两条** MCP 条目（`x64dbg-mcp` → 9094、`x32dbg-mcp` → 9095），否则 32 位目标无法调试。
+
+**收尸顺序**（重要）：被调试的目标进程由调试器持有，`taskkill` 杀不掉。
+必须先 `StopDebug`，再扫：
+
+```bash
+python skills/scripts/proc_guard.py --sweep <样本目录>
+```
