@@ -197,6 +197,11 @@ cand_skills = ", ".join(f"skills/{routes[item]['skill']}" for item in selected_o
 entry_menu = config.get("entry_menu") or []
 entry_txt = ", ".join(f"skills/{e['skill']}" for e in entry_menu) or "(none)"
 
+# ★ 2026-10-17 盲跑实测：`primary_skill` 的 `skills/` 是**逻辑前缀**（相对技能根），
+#   不是从仓库根可解析的文件系统路径（真实根是 <repo>/skillpack/skills）。
+#   下游解析器依赖该前缀（case-init.sh、RouteScope.ps1、test-routing-e2e.py），
+#   故**格式不改**；另给绝对路径，让智能体真的能打开。
+primary_abs = skills_root / primary_path
 lines = [
     "# reverse-skill Master route (PRIMARY)",
     f"- created: {datetime.datetime.now(datetime.timezone.utc).astimezone().isoformat()}",
@@ -205,6 +210,8 @@ lines = [
     f"- primary: {primary}",
     f"- primary_label: {route['label']}",
     f"- primary_skill: skills/{primary_path}",
+    f"- skills_root: {skills_root}",
+    f"- primary_skill_abs: {primary_abs}",
     f"- confidence: {confidence}",
     f"- project_root: {project_root}",
     f"- secondary: {', '.join(secondary) if secondary else '(none)'}",
@@ -214,10 +221,10 @@ lines = [
     "",
     "## MUST open next",
     "",
-    "1. skills/MASTER-ROUTING.md",
-    f"2. skills/{primary_path}",
-    "3. skills/references/tool-registry.md   # 工具通道事实源：注册/监听/怎么起（HTTP MCP 按需，端口平时关着是设计）",
-    "4. skills/reverse-engineering/references/triage-first-30-min.md   # 未知样本先 triage，再谈走哪个技能",
+    f"1. {skills_root / 'MASTER-ROUTING.md'}",
+    f"2. {primary_abs}",
+    f"3. {skills_root / 'references/tool-registry.md'}   # 工具通道事实源：注册/监听/怎么起（HTTP MCP 按需，端口平时关着是设计）",
+    f"4. {skills_root / 'reverse-engineering/references/triage-first-30-min.md'}   # 未知样本先 triage，再谈走哪个技能",
     "",
     "## 怎么用这份路由（读一次，别忘）",
     "",
@@ -234,10 +241,10 @@ if not notes:
     lines.append("- (none)")
 (out_dir / "route-scope.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-print(f"PRIMARY -> skills/{primary_path}")
+print(f"PRIMARY -> {primary_abs}")
 print(f"Label: {route['label']} | confidence: {confidence}")
 for note in notes:
     print(f"NOTE: {note}")
 print(f"Wrote {out_dir / 'route-scope.md'}")
-print(f"ACTION: Open skills/{primary_path} now and follow its instructions.")
+print(f"ACTION: Open {primary_abs} now and follow its instructions.")
 PY

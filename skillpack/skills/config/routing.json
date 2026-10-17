@@ -1485,11 +1485,11 @@
           "note": "来自 ctf-sandbox/SKILL.md 自述；R17 pwn 会抢 pwn 语义，故用『靶场/打靶』这类环境词而非裸 pwn"
         },
         {
-          "must": "(ctf|awd|靶场|靶机|打靶|比赛).{0,8}(pwn|题|环境)?|(pwn|web|re|misc|crypto).{0,4}(题|怎么打|怎么做)",
+          "must": "(ctf|awd|靶场|靶机|打靶|比赛).{0,2}(pwn|题|环境)|(pwn|web|re|misc|crypto).{0,4}(题|怎么打|怎么做)",
           "mustAll": [
             "ctf|awd|靶场|靶机|打靶|比赛"
           ],
-          "note": "来自 ctf-sandbox/SKILL.md 自述的「来道CTF题」「靶场这个pwn怎么做」；判据是 CTF 语境词共现 —— 有 CTF/靶场/比赛语境走本技能（编排入口），纯 pwn 技术栈问题仍走 R17 pwn-chain。"
+          "note": "来自 ctf-sandbox/SKILL.md 自述的「来道CTF题」「靶场这个pwn怎么做」；判据是 CTF 语境词共现 —— 有 CTF/靶场/比赛语境走本技能（编排入口），纯 pwn 技术栈问题仍走 R17 pwn-chain。★ 2026-10-17 盲跑抓到：窗口原为 `.{0,8}` 且任务词可选，导致裸 CTF 被当成「CTF+做题」——「CTF 头脑风暴先理清题意」里 `.{0,8}` 正好吃到第 8 个字的「题」，R41 记 2 分压过 R47 的 1 分，golden x-r47-brainstorm 判红。改为 `.{0,2}` 且任务词**必选**：来道CTF题(0字符)/靶场这个pwn(2字符) 仍命中，题意不再命中。"
         }
       ]
     },

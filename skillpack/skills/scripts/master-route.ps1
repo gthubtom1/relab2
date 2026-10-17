@@ -45,6 +45,41 @@ $skillsRoot = Split-Path -Parent $scriptDir
 $packageRoot = Split-Path -Parent $skillsRoot
 $configPath = Join-Path $skillsRoot 'config/routing.json'
 
+# --- preflight：hint 里若有**已存在的目标路径**，先看目标本身再路由 ---
+# ★ 2026-10-17 盲跑实测：31 个真实靶标里 24 个落到 R0/low，因为路由是纯关键词匹配，
+#   而裸文件路径几乎不带关键词（整张 routing.json 里唯一的文件类型词是 R6 的 `\.so`）。
+#   这里调 preflight-classify.py 读魔数/节表/CLR/壳特征/反调试导入，把结果追加进 hint。
+#   失败或没有 python 时**静默跳过**，行为与改动前逐字节一致。
+$preflightHint = ''
+$preflightRoutes = @()
+try {
+    $pathRe = [regex]'(?i)([A-Za-z]:\\[^\s"'']+|/[^\s"'']+)'
+    foreach ($m in $pathRe.Matches($Hint)) {
+        $candPath = $m.Groups[1].Value.Trim('"', "'")
+        if (-not (Test-Path -LiteralPath $candPath)) { continue }
+        $clsScript = Join-Path $scriptDir 'preflight-classify.py'
+        if (-not (Test-Path -LiteralPath $clsScript)) { break }
+        $py = ''
+        foreach ($pc in @($env:REVERSE_SKILL_PYTHON, 'python', 'python3')) {
+            if (-not $pc) { continue }
+            $c = Get-Command $pc -ErrorAction SilentlyContinue
+            if ($c -and $c.Source) { $py = $c.Source; break }
+        }
+        if (-not $py) { break }
+        $out = & $py $clsScript $candPath 2>$null
+        if ($LASTEXITCODE -eq 0 -and $out) {
+            $cls = ($out -join "`n") | ConvertFrom-Json
+            if ($cls.hint) { $preflightHint = $cls.hint }
+            if ($cls.suggested_routes) { $preflightRoutes = @($cls.suggested_routes) }
+            break
+        }
+    }
+} catch { }
+if ($preflightHint) {
+    $Hint = "$Hint $preflightHint"
+    $t = $Hint.ToLowerInvariant()
+}
+
 # --- 读取路由配置（单一事实源） ---
 if (-not (Test-Path -LiteralPath $configPath)) {
     Write-Host ("ERROR: routing config missing: {0}" -f $configPath) -ForegroundColor Red
@@ -82,6 +117,19 @@ $scores = [ordered]@{}
 foreach ($item in $sel) {
     if (-not $scores.Contains($item)) { $scores[$item] = 0 }
     $scores[$item] = $scores[$item] + 1
+}
+
+# --- preflight 加分：内容分类建议的路由直接加权（+10），压过纯关键词命中 ---
+# 理由：分类是**看文件内容**得出的，比文件名关键词可靠得多；关键词只作兜底。
+if ($preflightRoutes.Count -gt 0) {
+    $known = @($cfg.routes.PSObject.Properties | ForEach-Object { $_.Name })
+    foreach ($pr in $preflightRoutes) {
+        if ($known -contains $pr) {
+            if (-not $scores.Contains($pr)) { $scores[$pr] = 0 }
+            $scores[$pr] = $scores[$pr] + 10
+            if (-not $sel.Contains($pr)) { [void]$sel.Add($pr) }
+        }
+    }
 }
 
 $uniq = New-Object System.Collections.Generic.List[string]
@@ -283,6 +331,14 @@ $hintOneLine = (($Hint -replace '[\r\n]+', ' ').Trim())
 [void]$sb.AppendLine(("- primary: {0}" -f $primary))
 [void]$sb.AppendLine(("- primary_label: {0}" -f $primaryLabel))
 [void]$sb.AppendLine(("- primary_skill: skills/{0}" -f $primaryPath))
+# ★ 2026-10-17 盲跑实测：`primary_skill` 的 `skills/` 是**逻辑前缀**（相对技能根），
+#   不是从仓库根可解析的文件系统路径（真实根是 <repo>/skillpack/skills）。
+#   下游 4 个解析器依赖这个前缀（case-init.sh:274、RouteScope.ps1:39、
+#   test-routing-e2e.py:117、test-parse-contracts.ps1），所以**格式不能改**；
+#   另给绝对路径，让智能体真的能打开。
+$primaryAbs = Join-Path $skillsRoot ($primaryPath -replace '/', [IO.Path]::DirectorySeparatorChar)
+[void]$sb.AppendLine(("- skills_root: {0}" -f $skillsRoot))
+[void]$sb.AppendLine(("- primary_skill_abs: {0}" -f $primaryAbs))
 [void]$sb.AppendLine(("- confidence: {0}" -f $confidence))
 [void]$sb.AppendLine(("- project_root: {0}" -f $projectRoot))
 $sec = New-Object System.Collections.Generic.List[string]
@@ -303,9 +359,9 @@ $entryTxt = if ($cfg.entry_menu -and $cfg.entry_menu.Count -gt 0) { (($cfg.entry
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('## MUST open next')
 [void]$sb.AppendLine('')
-[void]$sb.AppendLine('1. skills/MASTER-ROUTING.md')
-[void]$sb.AppendLine(("2. skills/{0}" -f $primaryPath))
-[void]$sb.AppendLine('3. skills/references/tool-registry.md   # 工具通道事实源：注册/监听/怎么起（HTTP MCP 按需，端口平时关着是设计）')
+[void]$sb.AppendLine(("1. {0}" -f (Join-Path $skillsRoot 'MASTER-ROUTING.md')))
+[void]$sb.AppendLine(("2. {0}" -f $primaryAbs))
+[void]$sb.AppendLine(("3. {0}   # 工具通道事实源：注册/监听/怎么起（HTTP MCP 按需，端口平时关着是设计）" -f (Join-Path $skillsRoot 'references/tool-registry.md')))
 # ★ 2026-10-15 独立审查 P10：第 4 项以前无条件写死「未知样本先 triage」（逆向分诊）。
 #   后果：一句日常开发请求（如「git 合并冲突了」「接口返回 500」）落到 R0 时，
 #   这份路由会命令模型先去读逆向分诊 —— 正好是主人说的「四大战场不平等」。
@@ -314,9 +370,9 @@ $entryTxt = if ($cfg.entry_menu -and $cfg.entry_menu.Count -gt 0) { (($cfg.entry
 $devCtx = $false
 if ($Hint -match '(?i)(bug|报错|崩了|上线|部署|合并|conflict|500|502|503|返回码|日志|打不开|安装|nginx|docker|git |CI|build|构建|测试|test|接口|api|网站|脚本|代码|PR|仓库)') { $devCtx = $true }
 if ($devCtx) {
-    [void]$sb.AppendLine('4. skills/req-clarify/SKILL.md   # 提示词像日常开发/运维；先收敛需求与验收再写代码，别先走逆向分诊')
+    [void]$sb.AppendLine(("4. {0}   # 提示词像日常开发/运维；先收敛需求与验收再写代码，别先走逆向分诊" -f (Join-Path $skillsRoot 'req-clarify/SKILL.md')))
 } else {
-    [void]$sb.AppendLine('4. skills/reverse-engineering/references/triage-first-30-min.md   # 未知样本先 triage，再谈跟哪个技能')
+    [void]$sb.AppendLine(("4. {0}   # 未知样本先 triage，再谈跟哪个技能" -f (Join-Path $skillsRoot 'reverse-engineering/references/triage-first-30-min.md')))
 }
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('## 怎么用这份路由（读一次，别忘）')
@@ -335,11 +391,11 @@ foreach ($n in $notes) { [void]$sb.AppendLine(("- {0}" -f $n)) }
 $utf8 = New-Object System.Text.UTF8Encoding $true
 [System.IO.File]::WriteAllText((Join-Path $OutDir 'route-scope.md'), $sb.ToString(), $utf8)
 
-Write-Host ("PRIMARY -> skills/{0}" -f $primaryPath) -ForegroundColor Green
+Write-Host ("PRIMARY -> {0}" -f $primaryAbs) -ForegroundColor Green
 Write-Host ("Label: {0} | confidence: {1}" -f $primaryLabel, $confidence)
 foreach ($n in $notes) { Write-Host ("NOTE: {0}" -f $n) -ForegroundColor Yellow }
 Write-Host ("Wrote {0}\route-scope.md" -f $OutDir)
-Write-Host ("ACTION: Open skills/{0} now and follow its instructions." -f $primaryPath) -ForegroundColor Yellow
+Write-Host ("ACTION: Open {0} now and follow its instructions." -f $primaryAbs) -ForegroundColor Yellow
 
 # --- R0 影子档 (fuse-shadow): 未晋升且 PRIMARY=R0 时复用晋升阶段的融合结果,只读打一行 ---
 # 约束: 晋升后不再打 SHADOW; votes<3 维持 R0 + SHADOW 行; route-scope.md/PRIMARY/confidence 以晋升后的为准; 失败静默跳过。
