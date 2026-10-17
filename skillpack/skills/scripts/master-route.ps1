@@ -172,6 +172,42 @@ if ($null -eq $primary) {
 } else {
     $confidence = if ($uniq.Count -eq 1) { 'high' } else { 'medium' }
 }
+# ★ 2026-10-18 审计（A2）修：**关键词命中一条就给 high，是「自信地错」的根源**。
+#   实测 20 条真人原话只命中 5/20，且错时给 high：
+#     「这个网站的数据我扒不下来」-> Fix bug(high)（应 web-protocol-reverse）
+#     「公司要做等保，查查服务器有没有洞」-> Implement feature(high)（应 pentest-tools）
+#   原因：keyword/regex 对自然语言天生不敏感（vLLM Semantic Router 也把 keyword 定位成
+#   "只适合 fast path，worst for anything where users phrase things naturally"）。
+#   现在：跑一遍语义候选（route-semantic.py，BM25 over 症状句 + 技能 description），
+#   语义 top-1 与关键词 PRIMARY 不一致时**降置信度并打印候选**，由模型最终判定。
+$semanticTop = @()
+$semPy = Join-Path $PSScriptRoot 'route-semantic.py'
+if ((Test-Path -LiteralPath $semPy) -and $Hint) {
+    $pyExe = $null
+    foreach ($c in @((Join-Path $env:REVERSE_TOOL_ROOT 'runtime\python-venv\Scripts\python.exe'), 'python')) {
+        if ($c -eq 'python' -or (Test-Path -LiteralPath $c)) { $pyExe = $c; break }
+    }
+    try {
+        $raw = & $pyExe $semPy --hint $Hint --top 5 --json 2>$null
+        $obj = ($raw -join "`n") | ConvertFrom-Json
+        $semanticTop = @($obj.top | ForEach-Object { $_.skill })
+    } catch { $semanticTop = @() }
+}
+if ($semanticTop.Count -gt 0) {
+    # 语义候选与关键词结果可能不一致 —— 关键词对自然语言天生不敏感，
+    # 所以只要两者不同名，就把置信度降一档，并把候选交给模型判。
+    $kwLeaf = ''
+    if ($primary) {
+        $kwLeaf = [System.IO.Path]::GetFileName([System.IO.Path]::GetDirectoryName([string]$primary))
+    }
+    if ($kwLeaf -and ($semanticTop[0] -ne $kwLeaf)) {
+        if ($confidence -eq 'high') { $confidence = 'medium' }
+        [void]$notes.Add(("SEMANTIC-DISAGREE: 关键词 {0} vs 语义 top-1 {1} —— 不一致，按候选自己判" -f $kwLeaf, $semanticTop[0]))
+    }
+    [void]$notes.Add(("SEMANTIC-CANDIDATES: " + ($semanticTop -join ' > ')))
+}
+
+
 
 # ★ 零基础主人的日常工程任务（做软件/网站/工具、接手仓库、二开、采集协议、加参数/修 bug）
 # 在 routing.json 里没有对应技能路由（六条业务线在 kernel，不在本包路由表），常落到 R0 兜底 ——

@@ -887,13 +887,20 @@ def process_state(host_id: str, *, ttl: float = _SCAN_TTL_SECONDS, now: float | 
     stamp = time.monotonic() if now is None else now
     with _lock:
         cached = _cache["value"]
-        if cached is not None and (stamp - _cache["at"]) < ttl:
+        eff_ttl = max(ttl, _cache.get("ttl") or 0.0)
+        if cached is not None and (stamp - _cache["at"]) < eff_ttl:
             row = (cached.get("hosts") or {}).get(host_id)
             if row is not None:
                 return dict(row)
         value = _scan_running()
         _cache["value"] = value
-        _cache["at"] = stamp
+        # ★ 2026-10-18：时间戳以前记的是**调用开始**的时刻（stamp），而 _scan_running()
+        #   本身要 5.8–25 s —— 于是下次调用时 (stamp2 - _cache["at"]) 必然 ≥ 扫描耗时 > TTL(3s)，
+        #   **缓存永不命中**，每次都全量重扫。审计实测 /api/status 因此慢到 >150 s。
+        #   改成记在扫描**结束之后**，并让 TTL 至少覆盖"刚扫完的那一次耗时"，
+        #   这样连续轮询能真正命中。
+        _cache["at"] = time.monotonic() if now is None else stamp
+        _cache["ttl"] = max(ttl, (time.monotonic() - stamp) * 2)
     row = (value.get("hosts") or {}).get(host_id) or {"running": False, "known": False, "pids": []}
     return dict(row)
 

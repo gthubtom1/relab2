@@ -29,7 +29,10 @@ param(
     [string] $Command = 'help',
 
     [switch] $DryRun,
-    [switch] $Json
+    [switch] $Json,
+    # ★ 2026-10-18：以前 façade 不认 -ToolRoot，而 setup.ps1 默认 D:\Tools ——
+    #   只有 C: 盘的新机器跑「一条命令 setup」必然 rc=1（建目录失败），且原因被 Out-Null 吞掉。
+    [string] $ToolRoot = ''
 )
 
 $ErrorActionPreference = 'Continue'
@@ -402,12 +405,14 @@ function Invoke-Setup {
     Write-Head 'relab2 setup —— 一键接入（幂等，可 -DryRun 预览）'
     $rc = 0
 
-    Invoke-Step -File 'relab2-root.ps1' -ArgList @() -Label '仓根定位' | Out-Null
+    Invoke-Step -File 'relab2-root.ps1' -ArgList @() -Label '仓根定位' | Out-Host
     if ($LASTEXITCODE -ne 0 -and -not $DryRun) { $rc = 1 }
 
     $a = @()
     if ($DryRun) { $a += '-DryRun' }
-    Invoke-Step -File 'setup.ps1' -ArgList $a -Label '环境变量 + 自检' | Out-Null
+    # ★ 2026-10-18：转发 -ToolRoot（façade 以前不认这个参数，只有 C: 盘的新机必然失败）
+    if ($ToolRoot) { $a += @('-ToolRoot', $ToolRoot) }
+    Invoke-Step -File 'setup.ps1' -ArgList $a -Label '环境变量 + 自检' | Out-Host
     if ($LASTEXITCODE -ne 0 -and -not $DryRun) { $rc = 1 }
 
     $b = @()
@@ -421,7 +426,7 @@ function Invoke-Setup {
     #   跑完 252 处联接全部 MISMATCH 指向 C:\relab2，而 `doctor` 那一项也报不出来。
     #   （MCP 注册本来就传了 --skill-root $RepoRoot，所以 MCP 路径一直是对的 —— 两者不一致。）
     $b += @('-RepoRoot', $RepoRoot)
-    Invoke-Step -File 'skillpack\skills\scripts\register-skills.ps1' -ArgList $b -Label '技能挂载（一份实体 N 个联接）' | Out-Null
+    Invoke-Step -File 'skillpack\skills\scripts\register-skills.ps1' -ArgList $b -Label '技能挂载（一份实体 N 个联接）' | Out-Host
     if ($LASTEXITCODE -ne 0 -and -not $DryRun) { $rc = 1 }
 
     # ---- MCP 一键注册（幂等 + 备份 + 干跑）----

@@ -393,3 +393,38 @@ imports/strings 段且非空"）为什么以前**永远做不到** —— 修前
 **为什么这次只登记不改**：改 schema + 24 条数据会让 11 张卡在 `test-experience-card.py`
 里全红（那是 CI 门），而本次交付的时间窗不允许连带验证整条经验卡链路。
 **如实暴露 > 假装修好**，所以写在这里。
+
+---
+
+## 28. 路由对自然语言的天花板：词法层 recall@5 = 58%（2026-10-18 实测）
+
+**结论**：本机（4 GB / 无 HuggingFace 网络）只能做**词法路由**。实测 12 条真人原话：
+
+| 方法 | top-1 | recall@5 |
+|---|---|---|
+| 原 `routing.json` keyword（基线） | 25%（3/12） | — |
+| BM25 over SKILL.md body | 33% | 25% |
+| BM25 over SYMPTOM-INDEX 症状句 | 25% | 25% |
+| **BM25 双路 RRF（症状句 + 技能 description）** | **42%** | **58%** |
+
+**为什么上不了 embedding**（业界标准做法，R3-Skill / vLLM Semantic Router 都是这个思路）：
+`fastembed` 装得上，但 `BAAI/bge-small-zh-v1.5`（92 MB）与
+`paraphrase-multilingual-MiniLM-L12-v2`（225 MB）**都下不下来**：
+
+```
+ERROR fastembed.common.model_management: Could not download model from HuggingFace: timed out
+ERROR ... Could not load model BAAI/bge-small-zh-v1.5 from any source.
+```
+
+**所以现在的设计是两段**：
+
+1. **脚本段**（确定性）：`route-semantic.py` 把 57 个技能缩到 5 个候选（recall@5 = 58%），
+   `master-route.ps1` 在输出 PRIMARY 之后追加 `NOTE: SEMANTIC-CANDIDATES: a > b > c > d > e`。
+2. **模型段**（语义）：拿到候选 + 症状句后**由模型最终判定**，不再把单一 `confidence: high` 当结论。
+
+**这解决了「自信地错」**：以前「这个网站的数据我扒不下来」直接给 `Fix bug (high)`，
+现在同一句话会额外打印 5 个候选，模型能看到 `web-protocol-reverse` 之类的选项。
+
+**仍未解决的**：脚本自己判不准（42%）。要真正解决必须上 embedding ——
+**换一台能访问 HuggingFace 的机器，或把模型文件预先放进仓库/工具根**，接上后
+`route-semantic.py` 的 `hybrid()` 只需把 BM25 换成向量余弦，接口不变。
