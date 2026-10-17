@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0",
+  "meta": {
+    "purpose": "**正确性**基准（不是漂移检测）。expect 由人工按「一个懂行的人会怎么判」标注，不取自路由器的输出。",
+    "why_separate": "routing-benchmark-natural.json 的 93 条里 primary==expect 93/93 —— 那是拿路由器自己的历史输出当期望，只能测「路由没变」，测不出「路由一直错」。本文件是 2026-10-18 审计（A2）发现该问题后新增的诚实基准。",
+    "added": "2026-10-18",
+    "note": "本基准刻意只收**真人会说的话**，不收术语。红是正常的 —— 它红说明路由该改。",
+    "how_to_add": "expect 必须是人工判断的结果，并在 note 里写清「为什么应该去那里」。禁止从 master-route 的输出抄 expect。"
+  },
+  "cases": [
+    {
+      "hint": "这个网站的数据我扒不下来，老是报错不给我",
+      "expect": "web-protocol-reverse",
+      "note": "用户要的是「把数据拿到手」，障碍是请求被拒/被识别 —— 该走协议还原（sign/token/cookie/challenge），不是去修一个 bug。实测 2026-10-18 路由到 fix-bug(high)，错。"
+    },
+    {
+      "hint": "公司要做等保，让我查查这几台服务器有没有洞",
+      "expect": "pentest-tools",
+      "note": "授权范围内的资产漏洞排查 —— 该走渗透工具链。实测 2026-10-18 路由到 implement-feature(high)，错得最远的一条。"
+    },
+    {
+      "hint": "客户发来一个手机应用的安装包，想看看它开机自启后都在后台干些什么",
+      "expect": "apk-reverse",
+      "note": "APK 包体 + 自启行为 —— apk-reverse 正确。实测 2026-10-18 路由到 apk-reverse(high)，对。保留作为正例对照。"
+    }
+  ]
+}
