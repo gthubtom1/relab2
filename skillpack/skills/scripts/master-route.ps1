@@ -52,6 +52,7 @@ $configPath = Join-Path $skillsRoot 'config/routing.json'
 #   失败或没有 python 时**静默跳过**，行为与改动前逐字节一致。
 $preflightHint = ''
 $preflightRoutes = @()
+$preflightGap = ''
 try {
     $pathRe = [regex]'(?i)([A-Za-z]:\\[^\s"'']+|/[^\s"'']+)'
     foreach ($m in $pathRe.Matches($Hint)) {
@@ -71,6 +72,7 @@ try {
             $cls = ($out -join "`n") | ConvertFrom-Json
             if ($cls.hint) { $preflightHint = $cls.hint }
             if ($cls.suggested_routes) { $preflightRoutes = @($cls.suggested_routes) }
+            if ($cls.gap) { $preflightGap = $cls.gap }
             break
         }
     }
@@ -161,6 +163,7 @@ foreach ($p in $priority) {
 }
 
 $notes = New-Object System.Collections.Generic.List[string]
+if ($preflightGap) { [void]$notes.Add('GAP: ' + $preflightGap) }
 $confidence = 'low'
 if ($null -eq $primary) {
     $primary = $fallbackId

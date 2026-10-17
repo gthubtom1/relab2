@@ -417,6 +417,14 @@ def classify(path: str) -> dict:
 
     info["suggested_routes"] = route_for(info)
     info["hint"] = to_hint(info)
+    # ★ 没有专用技能时，明确说出来，而不是静默回退 R0。
+    #   R0 是「通用逆向方法论」，不是「这个格式有人管」。
+    gaps = {
+        "swf": "SWF/Flash 无专用技能（routing.json 无对应路由）；回退 R0 通用方法论，Flash 反编译需额外工具链",
+        "jar": "Java/JAR 无专用技能（routing.json 无对应路由）；回退 R0 通用方法论，Java 字节码反编译需 jadx/CFR",
+    }
+    if info.get("format") in gaps:
+        info["gap"] = gaps[info["format"]]
     return info
 
 
@@ -467,7 +475,10 @@ def main(argv: list[str]) -> int:
         if as_hint:
             print(to_hint(info))
     if not as_hint:
-        print(json.dumps(results if len(results) > 1 else results[0], ensure_ascii=False, indent=2))
+        # ★ ensure_ascii=True：PowerShell 子进程默认按本地码页解码 stdout，
+        #   带中文的 UTF-8 会被打乱 -> ConvertFrom-Json 抛错 -> preflight 静默失效（实测 SWF 就是这样丢的）。
+        #   转义成 \uXXXX 后任何码页都能正确解析。
+        print(json.dumps(results if len(results) > 1 else results[0], ensure_ascii=True, indent=2))
     return 0
 
 
