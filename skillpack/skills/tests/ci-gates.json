@@ -515,6 +515,28 @@
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "非 ASCII 的 .ps1 必须带 UTF-8 BOM（2026-10-16 真事故，见 docs/KNOWN-BOUNDARIES.md 第 21 条）。Windows PowerShell 5.1 加载无 BOM 的 .ps1 时按系统 ANSI 码页解码：本机 936 下含中文的脚本被解错字节边界，直接 ParserError，**换机第一步就是死的**（HEAD 上 4 个 .ps1 缺 BOM → 干净 clone 的 `relab2.ps1 doctor` 与 `setup -DryRun` 都 rc=1，而 selfcheck 还报「通过 6/失败 0」）。已有的 verify-powershell-syntax 门拦不住它：那道门为了让 PS5.1 能看见错误，显式按 UTF-8 读入再 ParseInput（见其注释），恰好绕开了「PS5.1 自己加载时会怎样」。所以 BOM 必须由独立门来查。判据与 ci.yml 的 `Non-ASCII .ps1 must carry a UTF-8 BOM` 步骤一致。"
+    },
+    {
+      "id": "verify-debugger-arch",
+      "script": "skills/tests/verify-debugger-arch.py",
+      "args": [],
+      "blocking_exits": [
+        20
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "32-bit PE targets must reach x32dbg on 9095: start.ps1 picks the debugger from the PE Machine field, and register-mcp.py emits both the 9094 and 9095 channels. Feeding a 32-bit PE to x64dbg only shows 'please use x32dbg' and LoadBinary returns NO_TARGET with no architecture hint."
+    },
+    {
+      "id": "test-route-evidence-checker",
+      "script": "skills/tests/test_check_route_evidence.py",
+      "args": [],
+      "blocking_exits": [
+        1
+      ],
+      "non_blocking_exits": [],
+      "executes_vendor_code": false,
+      "why": "check-route-evidence.py is what decides whether a route result.json counts as evidence-backed. Its own behaviour must be pinned: every E-code rejects, --only with an unknown route is a usage error (rc=2) rather than a silent green, and a compliant route still passes. Uses temp fixtures only, so it runs on CI where work/ is gitignored."
     }
   ]
 }

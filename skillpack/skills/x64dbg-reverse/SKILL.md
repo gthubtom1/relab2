@@ -30,7 +30,7 @@ x64dbg-MCP-Server 是**活在被调试进程里的插件**，没有独立服务�
 
 | 步 | 做什么 | 关键点 |
 |---|---|---|
-| 1 | 起 x64dbg（9094 监听） | `scripts/start.ps1`；幂等，已在听则立即返回 0 |
+| 1 | 起调试器（9094=x64 / 9095=x32 监听） | **首选 `scripts/start.ps1 -Target <样本>`**（读 PE Machine 自动选架构与端口）；幂等，已在听则立即返回 0。已知目标位数时才用 `-Arch x64` / `-Arch x32` |
 | 2 | 载入目标 | 优先**让 x64dbg 自己启动目标**（插件随进程创建注入 ScyllaHide） |
 | 3 | 设异常处理 | 受保护目标会**主动抛 `0xC0000005` 驱动自校验**；先把它设成 pass/ignore，否则一步一停 |
 | 4 | 下断 | 校验点、解密后缓冲区读断点（硬件读断点看"谁读它"）、API 断点 |
@@ -44,6 +44,7 @@ x64dbg-MCP-Server 是**活在被调试进程里的插件**，没有独立服务�
 | **附加式调试会被反调试当场杀掉** | `AttachProcess` 后目标立刻退出 | ScyllaHide **只在进程创建时**注入；用 x64dbg 自己 LoadBinary，或用 IFEO 让 shell 启动时进入调试会话（父进程仍是 explorer） |
 | **`headless.exe` 起不了 MCP** | 端口始终不监听 | 动态调试一律拉 **GUI x64dbg**（插件随进程加载，9094 才监听）；`headless` 只适合一次性批处理 |
 | **9095 不是控制口** | 向 9095 发指令无应答 | 9095 是 **x32 的服务口**；x64 只有 9094 |
+| **32 位目标送进 x64dbg** | 弹窗「请您用 x32dbg 来调试这个程序」，`LoadBinary` 永远 `NO_TARGET`，错误里**不写**"架构不匹配" | 这不是 MCP 坏了：x64dbg 只收 64 位 PE。**起服务时就用 `start.ps1 -Target <样本>`** 让它按 PE Machine 选（0x014C→9095 / 0x8664→9094）；已经起错的，`-Arch x32` 另起一条 9095，或先 `StopDebug` 再换 |
 | **MCP 写内存"成功"但读回没变** | `WriteMemToAddress` 报 Success，`ReadMemory` 仍是原字节 | `.text` 是 RX，写不落地；改用 `scripts/patchmem.py`（进程外放开页保护再写），并用**独立于调试器的** `ReadProcessMemory` 复核 |
 | **token 变了/401** | MCP 返回 401 Unauthorized | token 是**每个 x64dbg 实例自己的**，读 `release\x64\mcp_config.json` 的 `AuthToken`（宿主侧对应 `X64DBG_MCP_TOKEN`） |
 | **保护器代码不在文件里** | 断点命中的地址不在任何模块范围内 | 保护器在**私有可执行区**（运行期生成/解密）；先 `GetMemoryMap` 找 RWX / R-X 私有页，再在那些页上下断 |

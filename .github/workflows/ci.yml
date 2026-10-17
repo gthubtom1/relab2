@@ -387,6 +387,21 @@ jobs:
         shell: bash
         run: python3 skillpack/skills/tests/verify-powershell-syntax.py
 
+      # 32 位目标必须能走到 x32dbg(9095)：把 32 位 PE 送进 x64dbg 只会弹
+      # 「请您用 x32dbg 来调试这个程序」，LoadBinary 永远 NO_TARGET 且错误里
+      # 不写"架构不匹配" —— 会被误判成 MCP 坏了。门钉住两处：start.ps1 按
+      # PE Machine 选架构、register-mcp.py 同时生成 9094/9095 两条通道。
+      - name: Debugger arch routing (x64/x32 must both be reachable)
+        shell: bash
+        run: python3 skillpack/skills/tests/verify-debugger-arch.py
+
+      # check-route-evidence.py 决定「一条路由的 result.json 算不算有证据」。
+      # 它自己的行为必须钉住：每个 E-code 都要能拒、--only 给不存在的路由要报用法错误
+      # （rc=2）而不是静默绿、合规路由仍要能过。用临时 fixture，CI 上 work/ 被 gitignore 也能跑。
+      - name: Route evidence checker behaviour
+        shell: bash
+        run: python3 skillpack/skills/tests/test_check_route_evidence.py
+
       - name: Non-ASCII .ps1 must carry a UTF-8 BOM (Windows PowerShell 5.1 safety)
         shell: bash
         run: python3 skillpack/skills/tests/verify-ps1-bom.py

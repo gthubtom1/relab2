@@ -87,13 +87,24 @@ def find_python_with(module: str, tool_root: pathlib.Path, extra: list[pathlib.P
     return None
 
 
-def read_x64dbg_token(tool_root: pathlib.Path) -> str | None:
-    """x64dbg 的 Bearer token 是**每个实例自己的**，写在它自己的 mcp_config.json 里。"""
-    for pat in ("disasm/x64dbg/release/x64/mcp_config.json", "**/x64dbg/**/mcp_config.json"):
+def read_x64dbg_token(tool_root: pathlib.Path, arch: str = "x64") -> str | None:
+    """x64dbg 的 Bearer token 是**每个实例自己的**，写在它自己的 mcp_config.json 里。
+
+    ★ 2026-10-18：32 位与 64 位是**两套独立的 token/端口**（x64→9094、x32→9095）。
+      旧版只 glob x64 目录，导致 x32dbg-mcp 永远拿不到自己的 token。
+    """
+    pats = (f"disasm/x64dbg/release/{arch}/mcp_config.json",
+            f"**/x64dbg/**/{arch}/mcp_config.json",
+            f"**/x64dbg/**/mcp_config.json")
+    for pat in pats:
         for f in tool_root.glob(pat):
             try:
                 d = json.loads(f.read_text(encoding="utf-8", errors="replace"))
             except Exception:  # noqa: BLE001
+                continue
+            # 端口必须对得上，避免 x32 读到 x64 的 token
+            want = 9095 if arch == "x32" else 9094
+            if isinstance(d.get("Port"), int) and d["Port"] != want:
                 continue
             for key in ("AuthToken", "authToken", "token", "Token"):
                 if isinstance(d.get(key), str) and d[key]:
@@ -231,22 +242,33 @@ def build_entries(skill_root: pathlib.Path, tool_root: pathlib.Path,
     else:
         notes.append(f"idapro：缺 {lazy} 或 {ida_start} —— 跳过")
 
-    # ⑤ x64dbg-mcp（stdio·懒启）
-    x64_start = tool_root / "cli" / "start-x64dbg-mcp.ps1"
-    token = read_x64dbg_token(tool_root)
-    if lazy.exists() and x64_start.exists() and (py_g or py_a):
-        args = [str(lazy), "--name", "x64dbg-mcp",
-                "--url", "http://127.0.0.1:9094/mcp", "--port", "9094",
-                "--launcher", f'powershell -NoProfile -ExecutionPolicy Bypass -File "{x64_start}"',
-                "--wait", "60"]
+    # ⑤ x64dbg-mcp / ⑤b x32dbg-mcp（stdio·懒启）
+    #   ★ 2026-10-18 修：32 位目标必须走 x32dbg（端口 9095）。把 32 位 PE 送进 x64dbg，
+    #     它只弹「请您用 x32dbg 来调试这个程序」，LoadBinary 永远 NO_TARGET，且错误里不写
+    #     "架构不匹配" —— 会被误判成 MCP 坏了。旧版这里只造 x64 一条，x32 只能手工加，
+    #     于是换机/重新注册后 32 位目标必然无法调试。
+    #   启动器优先用**随仓库走**的 x64dbg-reverse/scripts/start.ps1（支持 -Arch x32），
+    #     退回本机工具根里的 cli/start-x64dbg-mcp.ps1（旧机器专属文件）。
+    x64_start = skills / "x64dbg-reverse" / "scripts" / "start.ps1"
+    if not x64_start.exists():
+        x64_start = tool_root / "cli" / "start-x64dbg-mcp.ps1"
+    for arch, port, entry_name in (("x64", 9094, "x64dbg-mcp"), ("x32", 9095, "x32dbg-mcp")):
+        token = read_x64dbg_token(tool_root, arch)
+        if not (lazy.exists() and x64_start.exists() and (py_g or py_a)):
+            notes.append(f"{entry_name}：缺 {lazy} 或 {x64_start} —— 跳过")
+            continue
+        launcher = f'powershell -NoProfile -ExecutionPolicy Bypass -File "{x64_start}"'
+        if arch == "x32":
+            launcher += " -Arch x32"
+        args = [str(lazy), "--name", entry_name,
+                "--url", f"http://127.0.0.1:{port}/mcp", "--port", str(port),
+                "--launcher", launcher, "--wait", "60"]
         if token:
             args += ["--header", f"Authorization: Bearer {token}"]
         else:
-            notes.append("x64dbg-mcp：读不到 Bearer token（它自己的 mcp_config.json）—— 先注册，"
-                         "等 x64dbg 起来后再补 --header")
-        entries["x64dbg-mcp"] = {"command": str(py_g or py_a), "args": args}
-    else:
-        notes.append(f"x64dbg-mcp：缺 {lazy} 或 {x64_start} —— 跳过")
+            notes.append(f"{entry_name}：读不到 Bearer token（release/{arch}/mcp_config.json）"
+                         "—— 先注册，等调试器起来后再补 --header")
+        entries[entry_name] = {"command": str(py_g or py_a), "args": args}
 
     # ⑥ rea（经筛选桥；直连会把 207 个工具全塞进宿主上下文，见 find_rea_entry 的说明）
     rea = find_rea_entry(skills, tool_root)

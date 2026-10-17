@@ -89,14 +89,30 @@ python proc_guard.py --list                                       # 确认 regis
 两者可以同时运行（各占一个端口）。启动：
 
 ```powershell
-# 64 位
-powershell -NoProfile -File D:\Tools\cli\start-x64dbg-mcp.ps1
-# 32 位（同一个启动器，换 Exe 和 Port）
-powershell -NoProfile -File D:\Tools\cli\start-x64dbg-mcp.ps1 `
-  -Exe D:\Tools\disasm\x64dbg\release\x32\x32dbg.exe -Port 9095
+# ★ 首选：给目标路径，脚本自己读 PE Machine 字段决定 x64/x32 与端口
+powershell -NoProfile -ExecutionPolicy Bypass -File `
+  C:\relab2\skillpack\skills\x64dbg-reverse\scripts\start.ps1 -Target <样本路径>
+#   Machine=0x014C -> x32dbg.exe / 9095
+#   Machine=0x8664 -> x64dbg.exe / 9094
+#   非 i386/AMD64（如 ARM64）-> exit 2 并说明不适用，不会静默起错调试器
+
+# 显式指定（永远优先于 -Target）
+... start.ps1 -Arch x64      # 9094
+... start.ps1 -Arch x32      # 9095
 ```
 
+**为什么默认改成按目标判位数（2026-10-18 实测根因）**：靠人记着传 `-Arch x32` 不可靠，
+忘了就起 x64dbg，把 32 位 PE 拖进去只会弹「请您用 x32dbg 来调试这个程序」，`LoadBinary`
+永远 `NO_TARGET` —— 而这个症状**每次都会出现**，不是偶发 bug，是流程缺了判位数这一步。
+
+同批修掉的另一个结构性缺陷：`register-mcp.py` 原来**只生成 `x64dbg-mcp` 一条**，
+`x32dbg-mcp` 只能手工加（于是带着 `D:\Tools\cli\start-x64dbg-mcp.ps1` 这种机器专属路径，
+换机/重新注册就丢）。现在两条都由脚本生成，启动器统一指向**随仓库走**的
+`x64dbg-reverse/scripts/start.ps1`。
+
 宿主侧要**两条** MCP 条目（`x64dbg-mcp` → 9094、`x32dbg-mcp` → 9095），否则 32 位目标无法调试。
+两条的 Bearer token **各不相同**，分别来自 `release/x64/mcp_config.json` 与
+`release/x32/mcp_config.json`（`register-mcp.py` 按 `Port` 字段配对，不会串）。
 
 **收尸顺序**（重要）：被调试的目标进程由调试器持有，`taskkill` 杀不掉。
 必须先 `StopDebug`，再扫：

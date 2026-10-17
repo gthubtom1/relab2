@@ -19,11 +19,14 @@ start.ps1 —— 幂等起 x64dbg（或 x32dbg），让 x64dbg-MCP(9094/9095) �
 
 用法：
   powershell -NoProfile -ExecutionPolicy Bypass -File start.ps1
-  ... -Arch x32                起 x32 调试器（端口 9095）
+  ... -Target <样本路径>         ★ 首选：读 PE Machine 自动选 x64/x32 与端口
+                                （0x014C→x32/9095，0x8664→x64/9094，其它→exit 2）
+  ... -Arch x32                起 x32 调试器（端口 9095）；显式 -Arch 优先于 -Target
   ... -WaitSeconds 40          等更久（慢机器 / 大盘首启）
   ... -DryRun                  只解析并打印将要启动的文件，不真启动（验收用）
 
-退出码：0 = 已监听（新起或本来就在）；2 = 找不到可用的启动器/可执行文件
+退出码：0 = 已监听（新起或本来就在）；1 = 起了但端口没监听；2 = 找不到可用的启动器/可执行文件，
+        或 -Target 不是可用 PE（非 MZ / ARM64 等）
 #>
 [CmdletBinding()]
 param(
@@ -33,11 +36,57 @@ param(
     [int]$WaitSeconds = 30,
     [switch]$DryRun,
     [switch]$SkipProbe,
-    [string]$ExactToolRoot = ''
+    [string]$ExactToolRoot = '',
+    # ★ 按目标自动选架构：给一个 PE 路径，脚本自己读 Machine 字段决定 x64/x32 与端口。
+    #   根因（2026-10-18 实测）：把 32 位 PE 送进 x64dbg 只会弹「请您用 x32dbg 来调试这个程序」，
+    #   LoadBinary 永远 NO_TARGET，而错误里不写"架构不匹配" —— 极易误判成 MCP 坏了。
+    #   靠人记着传 -Arch x32 不可靠，所以这里把判断做成默认行为。
+    [string]$Target = ''
 )
 
 $ErrorActionPreference = 'Continue'
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }   # scan-ok: 控制台编码设置失败只影响中文显示，不影响启动/监听判定
+
+# --- 目标位数探测（只在用户没显式指定 -Arch 时生效，显式指定永远优先）---
+$archFromTarget = ''
+if ($Target -and -not $PSBoundParameters.ContainsKey('Arch')) {
+    if (-not (Test-Path -LiteralPath $Target)) {
+        Write-Host ("ERROR: -Target 不存在: {0}" -f $Target) -ForegroundColor Red
+        exit 2
+    }
+    try {
+        $fs = [System.IO.File]::OpenRead((Resolve-Path -LiteralPath $Target).Path)
+        try {
+            $br = New-Object System.IO.BinaryReader($fs)
+            $mz = $br.ReadBytes(2)
+            if ($mz[0] -ne 0x4D -or $mz[1] -ne 0x5A) {
+                Write-Host ("ERROR: -Target 不是 PE/MZ 文件: {0}" -f $Target) -ForegroundColor Red
+                exit 2
+            }
+            $fs.Position = 0x3C
+            $lfanew = $br.ReadInt32()
+            $fs.Position = $lfanew + 4
+            $machine = $br.ReadUInt16()
+            $archFromTarget = switch ($machine) {
+                0x014c { 'x32' }   # IMAGE_FILE_MACHINE_I386
+                0x8664 { 'x64' }   # IMAGE_FILE_MACHINE_AMD64
+                default { '' }
+            }
+            Write-Host ("target arch probe: {0} -> Machine=0x{1:X4} -> {2}" -f `
+                (Split-Path -Leaf $Target), $machine, $(if ($archFromTarget) { $archFromTarget } else { 'unsupported' }))
+            if (-not $archFromTarget) {
+                Write-Host ("ERROR: Machine=0x{0:X4} 既不是 i386 也不是 AMD64，x64dbg/x32dbg 都不适用（ARM64 目标请走其它调试器）" -f $machine) -ForegroundColor Red
+                exit 2
+            }
+        }
+        finally { $fs.Dispose() }
+    }
+    catch {
+        Write-Host ("ERROR: 读 PE 头失败: {0}" -f $_.Exception.Message) -ForegroundColor Red
+        exit 2
+    }
+    $Arch = $archFromTarget
+}
 
 if ($Port -le 0) { $Port = if ($Arch -eq 'x32') { 9095 } else { 9094 } }
 $name = if ($Arch -eq 'x32') { 'x32dbg' } else { 'x64dbg' }
