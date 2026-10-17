@@ -129,6 +129,7 @@ function Invoke-Doctor {
                 $cfg = (Get-Content -LiteralPath $hostMcp -Raw -Encoding UTF8 | ConvertFrom-Json).mcpServers
                 $cacheDir = Join-Path $env:LOCALAPPDATA 'reverse-skill\mcp-lazy'
                 $bad = 0
+                $noSeed = 0
                 foreach ($nm in $cfg.PSObject.Properties.Name) {
                     $e = $cfg.$nm
                     $cmdOk = $e.command -and (Test-Path -LiteralPath $e.command)
@@ -145,6 +146,10 @@ function Invoke-Doctor {
                             Write-Host ("      · {0,-14} 懒启·缓存/种子在位（工具对模型可见）" -f $nm) -ForegroundColor DarkGray
                         }
                         else {
+                            # ★ 2026-10-18：这一条以前只打黄字、不进计数 —— 于是同一屏上一行
+                            #   「模型看不见它的工具」、下一行 `[OK] MCP 通道自检 命令都在；懒启通道有缓存/种子兜底`。
+                            #   审计实测 3 次全复现。现在计入 $noSeed，判 WARN。
+                            $noSeed++
                             Write-Host ("      · {0,-14} 懒启·**无缓存也无种子** → 模型看不见它的工具" -f $nm) -ForegroundColor Yellow
                         }
                     }
@@ -153,6 +158,7 @@ function Invoke-Doctor {
                     }
                 }
                 if ($bad -gt 0) { Add-Result 'MCP 通道自检' 'FAIL' "$bad 条的 command 指向不存在的文件" }
+                elseif ($noSeed -gt 0) { Add-Result 'MCP 通道自检' 'WARN' "$noSeed 条懒启通道既无缓存也无种子 —— 模型看不见它们的工具（见上面黄字；补 skillpack\skills\references\mcp-lazy-seeds\<名字>.json）" }
                 else { Add-Result 'MCP 通道自检' 'OK' '命令都在；懒启通道有缓存/种子兜底' }
             }
             catch { Add-Result 'MCP 通道自检' 'WARN' "解析 $hostMcp 失败：$_" }
