@@ -181,24 +181,27 @@ if ($null -eq $primary) {
 #   现在：跑一遍语义候选（route-semantic.py，BM25 over 症状句 + 技能 description），
 #   语义 top-1 与关键词 PRIMARY 不一致时**降置信度并打印候选**，由模型最终判定。
 $semanticTop = @()
-$semPy = Join-Path $PSScriptRoot 'route-semantic.py'
-if ((Test-Path -LiteralPath $semPy) -and $Hint) {
-    $pyExe = $null
-    foreach ($c in @((Join-Path $env:REVERSE_TOOL_ROOT 'runtime\python-venv\Scripts\python.exe'), 'python')) {
-        if ($c -eq 'python' -or (Test-Path -LiteralPath $c)) { $pyExe = $c; break }
-    }
-    try {
+# ★ 2026-10-18：整段包在 try 里。第一版在 CI 上把路由整个搞崩了 ——
+#   `Join-Path $env:REVERSE_TOOL_ROOT 'runtime\...'` 在变量为空时抛
+#   「Path 为 null」，而它当时不在 try 里，于是每个 hint 都返回 ERR。
+#   语义候选是**锦上添花**，任何失败都必须退回「只有关键词结果」。
+try {
+    $semPy = Join-Path $PSScriptRoot 'route-semantic.py'
+    if ((Test-Path -LiteralPath $semPy) -and $Hint) {
+        $pyExe = 'python'
+        if ($env:REVERSE_TOOL_ROOT) {
+            $cand = Join-Path $env:REVERSE_TOOL_ROOT 'runtime\python-venv\Scripts\python.exe'
+            if (Test-Path -LiteralPath $cand) { $pyExe = $cand }
+        }
         $raw = & $pyExe $semPy --hint $Hint --top 5 --json 2>$null
         $obj = ($raw -join "`n") | ConvertFrom-Json
         $semanticTop = @($obj.top | ForEach-Object { $_.skill })
-    } catch { $semanticTop = @() }
-}
+    }
+} catch { $semanticTop = @() }
 if ($semanticTop.Count -gt 0) {
-    # 语义候选与关键词结果可能不一致 —— 关键词对自然语言天生不敏感，
-    # 所以只要两者不同名，就把置信度降一档，并把候选交给模型判。
     $kwLeaf = ''
     if ($primary) {
-        $kwLeaf = [System.IO.Path]::GetFileName([System.IO.Path]::GetDirectoryName([string]$primary))
+        try { $kwLeaf = [System.IO.Path]::GetFileName([System.IO.Path]::GetDirectoryName([string]$primary)) } catch { $kwLeaf = '' }
     }
     if ($kwLeaf -and ($semanticTop[0] -ne $kwLeaf)) {
         if ($confidence -eq 'high') { $confidence = 'medium' }
