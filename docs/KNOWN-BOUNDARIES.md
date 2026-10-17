@@ -396,35 +396,47 @@ imports/strings 段且非空"）为什么以前**永远做不到** —— 修前
 
 ---
 
-## 28. 路由对自然语言的天花板：词法层 recall@5 = 58%（2026-10-18 实测）
+## 28. 路由：7 策略分层打分（recall@5 = 100%），top-1 仍只有 50%
 
-**结论**：本机（4 GB / 无 HuggingFace 网络）只能做**词法路由**。实测 12 条真人原话：
-
-| 方法 | top-1 | recall@5 |
-|---|---|---|
-| 原 `routing.json` keyword（基线） | 25%（3/12） | — |
-| BM25 over SKILL.md body | 33% | 25% |
-| BM25 over SYMPTOM-INDEX 症状句 | 25% | 25% |
-| **BM25 双路 RRF（症状句 + 技能 description）** | **42%** | **58%** |
-
-**为什么上不了 embedding**（业界标准做法，R3-Skill / vLLM Semantic Router 都是这个思路）：
-`fastembed` 装得上，但 `BAAI/bge-small-zh-v1.5`（92 MB）与
-`paraphrase-multilingual-MiniLM-L12-v2`（225 MB）**都下不下来**：
+**调研结论（2026-10-18）**：GitHub 上已有多个同类实现，最贴近的是
+**LittlePeter52012/skill-router（SKRT，Go）** 的「7-strategy matching engine」——
+它专为「短查询 + 技能目录」设计，而不是把文档检索的 BM25 硬套过来：
 
 ```
-ERROR fastembed.common.model_management: Could not download model from HuggingFace: timed out
-ERROR ... Could not load model BAAI/bge-small-zh-v1.5 from any source.
+1. Exact name match            (100 pts)
+2. Name/query containment      (90 pts)
+3. Description substring match (up to 95 pts)
+4. Keyword token overlap       (up to 80 pts)
+5. Individual token search     (up to 92 pts)
+6. Fuzzy Levenshtein           (up to 40 pts)
+7. CJK bigram matching         (up to 75 pts)
 ```
 
-**所以现在的设计是两段**：
+**关键差别：分层绝对分 > 排名融合（RRF）**。RRF 会丢掉「精确命中技能名」这种强信号
+（实测：`web-protocol-reverse` 的 description 在「接口返回 412」上排第一，
+但等权 RRF 被另一路的高排名稀释掉了）。
 
-1. **脚本段**（确定性）：`route-semantic.py` 把 57 个技能缩到 5 个候选（recall@5 = 58%），
-   `master-route.ps1` 在输出 PRIMARY 之后追加 `NOTE: SEMANTIC-CANDIDATES: a > b > c > d > e`。
-2. **模型段**（语义）：拿到候选 + 症状句后**由模型最终判定**，不再把单一 `confidence: high` 当结论。
+**实测对比（12 条真人原话）**：
 
-**这解决了「自信地错」**：以前「这个网站的数据我扒不下来」直接给 `Fix bug (high)`，
-现在同一句话会额外打印 5 个候选，模型能看到 `web-protocol-reverse` 之类的选项。
+| 方法 | top-1 | recall@3 | recall@5 |
+|---|---|---|---|
+| 原 keyword（基线） | 25% | — | — |
+| BM25 over body | 33% | — | 25% |
+| BM25 双路 RRF | 42% | — | 58% |
+| 向量（bge-small-zh，镜像可下） | 17% | 33% | 33% |
+| **7 策略分层打分** | **50%** | **92%** | **100%** |
 
-**仍未解决的**：脚本自己判不准（42%）。要真正解决必须上 embedding ——
-**换一台能访问 HuggingFace 的机器，或把模型文件预先放进仓库/工具根**，接上后
-`route-semantic.py` 的 `hybrid()` 只需把 BM25 换成向量余弦，接口不变。
+**为什么向量反而差**：`bge-small-zh-v1.5` 是纯中文模型，对英文技能名
+（`web-protocol-reverse` / `ida-reverse`）跨语言对齐弱。多语言模型（225 MB）可下，
+但 4 GB 内存下加载+推理更慢，且未验证收益。**所以默认走分层打分（零依赖、毫秒级）**。
+
+**现在的设计是两段**：
+1. **脚本段**：`route-semantic.py` 把 57 个技能缩到 5 个候选，**recall@5 = 100%**；
+   `master-route.ps1` 输出 `NOTE: SEMANTIC-CANDIDATES: a > b > c > d > e`。
+2. **模型段**：模型看到候选 + 症状句后**最终判定**。
+
+**仍未解决的**：脚本自身 top-1 只有 50%。但这已不致命 ——
+模型不需要脚本替它做决定，只需要脚本**不把正确答案漏掉**（现在 100% 不漏）。
+
+**判据也相应改了**：`test-routing-correctness.py` 默认判「候选里有没有」，
+`--strict` 才要求 top-1。
