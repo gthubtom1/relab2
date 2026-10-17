@@ -323,3 +323,51 @@ for s in pe.sections:
 - `aob-signature-scan.md` — 在 dump 里扫特征码找解包逻辑
 - `dynamic-api-resolution.md` — 壳的 IAT 重建就是一条解析链
 - `../SKILL.md` — 总体流程
+---
+
+## 附：IAT 重建的两种模式（踩过的坑）
+
+重建导入表时，`OriginalFirstThunk`（INT）不是可有可无的。**先看原二进制的导入目录长什么样**：
+
+```python
+# 读原导入目录的第一个描述符
+oft, ts, fc, name_rva, ft = struct.unpack_from("<IIIII", data, desc_off)
+print("OFT =", hex(oft))   # 0 还是非 0，决定了重建方式
+```
+
+### 模式 A：`OriginalFirstThunk != 0`（标准）
+
+- 描述符：`OFT = INT 的 RVA`，`FirstThunk = IAT 的 RVA`
+- 加载器从 **INT** 读名字，把解析结果写进 **IAT**
+- INT 与 IAT 是两张表，内容初始相同（IAT 里也是名字 RVA）
+
+### 模式 B：`OriginalFirstThunk == 0`（无 INT）
+
+- 描述符：`OFT = 0`，`FirstThunk = IAT 的 RVA`
+- 加载器**直接把 IAT 槽里的 dword 当 hint/name 的 RVA**，解析后**原地覆盖**成函数地址
+- 也就是说：**IAT 必须预先把名字 RVA 写进去**
+
+### 为什么这个区分会致命
+
+2026-10-17 实测（`Easy_UnpackMe`，自定义壳）：
+
+| 重建方式 | 结果 |
+|---|---|
+| 按模式 A（标准 INT）重建 | 成品**能加载**，但 USER32/GDI32 **不加载**、IAT 全 0 → 入口 `0xC0000005` |
+| 按模式 B（OFT=0 + 槽里预写名字 RVA） | 成品**正常运行**（窗口句柄非零） |
+
+模式 A 的错误**没有任何报错**：`pefile` 解析导入表也完全正常，只是加载器静默忽略。
+诊断办法：把**原始**描述符复制到一个空节、让导入目录指过去 —— 如果这样能加载，
+说明加载器没问题，是你的描述符模式不对。
+
+### 运行期 dump 的完整链路（本机）
+
+```python
+# x32dbg 在 9095（64 位目标用 9094，见 references/tool-lifecycle.md）
+LoadBinary(filePath)
+SetBreakpoint(target="0x<OEP>")
+run()            # 第一次停在壳自己的入口
+run()            # 第二次才到 OEP
+DumpModule(module="<name>", filePath="mem_dump.bin")
+StopDebug()      # 必须先停，否则 taskkill 杀不掉被调试的进程
+```
