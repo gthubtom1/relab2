@@ -307,7 +307,14 @@ def trunk_card_refs():
                 if resolve_rel(card, t2) is not None:
                     continue
                 # ② 跨卡：兄弟技能卡里存在同名目标即可达（多个同名则算有歧义但不判断）
-                name = Path(t2).name
+                # ★ 2026-10-18：**反斜杠必须先归一成 `/`**。
+                #   卡里写的路径有 Windows 风格（`skillpack\skills\x64dbg-reverse\...`），
+                #   在 POSIX 上 `\` 不是分隔符 —— `Path(t2).name` 会返回整串，
+                #   `SKILLS.glob(f"*/{t2}")` 也匹配不到任何东西，于是同一份文档
+                #   在 Windows 上「有入口」、在 ubuntu CI 上「断了」。
+                #   实测：同一 commit，本机 1911 叶 0 断；CI `verify-leaves` exit 1（blocked）。
+                t2_posix = t2.replace("\\", "/")
+                name = t2_posix.rsplit("/", 1)[-1]
                 # ★ 2026-10-17：**单条怪引用不许把整道门弄崩**。
                 #   实测：文档里写了 `references/**.md`（本意是"references 下的 .md"），
                 #   抽取器把它当路径 → `glob("*/references/**.md")` ——
@@ -317,7 +324,7 @@ def trunk_card_refs():
                 #   而本机（py3.14，pathlib 已支持 `**` 任意位置）完全看不出来。
                 #   glob 失败就当"没有兄弟"处理（该引用照旧按断叶判），而不是崩门。
                 try:
-                    sib = [p for p in SKILLS.glob(f"*/{t2}") if p.is_file()]
+                    sib = [p for p in SKILLS.glob(f"*/{t2_posix}") if p.is_file()]
                     sib += [p for p in SKILLS.glob(f"*/**/{name}") if p.is_file()]
                 except (ValueError, OSError):
                     sib = []
