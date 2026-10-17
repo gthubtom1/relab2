@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0",
   "subject": "skills/tests/ci-gates.json",
-  "subject_digest": "sha256:cd9c91e0771aa7d6f1d2f981d1ddb5bb3461850c05523742933bf5ba4bf0a3c6",
-  "gates_total": 44,
+  "subject_digest": "sha256:71103502cde8bc71a6ceb1a88dd757424f1643260cdbda85616bc98a70dc64e4",
+  "gates_total": 45,
   "gate_ids": [
     "verify-spec-structure",
     "audit-discovery-surface",
@@ -47,7 +47,8 @@
     "verify-powershell-syntax",
     "verify-ps1-bom",
     "verify-debugger-arch",
-    "test-route-evidence-checker"
+    "test-route-evidence-checker",
+    "verify-gpl-distribution-boundary"
   ],
   "note": [
     "Digest lock for the CI gate manifest. verify-gate-wiring.py fails when the",

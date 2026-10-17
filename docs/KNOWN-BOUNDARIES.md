@@ -93,10 +93,31 @@ test-audit-doc-code-negctl.py
 |---|---|
 | A. 整体转 GPL-3.0 | 合法最稳，但不能再以 MIT 分发 |
 | B. 隔离 GPL 内容 | 知识库少 209 篇 |
-| C. 保持现状（当前） | **私有不对外分发**技术上不触发义务 |
+| C. ~~保持现状~~ **已失效** | 原假设是「私有不对外分发」；2026-10-18 实测仓库是 **PUBLIC**，前提消失（见下） |
 
-**判断影响**：**只要你不对公分发，现在完全没问题。**
+**判断影响**：~~只要你不对公分发，现在完全没问题。~~
 对公分发前需要你（或律师）拍板。
+
+### ★ 2026-10-18 复核：方案 C 已失效，现在是"已对公分发"状态
+
+```
+$ gh repo view gthubtom1/relab2 --json visibility,isPrivate
+{"isPrivate":false,"visibility":"PUBLIC"}
+
+$ python skillpack/skills/scripts/verify-gpl-distribution-boundary.py
+exit=20
+必须在继续之前二选一：
+  A 整体转 GPL-3.0        —— 0 机械成本，89% 原创代码也被 copyleft
+  B 隔离 skills/*/references/  —— 保持 MIT，但 12 个 SKILL.md 的
+                              约 563 处 references 链接要逐处处理
+```
+
+**上面那句"私有不对外分发"已经不成立了** —— 仓库是 public，209 篇 GPL-3.0 改编内容已随仓库公开。
+方案 C 的前提消失，现在是**必须 A 或 B 二选一**的状态。
+
+**这道门此前不在 `ci-gates.json` 里**，只由 `ci.yml` 直调 —— 所以 `run-ci-gates` 报的
+「blocked=0 failed=0」**从来不包含它**。2026-10-18 已把它登记进清单（第 45 道，`non_blocking_exits: [20]`），
+让它在门禁输出里可见；**决策落地后应改回 blocking**。
 
 ---
 

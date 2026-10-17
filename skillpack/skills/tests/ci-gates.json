@@ -537,6 +537,17 @@
       "non_blocking_exits": [],
       "executes_vendor_code": false,
       "why": "check-route-evidence.py is what decides whether a route result.json counts as evidence-backed. Its own behaviour must be pinned: every E-code rejects, --only with an unknown route is a usage error (rc=2) rather than a silent green, and a compliant route still passes. Uses temp fixtures only, so it runs on CI where work/ is gitignored."
+    },
+    {
+      "id": "verify-gpl-distribution-boundary",
+      "script": "skills/scripts/verify-gpl-distribution-boundary.py",
+      "args": [],
+      "blocking_exits": [],
+      "non_blocking_exits": [
+        20
+      ],
+      "executes_vendor_code": false,
+      "why": "GPL 分发边界：仓库若 public 且含 GPL 正文，必须二选一（整体转 GPL-3.0 / 隔离 references）。2026-10-18 审计发现 gh 报 PUBLIC 而这道门 exit 20，且它此前不在本清单里 —— 于是「44 道门全绿」这句话永远不包含它。现登记为 non_blocking(20)：可见、不阻塞，等许可决策；决策落地后改回 blocking。"
     }
   ]
 }
