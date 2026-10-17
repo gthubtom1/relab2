@@ -373,3 +373,23 @@ imports/strings 段且非空"）为什么以前**永远做不到** —— 修前
    注入给子进程的审计钩子源码）与 `subprocess.run(...)` 的**说明文字**（`relab2-tools-mcp.py` /
    `register-mcp.py` / `test-subprocess-capture-deadlock.py` 的 docstring）。这 5 条已按"误报"计
    （见 §11.3 第 4 行），AST 顺带给出准确行号。
+
+---
+
+## 27. 经验卡的 `artifactSha256` 26 条里 24 条是全 0（2026-10-18 审计发现）
+
+**现象**：`skillpack/skills/experience-cards/*.json` 的 `reproductions[].artifactSha256`
+实测 **24/26 条是 `000…0`**。`validate_card` 对 `fixture.sha256` 有占位符检查（`:187`），
+对 `artifactSha256` **只查非空** —— 所以「这张卡的复现产物真的存在且就是那个文件」这件事，门禁一条都没验。
+
+**为什么没当场修**：这些卡记录的是**大体积产物**（例：`dsh-remote-android-v0.4.17.apk` 80.7 MB），
+产物不在仓库里、也不在这台机器上 —— **没有真实哈希可填**。
+
+**正确修法（需要改 schema，不是改数据）**：
+1. 允许 `artifactSha256: null` + `artifactUnavailable: "<原因>"`；
+2. `validate_card` 接受这种形态（视为"已声明缺件"，不是占位符）；
+3. 把 24 条全 0 改成 `null` + 原因。
+
+**为什么这次只登记不改**：改 schema + 24 条数据会让 11 张卡在 `test-experience-card.py`
+里全红（那是 CI 门），而本次交付的时间窗不允许连带验证整条经验卡链路。
+**如实暴露 > 假装修好**，所以写在这里。

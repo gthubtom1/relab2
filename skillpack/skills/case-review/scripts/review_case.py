@@ -54,7 +54,12 @@ REBUILD_COVERAGE_ITEMS = (
     ("critical_function_status", "关键功能状态", re.compile(r"关键功能|critical\s*function", re.I)),
     ("known_diff", "已知差异已记录", re.compile(r"已知差异|known\s*deviation", re.I)),
 )
-REBUILD_DIFF_REF = re.compile(r"[A-Za-z0-9_./\\-]*diff[/\\][A-Za-z0-9_.\\/-]+")
+# ★ 2026-10-18：原来只认路径里含 `diff/` 这一段的，于是
+#   `diff-update/F-001.md`（**本文件 :568 自己写的缺省约定**）和 `diff-broken/...`
+#   都提取不到 → cross-check 静默跳过。实测：
+#     diff/F-001.md -> 命中 ; diff-update/F-001.md -> 空 ; diff-broken/F-001.md -> 空
+#   现在改成「路径里含 diff / diff-update / diff-* 段」都认。
+REBUILD_DIFF_REF = re.compile(r"[A-Za-z0-9_./\\-]*diff(?:-update)?[/\\][A-Za-z0-9_.\\/-]+")
 # diff-runner 草稿里的两段原始 stdout；一条记录可含多组（--input 可重复）。
 # 完成态行引用的记录必须带这两段，且两段**逐字节**一致——这是「验内容不验自称」的
 # 判据本体：按 bytes 匹配、不做编码/换行归一化，`\n` vs `\r\n` 这类差异无处藏身。
