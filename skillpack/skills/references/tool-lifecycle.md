@@ -104,3 +104,30 @@ powershell -NoProfile -File D:\Tools\cli\start-x64dbg-mcp.ps1 `
 ```bash
 python skills/scripts/proc_guard.py --sweep <样本目录>
 ```
+
+## 坑：被调试的进程不能用 taskkill 硬杀
+
+实测（2026-10-17）：调试器挂着目标时直接 `taskkill /PID <target>`，目标被杀掉，
+但**调试器收不到退出事件**，会卡在僵尸态：
+
+```
+isDebugging: true
+status: LOCKED
+currentAddress: 0x0
+currentModule: <乱码>
+```
+
+此时 `--sweep` 也杀不掉那个 pid（仍被调试器持有），必须先 `StopDebug`；
+若调试器已经错乱到 `StopDebug` 也无效，就**连调试器一起重启**：
+
+```bash
+# 1. 先优雅停
+#    MCP: StopDebug
+# 2. 还不行就重启调试器
+taskkill /IM x32dbg.exe /T /F
+taskkill /IM x64dbg.exe /T /F
+# 3. 再扫目标
+python skills/scripts/proc_guard.py --sweep <样本目录>
+```
+
+**正确顺序**永远是：`StopDebug` → 再 `sweep`。反过来就会留下僵尸调试器。
