@@ -14,6 +14,38 @@
 
 ---
 
+## ★ 缺工具怎么办：调 `ensure_tool`，不要问人、不要跳过
+
+**2026-10-18 起，缺工具是自愈的。** MCP 通道 `relab2-tools` 有一个 `ensure_tool`：
+
+```
+ensure_tool(tool_id="bkcrack")          # 缺就装，装完自注册
+ensure_tool(tool_id="jadx", dry_run=true)   # 只看会怎么装
+```
+
+它做六件事，**每一步都能单独观察**：
+
+1. **探测**（`probe()`）—— 已有就返回 `already: true`，**不重复下载**
+2. **查 manifest**（`bootstrap-manifest.json` 的 `capabilities[]`）—— 没收录就如实报「未收录」并列出已知能力名
+3. **判能不能自动装** —— `canAutoInstall: false`（商业授权 / 需人工）返回 `manualInstallHint` + `docsUrl`，**不假装成功**
+4. **真装** —— `bootstrap-reverse.ps1 -Capability <name>`：GitHub Release zip / winget / pip / npm / git clone / go install，**只用公开源**；manifest 里带 `assetSha256` 的会校验
+5. **复验** —— 探测层认不出时，**再看 bootstrap 自己报的 `status: installed` + `tool_path` 是否存在**（实测 `agent-browser` 装在 `D:\Tools\cli\agent-browser.cmd`、bootstrap 报 installed，但它不在 `KNOWN_TOOLS` 里 —— 只信探测层会误判成「缺」）
+6. **自注册** —— 装上了但 `_map.json` 没有别名就补一条（否则换机会落到第 4 级 scan）
+
+**装到哪**：`%REVERSE_TOOL_ROOT%`（本机 `D:\Tools`）。manifest 的 `installDir` 已全部改成这个占位符，
+`bootstrap-reverse.ps1` 用 `[Environment]::ExpandEnvironmentVariables` 展开（`Join-Path`/`Test-Path` 不会自动展开）。
+
+**失败也要说清**：装不上时返回 `reason` + `stdout_tail` + `stderr_tail`（原始错误），
+例如本机实测过 `The SSL connection could not be established`（GitHub 不通）、
+`Failed building wheel for unicorn`（缺编译环境）—— 这些是**环境限制**，如实报，不吞。
+
+**不要做的三件事**：
+- 不要因为缺工具就停下来问人（先 `ensure_tool`）
+- 不要自己拼下载链接装到别处（会绕过 sha256 校验与 `_map.json` 登记）
+- 不要装盗版 / 破解版（manifest 里 `canAutoInstall: false` 的就是这类，只能人手动装）
+
+---
+
 ## 0. 定位规则（每次都适用）
 
 需要某工具时，按这三步走，**不要跳步，也不要因为第 1 步查空就断定没装**：

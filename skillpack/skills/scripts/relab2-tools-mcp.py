@@ -692,6 +692,21 @@ def build_server(ctx: Ctx) -> Server:
                     "limit": {"type": "integer", "description": "每页条目数，默认 200"}}},
             ),
             types.Tool(
+                name="ensure_tool",
+                description=(
+                    "★ **缺工具时自己装** —— 不需要问人。流程：探测是否已装 → 查 bootstrap-manifest → "
+                    "从**公开源**下载（GitHub Release zip / winget / pip，manifest 里带 assetSha256 的会校验）"
+                    "→ 解压到工具根 → 刷新 PATH → 写工具路由(_map.json aliases) → 真跑 verifyCommand 确认。"
+                    "幂等：已装直接返回 already=true，不会重复下载。"
+                    "装不了的（商业授权/需人工）会返回 manualInstallHint + docsUrl，而不是假装成功。"
+                    "示例：tool_id='jadx'。"
+                ),
+                inputSchema={"type": "object", "properties": {
+                    "tool_id": {"type": "string", "description": "能力名（bootstrap-manifest.json 的 capabilities[].name）"},
+                    "dry_run": {"type": "boolean", "description": "true = 只报会怎么装，不真下载"}},
+                    "required": ["tool_id"]},
+            ),
+            types.Tool(
                 name="run_tool",
                 description=("调用本机任一已登记工具。路径由探测层实时解析（换机自动适配），"
                              "不需要也不允许自己拼路径。示例：tool_id='diec', args=['-d','-e','-j','C:/x.exe']。"
@@ -806,6 +821,11 @@ def build_server(ctx: Ctx) -> Server:
                 body["分页"] = {"offset": off, "limit": lim, "total": len(ok), "next_offset": nxt}
             return _text(json.dumps(body, ensure_ascii=False, indent=1))
 
+        if name == "ensure_tool":
+            return _text(json.dumps(
+                await anyio.to_thread.run_sync(lambda: _ensure_tool(arguments, ctx)),
+                ensure_ascii=False, indent=1))
+
         if name == "run_tool":
             res = await anyio.to_thread.run_sync(
                 lambda: ctx.run(arguments.get("tool_id", ""), list(arguments.get("args") or []),
@@ -863,6 +883,136 @@ def build_server(ctx: Ctx) -> Server:
         return _text(f"未知工具名：{name}", is_error=True)
 
     return server
+
+
+def _ensure_tool(arguments: dict, ctx) -> dict:
+    """缺工具时自动装 —— 只走公开源，幂等，装完自注册。
+
+    步骤（每一步都可单独观察）：
+      1. probe() 看本机是否已有 -> already=true 直接返回（**不重复下载**）
+      2. 读 bootstrap-manifest.json 找这个能力 -> 没有就如实报「manifest 未收录」
+      3. canAutoInstall=false -> 返回 manualInstallHint + docsUrl（商业授权/需人工，**不假装成功**）
+      4. 真跑 bootstrap-reverse.ps1 -Capability <name>（它负责 GitHub Release 下载 + sha256 校验 +
+         解压 + PATH 刷新；manifest 里 assetSha256 为空时它自己算并提示补录）
+      5. 重新 probe -> 仍然缺就如实报失败原因（不吞）
+      6. 装上了但 _map.json 里没有别名 -> 补一条（否则换机会落到第 4 级 scan）
+    """
+    import subprocess, hashlib, json as _json, os as _os
+    tid = (arguments.get("tool_id") or "").strip()
+    dry = bool(arguments.get("dry_run"))
+    if not tid:
+        return {"ok": False, "reason": "缺少 tool_id"}
+
+    # 1 已装？
+    table = ctx.probe(ttl=0)
+    hit = table.get(tid)
+    if hit and hit.get("ok"):
+        return {"tool": tid, "already": True, "ok": True,
+                "via": hit.get("via"), "cmd": hit.get("cmd"),
+                "note": "本机已有，未重复下载"}
+
+    # 2 manifest
+    here = _os.path.dirname(_os.path.abspath(__file__))
+    mf = _os.path.join(here, "bootstrap-manifest.json")
+    try:
+        with open(mf, encoding="utf-8") as f:
+            manifest = _json.load(f)
+    except Exception as exc:
+        return {"tool": tid, "ok": False, "reason": "读不到 bootstrap-manifest.json: %s" % exc}
+    caps = manifest.get("capabilities") or []
+    cap = next((c for c in caps if c.get("name") == tid), None)
+    if cap is None:
+        return {"tool": tid, "ok": False,
+                "reason": "bootstrap-manifest.json 里没有这个能力",
+                "known": sorted(c.get("name") for c in caps if c.get("name"))}
+
+    # 3 能不能自动装
+    if not cap.get("canAutoInstall"):
+        return {"tool": tid, "ok": False, "auto": False,
+                "reason": "该能力不能自动安装（商业授权 / 需人工）",
+                "manualInstallHint": cap.get("manualInstallHint"),
+                "docsUrl": cap.get("docsUrl")}
+
+    if dry:
+        return {"tool": tid, "dry_run": True, "plan": {
+            "bootstrapKind": cap.get("bootstrapKind"),
+            "repo": cap.get("repo"), "releaseTag": cap.get("releaseTag"),
+            "assetRegex": cap.get("assetRegex"), "installDir": cap.get("installDir"),
+            "verifyCommand": cap.get("verifyCommand"),
+            "assetSha256": (cap.get("assetSha256") or "")[:16] + "..."}}
+
+    # 4 真装
+    bs = _os.path.join(here, "bootstrap-reverse.ps1")
+    if not _os.path.isfile(bs):
+        return {"tool": tid, "ok": False, "reason": "找不到 bootstrap-reverse.ps1"}
+    t0 = _os.times()
+    try:
+        r = subprocess.run(
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", bs,
+             "-Capability", tid, "-SkipRefresh"],
+            capture_output=True, text=True, errors="replace", timeout=900,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        rc, out, err = r.returncode, r.stdout or "", r.stderr or ""
+    except subprocess.TimeoutExpired:
+        return {"tool": tid, "ok": False, "reason": "bootstrap 超时（900s）"}
+    except Exception as exc:
+        return {"tool": tid, "ok": False, "reason": "bootstrap 启动失败: %s" % exc}
+
+    # 5 复验：**两个来源都算数**
+    #   ① 探测层 probe()（只在 KNOWN_TOOLS 里的 id 才覆盖）
+    #   ② bootstrap 自己的 JSON 结论（status=installed + tool_path 存在）
+    #   ★ 2026-10-18 实测：`agent-browser` 已经装在 D:\Tools\cli\agent-browser.cmd，
+    #     bootstrap 也报 `status: installed`，但它**不在 KNOWN_TOOLS 里** ——
+    #     只信 probe() 会把「装好了」误判成「缺」。所以两条都要看。
+    table2 = ctx.probe(ttl=0)
+    hit2 = table2.get(tid)
+    ok = bool(hit2 and hit2.get("ok"))
+    cmd_path = (hit2 or {}).get("cmd")
+    via = (hit2 or {}).get("via")
+    if not ok:
+        # 从 bootstrap 的 stdout 里抠出最后那个 JSON 块
+        blob = out.strip()
+        j = blob.rfind("{")
+        if j >= 0:
+            try:
+                bj = _json.loads(blob[j:])
+                if bj.get("status") == "installed" and bj.get("tool_path") and _os.path.exists(bj["tool_path"]):
+                    ok = True
+                    cmd_path = bj["tool_path"]
+                    via = "bootstrap"
+            except Exception:
+                pass
+    res = {"tool": tid, "ok": ok, "bootstrap_exit": rc,
+           "cmd": cmd_path, "via": via,
+           "stdout_tail": out.strip().splitlines()[-8:],
+           "stderr_tail": err.strip().splitlines()[-8:] if err.strip() else []}
+    if not ok:
+        res["reason"] = "bootstrap 跑完但既探测不到、也没有 status=installed 的结论（见 stdout/stderr）"
+        return res
+
+    # 6 补 _map.json 别名（装上了但路由表没有 -> 换机会落到第 4 级 scan）
+    try:
+        root = _os.environ.get("REVERSE_TOOL_ROOT") or r"D:\Tools"
+        mpath = _os.path.join(root, "_map.json")
+        if _os.path.isfile(mpath):
+            with open(mpath, encoding="utf-8") as f:
+                m = _json.load(f)
+            al = m.setdefault("aliases", {})
+            if tid not in al:
+                cmd = res.get("cmd") or ""
+                rel = _os.path.relpath(cmd, root).replace("\\", "/") if cmd else ""
+                al[tid] = {"exec": _os.path.basename(cmd) if cmd else tid,
+                           "prefer": [rel] if rel else [],
+                           "note": "由 ensure_tool 自动登记（%s）" % cap.get("bootstrapKind")}
+                with open(mpath, "w", encoding="utf-8") as f:
+                    _json.dump(m, f, ensure_ascii=False, indent=2)
+                res["registered_in_toolmap"] = True
+            else:
+                res["registered_in_toolmap"] = "already"
+    except Exception as exc:
+        res["toolmap_warning"] = "写 _map.json 失败：%s" % exc
+
+    return res
 
 
 def _step_view(tool_id: str, r: dict) -> dict:

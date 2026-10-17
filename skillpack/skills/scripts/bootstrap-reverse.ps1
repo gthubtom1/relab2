@@ -521,7 +521,9 @@ function Ensure-ApktoolInstall {
     Ensure-JavaRuntime
     $releaseTag = if ($Definition.PSObject.Properties['releaseTag']) { [string]$Definition.releaseTag } else { '' }
     $asset = Get-GitHubLatestReleaseAsset -Repo $Definition.repo -AssetRegex $Definition.assetRegex -ReleaseTag $releaseTag
-    $installDir = $Definition.installDir
+    # ★ 2026-10-18：installDir 支持任意环境变量（含自定义的 REVERSE_TOOL_ROOT）。
+    #   [Environment]::ExpandEnvironmentVariables 认所有环境变量，而 Join-Path/Test-Path 不会自动展开。
+    $installDir = [Environment]::ExpandEnvironmentVariables([string]$Definition.installDir)
     Ensure-DownloadDirectory -Path $installDir
 
     $jarName = [System.IO.Path]::GetFileName($asset.name)
@@ -806,7 +808,7 @@ function Start-AnythingAnalyzerService {
         $AuthToken = Ensure-AnythingAnalyzerMcpConfig -Port ([int]$Definition.servicePort)
     }
 
-    $repoDir = [string]$Definition.installDir
+    $repoDir = [Environment]::ExpandEnvironmentVariables([string]$Definition.installDir)
     $checkoutDefinition = [pscustomobject]@{
         repo         = [string]$Definition.repoUrl
         pinnedCommit = [string]$Definition.pinnedCommit
@@ -917,10 +919,10 @@ function Ensure-Capability {
             $verifyName = if ($definition.PSObject.Properties['verifyCommand'] -and -not [string]::IsNullOrWhiteSpace($definition.verifyCommand)) {
                 $definition.verifyCommand
             } else { $Name }
-            return Ensure-GitHubZipInstall -Definition $definition -TargetPath $definition.installDir -VerifyName $verifyName
+            return Ensure-GitHubZipInstall -Definition $definition -TargetPath ([Environment]::ExpandEnvironmentVariables([string]$definition.installDir)) -VerifyName $verifyName
         }
         'git-clone' {
-            return Ensure-GitCloneInstall -Definition $definition -TargetPath $definition.installDir
+            return Ensure-GitCloneInstall -Definition $definition -TargetPath ([Environment]::ExpandEnvironmentVariables([string]$definition.installDir))
         }
         'github-release-jar-wrapper' {
             return Ensure-ApktoolInstall -Definition $definition
