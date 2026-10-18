@@ -22,7 +22,7 @@ $inj  = (Resolve-ReverseToolSpec -Name 'scyllahide').Command   # InjectorCLIx64.
 $rdi  = (Resolve-ReverseToolSpec -Name 'r2').Command
 ```
 
-cdb 只能走 alias：`%LOCALAPPDATA%\Microsoft\WindowsApps\cdb.exe`（x86 用 `cdbX86.exe`）。
+cdb 只能走 alias：`%LOCALAPPDATA%\Microsoft\WindowsApps\cdb.exe`（x86 用 `cdb.exe`）。
 
 ## 先建立一个基线
 

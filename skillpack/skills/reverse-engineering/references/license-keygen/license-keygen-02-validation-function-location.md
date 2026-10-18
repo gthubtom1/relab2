@@ -89,7 +89,7 @@ q
 ★ **cdb 上不要写 `bp user32.GetDlgItemTextW`** —— 实测 `kernel32!X` 形态因
 forwarder 断不上（见 `../debugger-breakpoints.md` 判据 1）。
 **GUI 目标最实用的替代是 x64dbg**：本机 x64dbg 在位，MCP 通道
-`x64dbg-automate-mcp` 已握手，用 `set_breakpoint` 传 `user32.GetDlgItemTextW`，
+`x64dbg-mcp` 已握手，用 `set_breakpoint` 传 `user32.GetDlgItemTextW`，
 命中后用 `read_memory` 看输出缓冲区 + 栈回溯。
 
 **x64dbg 命令行的等价写法**（GUI 操作）：

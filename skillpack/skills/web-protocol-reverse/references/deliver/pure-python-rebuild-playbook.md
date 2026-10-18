@@ -193,6 +193,6 @@ r = sess.post(url, data=body, headers=headers, cookies=jar)
 
 1. **源文档「Rules 第 5 条」与本包 `delivery-gate-playbook.md` 的「Acceptable runnable delivery shapes」在字面上冲突。** 交付门把「Python + 隔离的本地 JS helper」列为**可接受的**可运行交付形态，而本文规则第 5 条禁止 Node 进入最终依赖路径。改编后的裁决：**两者按形态分层** —— 判据第 7 条是「纯 Python 重建」这一形态的**终局**要求；若任务在 `delivery-gate-playbook.md` 下**明确接受**了一个极窄 helper（且该 helper 不读 `window`/`document`/浏览器存储），则按交付门走并如实标注 `runtimeFree: false`。源文档没点明这层关系，读者容易自相矛盾。
 2. **源文档多处引用 `scripts/` 下的脚本（`check_reverse_env.py`、`evidence_normalizer.py`、`forward_test_report.py`、`transport_profile_diff.py`、`grpc_frame_inspector.py` 等），但本次落地的 `web-protocol-reverse/` 目录中 `scripts/` 目录根本不存在**（`C:\relab2\skillpack\skills\web-protocol-reverse\scripts` 无此目录，仓库内也搜不到这些文件）。改编时已把所有脚本引用删除或改写为可执行的实际做法，**不再引用不存在的路径**。这是落地时的**真实缺口**，不是改编引入的问题。
-3. **源文档入口条件引用的专员技能名 `camoufox-js-reverse` 以及 `chrome-devtools` / `js-reverse` 这两个 MCP 家族，在本机 agent 工具注册表中未挂载**（本机挂载的是 `pyghidra-mcp` / `idapro`(13337 HTTP) / `ida-pro-mcp` / `angr-mcp` / `x64dbg-automate-mcp`，均为逆向侧，无 web 侧）。改编时按本机实际改写分流路径。
+3. **源文档入口条件引用的专员技能名 `camoufox-js-reverse` 以及 `chrome-devtools` / `js-reverse` 这两个 MCP 家族，在本机 agent 工具注册表中未挂载**（本机挂载的是 `pyghidra-mcp` / `idapro`(13337 HTTP) / `ida-pro-mcp` / `angr-mcp` / `x64dbg-mcp`，均为逆向侧，无 web 侧）。改编时按本机实际改写分流路径。
 4. **源文档规则第 6 条把入口形态特指为 PyCharm 右键运行。** 改编保留「IDE 右键可运行、无必填 CLI 参数」这一实质要求（这才是它想表达的），去掉对特定 IDE 的绑定。
 5. **源文档没有给出任何本机路径或运行前提。** 改编补入本机 Python / Node / curl_cffi 的实际路径与版本，并显式写出「Node 可用但禁入最终依赖」这一本机特有的张力，避免读者以为 `node` 不可用而绕路。

@@ -9,7 +9,7 @@
 > - 本篇 —— **断点怎么设、怎么证明它真的命中了**。断点操作本身的判据。
 >
 > **工具替换说明**：源文档全篇用 x64dbg 脚本语法。本机 **x64dbg 在位**（含 ScyllaHide 插件），
-> MCP 通道 `x64dbg-automate-mcp` 已实测握手。但**可脚本化、能进自动化流程、判据可外部观测的断点操作主力是 cdb**，
+> MCP 通道 `x64dbg-mcp` 已实测握手。但**可脚本化、能进自动化流程、判据可外部观测的断点操作主力是 cdb**，
 > 所以本篇以 cdb 为主线，x64dbg 只讲 MCP / 交互式差异。
 
 ## 适用信号
@@ -25,7 +25,7 @@
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $cdb = (Resolve-ReverseToolSpec -Name 'cdb').Command
 # → C:\Users\<user>\AppData\Local\Microsoft\WindowsApps\cdb.exe
-$x86 = (Resolve-ReverseToolSpec -Name 'cdbX86').Command   # 只调 32 位目标
+$x86 = (Resolve-ReverseToolSpec -Name 'cdb').Command   # 只调 32 位目标
 ```
 
 ★ **cdb 只能走 alias 路径**，WindowsApps 包目录里的 `cdb.exe` 直跑会「拒绝访问」，
@@ -352,7 +352,7 @@ MCP 侧的常用调用（`xd://mcp__x64dbg_automate_mcp_*`）：
    有缩进的多行结构不会被解析。
 6. **`-cf` 脚本里 `#` 不是注释**。cdb 用 `$$` 注释，或干脆别写注释。
 7. **cdb 的退出码不可信**（实测 `-2147024866`）。判成功看日志内容，不看 `$LASTEXITCODE`。
-8. **`cdbX86` 只能调 32 位目标，`cdb` 只能调 64 位**。混用报
+8. **`cdb` 只能调 32 位目标，`cdb` 只能调 64 位**。混用报
    `Win32 error 0n50 / 不支持该请求`。找 32 位样本看 `%SystemRoot%\SysWOW64\*`。
 9. **WindowsApps 不能加进 PATH**。`cdb.exe` 直跑会「拒绝访问」。
 10. **WindowsApps 不能加进 PATH**。`cdb.exe` 直跑会「拒绝访问」。

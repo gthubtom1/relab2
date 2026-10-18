@@ -424,7 +424,7 @@ $t = [System.IO.File]::ReadAllText((Join-Path $Out 'cdb.log'), [System.Text.Enco
 |------|------|--------|
 | 脚本化、可无人值守、要出可归档日志 | **cdb** | `& $dbg -cf <cmdfile> -o <exe>`，日志 UTF-16 |
 | 需要交互式单步、内存 dump、IAT 重建 | **x64dbg + MCP** | 走 `xd://mcp__x64dbg_automate_mcp_*`，**agent 不得拉 GUI** |
-| 目标 32 位 | `cdbX86` | 只能调 32 位目标；混用报 `Win32 error 0n50`，那是架构不对不是工具坏 |
+| 目标 32 位 | `cdb` | 只能调 32 位目标；混用报 `Win32 error 0n50`，那是架构不对不是工具坏 |
 | 反反调试 L1 | `scyllahide` | `& $sh -p <pid>`（`InjectorCLIx64.exe`），跑完再挂调试器 |
 | 确认注入 / inline hook | `pe-sieve` | `& $ps /pid <pid>` |
 | 静态查壳补充 | `yara` | `& $yara <rule.yar> $S` |
@@ -525,7 +525,7 @@ triage-<ts>/
 | `bl` 显示 ≠ 会命中 | kernel32/kernelbase 的 forwarder 符号会显示但永不触发 | 以日志里的 `Breakpoint 0 hit` 为唯一判据；优先 `ntdll!NtXxx` |
 | 日志编码 | cdb 输出是 UTF-16LE，`Select-String` 报「非 UTF-8」 | `[System.IO.File]::ReadAllText($log, [Text.Encoding]::Unicode)` |
 | 只走 app execution alias | 直跑 WindowsApps 里的 `cdb.exe` → 「拒绝访问」 | 用探测层 `cdb`，别把它加进 PATH |
-| 架构不匹配 | `cdbX86` 调 64 位目标 → `Win32 error 0n50` | 32 位样本去 `%SystemRoot%\SysWOW64\` 找 |
+| 架构不匹配 | `cdb` 调 64 位目标 → `Win32 error 0n50` | 32 位样本去 `%SystemRoot%\SysWOW64\` 找 |
 | `da` vs `du` | 满屏 `????` | 裸 ASCII 指针用 `da`；UTF-16 用 `du`；结构体指针先 `dt` 再取 Buffer |
 
 ### IDA / Ghidra headless

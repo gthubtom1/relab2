@@ -233,6 +233,6 @@ Select-String -Path "$env:TEMP\gw.log" -Pattern "Breakpoint 0 hit|===HIT==="
 - `code-patching.md` — detour 的字节级 patch 视角
 - `../tools-dynamic.md` — 调试器/注入框架通用用法
 
-> **x64dbg 界面**（本机在位，含 ScyllaHide 插件，MCP `x64dbg-automate-mcp` 已握手）
+> **x64dbg 界面**（本机在位，含 ScyllaHide 插件，MCP `x64dbg-mcp` 已握手）
 > 提供内置的「汇编 detour」向导，可自动生成并安装含完整 prologue/epilogue 的 hook。
 > 交互式快速验证时它比手写 gateway 省事得多；本篇只在你需要**完全控制字节**时才需要。

@@ -31,8 +31,8 @@ Test-ReverseTcpPort -Port <端口>     # 1 秒超时，不阻塞
 
 ## 1. 逆向方向 MCP 通道
 
-> 本表的事实源是 `skills/scripts/register-mcp.py`（**出厂 6 条**，分两类形态）。
-> 表里额外那条 `idalib-mcp` 是**可选项，不在出厂 6 条里** —— 它不会自动注册，
+> 本表的事实源是 `skills/scripts/register-mcp.py`（**出厂 7 条**：6 条基础通道 + `x32dbg-mcp`，分两类形态）。
+> 表里额外那条 `idalib-mcp` 是**可选项，不在出厂 7 条里** —— 它不会自动注册，
 > 要用得自己加。**别把本表的行数当"本机注册了几条"**，那个数现查：
 > `python -c "import json,os;print(list(json.load(open(os.path.expanduser('~/.omp/agent/mcp.json'),encoding='utf-8'))['mcpServers']))"`
 

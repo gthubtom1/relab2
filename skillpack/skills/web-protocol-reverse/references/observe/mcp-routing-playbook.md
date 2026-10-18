@@ -274,7 +274,7 @@
 
 ## 源文档勘误（改编时修正）
 
-1. **源文档整篇以 `chrome-devtools` / `js-reverse` 两个 MCP 家族为默认手段**，并把它们写进「角色绑定」表的「首选」列。**本机 agent 工具注册表未挂载任何 web 侧 MCP**（已挂载的 `pyghidra-mcp` / `idapro` / `ida-pro-mcp` / `angr-mcp` / `x64dbg-automate-mcp` 全是逆向侧）。源文档照抄会在「按挂载表选工具」这一步直接空转。改编保留了**全部方法论与角色结构**，把每个角色的工具列改为「源文档首选（本机不可用）+ 本机替代」双列，并在文首与常见坑中显式声明这一差异。
+1. **源文档整篇以 `chrome-devtools` / `js-reverse` 两个 MCP 家族为默认手段**，并把它们写进「角色绑定」表的「首选」列。**本机 agent 工具注册表未挂载任何 web 侧 MCP**（已挂载的 `pyghidra-mcp` / `idapro` / `ida-pro-mcp` / `angr-mcp` / `x64dbg-mcp` 全是逆向侧）。源文档照抄会在「按挂载表选工具」这一步直接空转。改编保留了**全部方法论与角色结构**，把每个角色的工具列改为「源文档首选（本机不可用）+ 本机替代」双列，并在文首与常见坑中显式声明这一差异。
 2. **源文档的「Wire visibility」段只讲 WireMCP / PCAP，不给具体命令**，读者即使有 PCAP 也不知道怎么用。改编补入本机 `tshark` 的两条实际命令。
 3. **源文档的「Capability and availability」第 2 条要求记录 `available_mcp` / `missing_mcp`，但没给「本机应该有什么」的基线**，读者无从判断某项缺失是否正常。改编在顶部补入本机已挂载 MCP 的完整清单，使「缺失」这一判断可执行。
 4. **源文档的「Passive wire stores」把 reqable 列为默认被动存储**。本机未安装 reqable。改编在相关位置一律给出本机替代（工作区 `network.jsonl` + `tshark` / `mitmdump`），但**保留 reqable 作为「如果装了就用它」的上游能力描述**，因为它是方法论的一部分而非本机事实。

@@ -41,7 +41,7 @@
 | 自动脱壳 | `upx` | `(Resolve-ReverseToolSpec -Name 'upx').Command` |
 | Ghidra 无头 | `analyzeHeadless` | `(Resolve-ReverseToolSpec -Name 'analyzeHeadless').Command` |
 | IDA 无头 | `idat64` / `idat` | 8.3 便携版 / 9.4 |
-| 动态调试（脚本化） | `cdb` / `cdbX86` | `%LOCALAPPDATA%\Microsoft\WindowsApps\cdb.exe` |
+| 动态调试（脚本化） | `cdb` / `cdb` | `%LOCALAPPDATA%\Microsoft\WindowsApps\cdb.exe` |
 | 动态调试（交互式） | `x64dbg` + MCP | 走 `xd://mcp__x64dbg_automate_mcp_*` |
 | 反反调试 L1（注入式） | `scyllahide` | `(Resolve-ReverseToolSpec -Name 'scyllahide').Command` |
 | 反反调试 L3（硬件断点） | `cdb` 的 `ba` 命令 | 同上 |
@@ -558,7 +558,7 @@ try {
 | `bl` 显示 ≠ 命中 | kernel32 的 `*Stub` 别名会显示但永不触发 | 以日志里的 `Breakpoint 0 hit` 为唯一判据；优先 `ntdll!NtXxx` |
 | `da` vs `du` | 结构体指针读出满屏 `????` | 裸指针才用 `da`/`du`；结构指针先 `dt` |
 | 硬件断点 vs 软件断点 | 目标有 INT3 完整性校验时软断点当场暴露 | 用 `ba 1 eip <addr>` |
-| cdb 架构 | `cdbX86` 调 64 位 → `Win32 error 0n50` | 32 位样本去 `%SystemRoot%\SysWOW64\` |
+| cdb 架构 | `cdb` 调 64 位 → `Win32 error 0n50` | 32 位样本去 `%SystemRoot%\SysWOW64\` |
 | IDA 无 license | `idat` 直接 exit 1 | 用 `idat64`（8.3 便携版） |
 | IDA 脚本不退出 | headless 挂住 | 脚本尾 `idc.qexit(0)` + `idaapi.auto_wait()` |
 | Ghidra 挂控制台 | `analyzeHeadless` 不返回 | `cmd /c "... < nul"` |

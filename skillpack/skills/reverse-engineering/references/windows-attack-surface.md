@@ -43,7 +43,7 @@ $cdb   = (Resolve-ReverseToolSpec -Name 'cdb').Command
 ```
 
 > ★ cdb 只能走 `%LOCALAPPDATA%\Microsoft\WindowsApps\cdb.exe` alias，且**不能加进 PATH**。
-> x86 样本换 `cdbX86`，混用报 `Win32 error 0n50`。
+> x86 样本换 `cdb`，混用报 `Win32 error 0n50`。
 
 ## 步骤
 

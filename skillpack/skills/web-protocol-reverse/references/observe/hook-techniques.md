@@ -14,7 +14,7 @@
 > 
 > - `frida 17.17.0`（`(Resolve-ReverseToolSpec -Name 'frida').Command`，Python 包同版本）**可用** —— 本机主力 hook 路径
 > - `node v22.23.3`（`(Resolve-ReverseToolSpec -Name 'node').Command`）**可用**，用于把目标 JS 拉到 Node 里做定点改写
-> - MCP 浏览器家族 `chrome-devtools` / `js-reverse` **本机 agent 工具注册表中未挂载**（本机挂载的是 `pyghidra-mcp` / `idapro` / `ida-pro-mcp` / `angr-mcp` / `x64dbg-automate-mcp`，**均为逆向侧，无 web 侧**）
+> - MCP 浏览器家族 `chrome-devtools` / `js-reverse` **本机 agent 工具注册表中未挂载**（本机挂载的是 `pyghidra-mcp` / `idapro` / `ida-pro-mcp` / `angr-mcp` / `x64dbg-mcp`，**均为逆向侧，无 web 侧**）
 > - 因此本文源文档中「MCP 浏览器家族注入 / preload」那一列的**方法论原样保留**，但**本机执行路径改用 `frida` + `playwright`**
 
 ---
@@ -189,8 +189,8 @@ frida 相比页面内注入的关键优势，正好覆盖了上面矩阵里最�
 
 ## 源文档勘误（改编时修正）
 
-1. **源文档整篇假定「MCP 浏览器家族（`chrome-devtools` / `js-reverse`）在本会话已挂载」**，其注入时序矩阵里的「schema 确认的文档前能力」「受控刷新」等说法都依赖这些工具存在。**本机 agent 工具注册表未挂载任何 web 侧 MCP**（挂载的是逆向侧的 `pyghidra-mcp` / `idapro` / `ida-pro-mcp` / `angr-mcp` / `x64dbg-automate-mcp`）。源文档照抄会直接卡死在「schema 确认」这一步。改编保留全部方法论，但补入 frida/playwright 的本机实现路径，并显式说明**矩阵中哪几行在本机因 frida 而不再是问题**。
+1. **源文档整篇假定「MCP 浏览器家族（`chrome-devtools` / `js-reverse`）在本会话已挂载」**，其注入时序矩阵里的「schema 确认的文档前能力」「受控刷新」等说法都依赖这些工具存在。**本机 agent 工具注册表未挂载任何 web 侧 MCP**（挂载的是逆向侧的 `pyghidra-mcp` / `idapro` / `ida-pro-mcp` / `angr-mcp` / `x64dbg-mcp`）。源文档照抄会直接卡死在「schema 确认」这一步。改编保留全部方法论，但补入 frida/playwright 的本机实现路径，并显式说明**矩阵中哪几行在本机因 frida 而不再是问题**。
 2. **源文档的矩阵最后一行提到「工具断连、重启或注册表变化」，但没有说清为什么重要** —— 原文只写「never infer PARKED/CLOSED」，读者容易当成一句套话。改编保留了结论，但把它归因明确为「控制权丢失 ≠ 进程已退出」，这是本包 `../triage/tool-playbook.md` 生命周期语义的同一原则。
-3. **源文档 `Hooking order` 第 4 步「local-variable breakpoints」隐含需要调试器**。本机调试器侧可用的是 `x64dbg-automate-mcp`（挂载了）和 IDA 系，**不是浏览器 JS 调试器**。改编在判据中把该步的依赖降级为「hook 仍留歧义时」，并明确它不是本机默认手段。
+3. **源文档 `Hooking order` 第 4 步「local-variable breakpoints」隐含需要调试器**。本机调试器侧可用的是 `x64dbg-mcp`（挂载了）和 IDA 系，**不是浏览器 JS 调试器**。改编在判据中把该步的依赖降级为「hook 仍留歧义时」，并明确它不是本机默认手段。
 4. **源文档 `Logging shape` 只说「绑定到 target、event、method、URL、field、caller」**，没给具体格式。改编在判据第 3 条把它变成可检查项（每一行都要能回答这六问），否则无法验收。
 5. **源文档没有区分「hook 类工具本身改变了目标行为」与「目标反调试」两种失败形态**，两者都会表现为「hook 后行为变了」。改编在步骤的矩阵末尾与「判据」第 4 条分别点名，避免误诊。

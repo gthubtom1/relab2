@@ -31,7 +31,7 @@
 | `idapro` | http `127.0.0.1:13337/mcp` | IDA，69 工具 | ⚠ 按需启动（用前跑 `start.ps1`）；`idb_open` 需 IDA license（本机为示例许可） |
 | `ida-pro-mcp` | stdio | IDA 工具（GUI 内插件侧） | ⚠ 同样需 license |
 | `angr-mcp` | stdio | 符号执行 | ✅ 已实测握手 |
-| `x64dbg-automate-mcp` | stdio | x64dbg 自动化，48 工具 | ✅ 已实测握手 |
+| `x64dbg-mcp` | stdio | x64dbg 自动化，48 工具 | ✅ 已实测握手 |
 
 注册位置：`~/.omp/agent/mcp.json`（4 个 stdio + 1 个 http）。
 `13337` **按需启动**（2026-10-14 起）：原「每分钟巡检保活」任务 `reverse-skill-ida-mcp` 已按用户要求停用（不用时不后台跑，也避免每分钟闪窗）；需要时跑 `ida-reverse/scripts/start.ps1`（冷启约 9s）。

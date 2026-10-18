@@ -12,7 +12,7 @@ description: 敌意 Web 客户端还原成不依赖浏览器的采集器：sign/
 > **本机与上游的差异（改编时已知，勿按原文假设）**：
 > - 上游 `scripts/`（`env-diagnose.js`、`scaffold_reverse_project.py`、`protocol_diff.py`、`validate_skill.py` 等）与三套 profile 自带的 `scripts/`、`tests/`、`package.json` **未随本次落地**，只有 Markdown 文档在包内。文档里引用这些脚本的地方本包已标注"未落地"，需要时从上游仓库取或自行实现。
 > - ★ **本机没有任何浏览器类 MCP**（2026-10-10 实测 `~/.omp/agent/mcp.json`：只注册了
->   `pyghidra-mcp` / `ida-pro-mcp` / `angr-mcp` / `x64dbg-automate-mcp` / `idapro`，**全部是逆向侧**）。
+>   `pyghidra-mcp` / `ida-pro-mcp` / `angr-mcp` / `x64dbg-mcp` / `idapro`，**全部是逆向侧**）。
 >   `chrome-devtools` / `Camoufox` / `js-reverse` server **本机不存在**。
 >   **所以本包文档里"默认基线主机 = chrome-devtools"是上游设定，不是本机事实** ——
 > （★ 本机无 chrome-devtools / Camoufox MCP —— 见 SKILL.md「来源声明」实测记录；本机基线主机是 `playwright` 的 `launch(channel="msedge")`）

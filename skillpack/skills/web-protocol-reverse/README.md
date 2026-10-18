@@ -90,7 +90,7 @@ HAR 导出仍可用浏览器 DevTools 完成。本文不写 Reqable 的具体操
 1. **`scripts/` 整个目录未落地**。上游 `SKILL.md` / `README.md` 里提到的 `check_reverse_env.py`、`protocol_diff.py`、`scaffold_reverse_project.py`、`evidence_normalizer.py`、`transcript_diff.py`、`transform_trace_diff.py`、`transport_profile_diff.py`、`crypto_fingerprint.py`、`forward_test_report.py`、`practice_lab.py`、`validate_skill.py`，**在本包里一个都没有**。需要时从上游 MIT 仓库取，或自行实现。
 2. **三套 profile 的 `scripts/` 与 `tests/` 未落地**。`profiles/browser-hook-snippets/`、`profiles/static-ast/`、`profiles/env-patch/` 在本包里**只有 Markdown 文档**，没有 `.js`、没有 `package.json`、没有 `node_modules`。文档里出现的 `../scripts/xhr_fetch.js`、`scripts/env-diagnose.js`、`npm test --prefix ...` 等命令**当前跑不了**。
 3. **`package-lock.json` 未落地**，所以 `profiles/static-ast/index.md` 的 `npm ci` 流程需要自己重新定依赖版本。
-4. **MCP 家族差异**。上游默认依赖 `chrome-devtools` 与 Camoufox 作为基线主机。本机已挂载的 MCP 是 `pyghidra-mcp`、`idapro`、`ida-pro-mcp`、`angr-mcp`、`x64dbg-automate-mcp`，**不含浏览器类 MCP**。所以"默认 live 顺序 = chrome-devtools → js-reverse"这条在本机需要重新用 `js-reverse` 那一侧或本包工具链替代，且要先确认可用性。
+4. **MCP 家族差异**。上游默认依赖 `chrome-devtools` 与 Camoufox 作为基线主机。本机已挂载的 MCP 是 `pyghidra-mcp`、`idapro`、`ida-pro-mcp`、`angr-mcp`、`x64dbg-mcp`，**不含浏览器类 MCP**。所以"默认 live 顺序 = chrome-devtools → js-reverse"这条在本机需要重新用 `js-reverse` 那一侧或本包工具链替代，且要先确认可用性。
 > （★ 本机无 chrome-devtools / Camoufox MCP —— 见 SKILL.md「来源声明」实测记录；本机基线主机是 `playwright` 的 `launch(channel="msedge")`）
 5. **`LICENSE` 文件未随本次落地复制到本目录**，但 MIT 许可事实以本文与 `SKILL.md` 顶部的来源声明为准（见文末「许可」）。
 
