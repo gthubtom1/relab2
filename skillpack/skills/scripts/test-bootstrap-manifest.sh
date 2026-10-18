@@ -328,7 +328,12 @@ fi
 # Table: each generic package-manager sink receives its canonical manifest value.
 while IFS='|' read -r capability _field expected; do
   : > "$CALL_LOG"
-  STUB_PIPX_VERSION=1.16.5 run_generic "$capability" --skip-refresh >/dev/null
+  # ★ 2026-10-18：裸调用 -> 显式断言（同上，set -e 下失败会静默退出）
+  STUB_PIPX_VERSION=1.16.5 run_generic "$capability" --skip-refresh >/dev/null || {
+    echo "ASSERT FAILED: run_generic $capability --skip-refresh returned non-zero" >&2
+    echo "--- CALL_LOG ---" >&2; cat "$CALL_LOG" >&2
+    exit 1
+  }
   expect_line "$expected"
 done <<EOF
 frida|pipPackage|pipx|install|--force|$(json_value frida pipPackage)
@@ -352,7 +357,15 @@ fi
 
 # Generic Anything Analyzer: staged checkout, pinned pnpm, frozen install, clean recheck, then dev.
 : > "$CALL_LOG"
-STUB_PIPX_VERSION=1.16.5 STUB_PNPM_VERSION=0 run_generic anything-analyzer --start-services --skip-refresh >/dev/null
+# ★ 2026-10-18：这行原来是**裸调用** —— run_generic 返回非零时 set -e 直接静默退出。
+#   CI 上实测：test-routing.sh 打完 ALL PASS 之后 **12 秒零输出、exit 1**，
+#   连 ASSERT FAILED 都没有（`>/dev/null` 把 bootstrap 自己的报错也吞了）。
+#   现在断言 + 把 CALL_LOG 一起打出来，失败能自己说清是哪个 sink 没被调到。
+STUB_PIPX_VERSION=1.16.5 STUB_PNPM_VERSION=0 run_generic anything-analyzer --start-services --skip-refresh >/dev/null || {
+  echo "ASSERT FAILED: run_generic anything-analyzer --start-services returned non-zero" >&2
+  echo "--- CALL_LOG ---" >&2; cat "$CALL_LOG" >&2
+  exit 1
+}
 anything_dir="$SCRATCH/tools/anything-analyzer"
 expect_line "npm|install|-g|$pnpm_package"
 expect_line 'pnpm|install|--frozen-lockfile'
