@@ -12,7 +12,7 @@ Owner：T18。依据：规范 §18 T18 卡、§17.12 / §17.25，以及 wave 5 �
 
 | 件 | 位置 | 说明 |
 |---|---|---|
-| 黄金数据集 | `skills/tests/golden-route.json` | 26 用例，每条含 cwd、运行时、依赖、期望 JSON/退出码、`why` 实测说明 |
+| 黄金数据集 | `skills/tests/golden-route.json` | **41 用例**（2026-10-18 实测；原写 26 是旧读数），每条含 cwd、运行时、依赖、期望 JSON/退出码、`why` 实测说明 |
 | 评测跑器 | `skills/scripts/test-golden-route.py` | 走真实 CLI（含 exit code），报正向 + 负向 + U9 + handoff + budget；全过才 exit 0 |
 | CI 钉子 | `skills/scripts/test-community-route.py :: golden_u9_pins` | 只加法：断言 6 个 U9 pin；既有断言一行未动 |
 
@@ -20,7 +20,7 @@ Owner：T18。依据：规范 §18 T18 卡、§17.12 / §17.25，以及 wave 5 �
 `community-raw/**`、`skills/config/*.json`；未删/未放宽任何既有断言；未动阈值；
 未新增 CI 门（门数保持 20）。
 
-## 2. 数据集：26 用例
+## 2. 数据集：**41 用例**（2026-10-18 实测；下方 §3 的 26 是 2026-10-01 那轮的历史报告）
 
 所有用例统一：cwd=`C:\relab2`，
 运行时=`(Resolve-ReverseToolSpec -Name 'pyre').Command`（先 `$env:PYTHONIOENCODING='utf-8'`），
