@@ -168,7 +168,7 @@ objection patchapk --source app.apk --skip-resources
 
 ```bash
 # 1. 解密 App Store IPA
-python3 frida-ios-dump.py -u -p com.app.target
+python frida-ios-dump.py -u -p com.app.target
 
 # 2. 注入 FridaGadget.dylib
 # 修改 Mach-O Load Commands，添加 @executable_path/FridaGadget.dylib

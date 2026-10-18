@@ -376,16 +376,16 @@ def admin_users():
 
 ```bash
 # jwt_tool 修改 Payload 并重放
-python3 jwt_tool.py <token> -I \
+python jwt_tool.py <token> -I \
   -pc "exp" -pv "9999999999" \
   -pc "role" -pv "admin" \
   -pc "aud" -pv "other-service"
 
 # 测试过期 Token
-python3 jwt_tool.py <token> -I -pc "exp" -pv "1000000000"
+python jwt_tool.py <token> -I -pc "exp" -pv "1000000000"
 
 # 测试未来 Token
-python3 jwt_tool.py <token> -I -pc "nbf" -pv "9999999999"
+python jwt_tool.py <token> -I -pc "nbf" -pv "9999999999"
 ```
 
 ## 工作流

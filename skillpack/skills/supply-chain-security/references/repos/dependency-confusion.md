@@ -278,7 +278,7 @@ setup(
     packages=["internal_tool"],
     install_requires=[],  # 不引人注目
 )
-# python3 setup.py sdist
+# python setup.py sdist
 # twine upload dist/*
 ```
 

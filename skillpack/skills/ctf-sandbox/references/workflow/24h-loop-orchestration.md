@@ -91,7 +91,7 @@ flowchart TD
 3. 对 `agent_required` 动作按攻击网选择 1-2 条路径深入。
 4. 每发现信号，立即：
    ```bash
-   python3 scripts/ctf-website/kb_router.py "<signal>"
+   python scripts/ctf-website/kb_router.py "<signal>"
    ```
 5. 写回：
    - `autopilot.rounds[]`
@@ -101,7 +101,7 @@ flowchart TD
    - `dead_ends[]`
 6. 运行：
    ```bash
-   python3 scripts/ctf-website/ctf_loop_status.py cases/<case>/ai_manifest.json --write
+   python scripts/ctf-website/ctf_loop_status.py cases/<case>/ai_manifest.json --write
    ```
 
 ## 3. 多目标 Fleet

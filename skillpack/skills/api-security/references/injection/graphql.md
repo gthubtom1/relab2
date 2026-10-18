@@ -478,15 +478,15 @@ query { user(id: 1) { ...f ...f ...f } }
 
 ```bash
 # Graphw00f — 指纹
-python3 graphw00f.py -t https://target.com/graphql
+python graphw00f.py -t https://target.com/graphql
 
 # Clairvoyance — 绕过 introspection 禁用提取 schema
-python3 clairvoyance.py -o schema.json https://target.com/graphql
+python clairvoyance.py -o schema.json https://target.com/graphql
 
 # GraphQL Cop (Burp) — Schema/批量检查
 # InQL (Burp) — IDE + 攻击
 # CrackQL — 批量爆破/注入
-python3 crackql.py -t https://target.com/graphql -q queries.graphql -w wordlist.txt
+python crackql.py -t https://target.com/graphql -q queries.graphql -w wordlist.txt
 
 # BatchQL — schema 检查 + 批量 query
 # https://batchql.com

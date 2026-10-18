@@ -279,7 +279,7 @@ http://schemas.microsoft.com/ws/2008/06/identity/claims/role
 # saml2aws — AWS SAML 集成测试
 
 # 手动解码
-echo "$SAML_RESPONSE" | python3 -c "
+echo "$SAML_RESPONSE" | python -c "
 import sys,base64,zlib
 data=base64.b64decode(sys.stdin.read())
 print(data.decode())

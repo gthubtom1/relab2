@@ -24,7 +24,7 @@ $py  = (Resolve-ReverseToolSpec -Name 'pyre').Command    # pefile 2024.8.26
 $sys = '<工具根>\<分类>\<工具名>'       # Listdlls64.exe（验证模块列表里没有它）
 ```
 
-★ 本机有 gcc（`D:\Tools\runtime\mingw64\bin\gcc.exe`），需要编译 loader 时可用。
+★ 本机有 gcc（`D:\Tools\runtime\mingw64\mingw64\bin\gcc.exe`），需要编译 loader 时可用。
 
 ## 步骤
 
@@ -290,7 +290,7 @@ WaitForSingleObject(th, INFINITE)
 9. **全局/静态初始化（CRT）不跑**。手动映射只调 `DllMain`，不跑 CRT 的 `_initterm`。
    用到 CRT 的 DLL 会出问题。
 10. **本机只有 gcc，没有 MSVC**。需要编译 loader 时用
-    `D:\Tools\runtime\mingw64\bin\gcc.exe`，命令形态：
+    `D:\Tools\runtime\mingw64\mingw64\bin\gcc.exe`，命令形态：
     `gcc -O2 -o loader.exe loader.c -static -s`。
 11. **x86/x64 混淆**。64 位 PE 只能映射进 64 位进程（例外是 wow64，复杂且本篇不覆盖）。
 

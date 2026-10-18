@@ -103,12 +103,12 @@ int main(int argc, char **argv) {
 }
 ```
 
-★ **在 bash 里直接 `/d/Tools/runtime/mingw64/bin/gcc` 会报 `command not found`**。
+★ **在 bash 里直接 `/d/Tools/runtime/mingw64/mingw64/bin/gcc` 会报 `command not found`**。
 必须写 bat 包装：
 
 ```bat
 @echo off
-set PATH=D:\Tools\runtime\mingw64\bin;%PATH%
+set PATH=D:\Tools\runtime\mingw64\mingw64\bin;%PATH%
 cd /d C:\relab2\work
 gcc -O2 -o prng_probe.exe prng_probe.c
 ```

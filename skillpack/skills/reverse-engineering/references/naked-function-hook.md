@@ -22,7 +22,7 @@ $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
 $rasm = (Resolve-ReverseToolSpec -Name 'rasm2').Command
 ```
 
-⚠️ **本机没有 MSVC**（`cl` 不在 PATH，只有 MinGW gcc `D:\Tools\runtime\mingw64\bin\gcc.exe`）。
+⚠️ **本机没有 MSVC**（`cl` 不在 PATH，只有 MinGW gcc `D:\Tools\runtime\mingw64\mingw64\bin\gcc.exe`）。
 源文档的 MSVC `__declspec(naked)` + MASM `.asm` 路线**在本机不可用**，已改为 MinGW/GCC 形态
 （GCC 用 `__attribute__((naked))` + AT&T 内联汇编，或用 `rasm2` 生成裸字节）。
 

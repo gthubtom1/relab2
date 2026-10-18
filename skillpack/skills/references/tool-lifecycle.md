@@ -71,7 +71,7 @@ python proc_guard.py --list                                       # 确认 regis
 |---|---|
 | `proc_guard.py` | 生命周期守护（run / list / reap / sweep / sweep-tools） |
 | `.procs.json` | 进程登记表（自动维护；崩了也能被 `--sweep` 兜住） |
-| `gui_check.ps1` | GUI 驱动，收尾改 `taskkill /T /F` |
+| ~~`gui_check.ps1`~~ | **该文件在仓库里不存在**（2026-10-18 复核：`find . -name 'gui_check*'` 空）。GUI 驱动的收尾用 `taskkill /T /F` 即可，不需要这个脚本 |
 
 ---
 

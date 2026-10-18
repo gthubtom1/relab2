@@ -221,8 +221,8 @@ recv_forever(sock, end_time)
 
 ```bash
 cd "CVE-2026-49975 HTTP2 Bomb"
-python3 exploit/exploit.py --host 127.0.0.1 --port 443 --hold-seconds 30
-python3 exploit/exploit.py --host 127.0.0.1 --port 80 --no-tls \
+python exploit/exploit.py --host 127.0.0.1 --port 443 --hold-seconds 30
+python exploit/exploit.py --host 127.0.0.1 --port 80 --no-tls \
   --streams 2 --references 4096 --hold-seconds 45
 ```
 

@@ -453,7 +453,7 @@ curl -v "https://target.com/oauth/authorize?response_type=code&client_id=xxx&red
 curl -X POST "https://target.com/oauth/token" -d "grant_type=authorization_code&code=xxx&client_id=xxx&redirect_uri=https://callback"
 curl -X POST "https://target.com/oauth/token" -d "grant_type=refresh_token&refresh_token=xxx&client_id=xxx"
 curl -X POST "https://target.com/oauth/token" -d "grant_type=client_credentials&client_id=xxx&client_secret=xxx"
-python3 jwt_tool.py <id_token>
+python jwt_tool.py <id_token>
 curl https://target.com/.well-known/openid-configuration | jq .
 ```
 

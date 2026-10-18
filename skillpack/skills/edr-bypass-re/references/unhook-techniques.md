@@ -63,7 +63,7 @@ NtAllocateVirtualMemory:
 ```powershell
 git clone https://github.com/klezVirus/SysWhispers3
 cd SysWhispers3
-python3 syswhispers.py --preset all --action edit -o syscalls
+python syswhispers.py --preset all --action edit -o syscalls
 ```
 
 输出：
@@ -168,7 +168,7 @@ kernel-mode ETW provider 看到的 RIP 是 ntdll 地址，符合合法行为模�
 ### SysWhispers3 indirect 模式
 
 ```powershell
-python3 syswhispers.py --preset all --action edit --mode jumper -o syscalls
+python syswhispers.py --preset all --action edit --mode jumper -o syscalls
 # --mode jumper            => indirect syscall
 # --mode jumper_randomized => 随机化 jmp 目标减少签名
 ```

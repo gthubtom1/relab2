@@ -37,7 +37,7 @@ $r = Resolve-ReverseToolSpec -Name '<toolid>'   # 例：sqlmap / httpx / ffuf / 
 2. **方法 3: HTTP/2 Rapid Reset (CVE-2023-44487)** — nginx (< 1.25.3): 单连接每秒 10 万+ stream 重置
 3. **方法 3: HTTP/2 Rapid Reset (CVE-2023-44487)** — Apache httpd (< 2.4.58)
 4. **方法 3: HTTP/2 Rapid Reset (CVE-2023-44487)** — Envoy (< 1.27.0)
-5. **方法 3: HTTP/2 Rapid Reset (CVE-2023-44487)** — Go net/http (< 2.0.0)
+5. **方法 3: HTTP/2 Rapid Reset (CVE-2023-44487)** — Go net/http (< 1.20.10 / 1.21.3；Go 没有 2.0)
 6. **方法 3: HTTP/2 Rapid Reset (CVE-2023-44487)** — Node.js http2 (< 20.8.0)
 7. **方法 3: HTTP/2 Rapid Reset (CVE-2023-44487)** — Amazon ALB / CloudFront
 8. **方法 6: Race Condition Window DoS — TOCTOU 资源锁定** — **配额耗尽**：免费 API 每分钟 100 次 → 在 1ms 窗口内发送 200 次请求，全部通过

@@ -216,7 +216,7 @@ $rasm = (Resolve-ReverseToolSpec -Name 'rasm2').Command
 7. ★ **Java class 文件有结构校验**。改常量池里的字节可能破坏 class 结构。
    **只改 `getPublicKey()` 返回的数组内容，不改类名/字段/方法数。**
 8. **「验签置空」的 6 字节可能切在指令中间**。用 capstone 算 detourSize。
-9. **本机无 MSVC**。需要编译工具时用 `D:\Tools\runtime\mingw64\bin\gcc.exe`。
+9. **本机无 MSVC**。需要编译工具时用 `D:\Tools\runtime\mingw64\mingw64\bin\gcc.exe`。
 10. **`cryptography` 包需要单独安装**，不保证在 `(Resolve-ReverseToolSpec -Name 'pyre').Command` 里预装。
 
 ## 相关

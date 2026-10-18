@@ -294,7 +294,7 @@ echo "<token>" > /tmp/jwt.txt
 john --wordlist=/usr/share/wordlists/rockyou.txt /tmp/jwt.txt
 
 # jwt_tool (CPU, 较慢)
-python3 jwt_tool.py <token> -C -d /usr/share/wordlists/rockyou.txt
+python jwt_tool.py <token> -C -d /usr/share/wordlists/rockyou.txt
 
 # c-jwt-cracker (C, 最快)
 ./jwt-cracker "<token>" "abcdefghijklmnopqrstuvwxyz0123456789" 6

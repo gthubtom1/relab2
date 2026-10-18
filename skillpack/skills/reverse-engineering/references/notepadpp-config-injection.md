@@ -162,7 +162,7 @@ HINSTANCE r = ShellExecuteA(NULL, "open", interp, NULL, NULL, SW_SHOWNORMAL);
 
 ```bat
 @echo off
-set PATH=D:\Tools\runtime\mingw64\bin;%PATH%
+set PATH=D:\Tools\runtime\mingw64\mingw64\bin;%PATH%
 cd /d C:\relab2\work
 gcc -O2 -o kbconfig_probe.exe kbconfig_probe.c -lshell32
 ```

@@ -294,7 +294,7 @@ WAPP_FINGERPRINTS = {
 
 ```bash
 # 一键指纹收集
-python3 fingerprinter.py https://target.com > fingerprints.json
+python fingerprinter.py https://target.com > fingerprints.json
 
 # nuclei 模板扫描
 nuclei -u https://target.com -t technologies/ -o tech_report.json

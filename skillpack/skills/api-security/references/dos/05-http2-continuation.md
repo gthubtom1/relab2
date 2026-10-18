@@ -33,13 +33,16 @@ $r = Resolve-ReverseToolSpec -Name '<toolid>'   # 例：sqlmap / httpx / ffuf / 
 
 ## 步骤
 
-1. **方法 1: CONTINUATION Flood (CVE-2024-27316)** — nginx < 1.26.0          (挂起 stream 内存泄漏)
-2. **方法 1: CONTINUATION Flood (CVE-2024-27316)** — Apache httpd < 2.4.60    (worker 内存持续增长)
-3. **方法 1: CONTINUATION Flood (CVE-2024-27316)** — Envoy < 1.29.3           (OOM 崩溃)
-4. **方法 1: CONTINUATION Flood (CVE-2024-27316)** — Node.js < 21.6.2         (event loop 阻塞)
-5. **方法 1: CONTINUATION Flood (CVE-2024-27316)** — Go net/http < 1.22.1     (goroutine 泄漏)
-6. **方法 1: CONTINUATION Flood (CVE-2024-27316)** — Apache Tomcat < 10.1.20
-7. **方法 1: CONTINUATION Flood (CVE-2024-27316)** — Jetty < 12.0.8
+1. **CONTINUATION Flood — Apache httpd < 2.4.59**（**CVE-2024-27316**）— worker 内存持续增长
+2. **CONTINUATION Flood — Node.js < 21.6.2 / 20.12.1 / 18.20.1**（**CVE-2024-27983**）— event loop 阻塞
+3. **CONTINUATION Flood — Go net/http < 1.21.9 / 1.22.2**（**CVE-2023-45288**）— goroutine 泄漏
+4. **CONTINUATION Flood — nginx < 1.26.0**（无独立 CVE，按厂商公告）— 挂起 stream 内存泄漏
+5. **CONTINUATION Flood — Envoy < 1.29.3**（无独立 CVE，按 GHSA）— OOM 崩溃
+6. **CONTINUATION Flood — Apache Tomcat < 10.1.20**（按厂商公告）
+7. **CONTINUATION Flood — Jetty < 12.0.8**（按厂商公告）
+
+> ⚠️ **不要把 CVE-2024-27316 套到所有产品上**：它只属于 Apache httpd。
+> Node / Go / Envoy / nginx / Tomcat / Jetty 各有自己的公告或没有独立 CVE。
 8. **方法 1: CONTINUATION Flood (CVE-2024-27316)** — Netty < 4.1.108
 9. **方法 2: HPACK Bomb — 头部压缩放大** — 最大 4096 或 65536 bytes (SETTINGS_HEADER_TABLE_SIZE)
 10. **方法 2: HPACK Bomb — 头部压缩放大** — 新头部插入表头，旧的从表尾移除

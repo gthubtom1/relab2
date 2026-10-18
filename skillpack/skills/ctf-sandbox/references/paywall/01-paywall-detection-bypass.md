@@ -91,7 +91,7 @@ $r = Resolve-ReverseToolSpec -Name '<toolid>'   # 例：sqlmap / httpx / ffuf / 
   - Cookie wall: GDPR 弹窗 + 阅读计数 (清除 Cookie 重置)
 ```
 
-截至 2026-06，已确认支持绕过 400+ 网站，涵盖全球主要新闻出版集团。
+该扩展**自称**覆盖大量站点（第三方宣传数字，仓库内无证据文件，**不要当事实引用**）；实际支持面需自行抽验。
 
 ## 输入信号
 

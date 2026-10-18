@@ -180,7 +180,7 @@ $r2    = (Resolve-ReverseToolSpec -Name 'r2').Command
    **结合导入表判断，不要只看长度。**
 7. **`floss` 打开 decode 通道会显著变慢**。大样本先跑 `--only static` 快速筛，
    确定是许可证相关后再跑完整 decode。
-8. **本机没有 MSVC**。要编译验证工具时用 `D:\Tools\runtime\mingw64\bin\gcc.exe`。
+8. **本机没有 MSVC**。要编译验证工具时用 `D:\Tools\runtime\mingw64\mingw64\bin\gcc.exe`。
 
 ## 相关
 

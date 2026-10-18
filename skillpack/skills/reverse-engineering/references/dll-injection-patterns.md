@@ -21,7 +21,7 @@
 
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
-$cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
+$cdb  = (Resolve-ReverseToolSpec -Name 'cdb').Command
 $inj  = (Resolve-ReverseToolSpec -Name 'scyllahide').Command  # InjectorCLIx64.exe
 $py   = (Resolve-ReverseToolSpec -Name 'pyre').Command
 ```

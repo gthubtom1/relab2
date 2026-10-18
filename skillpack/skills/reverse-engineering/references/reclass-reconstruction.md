@@ -24,8 +24,8 @@
 
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
-$cdb = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
-$py  = (Resolve-ReverseToolSpec -Name 'pyre').Command   # pefile 2024.8.26 + capstone 5.0.7
+$cdb = (Resolve-ReverseToolSpec -Name 'cdb').Command
+$py  = (Resolve-ReverseToolSpec -Name 'pyre').Command   # pefile 2024.8.26 + capstone 5.0.6
 $sys = '<工具根>\<分类>\<工具名>'      # Listdlls64.exe / procdump64.exe 等
 ```
 

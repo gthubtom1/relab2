@@ -21,7 +21,9 @@ $rasm = (Resolve-ReverseToolSpec -Name 'rasm2').Command  # (Resolve-ReverseToolS
 $diec = (Resolve-ReverseToolSpec -Name 'diec').Command   # (Resolve-ReverseToolSpec -Name 'diec').Command
 ```
 
-> ★ **不要用 `rabin2`**：本机 `(Resolve-ReverseToolSpec -Name 'rabin2').Command` 与 `r2.exe` 字节数完全相同（153600），是同一份二进制的副本，它的 `-I/-i/-H/-e/-l` 已被 r2 的启动参数占用，报 `Missing file to open`。全部走 `r2 -2 -qc`（见「坑」1）。
+> ★ **`rabin2` 可用**（2026-10-18 实测纠正）：本机 `rabin2.exe`（152064 B）与 `radare2.exe`（153600 B）**不是同一份二进制**，`rabin2 -I/-i` 均 RC=0。
+> 注意 `r2.exe` **不存在**，只有 `r2.bat`（→ `radare2.exe`）；`rabin2` 是独立二进制，可直接用。
+> 批量扫描仍推荐 `r2 -2 -qc`（一次进程扫多个文件更快），但不是因为 `rabin2` 不能用。
 
 需要 `pefile` 时见「坑」4。
 

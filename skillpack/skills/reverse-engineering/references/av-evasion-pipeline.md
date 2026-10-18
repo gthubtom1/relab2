@@ -21,7 +21,7 @@
 
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
-$gcc = 'D:\Tools\runtime\mingw64\bin\gcc.exe'   # 本机 gcc 15.2.0
+$gcc = 'D:\Tools\runtime\mingw64\mingw64\bin\gcc.exe'   # 本机 gcc 15.2.0
 $py  = (Resolve-ReverseToolSpec -Name 'pyre').Command
 $diec = (Resolve-ReverseToolSpec -Name 'diec').Command
 $capa = (Resolve-ReverseToolSpec -Name 'capa').Command
@@ -240,7 +240,7 @@ int main(void) {
 # 1. hash 每次都不同
 $sha = [System.Security.Cryptography.SHA256]::Create()
 1..3 | ForEach-Object {
-    & 'D:\Tools\runtime\mingw64\bin\gcc.exe' -O2 -o "t$_.exe" loader.c -mwindows -static -s -fno-ident
+    & 'D:\Tools\runtime\mingw64\mingw64\bin\gcc.exe' -O2 -o "t$_.exe" loader.c -mwindows -static -s -fno-ident
     [BitConverter]::ToString($sha.ComputeHash([IO.File]::ReadAllBytes("t$_.exe"))).Replace('-','').Substring(0,16)
 }
 ```

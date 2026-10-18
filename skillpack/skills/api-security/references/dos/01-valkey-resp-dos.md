@@ -147,7 +147,7 @@ printf '*0\r\nPING\r\n' | nc -w 2 127.0.0.1 16379
 
 ```bash
 cd "CVE-2026-27623 Pre-Authentication DOS from malformed RESP request"
-python3 exploit/exp.py
+python exploit/exp.py
 # 默认连接 127.0.0.1:16379
 ```
 

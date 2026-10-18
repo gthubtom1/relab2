@@ -68,7 +68,7 @@ $r = Resolve-ReverseToolSpec -Name '<toolid>'   # 例：sqlmap / httpx / ffuf / 
 
 ```bash
 # 1. 拿到 token 先解码
-python3 jwt_tool.py <token>
+python jwt_tool.py <token>
 
 # 2. 看 alg 决策
 # RS256/ES256 → 02 算法混淆 + 05 jku劫持

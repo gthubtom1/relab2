@@ -25,7 +25,7 @@ de4dot target.exe -o target-clean.exe
 de4dot --type cfze target.exe -o target-clean.exe
 
 # 先探测壳类型
-de4dot --detect target.exe
+de4dot -d target.exe
 
 # 批量
 de4dot *.exe
@@ -137,7 +137,7 @@ de4dot 对 SmartAssembly 兼容性最好，基本一键搞定。
 
 ## de4dot 失败时的退路
 
-1. **de4dot --detect** 看识别结果，对照上表
+1. **de4dot -d** 看识别结果，对照上表
 2. **运行时 dump**（MegaDumper / ExtremeDumper / Process Hacker 导出模块）
 3. **dnlib 脚本** 手动解（见 common-workflow.md 的 dnlib 段）
 4. **动态优先**：跑起来在解密点下断，直接看明文，不脱壳也能拿情报
