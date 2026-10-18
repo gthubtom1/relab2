@@ -17,10 +17,12 @@ trap 'case "$-" in *e*) rc=$?; echo "ASSERT FAILED (rc=$rc) at ${BASH_SOURCE[0]}
 # 失败即静默退出 —— CI 上实测跑了 11 秒、零输出、exit 1，只能靠猜。
 # 现在每一条都写成 `[[ COND ]] || { echo "ASSERT FAILED: COND"; exit 1; }`。
 
+echo "STEP 01 resolve paths" >&2
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOOTSTRAP="$SCRIPT_DIR/bootstrap-reverse.sh"
 KALI_BOOTSTRAP="$SCRIPT_DIR/../../kali/scripts/bootstrap-reverse.sh"
 MANIFEST="$SCRIPT_DIR/bootstrap-manifest.json"
+echo "STEP 03 find real python" >&2
 REAL_PYTHON=""
 # ★ 本测试器要造 python3 stub 来测 bootstrap 的防 stub 逻辑，所以自己必须先拿到
 #   **真**解释器。Windows 上 `python3` 常是 0 字节 Microsoft Store stub
@@ -38,8 +40,10 @@ if [[ -z "$REAL_PYTHON" ]]; then
   echo "ERROR: no usable real Python interpreter for this test." >&2
   exit 2
 fi
+echo "STEP 02 scratch + stubs" >&2
 SCRATCH="$(mktemp -d /tmp/reverse-bootstrap-test-XXXXXX)"
 trap 'rm -rf "$SCRATCH"' EXIT
+echo "STEP 04 build command stubs" >&2
 STUB_BIN="$SCRATCH/bin"
 CALL_LOG="$SCRATCH/calls.log"
 mkdir -p "$STUB_BIN" "$SCRATCH/home" "$SCRATCH/tools"
@@ -210,6 +214,7 @@ rejects_without_pnpm() {
   ! grep -Eq '^pnpm\|(install|dev)' "$CALL_LOG" || { echo "ASSERT FAILED: pnpm install/dev was called" >&2; cat "$CALL_LOG" >&2; return 1; }
 }
 
+echo "STEP 05 read manifest values" >&2
 pipx_package=$(json_value dependency pipx)
 pnpm_package=$(json_value dependency pnpm)
 anything_repo=$(json_value anything-analyzer repoUrl)
@@ -301,6 +306,7 @@ if grep -Fq '|pip|install|' "$CALL_LOG"; then
 fi
 fi   # ← 闭合上面 `if [[ -n "$NO_PYTHON_BIN" ]]` 的平台守卫
 
+echo "STEP 09 broken manifest negative" >&2
 # A required empty manifest field fails before any package-manager sink.
 BROKEN_DIR="$SCRATCH/broken-bootstrap"
 mkdir -p "$BROKEN_DIR"
@@ -325,6 +331,7 @@ if grep -Eq '^npm\|install\|-g(\||$)' "$CALL_LOG"; then
   exit 1
 fi
 
+echo "STEP 10 package-manager sink table" >&2
 # Table: each generic package-manager sink receives its canonical manifest value.
 while IFS='|' read -r capability _field expected; do
   : > "$CALL_LOG"
@@ -343,6 +350,7 @@ proxycat|repo|pipx|install|git+$(json_value proxycat repo)@$(json_value proxycat
 pwntools|pipPackage|pipx|install|$(json_value pwntools pipPackage)
 EOF
 
+echo "STEP 06 pipx pinned install negative" >&2
 # pipx itself is pinned; a failed pinned install has no mutable fallback.
 : > "$CALL_LOG"
 if STUB_FAIL_PIP_INSTALL=1 run_generic frida --skip-refresh >/dev/null 2>&1; then
@@ -355,6 +363,7 @@ if grep -Eq '^pipx\|(install|upgrade)' "$CALL_LOG"; then
   exit 1
 fi
 
+echo "STEP 07 anything-analyzer (generic)" >&2
 # Generic Anything Analyzer: staged checkout, pinned pnpm, frozen install, clean recheck, then dev.
 : > "$CALL_LOG"
 # ★ 2026-10-18：这行原来是**裸调用** —— run_generic 返回非零时 set -e 直接静默退出。
@@ -375,6 +384,7 @@ expect_fragment "fetch|--depth|1|origin|$anything_pin"
 [[ -d "$anything_dir/.git" ]] || { echo "ASSERT FAILED: -d "$anything_dir/.git"" >&2; exit 1; }
 [[ $(grep -c '|status|--porcelain|--untracked-files=all' "$CALL_LOG") -ge 2 ]] || { echo "ASSERT FAILED: $(grep -c '|status|--porcelain|--untracked-files=all' "$CALL_LOG") -ge 2" >&2; exit 1; }
 
+echo "STEP 08 dirty source rejection" >&2
 # Dirty sources never reach install/dev.
 touch "$anything_dir/.stub-dirty"
 rejects_without_pnpm run_generic anything-analyzer --start-services --skip-refresh
@@ -389,6 +399,7 @@ TEST_TOOLS_ROOT="$retry_root" STUB_FAIL_FETCH=1 rejects_without_pnpm run_generic
 TEST_TOOLS_ROOT="$retry_root" STUB_PNPM_VERSION=10.24.0 run_generic anything-analyzer --start-services --skip-refresh >/dev/null
 [[ -d "$retry_root/anything-analyzer/.git" ]] || { echo "ASSERT FAILED: -d "$retry_root/anything-analyzer/.git"" >&2; exit 1; }
 
+echo "STEP 11 kali boundary" >&2
 # Kali exercises the same source-before-execution boundary where associative arrays are supported.
 if (( BASH_VERSINFO[0] >= 4 )); then
   kali_dir="$SCRATCH/home/tools/anything-analyzer"
