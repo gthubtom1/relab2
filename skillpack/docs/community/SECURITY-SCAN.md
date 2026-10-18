@@ -91,7 +91,7 @@ C5 以修正调用路径的重跑为准，判定逻辑未动；其余 C1–C4/C6
    ```powershell
    $env:PYTHONIOENCODING='utf-8'
    $env:GIT_DIR='D:\__no_such_git_dir__'
-   & (Resolve-ReverseToolSpec -Name 'pyre').Command kills\scripts\verify-repository-security.py
+   & (Resolve-ReverseToolSpec -Name 'pyre').Command skills\scripts\verify-repository-security.py
    Remove-Item Env:\GIT_DIR
    ```
    原理：`GIT_DIR` 指向不存在路径迫使 `rev-parse --is-inside-work-tree` 失败，

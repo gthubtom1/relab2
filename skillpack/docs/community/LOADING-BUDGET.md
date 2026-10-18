@@ -53,13 +53,13 @@ artifact/日志大小上限、取消与中断行为）超出本仓库只读查�
 
 ```text
 $env:PYTHONIOENCODING='utf-8'
-& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/scripts/community-route.py --hint "kerberos" --json            # exit 0
-& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/scripts/community-route.py --hint "web api security" --json   # exit 20 budget_exceeded
-& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/scripts/community-route.py --hint "kerberos" --limit 0        # exit 2
-& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/scripts/community-route.py --hint "kerberos" --limit 9        # exit 2
-& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/scripts/test-community-route.py      # exit 0
-& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/scripts/test-route-ranking.py        # exit 0
-& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/scripts/test-community-decoys.py     # exit 0（9 条具名 over-trigger 为既有登记）
-& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/scripts/verify-routing-signals.py --check   # exit 0
-& (Resolve-ReverseToolSpec -Name 'pyre').Command kills/scripts/test-routing-signals.py      # exit 0
+& (Resolve-ReverseToolSpec -Name 'pyre').Command skills/scripts/community-route.py --hint "kerberos" --json            # exit 0
+& (Resolve-ReverseToolSpec -Name 'pyre').Command skills/scripts/community-route.py --hint "web api security" --json   # exit 20 budget_exceeded
+& (Resolve-ReverseToolSpec -Name 'pyre').Command skills/scripts/community-route.py --hint "kerberos" --limit 0        # exit 2
+& (Resolve-ReverseToolSpec -Name 'pyre').Command skills/scripts/community-route.py --hint "kerberos" --limit 9        # exit 2
+& (Resolve-ReverseToolSpec -Name 'pyre').Command skills/scripts/test-community-route.py      # exit 0
+& (Resolve-ReverseToolSpec -Name 'pyre').Command skills/scripts/test-route-ranking.py        # exit 0
+& (Resolve-ReverseToolSpec -Name 'pyre').Command skills/scripts/test-community-decoys.py     # exit 0（9 条具名 over-trigger 为既有登记）
+& (Resolve-ReverseToolSpec -Name 'pyre').Command skills/scripts/verify-routing-signals.py --check   # exit 0
+& (Resolve-ReverseToolSpec -Name 'pyre').Command skills/scripts/test-routing-signals.py      # exit 0
 ```

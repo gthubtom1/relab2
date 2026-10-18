@@ -102,13 +102,13 @@ Until then, full-generation rollback exists only in this lab harness.
 
 ```text
 $env:PYTHONIOENCODING='utf-8'
-& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/t20-transactional-lab.py --seed
-& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/t20-transactional-lab.py --promote --crash-at B2
-& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/t20-transactional-lab.py --recover
-& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/t20-transactional-lab.py --promote   # clean -> gen 2
-& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/t20-transactional-lab.py --rollback
-& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/t20-rollback-audit.py
-& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts/t20-format-gate.py --self-test
+& (Resolve-ReverseToolSpec -Name 'pyre').Command scripts/t20-transactional-lab.py --seed
+& (Resolve-ReverseToolSpec -Name 'pyre').Command scripts/t20-transactional-lab.py --promote --crash-at B2
+& (Resolve-ReverseToolSpec -Name 'pyre').Command scripts/t20-transactional-lab.py --recover
+& (Resolve-ReverseToolSpec -Name 'pyre').Command scripts/t20-transactional-lab.py --promote   # clean -> gen 2
+& (Resolve-ReverseToolSpec -Name 'pyre').Command scripts/t20-transactional-lab.py --rollback
+& (Resolve-ReverseToolSpec -Name 'pyre').Command scripts/t20-rollback-audit.py
+& (Resolve-ReverseToolSpec -Name 'pyre').Command scripts/t20-format-gate.py --self-test
 & (Resolve-ReverseToolSpec -Name 'pyre').Command ests/t20/test_t20_transactional.py          # 29/29
 ```
 

@@ -100,11 +100,11 @@ manifest 关键字段（完整定义见 `schemas/release-candidate.json`）：
 
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
-& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts\build-release-candidate.py build --out-dir <仓库外> --requester <人>
-& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts\verify-release-approval.py --candidate-dir <上> --approval <记录>
-& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts\verify-release-gate.py            # exit 0
-& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts\verify-release-gate.py --release  # exit 20（预期）
-& (Resolve-ReverseToolSpec -Name 'pyre').Command cripts\validate-integration.py           # exit 0
+& (Resolve-ReverseToolSpec -Name 'pyre').Command scripts\build-release-candidate.py build --out-dir <仓库外> --requester <人>
+& (Resolve-ReverseToolSpec -Name 'pyre').Command scripts\verify-release-approval.py --candidate-dir <上> --approval <记录>
+& (Resolve-ReverseToolSpec -Name 'pyre').Command scripts\verify-release-gate.py            # exit 0
+& (Resolve-ReverseToolSpec -Name 'pyre').Command scripts\verify-release-gate.py --release  # exit 20（预期）
+& (Resolve-ReverseToolSpec -Name 'pyre').Command scripts\validate-integration.py           # exit 0
 ```
 
 `--release` / `--distribution redistributable` / 无批准三条 exit 20 是设计态：
