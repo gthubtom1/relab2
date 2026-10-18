@@ -356,7 +356,13 @@ echo "STEP 06 pipx pinned install negative" >&2
 # ★ 2026-10-18：这里原来是 `if ... then exit 1; fi` —— **无输出退出**。
 #   CI 实测：STEP 06 之后 11 秒静默 exit 1，就是这里。现在把 CALL_LOG 和 bootstrap 输出都留下。
 _pipx_neg_out="$SCRATCH/pipx-neg.log"
-if STUB_FAIL_PIP_INSTALL=1 run_generic frida --skip-refresh >"$_pipx_neg_out" 2>&1; then
+# ★ 2026-10-18：**显式把 pipx 版本压成 0**，强制走安装路径。
+#   原来只设了 STUB_FAIL_PIP_INSTALL，但 `ensure_pipx()` 有 `if [[ $current_version != $pipx_version ]]`
+#   的短路 —— 如果宿主机的 pipx 版本**恰好等于** manifest pin 的 1.16.5，整段安装被跳过，
+#   `STUB_FAIL_PIP_INSTALL` 根本没机会生效，于是「必失败的负例」返回 0。
+#   CI 上就是这个（STEP 06 之后静默 exit 1）。显式 STUB_PIPX_VERSION=0 之后，
+#   不管宿主装的是哪个版本，都必然进安装分支。
+if STUB_FAIL_PIP_INSTALL=1 STUB_PIPX_VERSION=0 run_generic frida --skip-refresh >"$_pipx_neg_out" 2>&1; then
   echo "ASSERT FAILED: STUB_FAIL_PIP_INSTALL=1 时 bootstrap 仍然返回 0（应当失败）" >&2
   echo "--- bootstrap output ---" >&2; cat "$_pipx_neg_out" >&2
   echo "--- CALL_LOG ---" >&2; cat "$CALL_LOG" >&2
