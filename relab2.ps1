@@ -56,7 +56,7 @@ function Invoke-Step {
     param([string]$File, [string[]]$ArgList, [string]$Label)
     $p = Join-Path $RepoRoot $File
     if (-not (Test-Path -LiteralPath $p)) { Add-Result $Label 'FAIL' "缺少脚本 $File"; return 1 }
-    if ($DryRun) { Write-Host ("  [DryRun] 将执行: {0} {1}" -f $File, ($ArgList -join ' ')) -ForegroundColor Yellow; return 0 }
+    if ($DryRun) { Write-Host ("  [DryRun] 将执行: {0} {1}" -f $File, ($ArgList -join ' ')) -ForegroundColor Yellow; return }
     Write-Host ("  -> {0} {1}" -f $File, ($ArgList -join ' ')) -ForegroundColor DarkGray
     & powershell -NoProfile -ExecutionPolicy Bypass -File $p @ArgList
     return $LASTEXITCODE
