@@ -67,7 +67,7 @@ description: 硬件/嵌入式接口安全：UART/JTAG/SWD 调试口发现、root
 | `hashcat` | 提取出的 `/etc/shadow`、配置口令 hash 离线 | 探测 id `hashcat`；先确认 hash 类型再选模式，别盲跑字典 |
 
 > **探针与通道都要现场定位（这条不许凭记忆）。**
-> 先 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`，再 `Resolve-ReverseToolSpec -Name <id>`：`Command` 给的是完整路径，直接用它调，别依赖 cwd；
+> 先 `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1`，再 `Resolve-ReverseToolSpec -Name <id>`：`Command` 给的是完整路径，直接用它调，别依赖 cwd；
 > `Get-Command` 返回空只说明第 2 级没命中（PATH 快照陷阱，见 `../references/env-selfcheck.md`），要走完四级再判缺，缺了照 `../TOOLS.md` 装。
 > 台面外的家伙（调试器、编程器、串口工具）在本机常常没有：先探测、再声明缺什么；通道另用
 > `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` 看三列（注册了哪些 / 谁在监听 / 怎么起），**注册 ≠ 在监听**。

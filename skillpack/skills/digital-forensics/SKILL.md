@@ -71,7 +71,7 @@ vol -f mem.dmp windows.cmdline
 | `winpmem` / `procdump` | Windows 侧内存采集 | `winpmem_mini_x64.exe mem.raw`；采集顺序先内存后磁盘 |
 | `windbg` / `cdb` | crash dump / 页文件内核态分析 | `cdb -z mem.dmp`；符号缺失先修符号路径再下结论 |
 
-探测层（唯一路径入口）：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name vol3`（同理查 `tshark` / `yara`）。
+探测层（唯一路径入口）：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name vol3`（同理查 `tshark` / `yara`）。
 本机另跑 `mcp-status.ps1` 看 MCP 通道谁在监听；注册 ≠ 在监听。
 
 顺序口径：先内存后磁盘（易失性高者先固定）；`vol3` 结论先过 `windows.info` 再解读进程表。

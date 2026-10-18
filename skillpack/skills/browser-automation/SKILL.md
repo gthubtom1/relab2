@@ -286,7 +286,7 @@ npm run doctor:network
 | **通道目录** | `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` | 三列「谁注册 / 谁在 LISTEN / 怎么起」；**攻坚类任务开工先看一次**（写进路线第 0 段），其余按需看；**盘点 ≠ 启动**（盘点只读目录、不预启动服务） |
 
 **注册 ≠ 在监听**：stdio 型由宿主按会话拉起；HTTP 型冷启是设计不是故障。工具路径唯一入口是探测层
-`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>`；
+`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>`；
 `Get-Command` 查空 ≠ 缺工具。**动 GUI 前先问一句：有没有 CLI/MCP 孪生？**（GUI 是同步阻塞的，
 命令不返回模型就不会有下一个 token。）
 

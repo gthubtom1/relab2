@@ -14,7 +14,7 @@ description: 供应链安全评估：SBOM、SCA 依赖漏洞与可达性、CI/CD
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
 3. `NOW`: 确认当前任务是否命中本 skill 的适用范围
-5. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
+5. `NEXT`：**工具定位** —— 先载入探测层 `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1`（**优先用相对路径**：从本卡往上两级 `..\..\skills\scripts\lib\Bootstrap.ps1`；本机 `C:\relab2\...` 只是备选，**别把绝对路径写进新文档**），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
 6. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
 7. `ACT`: 按本卡的「工作流」挑**当下适用**的那一条动手；不要停在确认状态
 
@@ -170,7 +170,7 @@ cosign verify --key cosign.pub myimage:tag
 | `nuclei` | 扫暴露在公网的私有 registry / CI runner 面板 | `nuclei -u https://registry.internal -t exposures/` |
 | `hashcat` | 验证窃得的 CI secret/hash 是不是真能用（别只看到就上报） | `hashcat -m 1400 ci_ntlm.txt` |
 
-**工具定位走探测层，不走猜**：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` 之后
+**工具定位走探测层，不走猜**：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` 之后
 `Resolve-ReverseToolSpec -Name syft` / `-Name trivy`，按返回的 `Command` 调（完整路径，别赖 cwd）。
 链上是 `pip`/`npm`/`go` 装的小工具时，先确认它在 PATH 快照之外还能被解析到 —— `Get-Command` 查空不代表没装。
 MCP 相关通道登记在 `../references/tool-registry.md`（只记端点与启动方式，状态一律现查）。

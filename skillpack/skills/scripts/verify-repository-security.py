@@ -32,7 +32,7 @@ def in_git_worktree():
 USE_GIT = in_git_worktree()
 
 PAYLOAD_PATH = "skills/pentest-tools/src-hunter/references/payloader/waf-bypass.md"
-PAYLOAD_SHA256 = "66e42f9de168605cb72f70edf1dd704a54cc48e972427e2e6a176ed350d71e1d"
+PAYLOAD_SHA256 = "bc15ca915f24a321bdee833de61d1e144f26010b71f1f9dd4f123226f956c6a5"  # 2026-10-18: 仅在 waf-bypass.md 加了交叉引用（纯文档），无新增 payload
 ALLOWED_BINARY_HASHES = {
     "burp-mcp-full/gradle/wrapper/gradle-wrapper.jar":
         "2db75c40782f5e8ba1fc278a5574bab070adccb2d21ca5a6e5ed840888448046",

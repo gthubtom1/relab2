@@ -14,7 +14,7 @@ description: API 安全测试：REST/GraphQL/WebSocket 接口发现、JWT/OAuth�
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
 3. `NOW`: 确认当前任务是否命中本 skill 的适用范围
-5. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
+5. `NEXT`：**工具定位** —— 先载入探测层 `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1`（**优先用相对路径**：从本卡往上两级 `..\..\skills\scripts\lib\Bootstrap.ps1`；本机 `C:\relab2\...` 只是备选，**别把绝对路径写进新文档**），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
 6. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
 7. `ACT`: 按本卡的「工作流」挑**当下适用**的那一条动手；不要停在确认状态
 
@@ -331,7 +331,7 @@ GET 突变 → CSRF 风险
 | 环节 | 本机怎么调 | 输出接到哪 |
 |---|---|---|
 | 通道目录 | `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1`：注册 / LISTEN / 怎么起三列 | Burp（`9876`）、Reqable 等 HTTP 型平时 `closed` 是**设计**，用到再起；起完重跑确认 `LISTEN` |
-| 路径探测 | `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name httpx` | `Get-Command` 查空 ≠ 缺工具；`jwt_tool`/`semgrep` 这类不在 toolmap 里的，一律走四级探测，全 `Available=False` 才按 `../TOOLS.md` 自装，禁止猜路径 |
+| 路径探测 | `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name httpx` | `Get-Command` 查空 ≠ 缺工具；`jwt_tool`/`semgrep` 这类不在 toolmap 里的，一律走四级探测，全 `Available=False` 才按 `../TOOLS.md` 自装，禁止猜路径 |
 | 端点发现 | `ffuf -u target/FUZZ -w <词表>` 爆未文档化路径；`nuclei` 只当入口发现用（命中降级为待验证） | 端点进接口清单，接 `references/api-attacks/01-api-discovery-leak.md` |
 | 认证面 | `python jwt_tool.py <JWT> -C -d <词表>`（弱 HMAC 爆破）、`-X k -pk pub.pem`（算法混淆）、`-I -pc role -pv admin`（声明篡改） | 改完令牌必须用**成对请求**在 Burp Repeater 复跑，见 `references/jwt-oauth-testing.md` |
 | 授权面 | Burp Autorize 双会话重放对比；越权用配对请求（原身份 + 目标身份） | 结果写进鉴权矩阵，每条 Finding 挂 ≥1 evidence_id |

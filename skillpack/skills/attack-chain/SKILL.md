@@ -15,7 +15,7 @@ description: 多阶段攻击链编排：侦察、初始访问、提权、横向�
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
 3. `NOW`: **创建/更新 case**（`../scripts/case-init.ps1`）并完成 `../pentest-tools/templates/scope.md`（`../ops/scope-contract.md`）——目标、网络档、产出物落 `work/<case>/`
 4. `NOW`: 以 **lead** 角色规划阶段（`../ops/role-map.md`），写入 specialist_roles
-5. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
+5. `NEXT`：**工具定位** —— 先载入探测层 `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1`（**优先用相对路径**：从本卡往上两级 `..\..\skills\scripts\lib\Bootstrap.ps1`；本机 `C:\relab2\...` 只是备选，**别把绝对路径写进新文档**），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`../TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
 6. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
 7. `ACT`: 按 `references/lifecycle-checklist.md` 过阶段门闩；每阶段更新 `../../examples/ctf-demo/timeline.md` + `../../examples/ctf-demo/workitems.md`（`../ops/timeline-workitem.md`）；发现提升为 Evidence/Finding
 8. 结束：`docs-generator` 报告必须含 Evidence 链
@@ -707,7 +707,7 @@ touch -t 202301010000 /path/to/file
 
 | 环节 | 本机怎么调 | 输出接到哪 |
 |---|---|---|
-| 路径探测 / 通道 | `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name httpx`；通道状态 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` | `Get-Command` 查空 ≠ 缺工具；HTTP 型 MCP 平时 `closed` 是设计 |
+| 路径探测 / 通道 | `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name httpx`；通道状态 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` | `Get-Command` 查空 ≠ 缺工具；HTTP 型 MCP 平时 `closed` 是设计 |
 | 凭据获取 | `impacket-secretsdump`（远程注册表/LSA）、`mimikatz`（内存 dump）；拿到 NTLM hash 后用 `hashcat` 判是否弱口令 | 每条凭据写清来源主机与采集方式；PtH/PtT 表见 §4.2 |
 | AD 路径 | `bloodhound`（SharpHound / `bloodhound-python` 采集）出最短路径与 ACL 边 | BH 的「可达」只是假设：边要实测成功、或明确标未证实，否则进不了 Path |
 | 横向执行 | `nxc`（crackmapexec）/ `impacket` 的 `psexec`、`wmiexec`、`smbexec` 子命令，经 `proxychains` 走隧道 | 新 shell 有回显才打下一跳（回程判据） |

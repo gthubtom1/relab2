@@ -75,7 +75,7 @@ Use Mermaid unless another language is clearly better.
 
 | 环节 | 本机怎么调 | 输出接到哪 |
 |---|---|---|
-| 渲染器探测 | `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name mmdc` / `-Name dot`；通道状态 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` | 探测不到就只交图源并写明；别声称「已渲染」 |
+| 渲染器探测 | `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name mmdc` / `-Name dot`；通道状态 `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` | 探测不到就只交图源并写明；别声称「已渲染」 |
 | 调用图数据源 | `Ghidra`（`analyzeHeadless` 批量导函数表）、`IDA`（`idat`）、`radare2`、`rabin2`（符号/导入表） | 节点数必须与导出文件行数对得上 |
 | 拓扑 / 流量图数据源 | `nmap -sV` 的服务表、`tshark` / `Wireshark` 的会话与协议分层 | 手画 IP 一律不允许 |
 | 固件 / 分区图数据源 | `binwalk` 的提取结果 | 分区偏移写进图注 |

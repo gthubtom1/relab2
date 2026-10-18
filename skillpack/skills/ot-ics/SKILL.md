@@ -84,7 +84,7 @@ rabin2 -zz gateway-fw.bin | grep -i -e plant -e station
 | **反例：`masscan`** | 全速率扫描器 | 在 OT 网段**禁用**：它的探测包密度会在秒级打瘫老控制器 |
 
 > **工具与通道先定位，再谈动作（OT 现场没有试错预算）。**
-> 载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` 后跑 `Resolve-ReverseToolSpec -Name <id>`，返回的 `Command` 才是可直接调用的完整路径；
+> 载入探测层 `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` 后跑 `Resolve-ReverseToolSpec -Name <id>`，返回的 `Command` 才是可直接调用的完整路径；
 > 单条 `Get-Command` 查空不算缺工具（PATH 快照陷阱见 `../references/env-selfcheck.md`），四级探测全 `Available=False` 才算缺，装法看 `../TOOLS.md`。
 > 现场侧工具（厂商工程软件、单向闸管理口）多半只能现场取；宿主侧通道清单用
 > `powershell -NoProfile -ExecutionPolicy Bypass -File skillpack\skills\scripts\mcp-status.ps1` 现查（注册了哪些 / 谁在监听 / 怎么起），**注册不等于在监听**。

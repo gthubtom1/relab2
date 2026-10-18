@@ -49,7 +49,7 @@ description: 联邦身份与 SSO 鉴权测试：SAML 断言篡改、OIDC/OAuth2 
 | `reqable` | 桌面端 SSO 客户端的 HTTP 抓包 | 客户端无浏览器 DevTools 时用它取证 |
 | `nmap` | IdP 端点与端口存活 | 只做可达性确认，不做口令爆破 |
 
-探测层（唯一路径入口）：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name Burp`。
+探测层（唯一路径入口）：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name Burp`。
 `Get-Command` 查空 ≠ 缺工具（四级递进：env → PATH → `_map.json` → 工具根扫描）。
 
 ## 参考

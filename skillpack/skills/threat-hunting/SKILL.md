@@ -69,7 +69,7 @@ description: 威胁狩猎与检测工程：SIEM/EDR 假说查询、Sysmon 事件
 | `nmap` | 出站目标与内网暴露面核对 | 只扫授权范围；生产网不做扫描试验场 |
 | `curl` | 富化前先看外部源可达性与返回码 | `curl -sSI <url>`；外部源不通记依赖不可用，不伪造结论 |
 
-探测层（唯一路径入口）：`. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name sigma`（同理可查 `yara` / `tshark`）。
+探测层（唯一路径入口）：`. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name sigma`（同理可查 `yara` / `tshark`）。
 本机另跑 `mcp-status.ps1` 看 MCP 通道谁在监听；注册 ≠ 在监听。
 
 数据源口径：Sysmon EID 1/3/11/13 是主链，Windows Security 4624/4648 是旁链；EDR 导出与 Zeek 网络流是**换源方向**，不是并列刷。

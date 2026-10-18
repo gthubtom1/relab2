@@ -66,7 +66,7 @@ Finding：位置 + 数据流 + PoC + 修复建议
 | Bandit | Python | `bandit -r <pkg>`，命中先看是否走的是 `eval/subprocess` 可控参数 |
 | gosec / staticcheck | Go | 重点看 `exec.Command`、`text/template` 与 `database/sql` 拼接 |
 | SpotBugs / FindSecBugs | Java | 反序列化与 XXE 命中优先级最高，先看 `ObjectInputStream` 上游 |
-| 路径探测 | 全工具 | `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>`；semgrep/codeql 不在本机 toolmap 里，走四级探测，全 `Available=False` 才按 `../TOOLS.md` 自装，禁止猜路径。`Get-Command` 查空 ≠ 缺工具 |
+| 路径探测 | 全工具 | `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>`；semgrep/codeql 不在本机 toolmap 里，走四级探测，全 `Available=False` 才按 `../TOOLS.md` 自装，禁止猜路径。`Get-Command` 查空 ≠ 缺工具 |
 | 运行时确认 | 定位到 sink 后 | `sqlmap -u "url?id=1" --batch` 或 `curl` 手搓 payload 验证可达性；也可让 `nuclei` 的模板面兜一遍已知 CVE。活环境用 `../pentest-tools/SKILL.md` |
 | 报文面复现 | Web 缺陷 | `Burp`（`../pentest-tools/references/burpsuite-mcp-guide.md`）改包重放；硬编码密钥用 `curl` 打真实端点，200/提权成立才算 confirmed |
 | 二进制依赖 | 依赖里带 `.so`/`.dll`/WASM | `rabin2 -i` 先看导入表与版本字符串，再 `analyzeHeadless`（Ghidra 无头）反编译比对；同源缺陷按版本差定位转 `../binary-diff/SKILL.md` |

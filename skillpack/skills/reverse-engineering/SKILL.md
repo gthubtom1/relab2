@@ -30,7 +30,7 @@ metadata:
    先读第一屏「攻坚者五条」（姿态，动手前先过一遍），再完成四问
    （Q0 任务归类 / Q1 目标类型 / Q2 保护层次 / Q3 目标成品），按分流结果进入对应工序卡。
    日常开发 / 维护 / 修 bug / 部署 / 文档：Q0 判 A，本卡到此为止，零额外工序。
-5. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
+5. `NEXT`：**工具定位** —— 先载入探测层 `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1`（**优先用相对路径**：从本卡往上两级 `..\..\skills\scripts\lib\Bootstrap.ps1`；本机 `C:\relab2\...` 只是备选，**别把绝对路径写进新文档**），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `../references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
 6. `NEXT`: **工具取用优先级：MCP 通道 > CLI 孪生 > GUI** —— `idalib-mcp`（stdio）/ `idapro`（http 13337，`../ida-reverse/scripts/start.ps1`）/ `pyghidra-mcp`（stdio 或 http 9111）/ `x64dbg-mcp`（http 9094，`mcp-status.ps1` 打印本机启动命令）；没有 MCP 就用 CLI 孪生（`idat`/`analyzeHeadless`/`r2`/`diec`，走探测层）；GUI 是同步阻塞的最后手段。**只在真要用某个通道时才启动它**；只有观测到阻塞（通道 `closed`、工具报错、拿不到结果）才跑 `../scripts/mcp-status.ps1` 唤醒 —— **不预启动服务**。**但「盘点」按流程做，且是路线第 0 段**：开工先跑一次 `../scripts/mcp-status.ps1`，把三列「谁注册 / 谁在监听 / 没在监听的照它给的命令怎么起」写进 `route-scope.md`（受保护目标攻坚写进 `assault.md` 状态段）。**盘点 ≠ 事前自检**：盘点只读目录、不拉起任何服务；**未查到的通道只算"还没确认"，不许算"本机没有"**。**注册 ≠ 在监听；HTTP 型冷启是设计，不是故障**；不许让用户手改 `mcp.json`（端点事实源 `../references/tool-registry.md`）。
 7. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
 8. `ACT`: 按 `references/re-agent-workflow.md` 推进 —— 挑**当下适用**的那一条动手，不要停在确认状态
