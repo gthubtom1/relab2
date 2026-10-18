@@ -167,7 +167,7 @@ r = sess.post(url, data=body, headers=headers, cookies=jar)
 
 **本机常见坑补充**：
 
-- 把本机可用的 `node v24.20.0` 当成「反正有 Node，用 Node 跑更省事」—— 它是**迁移期的对照宿主**，不是交付形态；判据第 5 条照样卡住。
+- 把本机可用的 `node v22.23.3` 当成「反正有 Node，用 Node 跑更省事」—— 它是**迁移期的对照宿主**，不是交付形态；判据第 5 条照样卡住。
 - 静态 AST 那套（`esprima` / `acorn` / `@babel/parser`）本机没装时，误以为「必须先装 AST 解析器才能开始」—— 九步全都不需要它，只有结构还原需要。
 - 抓包时去找 `reqable` —— 本机没有，**用 `tshark` / `mitmdump`**（命令见 `../observe/local-mcp-environment.md`）。
 

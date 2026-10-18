@@ -14,7 +14,7 @@
 >
 > | 能力 | 本机状态 |
 > |---|---|
-> | `node v24.20.0`（`(Resolve-ReverseToolSpec -Name 'node').Command`）+ `vm` + 自建 stub | ✅ **实测可用**，本文主路径 |
+> | `node v22.23.3`（`(Resolve-ReverseToolSpec -Name 'node').Command`）+ `vm` + 自建 stub | ✅ **实测可用**，本文主路径 |
 > | `playwright` + <playwright 浏览器> | ✅ 实测可用（需显式 `executable_path`） |
 > | `python 3.12`（`(Resolve-ReverseToolSpec -Name 'pyre').Command`） | ✅ 可用，**拥有全部真实 HTTP** |
 > | `jsdom` / `happy-dom` | ❌ **本机无**（npm 未装） |
@@ -102,7 +102,7 @@
 对应上面 8 条最小宿主要求：
 
 ```javascript
-// challenge-exec.js —— node v24.20.0 实测形态
+// challenge-exec.js —— node v22.23.3 实测形态
 const vm = require('vm');
 const input = JSON.parse(require('fs').readFileSync(process.argv[2], 'utf8'));
 
@@ -127,7 +127,7 @@ const sandbox = {
   // 若 getContext 返回 null，fillText 立刻抛
   // `TypeError: Cannot read properties of null (reading 'fillText')`，
   // 挑战脚本当场崩掉 —— 恰恰是最需要跑通的那条路径被堵死。
-  // （2026-10-10 本机 node v24.20.0 实测：null 上下文调 fillText 必抛。）
+  // （2026-10-10 本机 node v22.23.3 实测：null 上下文调 fillText 必抛。）
   HTMLCanvasElement: function(){
     const self = this;
     const ctx = new Proxy({}, {
@@ -311,7 +311,7 @@ console.log(JSON.stringify({
 **报告：**
 
 - 被挑战的路由与 content type
-- helper 的宿主家族（本机为 **`node v24.20.0` + `vm` 自建 stub**）
+- helper 的宿主家族（本机为 **`node v22.23.3` + `vm` 自建 stub**）
 - **哪个产物胜出**（`redirectUrl` / cookie / 两者）
 - **原始 URL 回声是否必需**
 - 准入所用的传输画像
@@ -339,7 +339,7 @@ console.log(JSON.stringify({
 
    **本机实测：`jsdom`、`happy-dom`、`iv8` 三者均不可用。**
    源文档的**语义**（「不要绑定到某个宿主品牌」）**完全正确且已保留**，
-   改编时把它落地为本机实测可用的 `node v24.20.0` + `vm` 自建 stub 骨架，并保留「任何保住所需语义的最小宿主都可以」这一判断。
+   改编时把它落地为本机实测可用的 `node v22.23.3` + `vm` 自建 stub 骨架，并保留「任何保住所需语义的最小宿主都可以」这一判断。
 
 2. **【未变的结论】** 源文档的契约（JSON 输入 / 输出）、8 条最小宿主要求、桥接隔离控制清单、产物优先级、以及交付形态**全部保留**，经逐条核对**未发现错误**。
 

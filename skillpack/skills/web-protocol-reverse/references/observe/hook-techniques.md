@@ -13,7 +13,7 @@
 > 或 `launch(executable_path=<显式路径>)`。照抄裸 `launch()` 一定失败。
 > 
 > - `frida 17.17.0`（`(Resolve-ReverseToolSpec -Name 'frida').Command`，Python 包同版本）**可用** —— 本机主力 hook 路径
-> - `node v24.20.0`（`(Resolve-ReverseToolSpec -Name 'node').Command`）**可用**，用于把目标 JS 拉到 Node 里做定点改写
+> - `node v22.23.3`（`(Resolve-ReverseToolSpec -Name 'node').Command`）**可用**，用于把目标 JS 拉到 Node 里做定点改写
 > - MCP 浏览器家族 `chrome-devtools` / `js-reverse` **本机 agent 工具注册表中未挂载**（本机挂载的是 `pyghidra-mcp` / `idapro` / `ida-pro-mcp` / `angr-mcp` / `x64dbg-automate-mcp`，**均为逆向侧，无 web 侧**）
 > - 因此本文源文档中「MCP 浏览器家族注入 / preload」那一列的**方法论原样保留**，但**本机执行路径改用 `frida` + `playwright`**
 
@@ -143,7 +143,7 @@ frida 相比页面内注入的关键优势，正好覆盖了上面矩阵里最�
 | page-owned world 证明 | 通过 MCP 能力 | `frida` 天然在目标进程内，无需分 world |
 | 干净基线采集 | 通过 MCP 能力 | `playwright` 受控启动 + HAR 落盘 |
 | 静态 AST 定位 | `esprima` / `acorn` / `@babel/parser` **本机未装** | 需先装；见 `../../profiles/static-ast/index.md` |
-| 本地运行时改写 | `node v24.20.0` **可用**；`iv8` **本机无** | `../../profiles/env-patch/index.md`（Node 路径已适配）；`iv8` 形态见 `../crypto/iv8-runtime-cheatsheet.md`（**未在本机验证**） |
+| 本地运行时改写 | `node v22.23.3` **可用**；`iv8` **本机无** | `../../profiles/env-patch/index.md`（Node 路径已适配）；`iv8` 形态见 `../crypto/iv8-runtime-cheatsheet.md`（**未在本机验证**） |
 
 ## 判据（Verification checklist）
 

@@ -19,7 +19,7 @@
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
-$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command    # capstone 5.0.7（算指令边界）
+$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command    # capstone 5.0.6（算指令边界）
 $cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
 ```
 
@@ -29,7 +29,7 @@ $cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
 
 **这是全篇最容易出错、后果最严重的一步。** `JMP rel32` 需要 5 字节，但**不能截断变长指令**。
 
-用 `disasm-jit-asm.md` 判据 2 的算法（实测脚本，capstone 5.0.7）：
+用 `disasm-jit-asm.md` 判据 2 的算法（实测脚本，capstone 5.0.6）：
 
 ```python
 # 逐条累加指令长度直到 >= 5

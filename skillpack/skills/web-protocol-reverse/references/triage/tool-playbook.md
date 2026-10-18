@@ -114,7 +114,7 @@
 
 ```powershell
 # 启动代理并把整条流落盘（-p 与 --listen-port 等价；-w 与 --save-stream-file 等价）
-# 实测：这两个 flag 在本机 mitmproxy 12.2.3 上存在
+# 实测：这两个 flag 在本机 mitmproxy 10.3.0 上存在
 & (Resolve-ReverseToolSpec -Name 'mitmdump').Command --listen-port 8899 --save-stream-file flow.mitm
 
 # 改写请求头：用 -s 加载一个自定义 addon 脚本
@@ -357,4 +357,4 @@
 7. **`python-venv` 陷阱（实测修正）**：任务简报把 `(Resolve-ReverseToolSpec -Name 'pyre').Command` 描述为「空壳」。本机实测**不是空壳** —— 它有解释器（3.12.0，`base_prefix` 指向 `(Resolve-ReverseToolSpec -Name 'pyre').Command`）、42 个 Scripts 条目、208 个 site-packages 条目。但**关键模块确实缺失**：`frida` / `playwright` / `curl_cffi` / `mitmproxy` 全部 `False`。本文按实测事实写为「缺关键模块」而非「空壳」。
 8. **保留未本地化的部分**：关键词包、基线优先证明流程、角色与证据面的关系判断、「不同证据面干的是不同的事」这张表 —— 这些与工具无关，是方法论核心，原样保留（译为中文）。
 9. **本文命令的校验范围**：已在本机实跑校验的是**工具存在性与 flag 合法性** —— `python -V` / `node -v` / `tshark -v` / `mitmdump --version` / `importlib.util` 模块探测 / `mitmdump --help` 的 `-p`、`-w`、`--listen-port`、`--save-stream-file`、`-s` / `tshark -G fields` 的 `http.request.full_uri`、`http.cookie`、`tls.handshake.type`、`frame.number`。**未实跑、需要真实目标或 pcap 的命令**（`tshark -r <文件>`、各 `playwright` / `frida` 调用）**只保证语法与字段名正确，不保证在你的目标上生效**。用户自写脚本（`normalize_evidence.py`、`practice_lab.py`）已标注「未在本机验证」。
-10. **写作过程中自查出并修正的两处错误**（记录在案，避免再次发生）：① 最初按任务简报把 `python-venv` 写成「空壳」，实测证伪，已改为「缺关键模块」；② 最初给出的 `--set flow_detail=1` 在本机 mitmproxy 12.2.3 上不存在，已删除并在正文加警告。
+10. **写作过程中自查出并修正的两处错误**（记录在案，避免再次发生）：① 最初按任务简报把 `python-venv` 写成「空壳」，实测证伪，已改为「缺关键模块」；② 最初给出的 `--set flow_detail=1` 在本机 mitmproxy 10.3.0 上不存在，已删除并在正文加警告。

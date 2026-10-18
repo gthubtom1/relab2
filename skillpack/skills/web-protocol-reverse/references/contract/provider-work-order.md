@@ -78,7 +78,7 @@
 
 用**精确布尔值**，不要用含糊的词。**未知权限 = 该动作先按离线形态做（定值向量 / 静态检视 / 本地复现）；要发出站再把那一个字段补上。**
 
-> 本机路线映射：`chromium-recon` / `browser-hook` 类路线在本机**没有** `chrome-devtools`、`js-reverse`、`camoufox-js-reverse` 专员可调用；`iv8-local-runtime` 路线本机无运行时。改走 `python-collector`（`python 3.12` + `curl_cffi`）、`transport`（`tshark 4.6.8` / `mitmdump 12.2.3`）或 `pure-python-rebuild`（`../deliver/pure-python-rebuild-playbook.md`）。
+> 本机路线映射：`chromium-recon` / `browser-hook` 类路线在本机**没有** `chrome-devtools`、`js-reverse`、`camoufox-js-reverse` 专员可调用；`iv8-local-runtime` 路线本机无运行时。改走 `python-collector`（`python 3.12` + `curl_cffi`）、`transport`（`tshark 4.6.0` / `mitmdump 10.3.0`）或 `pure-python-rebuild`（`../deliver/pure-python-rebuild-playbook.md`）。
 
 ### 二、条件性实现简报（Conditional Implementation Brief）
 

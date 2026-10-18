@@ -4,7 +4,7 @@
 > **什么时候用**：需要把字节解码成可读汇编，或把汇编意图变成精确的机器码 —— hook 跳板、syscall stub、shellcode 构造、指令边界判定。
 >
 > **工具替换说明**：源文档用 Zydis（解码）+ Xbyak（生成），**本机都没装**。已全部替换为：
-> - 解码 → `(Resolve-ReverseToolSpec -Name 'pyre').Command` + `import capstone`（capstone 5.0.7，实测可用）
+> - 解码 → `(Resolve-ReverseToolSpec -Name 'pyre').Command` + `import capstone`（capstone 5.0.6，实测可用）
 > - 汇编 → `rasm2 -a x86 -b 64 -s 0x0 "<asm>"`（radare2 套件自带）
 > - 大段反汇编 → `r2 -qc 'pd N'`
 >
@@ -23,7 +23,7 @@
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command      # (Resolve-ReverseToolSpec -Name 'r2').Command
 $rasm = (Resolve-ReverseToolSpec -Name 'rasm2').Command  # (Resolve-ReverseToolSpec -Name 'rasm2').Command
-$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command                        # capstone 5.0.7
+$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command                        # capstone 5.0.6
 ```
 
 ★ **`rasm2` 必须带 `-s 0x0`**。不带 `-s` 时 stdout 为空、exit code 却是 0 —— 极易误判成「汇编失败」。

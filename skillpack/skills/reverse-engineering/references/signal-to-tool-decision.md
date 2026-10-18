@@ -50,11 +50,11 @@
 | 符号执行 / 约束 | `python` + `angr` / `z3` | `(Resolve-ReverseToolSpec -Name 'pyre').Command` |
 | 仿真执行 | `python` + `qiling` / `unicorn` | 同上 |
 | 补丁写入 | `python` + `lief` / `pefile` | 同上 |
-| 抓包 | `tshark` / `mitmdump` | Npcap 服务需 Running |
+| 抓包 | `tshark` / `mitmdump` | **本机未装 Npcap**（2026-10-18 复核：`wpcap.dll` 不存在、`sc query npcap` → 1060）。`tshark` 只能读已有 pcap 文件；实时抓包要先装 Npcap，或用 `mitmdump` 走 HTTP 代理 |
 | Android | `jadx` / `apktool` / `adb` / `frida` / `objection` | 探测层 |
 | .NET | `ilspycmd` / `de4dot` / `dnSpy.Console` / `Confuser.CLI` | 探测层 |
 
-> ⚠ `idat`（IDA 9.4）本机**无 license 时会直接 exit 1**。需要 headless 反编译时优先 `idat64`（8.3 便携版）。
+> ⚠ `idat`（IDA 9.3）本机**无 license 时会直接 exit 1**。需要 headless 反编译时优先 `idat64`（8.3 便携版）。
 
 ---
 

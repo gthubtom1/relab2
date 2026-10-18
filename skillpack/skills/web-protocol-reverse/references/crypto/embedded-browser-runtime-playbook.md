@@ -8,7 +8,7 @@
 >
 > | 能力 | 本机状态 |
 > |---|---|
-> | `node v24.20.0`（`(Resolve-ReverseToolSpec -Name 'node').Command`）+ `vm` + 自建 stub | ✅ 可用（**首选轻量宿主**） |
+> | `node v22.23.3`（`(Resolve-ReverseToolSpec -Name 'node').Command`）+ `vm` + 自建 stub | ✅ 可用（**首选轻量宿主**） |
 > | `playwright` + <playwright 浏览器> | ✅ 可用（需显式 `executable_path`） |
 
 > ★★ **本机 playwright 必须显式指定浏览器**（2026-10-10 实测）：

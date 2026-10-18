@@ -215,7 +215,7 @@ def build_dllmain_shellcode(image_base, entry_point):
     return bytes(sc)
 ```
 
-**实测反汇编回环**（`(Resolve-ReverseToolSpec -Name 'pyre').Command`，本机 capstone 5.0.7）：
+**实测反汇编回环**（`(Resolve-ReverseToolSpec -Name 'pyre').Command`，本机 capstone 5.0.6）：
 
 ```
 48 83 ec 28 48 b9 20 30 4b f4 f6 7f 00 00 48 c7 c2 01 00 00 00

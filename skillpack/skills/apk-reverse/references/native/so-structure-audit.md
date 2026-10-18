@@ -19,7 +19,7 @@ $r = Resolve-ReverseToolSpec -Name 'r2';      & $r.Command -v
 $r = Resolve-ReverseToolSpec -Name 'python';  & $r.Command -V
 ```
 
-Python 库（capstone 5.0.7 / lief 1.0.0 / pyelftools 0.33）都在 `(Resolve-ReverseToolSpec -Name 'pyre').Command`；`(Resolve-ReverseToolSpec -Name 'pyre').Command` 是空的，不要在那里找。
+Python 库（capstone 5.0.6 / lief 1.0.0 / pyelftools 0.33）都在 `(Resolve-ReverseToolSpec -Name 'pyre').Command`；`(Resolve-ReverseToolSpec -Name 'pyre').Command` 是空的，不要在那里找。
 
 ## 步骤
 

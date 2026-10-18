@@ -18,7 +18,7 @@
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
 $rasm = (Resolve-ReverseToolSpec -Name 'rasm2').Command
 $diec = (Resolve-ReverseToolSpec -Name 'diec').Command
-$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command   # 有 pefile 2024.8.26 + capstone 5.0.7
+$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command   # 有 pefile 2024.8.26 + capstone 5.0.6
 ```
 
 > ★ `rabin2` 不可用，理由见 `aob-signature-scan.md` 坑 1。

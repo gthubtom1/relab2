@@ -480,7 +480,7 @@ python .\skillpack\skills\scripts\experience-card.py validate
 | 工具 | 干什么 | 装法 | 许可 |
 |---|---|---|---|
 | **Wireshark/tshark** | pcap 协议分层、`--export-objects` 提取 | 官方安装包（7z 免安装）→ `<工具根>\<分类>\<工具名>\` | 🟢 |
-| **Npcap** | 实时抓包驱动 | Wireshark 安装器内一并装，需管理员 | 🟢 |
+| **Npcap** | 实时抓包驱动 | Wireshark 安装器内一并装，需管理员 | 🔴 **未装**（2026-10-18：`wpcap.dll` 无、服务 1060） |
 | **mitmproxy** | HTTPS 中间人、addon | `pip install mitmproxy` | 🟢 |
 | **Fiddler Classic/Everywhere** | Windows 侧抓包 | 官网下载 | 🟡 |
 | **nmap** | 端口/服务扫描 | `winget install --source winget --accept-source-agreements --accept-package-agreements --disable-interactivity Insecure.Nmap` | 🟢 |

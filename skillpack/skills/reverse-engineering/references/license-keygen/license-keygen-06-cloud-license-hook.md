@@ -50,7 +50,7 @@ Remove-NetFirewallRule -DisplayName "TEMP-OFFLINE-TEST"
 ```
 
 ```powershell
-# 抓包确认请求形态（Npcap 服务本机 Running）
+# 抓包确认请求形态（本机未装 Npcap，2026-10-18 复核；用 mitmdump 代理抓 HTTP，或先装 Npcap）
 & $tshark -i <接口> -Y "http" -T fields -e ip.dst -e http.host -e http.request.uri
 ```
 

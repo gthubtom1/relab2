@@ -247,7 +247,7 @@ canvas、WebGL、computed style、系统颜色、屏幕尺寸、`deviceMemory`�
 下面这段是**本机实测**能工作的最小形态 —— 它建立上下文、自建定时器队列、stub XHR 并**记录出网**（对应 `netLog`）：
 
 ```javascript
-// harness.js —— node v24.20.0 实测可跑
+// harness.js —— node v22.23.3 实测可跑
 const vm = require('vm');
 
 const netLog = [];              // 对应 __iv8__.netLog.entries
@@ -304,7 +304,7 @@ console.log(JSON.stringify(netLog, null, 1));
 & (Resolve-ReverseToolSpec -Name 'node').Command harness.js
 ```
 
-**本机实测记录**（`node v24.20.0`，用一个自造的挑战片段验证 harness 本身）：
+**本机实测记录**（`node v22.23.3`，用一个自造的挑战片段验证 harness 本身）：
 
 ```
 pending timers: 1

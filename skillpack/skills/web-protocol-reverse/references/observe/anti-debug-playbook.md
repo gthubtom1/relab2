@@ -40,7 +40,7 @@
 
 - **保存资产**：`tshark` 抽 HTTP 响应体落盘，或用 `mitmdump`（`(Resolve-ReverseToolSpec -Name 'mitmdump').Command`）落流。**本机无 `reqable` / `WireMCP`。**
 - **最小 hook 优先**：`frida 17.17.0`（`(Resolve-ReverseToolSpec -Name 'frida').Command`）可以做**极窄的**、只读的 hook，比挂调试器对目标的影响面小得多。
-- **离线去混淆**：`node v24.20.0` 在本地跑脚本，取固定输入输出。
+- **离线去混淆**：`node v22.23.3` 在本地跑脚本，取固定输入输出。
 - **快速判定反调试 vs 工具故障**：若三条通道（浏览器读 DOM / frida 进程级 hook / tshark 纯抓包）表现不一致，那多半是你的工具状态问题，不是页面反调试。
 
 ## 判据（Verification checklist）

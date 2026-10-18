@@ -49,7 +49,7 @@
 > 或 `launch(executable_path=<显式路径>)`。照抄裸 `launch()` 一定失败。
 > 
 | `js-reverse`（MCP） | ❌ **未挂载** | `frida 17.17.0`（本机可用）；Node 侧见 `../../profiles/env-patch/index.md` |
-| `WireMCP` | ❌ **未挂载** | `tshark 4.6.8`（本机可用） |
+| `WireMCP` | ❌ **未挂载** | `tshark 4.6.0`（本机可用） |
 
 **结论（必须记住）**：本包文档里出现的 `chrome-devtools` / `js-reverse` / `Camoufox` / `AdsPower` / `Reqable` / `WireMCP` 序列，**在本机是「目标架构」而非「可执行脚本」**。照抄前先落到上表的替代列。
 

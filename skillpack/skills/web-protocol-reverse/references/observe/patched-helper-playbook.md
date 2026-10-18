@@ -77,7 +77,7 @@
 - `../principles/doctrine-index.md` —— **教条 3（固定输入验证胜过命名）**，本文是它的落地手册
 - `../deliver/pure-python-rebuild-playbook.md` —— 判定之后，下一步是九步纯 Python 重建
 - `./dual-writer-param-playbook.md` —— 「SDK 源码里的分支可能从未运行」
-- `../../profiles/env-patch/index.md` —— 确认是宿主依赖时，Node 侧的定点改写路径（本机 `node v24.20.0` 可用）
+- `../../profiles/env-patch/index.md` —— 确认是宿主依赖时，Node 侧的定点改写路径（本机 `node v22.23.3` 可用）
 - `../crypto/iv8-runtime-cheatsheet.md` —— **iv8 本机无**，该文档形态**未在本机验证**
 - `../crypto/offline-inline-deob-playbook.md` —— 先离线还原，再谈性质判定
 - `./transport-wrapper-playbook.md` —— 「值对」之外的「slot 对」

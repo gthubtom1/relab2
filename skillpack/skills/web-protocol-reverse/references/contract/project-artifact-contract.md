@@ -127,7 +127,7 @@
 ```powershell
 # 1) 确认项目根已被绑定（本文「绑定项目根」一节已记录）
 # 2) 确认解释器与运行时版本 —— 本机实测：
-& (Resolve-ReverseToolSpec -Name 'pyre').Command --version          # Python 3.12.0
+& (Resolve-ReverseToolSpec -Name 'pyre').Command --version          # Python 3.11.7
 & (Resolve-ReverseToolSpec -Name 'node').Command --version            # v24.20.0
 
 # 3) 只对显式选定的公开 lockfile 取指纹；不拷贝内容，只记 路径/字节数/SHA-256

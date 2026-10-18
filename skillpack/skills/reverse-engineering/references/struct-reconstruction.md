@@ -19,7 +19,7 @@
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command      # (Resolve-ReverseToolSpec -Name 'r2').Command
 $cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command # WindowsApps alias
-$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command                        # pefile 2024.8.26 + capstone 5.0.7
+$py   = (Resolve-ReverseToolSpec -Name 'pyre').Command                        # pefile 2024.8.26 + capstone 5.0.6
 ```
 
 `pefile` / `capstone` 只在 `(Resolve-ReverseToolSpec -Name 'pyre').Command`（`(Resolve-ReverseToolSpec -Name 'pyre').Command` 是空的，只有 pyghidra-mcp）。用探测层确认解释器路径。
