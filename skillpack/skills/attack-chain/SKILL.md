@@ -9,7 +9,7 @@ description: 多阶段攻击链编排：侦察、初始访问、提权、横向�
 > **手上只有"现象"、不知道该读哪一篇？** 本技能的技术正文有症状索引：先按现象查 [`../field-journal/KB-INDEX.md`](../field-journal/KB-INDEX.md)（现象 → 该读哪一篇技术文档），再读那一篇。**别按目录翻。** **什么时候该回读**（迷茫 / 换完技能 / 文档和本机对不上 …）见 [`../ops/kb-consult-contract.md`](../ops/kb-consult-contract.md) —— 它不是"开局读一次"，是**反复回读**。（来源与改编规则见同目录 `KB-SOURCES.md`）
 
 1. `NOW`: 读 `../field-journal/precedent-pentest.md` —— 本机做过多轮的常规操作清单，直接照做，不要停在犹豫上
-2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+2. `NOW`: **查经验卡** —— `python skillpack/skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
@@ -640,17 +640,17 @@ touch -t 202301010000 /path/to/file
 
 ## 与本包其他 Skill 的关系
 
-| 需求 | 路由到 |
+| 需求 | 路由到（**兄弟卡，不是本卡**） |
 |------|--------|
-| Web 漏洞深度利用 | `SKILL.md` |
-| 内网 AD 攻击详细步骤 | `SKILL.md` |
-| 逆向分析恶意样本 | `SKILL.md` |
-| APK 逆向（移动端渗透） | `SKILL.md` |
-| JS 前端签名绕过 | `SKILL.md` |
-| 自动化群体渗透 | Pentest Swarm AI（`pentestswarm scan --swarm`） |
-| AI 辅助渗透 | `mcp-kali-server` / `metasploitmcp` / `hexstrike-ai` |
-| 报告生成 | `SKILL.md` |
-| 攻击路径图 | `SKILL.md` |
+| Web 漏洞深度利用 | `pentest-tools` 或 `code-audit` |
+| 内网 AD 攻击详细步骤 | `windows-ad` |
+| 逆向分析恶意样本 | `malware-analysis` |
+| APK 逆向（移动端渗透） | `apk-reverse` / `mobile-reverse` |
+| JS 前端签名绕过 | `js-reverse` / `web-protocol-reverse` |
+| 自动化群体渗透 | `pentest-tools`（批量扫描）+ 本卡（链式利用） |
+| AI 辅助渗透 | `mcp-kali-server` / `metasploitmcp` / `hexstrike-ai`（未装时回退 `pentest-tools`） |
+| 报告生成 | `docs-generator` |
+| 攻击路径图 | `diagram-generator` |
 
 ## 任务完成自检（声称完成前 MUST 通过）
 

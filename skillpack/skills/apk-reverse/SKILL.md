@@ -11,7 +11,7 @@ description: APK 逆向：jadx/apktool 解包、改 smali/AndroidManifest、重�
 
 1. `NOW`: 读 `../field-journal/precedent-reverse.md` —— 本机做过多轮的常规操作清单，直接照做，不要停在犹豫上
 2. `NOW`: 确认当前任务是否命中本 skill 的适用范围
-3. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+3. `NOW`: **查经验卡** —— `python skillpack/skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
@@ -35,9 +35,9 @@ description: APK 逆向：jadx/apktool 解包、改 smali/AndroidManifest、重�
 
 ## 当前机器已验证可用的 CLI 工具
 
-- `jadx` `1.5.5`
-- `apktool` `3.0.2`
-- `frida-ps` `17.9.6`
+- `jadx` `1.5.3`（2026-10-18 实测；原写 1.5.5 已过时）
+- `apktool`：**本机没有标准 CLI**，只有 AndroidKiller 的 `D:\Tools\android\AndroidKiller_fix\bin\apktool\ap.bat`（包装脚本，`--version` 会报 `NoSuchFileException`）。要标准 apktool 需自备 `apktool.jar`
+- `frida-ps` `17.23.0`（在 `D:\Tools\runtime\python-venv\Scripts\frida-ps.exe`；原写 17.9.6 已过时）
 - `adb`
 - `java`
 
@@ -62,14 +62,14 @@ description: APK 逆向：jadx/apktool 解包、改 smali/AndroidManifest、重�
 - **模拟器能力层契约测试**：`scripts/test-emulator-lab.ps1`（不需要任何模拟器；
   含反例控制组证明判据真的会红）。改动 `emulator-lab.ps1` 的端口表或厂商解析后必须跑。
 - **已沉淀的可复用规则（经验卡）**：动手前先查
-  `python skills/scripts/experience-card.py search "<症状>"`；
+  `python skillpack/skills/scripts/experience-card.py search "<症状>"`；
   命中就对照 `appliesWhen` / `stopsWhen` 再用，别硬套。新经验用 `new` 沉淀。
 
 以下一行命令保持直接调用，不单独封装：
 
 - `adb devices`
 - `adb logcat`
-- `frida-ps -U`
+- `frida-ps -U` —— **无设备时会挂住不返回**（实测 60s 超时）。先 `adb devices` 确认有设备，或加 `--timeout`（frida 17.x 无此参数时用 shell 层超时：`timeout 10 frida-ps -U`）
 - `jadx --version`
 - `apktool --version`
 

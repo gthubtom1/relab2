@@ -8,12 +8,12 @@ description: Ghidra 逆向：反编译、交叉引用、analyzeHeadless 批量�
 ## ACTION REQUIRED（读完后立刻执行）
 
 1. `NOW`: 读 `../field-journal/precedent-reverse.md` —— 本机做过多轮的常规操作清单，直接照做，不要停在犹豫上
-2. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+2. `NOW`: **查经验卡** —— `python skillpack/skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
 3. `NOW`: 确认需要 **Ghidra**（无 IDA / 偏好开源 / 批量 headless）
-4. `NOW`（MCP 通道必备）: 拉起常驻 HTTP 服务（~8 s 冷启）——**启动方式与前置条件按 `../references/tool-registry.md` 的 `pyghidra-mcp` 端点行取**（`启动方式` = 常驻守护，冷启 7–10 s，幂等；`端点` = `127.0.0.1:9111/mcp`；`依赖` = `JDK 21+` + Ghidra 本体；Ghidra 本体路径用探测层 `Resolve-ReverseToolSpec -Name 'ghidraRun'` 的 `Command` 取（`Get-Command` 只是四级探测的第 2 级，返回空不等于缺工具，见 `../references/env-selfcheck.md`）。本项目无 `toolreg/`，该端点文档即事实源），再按该端点探活确认 READY 且 `Tool Count : 20`；本会话看不到 `ghidra` 工具时先 `/mcp reconnect ghidra`。**不要要求用户改 `mcp.json`，服务由 agent 自己起。**
+4. `NOW`（MCP 通道）: **本机走 stdio**（宿主按会话拉起，`tool-registry.md:41` 明确「不要设成常驻服务」；HTTP 形态 9111 是另一条可选路径，本机实测未监听，别去拉它）——**启动方式与前置条件按 `../references/tool-registry.md` 的 `pyghidra-mcp` 端点行取**（`启动方式` = 常驻守护，冷启 7–10 s，幂等；`端点` = `127.0.0.1:9111/mcp`；`依赖` = `JDK 21+` + Ghidra 本体；Ghidra 本体路径用探测层 `Resolve-ReverseToolSpec -Name 'ghidraRun'` 的 `Command` 取（`Get-Command` 只是四级探测的第 2 级，返回空不等于缺工具，见 `../references/env-selfcheck.md`）。本项目无 `toolreg/`，该端点文档即事实源），再按该端点探活确认 READY 且 `Tool Count : 20`；本会话看不到 `ghidra` 工具时先 `/mcp reconnect ghidra`。**不要要求用户改 `mcp.json`，服务由 agent 自己起。**
 5. `NEXT`: 读 `../TOOLS.md` 查 ghidra / ghidra-mcp 路径
 6. `NEXT`: 缺工具 → bootstrap `ghidra-mcp`（若 manifest 支持）或按手动步骤装 Ghidra
 7. `ACT`: 导入样本 → 自动分析 → 导出关键函数反编译
@@ -78,7 +78,7 @@ GHIDRA_PROJ="${GHIDRA_PROJ:-$PWD/ghidra_proj}"
 mkdir -p "$GHIDRA_PROJ"
 
 # analyzeHeadless 执行（尾部必须加 < nul）
-cmd /c "$GHIDRA_HOME\support\analyzeHeadless.bat $GHIDRA_PROJ temp_proj -import sample.bin -postScript ExportDecomp.py < nul"
+cmd /c "$GHIDRA_HOME\support\analyzeHeadless.bat $GHIDRA_PROJ temp_proj -import sample.bin < nul"   # 基础导入；要导出伪代码需自写 postScript（仓库里没有 ExportDecomp.py，2026-10-18 复核）
 ```
 
 ### 3. GUI 人工观察（ghidraRun）
@@ -144,11 +144,11 @@ cmd /c "$GHIDRA_HOME\support\analyzeHeadless.bat $GHIDRA_PROJ temp_proj -import 
 本技能产出算"完成"的**外部可观测**条件（不许写形容词）：
 
 - pyghidra 工程落盘：`list_project_binaries` 能列出 `/LicenceCheck.exe-ead7cd` 形式条目，MCP `save` 返回后该条目仍在（工程目录按注册表/`mcp_endpoints.ghidra.package_path` 查证）
-- Headless 批产物存在：`$GHIDRA_PROJ` 目录已 `mkdir`，`analyzeHeadless.bat ... -postScript ExportDecomp.py` 的输出文件非空（命令尾部必须带 `< nul`）
+- Headless 批产物存在：`$GHIDRA_PROJ` 目录已 `mkdir`，`analyzeHeadless.bat ...` 的输出非空（命令尾部必须带 `< nul`）。**要导出反编译结果，先自写一个 postScript**（Ghidra 自带示例在 `Ghidra/Features/Decompiler/ghidra_scripts/`）
 - 关键函数已重命名并落注释：`rename_function` / `set_comment` 后 `decompile_function` 输出中可见新名字，地址未丢失
 - 可运行最小命令（自验通道仍通）：
   - 探活：`curl.exe -sS http://127.0.0.1:9111/mcp` → 期望 READY / `Tool Count : 20`
-  - Headless：`cmd /c "$GHIDRA_HOME\support\analyzeHeadless.bat $GHIDRA_PROJ temp_proj -import sample.bin -postScript ExportDecomp.py < nul"`
+  - Headless：`cmd /c "$GHIDRA_HOME\support\analyzeHeadless.bat $GHIDRA_PROJ temp_proj -import sample.bin < nul"   # 基础导入；要导出伪代码需自写 postScript（仓库里没有 ExportDecomp.py，2026-10-18 复核）`
   - `GHIDRA_HOME` 取自 `(Get-Command ghidraRun -ErrorAction SilentlyContinue).Source` 的目录，不写死盘符
 - 功能对照一致：关键函数反编译结论与 `radare2` 反汇编／x64dbg 动态读数方向一致；不一致处显式列 `residual_risk`
 
@@ -164,7 +164,7 @@ NEXT:       <继续 | 换技能 | 停止（附成本判据）>
 本技能填写示例：
 
 ```
-FACT:       analyzeHeadless 导出 ExportDecomp_sub_00401820.txt 非空（E-003）；
+FACT:       analyzeHeadless 导入成功、$GHIDRA_PROJ 下生成 .gpr 与 .rep（E-003）；
             list_imports 含 VirtualAlloc/WriteProcessMemory（E-imports）
 HYPOTHESIS: H-002 sub_00401820 是注入壳体，写入目标是新建的远程进程
             confidence: medium，evidence_ids: [E-001, E-003]

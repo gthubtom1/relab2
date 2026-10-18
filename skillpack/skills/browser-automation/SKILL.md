@@ -7,7 +7,7 @@ description: 浏览器/桌面 GUI 自动化：Playwright/agent-browser 点击/�
 
 ## ACTION REQUIRED（读完后立刻执行）
 
-1. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+1. `NOW`: **查经验卡** —— `python skillpack/skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
@@ -20,7 +20,10 @@ description: 浏览器/桌面 GUI 自动化：Playwright/agent-browser 点击/�
 
 当任务属于以下场景时使用本 skill：
 
-### 浏览器场景（Playwright / agent-browser）
+### 浏览器场景（本机：**agent-browser 可用**；Playwright 未安装）
+
+> **2026-10-18 实测**：`python -m playwright` → rc=1（未安装）；`playwright-mcp` / `chrome-devtools` / `jshookmcp` 三个 MCP 通道**均未注册**。
+> 本机唯一可用的浏览器自动化路径是 **`agent-browser`**（rc=0）。下面的 Playwright 段落当**备选方案**读，用前先 `python -c "import playwright"` 验证。
 - 打开网页并操作页面元素（点击、填表、提交）
 - 爬取页面内容或截图
 - 自动化登录流程

@@ -9,7 +9,7 @@ description: OSINT 与威胁情报：公开来源 IOC 富化、campaign 与威�
 
 1. `NOW`: 读取 `../ops/scope-contract.md`，确认公开来源、目标实体、时间窗与交付用途。
 2. `NOW`: 仅在需要操作先例时读取 `../field-journal/precedent-pentest.md`。先例不能授予权限。
-3. `NOW`: **查经验卡** —— `python skills/scripts/experience-card.py search "<你看到的症状>"`。
+3. `NOW`: **查经验卡** —— `python skillpack/skills/scripts/experience-card.py search "<你看到的症状>"`。
    命中就读那张卡的 `invariant` + `decision.action`，并**逐条对照** `scope.appliesWhen`
    与 `scope.stopsWhen`：少一条前提就停用；命中任一停止条件就停。
    历史卡**不替代**当前目标的实测证据。详见 `../experience-cards/INDEX.md`。
