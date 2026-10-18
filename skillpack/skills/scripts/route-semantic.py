@@ -138,14 +138,26 @@ def score_all(hint: str, skills: list[dict], symptoms: list[dict]) -> list[dict]
             bump(sid, 90, "name-in-query")
         elif sid.lower() in ql:
             bump(sid, 88, "id-in-query")
-        # 3 description substring（按匹配长度给分，最长 95）
+        # 3 description substring —— **按覆盖率给分**，不是按命中个数。
+        #   ★ 2026-10-18：以前 `45 + 8*hit`，2 个泛词就给 61 分，
+        #     于是「接口老是返回 412」被 edr-bypass-re / hardware-security / verify-done
+        #     并列 81 分压过正确答案。改成「查询的词有多少比例出现在 desc 里」。
         dl = desc.lower()
-        hit = 0
-        for tok in (qlatin | qbigram):
-            if len(tok) >= 2 and tok in dl:
-                hit += 1
-        if hit:
-            bump(sid, min(95, 45 + 8 * hit), "desc-substr")
+        qset = qlatin | qbigram
+        hit = sum(1 for tok in qset if len(tok) >= 2 and tok in dl)
+        if hit and qset:
+            cov = hit / len(qset)
+            # ★ 稀有 token 单独加权：`412`、`0xc0000015`、`smali` 这类词一旦命中就是强信号，
+            #   不该被中文 bigram 稀释（「接口老是返回 412」的 qset 有 7 个词，
+            #   只有 412 命中 -> cov=0.14，按覆盖率算会被判成「无关」）。
+            rare = [t for t in qset if (t.isdigit() and len(t) >= 3) or (t.isascii() and len(t) >= 4)]
+            rare_hit = [t for t in rare if t in dl]
+            if rare_hit:
+                bump(sid, min(95, 70 + 10 * len(rare_hit)), "rare-token")
+            if cov >= 0.5:
+                bump(sid, 95, "desc-substr")
+            elif cov >= 0.3:
+                bump(sid, 55 + int(35 * cov), "desc-substr")
         # 4 keyword token overlap（desc 里的 latin token 与查询交集）
         dlat = latin_tokens(desc)
         ov = len(qlatin & dlat)
@@ -162,16 +174,23 @@ def score_all(hint: str, skills: list[dict], symptoms: list[dict]) -> list[dict]
                 bump(sid, 40, "fuzzy")
                 break
 
-    # 症状句：命中即视为强证据（它本来就是「用户这样说」的人工映射）
+    # 症状句：命中即视为强证据（它本来就是「用户这样说」的人工映射）。
+    # ★ 2026-10-18：以前是「共同 bigram >= 2 就给分」，2 个就给 50 —— 太松，
+    #   实测「挖矿木马样本，想搞清楚它连哪」靠 2 个泛词命中 macos-reverse 的症状句，
+    #   把正确答案 malware-analysis 压掉了。改成**按覆盖率**：查询的词有多少比例
+    #   在那条症状句里出现，覆盖率越高分越高；低于 35% 不给分。
+    qset = qlatin | qbigram
     for s in symptoms:
         ph = s["phrase"]
         pts = 0
         if q and (q in ph or ph in q):
             pts = 92
-        else:
-            ov = len((qlatin | qbigram) & (latin_tokens(ph) | cjk_bigrams(ph)))
-            if ov >= 2:
-                pts = min(85, 25 * ov)
+        elif qset:
+            cov = len(qset & (latin_tokens(ph) | cjk_bigrams(ph))) / len(qset)
+            if cov >= 0.55:
+                pts = 55 + int(20 * cov)
+            elif cov >= 0.30:
+                pts = 30 + int(40 * cov)
         if pts:
             bump(s["id"], pts, "symptom")
 
