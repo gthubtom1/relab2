@@ -1,4 +1,11 @@
-# PATH-CLEANUP — APK / Delivery / CTF-Hack 悬空路径与旧框架引用处置记录
+# PATH-CLEANUP
+
+> ⚠️ **2026-10-18 复核：本文的路径全部已失效**。
+> 它写的是 `skills/community/<source>/` 布局，那个布局已经移到 `skillpack/community-raw/`。
+> **本文只是维护记录（provenance），不是执行规则**；不要照抄任何路径。
+> 当前布局见 `docs/PROJECT-MAP.md` 与 `skillpack/skills/config/`。
+
+ — APK / Delivery / CTF-Hack 悬空路径与旧框架引用处置记录
 
 状态：maintenance record（T07 + T08 + T09 的**内容修复部分**交付物）
 作用：登记 A（悬空路径）/ B（`AI LOAD INSTRUCTION`）/ C（`user-invocable`）三组改动的

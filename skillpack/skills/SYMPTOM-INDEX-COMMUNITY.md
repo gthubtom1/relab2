@@ -17,6 +17,12 @@
 > 每行依据为 skills/community/registry.json 中该记录的 extensions.legacy_description
 >（delivery 包该字段多为套话时，依据为 legacy_original_name 字面能力 + community-raw 正文前 20 行）。
 
+> ⚠️ **2026-10-18 复核：本表的「去向」列有 16 个名字是旧写法，`registry.json` 里查不到**。
+> 形如 `xxx-skills-index` 的名字**不是真实 id**；真实的 delivery 包 id 是
+> `community-ai-fullstack-delivery-<NNN>`（见 `community/registry.json` 的 `skills[].id`）。
+> 本表仍可用于「现象 → 技能名」的**语义**路由，但**不要拿去向列的字面串去查 registry**。
+
+
 ## 症状 → 社区技能（一、hack-skills，经 hack-hub 进入）
 
 | 用户这样说 | 去这里 | 备注 |
