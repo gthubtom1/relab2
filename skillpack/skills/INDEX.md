@@ -8,7 +8,7 @@
 | 模块 | 摘要 |
 |------|------|
 | [api-security](api-security/SKILL.md) | API 安全测试：REST/GraphQL/WebSocket 接口发现、JWT/OAuth、BOLA/IDOR/BFLA 越权。用于：接口越权、JWT 弱密钥、GraphQL 内省。 |
-| [apk-reverse](apk-reverse/SKILL.md) | APK 逆向：jadx/apktool 解包、改 smali/AndroidManifest、重打包、Frida hook。用于：APK 逻辑、装不上、去广告、查服务器、root 检测。 |
+| [apk-reverse](apk-reverse/SKILL.md) | APK 逆向：jadx/apktool 解包、改 smali/AndroidManifest、重打包、Frida hook。用于：APK 逻辑、装不上、去广告、root 检测、安装包、开机自启、后台行为。 |
 | [attack-chain](attack-chain/SKILL.md) | 多阶段攻击链编排：侦察、初始访问、提权、横向、影响评估。用于：完整渗透、外网打到域控、HW 演练、webshell 下一步。 |
 | [binary-diff](binary-diff/SKILL.md) | 二进制差分/符号迁移：旧版符号迁到新版、更新后找偏移、内核缺 PDB。用于：更新后地址变了、新版 PDB 下不到、旧版函数名迁移。 |
 | [binary-ninja-reverse](binary-ninja-reverse/SKILL.md) | Binary Ninja 逆向：HLIL/MLIL/LLIL 数据流、xrefs、类型与重命名、Python API。用于：点名 BN 看函数逻辑、跟调用链、与 IDA/Ghidra/radare2 交叉验证。 |
@@ -45,11 +45,11 @@
 | [kernel-exploit](kernel-exploit/SKILL.md) | Linux 内核漏洞根因与利用链：CVE 复盘、OOB/UAF 原语推导、SMEP/SMAP/KASLR/KPTI 绕过、补丁差分。用于：查内核 CVE 根因、审计驱动源码。 |
 | [llm-security](llm-security/SKILL.md) | LLM/AI Agent 安全测试：prompt injection（直接/间接）、越狱与编码绕过、工具滥用越权、记忆投毒。用于：测 ChatBot/RAG、红队 Agent 工具调用、garak/PyRIT。 |
 | [macos-reverse](macos-reverse/SKILL.md) | macOS/Mach-O 逆向：codesign 签名与 Hardened Runtime、ObjC/Swift 符号恢复、dylib/.app 分析、TCC，工具 otool/jtool2。用于：分析 Mach-O 签名装载、恢复 ObjC 类结构。 |
-| [malware-analysis](malware-analysis/SKILL.md) | 恶意样本分析（静态/动态/行为）：查壳脱壳与 IAT 修复、C2 与持久化、IOC 提取、YARA/Sigma 规则、沙箱编排、反调试。用于：判定 exe/dll/sys/宏样本。 |
+| [malware-analysis](malware-analysis/SKILL.md) | 恶意样本分析（静态/动态/行为）：查壳脱壳与 IAT 修复、C2 与持久化、IOC 提取、YARA/Sigma 规则、沙箱编排、反调试。用于：判定 exe/dll/sys/宏、挖矿木马、连哪样本。 |
 | [mobile-reverse](mobile-reverse/SKILL.md) | Android/iOS 逆向与安全测试：APK/IPA 分析、jadx/apktool/smali、Frida/objection 插桩、SSL pinning 与 root/越狱绕过、OWASP MASTG。用于：分析 APK/IPA、绕证书校验与加固。 |
 | [ot-ics](ot-ics/SKILL.md) | OT/ICS 工控安全评估：Purdue 分区、PLC/RTU/SCADA 暴露面、Modbus/DNP3/S7/EtherNet/IP 识别、被动优先只读。用于：评估工控环境、镜像流量解析协议。 |
 | [patch-diff-exploit](patch-diff-exploit/SKILL.md) | N-day 补丁差分到利用：before/after 二进制对齐符号，BinDiff/ghidriff/Diaphora 差分，从新增检查反推 bug class（OOB/UAF/溢出）并写 PoC。用于：有 CVE 无 PoC、闭源驱动补丁还原。 |
-| [pentest-tools](pentest-tools/SKILL.md) | 主动渗透工具链：子域名、Nmap/Masscan 端口扫描、Nuclei 漏洞扫描、SQLi/XSS/SSRF 与 SQLMap/FFUF 爆破、Hashcat 口令破解。用于：授权扫描主机与 Web。 |
+| [pentest-tools](pentest-tools/SKILL.md) | 主动渗透工具链：子域名、Nmap/Masscan 端口扫描、Nuclei 漏洞扫描、SQLi/XSS/SSRF 与 SQLMap/FFUF 爆破、Hashcat 口令破解。用于：授权扫描主机与 Web、等保排查、查有没有洞 |
 | [src-hunter](pentest-tools/src-hunter/SKILL.md) | 实战 SRC/众测/bug bounty 漏洞挑战工作流。用于：5 阶段方法论 + 19 类攻击 playbook + 结构化 payload + WAF/EDR 绕过变体、真实漏洞案例库。 |
 | [pr-ship](pr-ship/SKILL.md) | 用最小、可审的 PR 交付改动，并附作者自己的验证证据与完整描述。用于：帮我把这个改动提成 PR、要开 PR 了、把这个 feature 交付出去。 |
 | [protocol-reverse](protocol-reverse/SKILL.md) | 自定义协议逆向：TCP/UDP 帧布局还原、protobuf/gRPC 解码、WebSocket/MQTT 分析、PCAP 还原状态机。用于：有 PCAP 要还协议、未知 protobuf 恢复。 |
@@ -58,14 +58,14 @@
 | [radio-sdr](radio-sdr/SKILL.md) | RF/SDR 信号研究：调制识别、GNU Radio/URH/Inspectrum 解调、屏蔽室重放。用于：非 Wi-Fi 射频（RTL-SDR/HackRF IQ）、ADS-B/遥控/传感器协议。 |
 | [req-clarify](req-clarify/SKILL.md) | 把模糊需求收敛成可判定的验收标准（Given-When-Then、含负例与边界），信息不足先问不猜。用于：需求含糊、验收写不出、开工前定 spec。 |
 | [dsl-vm-reverse](reverse-engineering/dsl-vm-reverse/SKILL.md) | JS 自定义 DSL/VM 解释器逆向。用于：分析 IIFE 或 switch opcode 分发器、提取指令表、恢复字节码语义、捕获 VM 状态时。 |
-| [reverse-engineering](reverse-engineering/SKILL.md) | 通用逆向方法论：triage→static→dynamic，判壳/混淆/虚拟化、custom VM、anti-debug。用于：搞不清样本怎么跑、加固挡路、调试器一用就退。 |
+| [reverse-engineering](reverse-engineering/SKILL.md) | 通用逆向方法论：triage→static→dynamic，判壳/混淆/虚拟化、custom VM、anti-debug。用于：搞不清样本怎么跑、注册码、序列号、改判断、加固挡路、调试器一用就退。 |
 | [spike](spike/SKILL.md) | 跑一次性原型验证可行性或比较方案，产出 go/no-go 结论与证据而非可合并代码。用于：先验证一下行不行、比较两个方案、做个技术选型原型。 |
 | [supply-chain-security](supply-chain-security/SKILL.md) | 供应链安全评估：SBOM、SCA 依赖漏洞与可达性、CI/CD 管道审计、容器镜像。用于：审依赖许可、查组件 CVE、测 GitHub Actions 信任边界。 |
 | [thick-client](thick-client/SKILL.md) | 桌面厚客户端测试：信任边界、凭证存储、IPC/命名管道、流量与更新校验。用于：Electron/Qt/WinForms/WPF、%APPDATA% 硬编码密钥、DLL 劫持、更新器降级。 |
 | [threat-hunting](threat-hunting/SKILL.md) | 威胁狩猎与检测工程：SIEM/EDR 假说查询、Sysmon 事件关联、Sigma/YARA 规则。用于：找 LOTL 横向、IOC 落地检测规则、验证规则。 |
 | [threat-intelligence](threat-intelligence/SKILL.md) | OSINT 与威胁情报：公开来源 IOC 富化、campaign 与威胁组织画像、仿冒诈骗线索、Xquik 公开 X/Twitter 检索。用于：IOC 归属、情报包准备。 |
 | [verify-done](verify-done/SKILL.md) | 给 agent 一个自己可跑、返回 pass/fail 的 check，并用独立 context 复核需求。用于：怎么确认改好了、做完了没有、跑一遍验证、核对需求逐条。 |
-| [web-protocol-reverse](web-protocol-reverse/SKILL.md) | 敌意 Web 客户端还原成不依赖浏览器的采集器：sign/token/cookie、challenge、WebSocket/GraphQL/protobuf、WebAssembly。用于：403/412/429、HAR 离线复现、可重放采集器。 |
+| [web-protocol-reverse](web-protocol-reverse/SKILL.md) | 敌意 Web 客户端还原成不依赖浏览器的采集器：sign/token/cookie、challenge、WebSocket/GraphQL/protobuf、WebAssembly。用于：403/412/429、HAR 离线复现、可重放采集器、爬不下来。 |
 | [wifi-wireless](wifi-wireless/SKILL.md) | Wi-Fi 安全评估：监听模式、WPA/WPA2 握手/PMKID、aircrack/hashcat 口令评估、流氓 AP 检测。用于：airmon-ng/airodump-ng 抓包、802.11 管理帧。 |
 | [windows-ad](windows-ad/SKILL.md) | AD/Windows 身份攻击：Kerberos(Kerberoast/AS-REP)、ADCS ESC1-ESC8、BloodHound、NTLM relay、域内提权。用于：域渗透身份枚举、impacket/certipy/nxc、pass-the-hash。 |
 | [write-tests](write-tests/SKILL.md) | 判断该不该写测试、写只测行为不测实现的测试，不强制覆盖率数字。用于：要不要写测试、测试怎么写、测行为还是测实现、测试总在改。 |
