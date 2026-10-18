@@ -134,7 +134,11 @@ foreach ($src in $sources) {
         if ($url) {
             try { $u = [uri]$url; $hostName = $u.Host; $port = $u.Port; $listening = Test-Port -HostName $hostName -Port $port } catch { }   # scan-ok: 解析/探测失败=>该行 host/port 留空、listening 未知（下一步 $isLazy 分支本就把它置 $null）；不会冒充"在监听"
         }
-        if ($isLazy) { $listening = $null }   # 懒启动：后端在不在都不影响可用性
+        # ★ 2026-10-18 审计（A4）：这一行以前**无条件**把懒启通道的 LISTENING 置成 n/a，
+        #   于是「idapro 在 13337 监听中」也显示 n/a —— 三列只兑现两列，
+        #   而 x64dbg-reverse/SKILL.md 的验收条件「mcp-status 显示 LISTEN」物理上无法达成。
+        #   现在：保留前面 Test-Port 的真实结果；只有**探测失败（$null）**才留空。
+        #   （懒启通道后端不在监听是正常形态，那一列会显示 False，不是 n/a。）
         $rows.Add([pscustomobject]@{
             host       = $src.host
             name       = $name
@@ -147,7 +151,13 @@ foreach ($src in $sources) {
 }
 
 if ($Json) {
-    [pscustomobject]@{ sources = @($seenSources); servers = @($rows) } | ConvertTo-Json -Depth 6
+    # ★ 2026-10-18 审计（A4）：`@($rows)` 对 List[pscustomobject] 会报
+    #   「Argument types do not match」（$rows 是泛型 List，不是数组）。
+    #   显式 ToArray() 才能进 hashtable 的值位。
+    [pscustomobject]@{
+        sources = [string[]]@($seenSources)
+        servers = @($rows.ToArray())
+    } | ConvertTo-Json -Depth 6
     exit 0
 }
 
