@@ -10,7 +10,7 @@ Output (markdown):
 
 Usage: python analyze.py data/R1.json [--out rounds/R1.md]
 """
-import io, json, os, re, sys
+import argparse, io, json, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CARDS = os.environ.get("HUBCORE_CARDS") or os.path.join(
@@ -46,8 +46,13 @@ CAND = re.compile(
 
 
 def main():
-    src = sys.argv[1]
-    out = sys.argv[sys.argv.index("--out") + 1] if "--out" in sys.argv else None
+    ap = argparse.ArgumentParser(
+        description="把一轮 sweep 的 JSON 变成补丁可用的证据表（只读源，写 --out 或 stdout）。")
+    ap.add_argument("src", help="sweep 原始 JSON，如 data/R1.json")
+    ap.add_argument("--out", default=None, help="输出 markdown 路径；不给就打到 stdout")
+    a = ap.parse_args()
+    src = a.src
+    out = a.out
     mp = os.path.join(HERE, "models.json")
     if os.path.exists(mp):
         for m in json.load(io.open(mp, encoding="utf-8")).get("models", []):

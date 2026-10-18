@@ -233,7 +233,7 @@ GUI 程序弹窗等输入、零 stdout、进程永不退出。**agent 不得经 
 
 无 CLI 孪生的（**PE-bear、Scylla、010 Editor、JEB**）：只能人工在桌面侧操作，agent 不得拉起。
 
-> ★ **工具参数的唯一事实源是 `skills/config/tool-recipes.json`**：本文件与各技能卡里的命令示例（如 `diec` 用 `-d -e -j`、`capa` 必须带 `-q`）若与它不一致，**一律以配方为准**；用 `python skills/tests/test-tool-recipes.py --list` 列出全部已登记配方（去掉 `--list` 会把每条真跑一遍）。
+> ★ **工具参数的唯一事实源是 `skills/config/tool-recipes.json`**：本文件与各技能卡里的命令示例（如 `diec` 用 `-d -e -j`、`capa` 必须带 `-q`）若与它不一致，**一律以配方为准**；用 `python skillpack/skills/tests/test-tool-recipes.py --list` 列出全部已登记配方（**从仓根跑**；`skills/...` 只在 `skillpack/` 目录下才解析得到）（去掉 `--list` 会把每条真跑一遍）。
 
 ---
 
@@ -532,7 +532,7 @@ python .\skillpack\skills\scripts\experience-card.py validate
 ## 8. 逆向 MCP 通道（按需启停）
 
 > **本表是"有哪几条通道、怎么起"，不是"本机注册了几条"。** 事实源 =
-> `skills/scripts/register-mcp.py`（出厂 **6 条**）+ `references/tool-registry.md`（端点登记）；
+> `skills/scripts/register-mcp.py`（实测 `--dry-run` 造出 **7 条**：pyghidra-mcp / angr-mcp / relab2-tools / idapro / x64dbg-mcp / x32dbg-mcp / rea）+ `references/tool-registry.md`（端点登记）；
 > 本机注册数现查宿主 `mcp.json`（命令见 §8.1）。`idalib-mcp` 是**可选项，不在出厂 6 条里**。
 
 | 通道 | 端点 | 启停 |
@@ -557,7 +557,7 @@ python .\skillpack\skills\scripts\experience-card.py validate
 > ⚠ **本节上一版写的是「`daily` 只留 pyghidra（20 工具）/ `full` 全 5 个（140+ 工具）」——
 > 那两张表已经不成立了，两个数也都是错的。** 现行语义看 `switch-mcp.py` 源码：
 > `2026-10-15：daily 与 full 已合并（懒启动代理上线后不再需要切来切去）`，
-> 两者都走同一个 `merge_and_apply()`，**结果一致：把出厂 6 条通道全部登记进活跃配置**。
+> 两者都走同一个 `merge_and_apply()`，**结果一致：把出厂 7 条通道全部登记进活跃配置**（`register-mcp.py --dry-run` 实跑输出 7 个名字）。
 >
 > 为什么废掉裁剪：旧版是「整份拷贝 `mcp.all.json` 覆盖 `mcp.json`」，
 > 会把**只存在于活跃配置里的通道静默删掉**（本机实测被删的是 `rea`）——
@@ -577,7 +577,7 @@ python -c "import json,os;p=os.path.expanduser('~/.omp/agent/mcp.json');print(li
 ```
 
 全量登记时，**每次请求都要带全部通道的工具 Schema**（Token 是实打实的成本：
-2026-10-11 按 5 通道口径实测 ~28,000~32,000，**6 通道后未复测 —— 引用前先重测**）。
+2026-10-11 按 5 通道口径实测 ~28,000~32,000，**7 通道后未复测 —— 引用前先重测**）。
 目前**没有**脚本级开关可以少注入一部分通道；`show` 只报状态，不改配置。
 切换后**要重开 agent 会话**才生效。
 

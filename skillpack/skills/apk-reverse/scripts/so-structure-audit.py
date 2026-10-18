@@ -6,8 +6,8 @@
 是否有加固特征 so、JNI 入口在哪、构造函数有几个。
 
 用法（Windows）:
-    D:\\EXE\\python\\python.exe so-structure-audit.py libil2cpp.so
-    D:\\EXE\\python\\python.exe so-structure-audit.py libtarget.so --jni --strings 256
+    python so-structure-audit.py libil2cpp.so
+    python so-structure-audit.py libtarget.so --jni --strings 256
 """
 import argparse
 import re
@@ -18,7 +18,7 @@ try:
     from elftools.elf.elffile import ELFFile
     from elftools.elf.sections import SymbolTableSection
 except ImportError as e:  # pragma: no cover
-    sys.exit("缺少 pyelftools: %s\n用 D:\\EXE\\python\\python.exe 运行" % e)
+    sys.exit("缺少 pyelftools: %s\n用装了 pyelftools 的解释器运行（本机 `python` 已装；探测层别名 pyre）" % e)
 
 MACHINE = {"EM_ARM": "ARM32", "EM_AARCH64": "ARM64",
            "EM_386": "x86", "EM_X86_64": "x86_64"}

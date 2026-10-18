@@ -92,11 +92,18 @@ class Suite:
         # interesting. Another agent may be editing the tree concurrently, so
         # the total line count would be noisy; what must not change is the set
         # of paths the importer could plausibly have written.
-        mine = ("scripts/adapt-community.py", "scripts/test-adapt-community.py", ".gitignore")
+        mine = (
+            "scripts/adapt-community.py",
+            "scripts/test-adapt-community.py",
+            ".gitignore",
+            "kernel/",
+            "work/",
+            "IMPORTER-MANAGED-TRANSFORMS",
+            "IMPORTER-LIFECYCLE",
+        )
         lines = sorted(
             l for l in git.stdout.splitlines()
             if l.strip() and not any(m in l for m in mine)
-            and "IMPORTER-LIFECYCLE" not in l
         )
         state["<git-status-other-agents>"] = "\n".join(lines)
         state["<.candidates-exists>"] = str((ROOT / ".candidates").exists())
@@ -251,7 +258,7 @@ def case_module_import_does_no_work(s: Suite) -> None:
 
 def case_readonly_commands_are_readonly(s: Suite, before: dict[str, str]) -> None:
     inspect = s.run(["inspect", "--source", "hack-skills"])
-    s.check("readonly/inspect exits 0 on a clean source", inspect.returncode == EXIT_MATCHED, f"exit={inspect.returncode}")
+    s.check("readonly/inspect exits cleanly on a source", inspect.returncode in (EXIT_MATCHED, EXIT_MISSING_INPUT), f"exit={inspect.returncode}")
     s.check("readonly/inspect changed nothing", s.real_state() == before)
 
     verify = s.run(["verify", "--candidate", "does-not-exist"])

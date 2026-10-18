@@ -1,5 +1,9 @@
 """索引库：把 26 MB 的 .hub/ledger.jsonl 变成一条可查的元数据索引。
 
+> **本仓当前没有 `.hub/`，索引为空是正常状态。** 下面这组数字是**上一版中枢**的实测值，
+> 留在这里是为了说明「为什么索引要增量做」；`ctxiso status --product <仓根>` 现在会报
+> `ledger_bytes: 0, indexed_events: 0`，那不是索引坏了。
+
 关键约束（实测依据，见 00-ANALYSIS/02-污染链实测.md）：
   ledger.jsonl = 26,029,540 B / 1,118 条事件，单条 physical_probe 约 23 KB，
   因为事件里内嵌了 observed.json（30+ 个 null 键）、assertions 数组、

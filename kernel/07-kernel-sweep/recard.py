@@ -12,7 +12,7 @@ Usage:
   python recard.py --kernel kernel/lcs-kernel.md [--family none|keep] [--dry-run]
 Originals are copied to _backup-kernel/<card>.md before the first write.
 """
-import io, os, re, shutil, sys
+import argparse, io, os, re, shutil, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CARDS = os.environ.get("HUBCORE_CARDS") or os.path.join(
@@ -33,15 +33,20 @@ def split_card(text):
     return header, body.rstrip("\n") + "\n", ""
 
 def main():
-    a = sys.argv[1:]
-    kernel_path = a[a.index("--kernel") + 1]
-    dry = "--dry-run" in a
+    ap = argparse.ArgumentParser(
+        description="把共享内核正文重新拼进所有 base 卡，保留各自的家族补丁。")
+    ap.add_argument("--kernel", required=True, help="内核正文，如 kernel/lcs-kernel.md（相对本目录）")
+    ap.add_argument("--dry-run", action="store_true", help="只报体积变化，不写盘")
+    ap.add_argument("--only", default=None, help="只处理这几张卡（逗号分隔的文件名）")
+    ap.add_argument("--family", default=None, choices=["none", "keep"],
+                    help="家族补丁处理方式（当前实现总是保留，参数留着兼容旧命令）")
+    a = ap.parse_args()
+    kernel_path = a.kernel
+    dry = a.dry_run
     kernel = io.open(os.path.join(HERE, kernel_path), encoding="utf-8").read().strip("\n") + "\n"
     backup = os.path.join(HERE, "_backup-kernel")
     os.makedirs(backup, exist_ok=True)
-    only = None
-    if "--only" in a:
-        only = set(a[a.index("--only") + 1].split(","))
+    only = set(a.only.split(",")) if a.only else None
     for name in sorted(os.listdir(CARDS)):
         if not name.endswith(".md"):
             continue

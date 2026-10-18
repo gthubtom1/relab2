@@ -9,7 +9,7 @@ he should be able to copy a line, paste it, get code, copy the next line.
 
 Usage: python gen_askcard.py items/extreme41.md items/staged41.md 提问卡.md
 """
-import io, os, re, sys
+import argparse, io, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -37,9 +37,14 @@ def read_titles(path):
     return out
 
 def main():
-    a = sys.argv[1:]
-    titles = read_titles(a[0])
-    staged = io.open(a[1], encoding="utf-8").read().splitlines()
+    ap = argparse.ArgumentParser(
+        description="生成给人用的复制粘贴提问卡（一条只问一个函数）。")
+    ap.add_argument("titles", help="类别级题集，如 items/extreme41.md（取每题的标题）")
+    ap.add_argument("staged", help="分段题集，如 items/staged41.md")
+    ap.add_argument("out", help="输出 markdown 路径，如 提问卡.md")
+    a = ap.parse_args()
+    titles = read_titles(a.titles)
+    staged = io.open(a.staged, encoding="utf-8").read().splitlines()
     groups = {}
     order = []
     for line in staged:
@@ -65,8 +70,8 @@ def main():
         for k, stage in enumerate(groups[base], 1):
             out.append("%d. %s" % (k, stage))
         out.append("")
-    io.open(a[2], "w", encoding="utf-8", newline="\n").write("\n".join(out) + "\n")
-    print("wrote %s: %d groups, %d questions" % (a[2], len(order), sum(len(v) for v in groups.values())))
+    io.open(a.out, "w", encoding="utf-8", newline="\n").write("\n".join(out) + "\n")
+    print("wrote %s: %d groups, %d questions" % (a.out, len(order), sum(len(v) for v in groups.values())))
 
 if __name__ == "__main__":
     main()

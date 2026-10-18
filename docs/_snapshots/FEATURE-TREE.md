@@ -6,8 +6,8 @@
 
 relab2 · 功能线路树（从真实文件推导）
 ========================================================================
-├─ 入口层（relab2.ps1 子命令 3 个）
-│    doctor · setup · update
+├─ 入口层（relab2.ps1 子命令 4 个）
+│    doctor · known · setup · update
 ├─ 技能层（57 张卡）
 │    api-security               API 安全测试：REST/GraphQL/WebSocket 接口发现、JWT/OAuth、BOLA/IDOR/BFL
 │    apk-reverse                APK 逆向：jadx/apktool 解包、改 smali/AndroidManifest、重打包、Frida hoo
@@ -22,17 +22,17 @@ relab2 · 功能线路树（从真实文件推导）
 │    R3   → js-reverse/SKILL.md                      JS / frontend reverse
 │    R4   → reverse-engineering/dsl-vm-reverse/SKILL.md DSL VM reverse
 │    … 其余 59 条
-├─ 工具层（预探测 id 57 · 能力 33 · 配方 9）
-│    配方: triage.format, triage.fileinfo, triage.strings, triage.capabilities, pcap.parse, portscan.local, yara.version, apk.decompile, js.runtime
-├─ MCP 层（宿主已注册 6 · 可注册 6）
-│    已注册: pyghidra-mcp, x64dbg-mcp, idapro, angr-mcp, relab2-tools, rea
-│    可注册: angr-mcp, idapro, pyghidra-mcp, rea, relab2-tools, x64dbg-mcp
-├─ 门禁层（40 道）
+├─ 工具层（预探测 id 57 · 能力 33 · 配方 69）
+│    配方: triage.format, triage.fileinfo, triage.strings, triage.capabilities, pcap.parse, portscan.local, yara.version, yara.scan, apk.decompile, js.runtime, tool.apktool, tool.binwalk, tool.dotnet, tool.ffmpeg, tool.frida, tool.gcc, tool.gdb, tool.gh, tool.go, tool.git, tool.hashcat, tool.ilspycmd, tool.java, tool.jq, tool.mitmdump, tool.ncat, tool.node, tool.nping, tool.npm, tool.nuclei, tool.objection, tool.pe-sieve, tool.ropper, tool.ropgadget, tool.scrcpy, tool.scyllahide, tool.sqlmap, tool.upx, tool.httpx, tool.ffuf, tool.john, tool.rabin2, tool.radare2, tool.7z, tool.cdb, tool.idat, tool.ghidra_headless, tool.de4dot, tool.javac, tool.adb, tool.aapt, tool.dexdump, tool.dex2jar, tool.zipalign, tool.unsquashfs, tool.mksquashfs, tool.openocd, tool.qemu-system-arm, tool.qemu-system-mips, tool.flashrom, tool.jefferson, tool.ubireader, tool.innoextract, tool.innounp, tool.npx, tool.bun, tool.ssh, tool.mitmproxy, tool.scyllahide-x86
+├─ MCP 层（宿主已注册 7 · 可注册 5）
+│    已注册: pyghidra-mcp, x64dbg-mcp, idapro, angr-mcp, relab2-tools, rea, x32dbg-mcp
+│    可注册: angr-mcp, idapro, pyghidra-mcp, rea, relab2-tools
+├─ 门禁层（45 道）
 │    verify-spec-structure            skills/scripts/verify-spec-structure.py
 │    audit-discovery-surface          skills/scripts/audit-discovery-surface.py
 │    verify-triage-lock               skills/scripts/verify-triage-lock.py
 │    verify-community-banner          skills/scripts/verify-community-banner.py
-│    … 其余 36 道
+│    … 其余 41 道
 ├─ 工作流层（6 个生命周期脚本）
 │    case-init.ps1          skillpack/skills/scripts/case-init.ps1
 │    append-evidence.ps1    skillpack/skills/scripts/append-evidence.ps1
@@ -46,23 +46,23 @@ relab2 · 功能线路树（从真实文件推导）
 │    模型怎么连
 │    文档里的「本机读数」不是配置。
 │    宿主入口文件缺失 = 首次安装，不是错误。
-├─ 知识库层（症状索引 True · 契约 True · 板块 10 · 技术正文 206 篇 · 本仓札记 51 篇）
-│    PE / 二进制逆向                61 篇  → reverse-engineering
-│    Web / API 安全              72 篇  → api-security
+├─ 知识库层（症状索引 True · 契约 True · 板块 14 · 技术正文 209 篇 · 本仓札记 51 篇）
+│    PE / 二进制逆向                39 篇  → reverse-engineering
+│    Web / API 安全              74 篇  → api-security
 │    数据库注入                     10 篇  → database-security
-│    Web 攻击链与 CVE 实证           18 篇  → attack-chain
-│    Web-CTF 比赛与付费墙            11 篇  → ctf-sandbox
-│    云 / K8s / CI-CD            9 篇  → cloud-k8s
+│    Web 攻击链与 CVE 实证           16 篇  → attack-chain
+│    Web-CTF 比赛与付费墙            15 篇  → ctf-sandbox
+│    云 / K8s / CI-CD            8 篇  → cloud-k8s
 │    上游: LING71671/open-reverselab`
 ├─ kernel 行为层（10 个模块）
 │    00-ANALYSIS             4 文件  00-ANALYSIS · 三份分析的导航
 │    01-design               5 文件  
-│    02-hubcore             83 文件  
-│    03-bundle             252 文件  
-│    04-console             74 文件  外置中枢 · 工作台（04-console）
-│    05-tests                6 文件  
+│    02-hubcore             91 文件  
+│    03-bundle             254 文件  
+│    04-console            167 文件  外置中枢 · 工作台（04-console）
+│    05-tests                7 文件  
 │    06-verify              10 文件  
-│    07-kernel-sweep       134 文件  
+│    07-kernel-sweep       140 文件  
 ├─ 经验卡层（11 张 · 读取器 True）
 │    android-minsdk-gate-is-not-bypassable
 │    android-native-abi-decides-hookability
@@ -73,7 +73,7 @@ relab2 · 功能线路树（从真实文件推导）
 │    wrapper: apk-extension, ctf-hub, delivery, hack-hub
 ├─ 扩展层（1 个文件）
 │    extensions/pi/cmd-guard
-├─ 契约/模板层（templates 4 · schemas 10 · ops 15 · references 7）
+├─ 契约/模板层（templates 4 · schemas 10 · ops 15 · references 8）
 └─ 依赖层
      python(系统)     3.14.3
      mcp SDK        1.30.0

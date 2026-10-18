@@ -135,4 +135,4 @@ freeze/<我们的版本>/
 路线为 `patch` 的行（只对 `patch` 行生效）：把旧特征码在新版原程序里重新检索，
 命中位置（VA / 文件偏移）可能与旧版不同 —— 位移按新版命中点重算，补丁字节在新命中点重写，
 再用回归探针确认行为。`## patch_shift` 表登记：`| F-ID | 旧特征码 | 新版命中位置 (VA/offset) | 位移重算 | 结果 |`。
-特征码带通配符、长度 ≥16 字节（沿用 `REVERSE-MAP.md` 的口径）。非 `patch` 行不进此表。
+特征码带通配符、长度 ≥16 字节（沿用 `REVERSE-MAP.md` 的口径 —— 该文件是**项目侧产物**，本包不带；口径本身见 `../reverse-engineering/references/triage-first-30-min.md`）。非 `patch` 行不进此表。

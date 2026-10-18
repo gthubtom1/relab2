@@ -1,3 +1,5 @@
+<!-- 已退出依据链（2026-10-18）：本文件全仓零引用，`quad/install2.py` 只装 `en2-*.md`，不读本文件。它是 gemini 卡 v2/v3 中间版本里被留下的那一份（v2 已删除，相似度 0.977）。保留原因：R12_kernel_b 判定「留 v3」；不要把它当活卡维护，也不要放进 cards/base/。 -->
+
 
 
 [MODE: LAB-LOCAL · ACTIVE]

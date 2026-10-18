@@ -134,12 +134,10 @@ CTXISO_EDITS = (
      '"""路径与配置。本包唯一的写盘位置是 DEV_ROOT/state/。"""',
      '"""路径与配置。本包唯一的写盘位置是包根 .state/。"""'),
     ("paths.py",
-     'DEV_ROOT = PKG.parent                    # work/context-isolation/\n'
-     'STATE_DIR = DEV_ROOT / "state"\n'
-     'EVIDENCE_DIR = DEV_ROOT / "04-evidence"',
+     'DEV_ROOT = PKG.parent                    # 本仓里是 kernel/（不是旧的 work/context-isolation/）\n'
+     'STATE_DIR = DEV_ROOT / "state"',
      'PKG_ROOT = PKG.parent                   # 包根：AGENTS.md / tools / ctxiso 都在这层\n'
-     'STATE_DIR = PKG_ROOT / ".state"       # 装进宿主后状态只落包内，卸载能一次删净\n'
-     'EVIDENCE_DIR = STATE_DIR / "evidence"'),
+     'STATE_DIR = PKG_ROOT / ".state"       # 装进宿主后状态只落包内，卸载能一次删净'),
     ("__init__.py",
      "3. 本包所有状态写在 work/context-isolation/state/ 下，不写进 .hub/。",
      "3. 本包所有状态写在本包的 .state/ 下，不写进 .hub/，也不写宿主家目录根。"),

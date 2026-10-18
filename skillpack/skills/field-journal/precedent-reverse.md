@@ -45,9 +45,10 @@
 ## IDA Pro / Ghidra — 已执行操作
 
 ```text
-□ ida64.exe target.so                                       — 打开 so/ELF/PE
-□ ida64.exe -B target.so                                    — 自动批量分析（生成 .i64）
-□ ida64.exe -A -S"script.py" target.so                      — 无头模式运行脚本
+□ idat target.so（本机 idat.exe 是 x64 单二进制，实测 PE machine=0x8664；9.x 已合并 idat32/idat64）
+□ idat -B target.so                                         — 自动批量分析（生成 .i64）
+□ idat -A -S"script.py" target.so                           — 无头模式运行脚本
+  ★ `ida64.exe` 在本机 IDA 9.3 目录里**不存在**，照抄会报找不到文件；`idat` 走探测层拿完整路径。
 □ 快捷键: Shift+F12 → 字符串窗口 → 搜索 "http\|key\|secret\|encrypt\|decrypt\|AES\|RSA"
 □ 快捷键: G → 跳转到地址
 □ 快捷键: X → 查看交叉引用（谁调用了这个函数/数据）

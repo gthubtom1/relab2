@@ -21,7 +21,7 @@ WORK-BOARD CR-002 原文："T03 的 328 条改写与 4 个横幅必须由 T05 �
 ```json managed-transforms
 {
   "schema": "skills-hub/importer-managed-transforms/1",
-  "digest": "bb75924c41477edf0899b1c174fa0e56fc44f0ce41c8b28101bd746e9f10b942",
+  "digest": "94d455bb303b5580b305bd34b5e675f1c52e764f9866e9cd171666ab35574249",
   "transforms": [
     {
       "id": "t09-load-instruction-neutralize",

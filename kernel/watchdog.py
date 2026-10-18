@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -31,8 +32,12 @@ try:
 except Exception:
     pass
 
-DEV = Path(__file__).resolve().parent
-REPO = DEV.parents[1]
+DEV = Path(__file__).resolve().parent        # kernel/
+REPO = DEV.parent                            # 仓根：build_hubcore 的 --product 用它
+# ctxtiso 的产品根是 kernel/ 本身：它的 GUARD_PATHS / archive_scan 全是
+# "02-hubcore/CORE.md" 这种相对 kernel 的路径。用仓根去跑，24 个受控件一个都找不到，
+# guard 会拿一份空基线报「全绿」——那是最坏的一种绿。
+PRODUCT = DEV
 STATE = DEV / "state"
 STATE.mkdir(parents=True, exist_ok=True)
 BEAT = STATE / "watchdog.json"
@@ -107,15 +112,32 @@ def _run(name: str, argv: list[str], cwd: Path) -> dict:
                 "torn": False, "tail": str(exc)}
 
 
+def _guard_baseline() -> Path:
+    """侧车的 guard 基线落在 state/<产品哈希>/guard-baseline.json（paths.state_dir）。"""
+    key = hashlib.sha1(str(PRODUCT).encode("utf-8")).hexdigest()[:12]
+    return STATE / key / "guard-baseline.json"
+
+
 def verify() -> list[dict]:
     """只跑可脚本化、且绝对只读的验证。绝不写产品目录。"""
     checks = []
     py = sys.executable
-    if (DEV / "ctxiso").is_dir() and (REPO / ".hub" / "ledger.jsonl").is_file():
+    # 两条账本校验：产品根是 kernel/（见 PRODUCT 的注释）。以前这里既拿错了根
+    # （REPO 解析成 C:\），又用一个本仓根本没有的 .hub/ledger.jsonl 当开关，
+    # 于是这两条**永久静默跳过**——代码里写了 _run，输出里从来没有它们。
+    # 现在只要侧车在就跑；索引为空（本仓没有 ledger）是正常状态，不是红项。
+    if (DEV / "ctxiso").is_dir():
         checks.append(_run("ctxiso-index", [py, "-m", "ctxiso", "index",
-                                            "--product", str(REPO)], DEV))
+                                            "--product", str(PRODUCT)], DEV))
+        # guard 要基线。没基线时 check 会 rc=3（"还没有基线，先跑 guard snapshot"）——
+        # 那是**未初始化**，不是回归。基线只写侧车 state/（已 gitignore），不碰产品目录，
+        # 所以这里先补一次再 check，两条都留痕，不把"没跑"伪装成"全绿"。
+        if not _guard_baseline().is_file():
+            checks.append(_run("ctxiso-guard-baseline",
+                               [py, "-m", "ctxiso", "guard", "snapshot",
+                                "--product", str(PRODUCT)], DEV))
         checks.append(_run("ctxiso-guard", [py, "-m", "ctxiso", "guard", "check",
-                                            "--product", str(REPO)], DEV))
+                                            "--product", str(PRODUCT)], DEV))
     builder = DEV / "02-hubcore" / "build_hubcore.py"
     if builder.is_file() and (DEV / "02-hubcore" / "MANIFEST.json").is_file():
         checks.append(_run("hubcore-check", [py, str(builder),

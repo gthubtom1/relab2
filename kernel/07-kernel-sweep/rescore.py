@@ -41,9 +41,15 @@ def redo(path):
 
 
 def main():
-    a = sys.argv[1:]
-    out = a[a.index("--out") + 1]
-    ins = [x for x in a if x != "--out" and x != out]
+    import argparse
+    ap = argparse.ArgumentParser(
+        prog="rescore.py",
+        description="离线重算已保存的 sweep 结果（只跑评分层，不发任何 API 请求）。")
+    ap.add_argument("inputs", nargs="+", metavar="in.json",
+                    help="已保存的 sweep 结果（可多份，按 model 合并）")
+    ap.add_argument("--out", required=True, help="输出 JSON 路径")
+    args = ap.parse_args()
+    ins, out = args.inputs, args.out
     merged = None
     for p in ins:
         d = redo(p)

@@ -1,6 +1,7 @@
 """极简本地控制台服务。只用标准库，只绑 127.0.0.1。
 
-四个接口，一个页面：列出智能体、载入、卸载、看状态。
+一组 `/api/` 端点，一个页面：列出智能体、载入、卸载、看状态。
+端点清单以 README 的「14 个 /api/ 端点」表为准（本文件是唯一真源，数一遍就是 14 个路径）。
 没有任何技能、副插件、AI 接口、授权、云端相关的东西。
 """
 
@@ -31,8 +32,6 @@ __version__ = "0.1.0"
 
 BOM = b"\xef\xbb\xbf"
 WEB_DIR = Path(__file__).resolve().parent / "web"
-# 卡片正文上限，和打包器 03-bundle/_bundle_lib.py 的 BASE_BUDGET 同一个数。
-# 在这里就拦：页面存的时候给一句人话，别等装的时候才失败。
 # 卡片正文上限，和打包器 03-bundle/_bundle_lib.py 的 BASE_BUDGET 同一个数——
 # 那边是权威（装了会拦），这里只是提前给一句人话。两边读同一个环境变量，改一处就够。
 CARD_MAX_BYTES = int(os.environ.get("HUBCORE_BASE_BUDGET", "40000"))

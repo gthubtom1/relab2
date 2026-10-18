@@ -124,6 +124,9 @@ def cmd_upload(opts):
     return 0
 
 def main():
+    if any(a in ("-h", "--help") for a in sys.argv[1:]):
+        print("usage: coordination-telemetry.py (emit|verify|upload) ...\n\n" + __doc__.strip())
+        return 0
     cmd, opts = parse_args(sys.argv[1:])
     if cmd == "emit" and opts.get("schema") and opts.get("log") is not None:
         return cmd_emit(opts)

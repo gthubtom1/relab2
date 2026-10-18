@@ -4,7 +4,7 @@
 状态：implementation specification / execution contract  
 主框架：reverse-skill  
 融合目录：integrated-skill-hub/  
-来源快照：D:/Project/skills-hub/upstream/
+来源快照：<开发根>/upstream/
 
 本文是施工合同。任何低级模型、子代理或人工维护者都必须先读本文，再读取任务卡中列出的文件。本文把架构决策、适配规则、机器契约、并行任务、测试、发布和回滚写成可执行要求。
 

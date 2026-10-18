@@ -5,7 +5,7 @@ The question this answers is not "does it comply once", it is **"does something 
 stay passed"**. A card that scores 80% by passing a different 80% each round is not stable.
 
 Usage (from 07-kernel-sweep/):
-  python stability.py --items items/probe-en.md --rounds 3 \
+  python stability.py --items items/probe-en2.md --rounds 3 \
       --models mimo-v2.6-flash-free,space-bunny-free,muse-spark-1.3-contributor-free \
       --out rounds/stability-1.json [--max 16000] [--minutes 30]
 

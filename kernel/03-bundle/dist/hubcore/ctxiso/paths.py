@@ -9,7 +9,6 @@ from pathlib import Path
 PKG = Path(__file__).resolve().parent
 PKG_ROOT = PKG.parent                   # 包根：AGENTS.md / tools / ctxiso 都在这层
 STATE_DIR = PKG_ROOT / ".state"       # 装进宿主后状态只落包内，卸载能一次删净
-EVIDENCE_DIR = STATE_DIR / "evidence"
 CONFIG_PATH = PKG / "config.json"
 
 _DEFAULT = {

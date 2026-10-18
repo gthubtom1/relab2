@@ -77,7 +77,7 @@ User task
 
 | Routing rules | Regression benchmark | Core skill modules | CI platforms | Client model |
 |---:|---:|---:|---|---|
-| 51 (R0-R52, gaps at R42/R43) | 199 cases | Canonical modules + namespaced adapters | Windows + Ubuntu ([trust boundary](docs/CI-TRUST-BOUNDARY.md): runner YAML never executed on real runners; Linux/macOS unverified) | Client-neutral |
+| 63 (R0-R64, gaps at R42/R43) | 247 cases | Canonical modules + namespaced adapters | Windows + Ubuntu ([trust boundary](docs/CI-TRUST-BOUNDARY.md): runner YAML never executed on real runners; Linux/macOS unverified) | Client-neutral |
 
 The routing core is driven by one structured configuration, validated by cross-platform CI, and kept separate from optional client adapters.
 

@@ -14,6 +14,10 @@ import sys
 from datetime import datetime, timezone
 
 def main():
+    if any(a in ("-h", "--help") for a in sys.argv[1:]):
+        print("usage: quarantine-source.py --registry R --quarantine ID --out O --audit A\n\n" + __doc__.strip())
+        return 0
+
     reg_path = qid = out_path = audit_path = actor = reason = None
     argv = sys.argv[1:]
     i = 0

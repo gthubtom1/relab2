@@ -8,7 +8,7 @@ verify_matrix_links.py —— 逐条验证 matrix.md 里的相对路径能解析
 
 默认：
     --matrix = 脚本同目录 matrix.md
-    --base   = <context-isolation>/02-hubcore/workflows
+    --base   = <kernel>/02-hubcore/workflows
                （即被替换的那份 workflows/protocol-automation.md 所在目录，
                  matrix.md 里的 ../docs/methods/x.md 就是相对它写的）
 

@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 CONSOLE_DIR = Path(__file__).resolve().parent
-# 04-console -> context-isolation，03-bundle 就在旁边。
+# 04-console -> kernel，03-bundle 就在旁边。
 REPO_ROOT = CONSOLE_DIR.parent
 BUNDLE_DIRNAME = "03-bundle"
 SOURCE_DIRNAME = "hubcore"

@@ -1,4 +1,4 @@
-"""一键自测：把验收 1-5 跑一遍，把真实输出打在屏幕上。
+"""一键自测：把验收 1–9（含 3b–3o / 8b / 9b，共 18 个标签）跑一遍，把真实输出打在屏幕上。
 
     python selftest.py                 用 TEMP 里的假打包器（默认，03-bundle 没就绪也能跑）
     python selftest.py --bundle real   用真的 03-bundle 联调（装卸都发生在 TEMP 里）
@@ -200,9 +200,40 @@ def start_child() -> tuple[subprocess.Popen, int, str, list[str]]:
     return proc, port, token, stream
 
 
+def purge_temp_custom_hosts() -> list[str]:
+    """把家目录落在本目录 TEMP/ 下的自定义宿主清掉，返回清掉的 id。
+
+    为什么需要：验收 3h / 8 会 `POST /api/hosts/add` 加一个假家，这一行落在
+    `hostlist/custom-hosts.json`（**持久，不在 TEMP**）。中途被打断（Ctrl+C /
+    timeout / 前面某一项提前退出）那一行就永久留下，之后每次跑都红在
+    「这家已经在名单里了」。TEMP 下的家目录一定是测试夹具，真宿主不可能住那里。
+    """
+    temp_root = TEMP.resolve()
+    gone = []
+    for row in hosts_mod.load_custom():
+        home = str(row.get("home") or "")
+        try:
+            inside = Path(home).resolve().is_relative_to(temp_root)
+        except (OSError, ValueError):
+            inside = False
+        if inside:
+            rid = str(row.get("id") or "")
+            if hosts_mod.remove_custom(rid).get("ok"):
+                gone.append(rid)
+    if gone:
+        hosts_mod.invalidate_cache()
+    return gone
+
+
 def main(argv: list[str] | None = None) -> int:
     global BUNDLE_KIND
     argv = list(sys.argv[1:] if argv is None else argv)
+    # 通用约定：`--help` 只印用法就退出，**不跑任何验收**。
+    # 不加这一段的话，「先跑 --help 看看用法」会直接开跑整套（装/卸真 03-bundle、
+    # 起 HTTP 服务、写 TEMP 与 hostlist/），`--help` 反而不是无副作用动作。
+    if "-h" in argv or "--help" in argv:
+        print(__doc__.strip())
+        return 0
     if "--bundle" in argv:
         BUNDLE_KIND = argv[argv.index("--bundle") + 1]
     if BUNDLE_KIND not in ("fake", "real"):
@@ -212,6 +243,10 @@ def main(argv: list[str] | None = None) -> int:
         print("注意：fake 是接线替身，只证明命令接上了；写入顺序和字节语义不代表产品。")
     print(f"打包器来源：{BUNDLE_KIND}（宿主家目录一律在 TEMP/fixture-home，真家目录不碰）")
     reset_fixture()
+    # 上一轮被打断留下的假宿主行（3h / 8 的夹具）先清掉，否则这一轮必定红。
+    purged = purge_temp_custom_hosts()
+    if purged:
+        print("清掉上一轮遗留的假宿主行：%s" % "、".join(purged))
     failures: list[str] = []
 
     check_bundler_guard()

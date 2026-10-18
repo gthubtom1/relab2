@@ -44,7 +44,7 @@ description: 小步实现功能：一次只解决一件事，复用仓库既有 
 | 需求验收写不出（说不出"什么输出算做完"） | `../req-clarify/SKILL.md` |
 | 连续**两次**构建 / 测试不绿，且报错读不通 | 停下，把原始报错原样贴出来，不继续盲改 |
 | 发现动的是一处既有缺陷，而不是在加功能 | `../fix-bug/SKILL.md` |
-| 提交前 `../tests/run-ci-gates.py` 报非零，但说不清是哪道门红的 | 先分清假绿 / 环境 / 真红（假绿的坑见 journal）再决定继续，不许放宽既有检查过关 |
+| 提交前 `../skills/tests/run-ci-gates.py` 报非零，但说不清是哪道门红的 | 先分清假绿 / 环境 / 真红（假绿的坑见 journal）再决定继续，不许放宽既有检查过关 |
 | 新增依赖后锁文件出现**没有**在 PR 描述里写明的版本漂移 | `../supply-chain-security/SKILL.md` |
 | 新代码要补测试脚手架（仓库里还没有能跑这类测试的基建） | `../write-tests/SKILL.md` |
 | 接口签名已被别处调用，改它开始牵动无关模块 | 回 `../design-slice/SKILL.md` 重切，不靠 shim 兼容层硬推 |
@@ -59,10 +59,10 @@ description: 小步实现功能：一次只解决一件事，复用仓库既有 
 | 工具 | 本机怎么调 | 接给谁 |
 |---|---|---|
 | `git diff --stat` / `git status --short` / `git log -p -- <file>` | `git` 在本机 PATH 上（`Get-Command git` 有结果，本机实测） | 先量这次的文件面与历史写法；超阈值转上面的切片分支 |
-| `python`（不是 `python3`） | 本机实测在 PATH 上；`python3` 是 stub | 跑仓库门 `../tests/run-ci-gates.py`（门清单在 `../tests/ci-gates.json`）、`../tests/verify-project-requirements.py` |
+| `python`（不是 `python3`） | 本机实测在 PATH 上；`python3` 是 stub | 跑仓库门 `../skills/tests/run-ci-gates.py`（门清单在 `../skills/tests/ci-gates.json`）、`../skills/tests/verify-project-requirements.py` |
 | CI 日志 | `.github/workflows/ci.yml`（路由回归 + 结构一致性 + 供应链 pin + 冒烟） | 本地过不了、CI 却绿（或反过来）时，逐 job 对齐再下结论 |
 | `curl` | 系统自带 `curl.exe`（本机 `command -v curl` 有结果） | 新接口冒烟：`curl -sS -o /dev/null -w "%{http_code}" <url>` |
-| `tshark` | TOOLS.md §4 登记（GUI `Wireshark` 的 CLI 孪生，禁止拉 GUI） | 新链路跑起来后抓一次帧，确认真的发出去/收回来，而不是看着代码像通 |
+| `tshark` | TOOLS.md §5 登记（GUI `Wireshark` 的 CLI 孪生，禁止拉 GUI） | 新链路跑起来后抓一次帧，确认真的发出去/收回来，而不是看着代码像通 |
 | `cdb` | `Resolve-ReverseToolSpec -Name 'cdb'` 现查（TOOLS.md §2 的 WinDbg 控制台版） | 新代码在 Windows 上崩在 native 层时看栈 |
 | 探测层通则 | `. ../scripts/lib/Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>` | 上表路径先复核再调用（拿到 `Command` 就用它的完整路径，别依赖 cwd） |
 

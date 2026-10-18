@@ -59,7 +59,7 @@
 ```bash
 python work/_benchmark/final_acceptance.py     # 63 路由六项验收
 relab2.ps1 doctor                              # 本机配置就绪度
-python skillpack/skills/tests/run-ci-gates.py  # 44 道门
+python skillpack/skills/tests/run-ci-gates.py  # 45 道门
 ```
 
 ---

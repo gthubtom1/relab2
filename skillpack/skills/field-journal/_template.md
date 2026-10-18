@@ -30,7 +30,7 @@
 | E-id | severity | status | source_type | 可复用命令模式 | 关联 Finding |
 |------|----------|--------|-------------|----------------|--------------|
 | E-001 | info | observed | command | `checksec --file=./pwn1` | F-001 |
-| E-002 | high | validated | command | `python3 exploit.py REMOTE` | F-001 |
+| E-002 | high | validated | command | `python exploit.py REMOTE` | F-001 |
 
 > **契约对齐（review_case.py）**：若本次 case 产出了独立证据目录（`evidence/E-xxx.md`），
 > 每条证据须满足 `skills/case-review/scripts/review_case.py` 的字段契约，否则 `--strict` 校验会 FAIL：

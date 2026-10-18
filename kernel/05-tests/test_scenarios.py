@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""九个必测场景里的 6 个（本轮负责：1 / 2 / 3 / 4 / 6 / 7）。
+"""九个必测场景的全部断言实现（1–9，含 3b–3o / 8b / 9b 等子项）。
 
 被测对象：<hubcore>/ctxiso（只读，绝不改）
 本文件只写 <hubcore>/05-tests/TEMP/
@@ -48,7 +48,7 @@ HARD_ZONES = ["02-hubcore/CORE.md", "02-hubcore/AGENTS.md",
 # 本仓内但允许在改的（单独列，不判红）：设计文档与分析、另一批既有测试。
 PROJ_ZONES = ["ctxiso", "00-ANALYSIS", "01-design"]
 # 别人分区（单独列，不判红）：打包器与控制台。
-SOFT_ZONES = ["03-bundle", "04-console", "03-tests", "06-verify"]
+SOFT_ZONES = ["03-bundle", "04-console", "06-verify"]
 
 
 # ================================================================ 小工具
@@ -175,6 +175,25 @@ def maybeliteral(s):
         return ast.literal_eval(s.strip())
     except (ValueError, SyntaxError):
         return None
+
+
+def rel(p):
+    """把本机绝对路径改写成相对 `<仓根>/kernel/` 的写法，再进 RESULT.md。
+
+    RESULT.md 是进版本库的文档：里面的绝对路径换台机器就失效，
+    而且会把真机布局（盘符、用户名）带进仓库。路径本身不是断言内容，
+    断言看的是 is_file()/bytes，所以显示层改写不影响判红。
+    """
+    try:
+        return Path(p).resolve().relative_to(CTXISO_ROOT).as_posix()
+    except (ValueError, OSError):
+        return str(p)
+
+
+def scrub(s):
+    """把一段文本里出现的本机绝对路径换成相对写法（用于 CLI 原样输出）。"""
+    return s.replace(str(CTXISO_ROOT).replace("\\", "\\\\"), "<kernel>") \
+            .replace(str(CTXISO_ROOT), "<kernel>")
 
 
 # ---------------------------------------------------------------- 泄漏检测
@@ -659,7 +678,7 @@ def scenario_3():
     s.check("3.13 账本里 work_enter 出现两次（进入两次都是追加）", enters >= 2,
             detail="work_enter 计数=%d" % enters, work_enter=enters)
 
-    s.note("假产品目录：%s（测完随 TEMP 一起删）" % fake)
+    s.note("假产品目录：%s（测完随 TEMP 一起删）" % rel(fake))
     s.note("真仓库 .hub/ 全程没被写：见 RESULT.md 的保护区指纹比对")
     return s
 
@@ -844,7 +863,7 @@ def scenario_4():
     body = maybeliteral(so) or {}
     s.check("4.8 目标在产品外被拒", rc == 2 and body.get("refused") is True,
             detail=so.strip()[:120], rc=rc)
-    s.note("假产品目录：%s" % fake)
+    s.note("假产品目录：%s" % rel(fake))
     return s
 
 
@@ -915,9 +934,9 @@ def scenario_6():
     res = jload(so)
     surv = Path(res["survivor_path"])
     drop = Path(res["dropped_path"])
-    s.check("6.6 生成 SURVIVOR.md", surv.is_file(), path=str(surv),
+    s.check("6.6 生成 SURVIVOR.md", surv.is_file(), path=rel(surv),
             survivor_bytes=surv.stat().st_size if surv.is_file() else 0)
-    s.check("6.6b 生成 dropped.json", drop.is_file(), path=str(drop),
+    s.check("6.6b 生成 dropped.json", drop.is_file(), path=rel(drop),
             dropped_bytes=drop.stat().st_size if drop.is_file() else 0)
     s.check("6.7 存活集正好是传进去的 7 个字段", res.get("survivor_fields") == want_fields,
             detail=str(res.get("survivor_fields")), fields=len(res.get("survivor_fields") or []))
@@ -1534,7 +1553,7 @@ def scenario_9():
             steps_ok=sum(1 for _, c in steps if c == 0), steps=len(steps))
     s.check("9.3b status 输出含 MISSION 与当前阶段/下一步",
             "MISSION" in o5 and "阶段" in o5,
-            detail=o5.replace("\n", " | ")[:220],
+            detail=scrub(o5.replace("\n", " | "))[:220],
             out_chars=len(o5), has_mission="MISSION" in o5)
 
     # --- 9.4 静态扫 ctxiso/*.py：写句柄一律不许指向产品目录
@@ -1885,12 +1904,12 @@ def scenario_9_bundle(s):
                                   "--product", prod)
         s.check("9.5f 假宿主里 python hub/ctxiso/cli.py status --product <假产品> 成功",
                 r2 == 0,
-                detail=(o2.replace("\n", " ")[:140] if r2 == 0
+                detail=(scrub(o2.replace("\n", " "))[:140] if r2 == 0
                         else e2.strip().splitlines()[-1][:180]), rc=r2, ms=m2)
         r3, o3, e3, m3 = _run_in(pkg, "-m", "ctxiso", "status", "--product", prod)
         s.check("9.5g 假宿主里 python -m ctxiso status --product <假产品> 成功",
                 r3 == 0,
-                detail=(o3.replace("\n", " ")[:140] if r3 == 0
+                detail=(scrub(o3.replace("\n", " "))[:140] if r3 == 0
                         else e3.strip().splitlines()[-1][:180]), rc=r3, ms=m3)
     finally:
         ok = _restore_hubcore()
@@ -1918,8 +1937,8 @@ def scenario_9_bundle(s):
         drift = (sj or {}).get("drift") or []
         missing = (sj or {}).get("missing_in_dist") or []
         unexc = [m for m in missing if os.path.basename(str(m)) not in _bundle_exclusions()]
-        why = (sj or {}).get("why") or ((sj or {}).get("verdict") or "").strip()
-        tail = ((sj or {}).get("tail") or "").strip().replace("\n", " ")[:120]
+        why = scrub((sj or {}).get("why") or ((sj or {}).get("verdict") or "").strip())
+        tail = scrub(((sj or {}).get("tail") or "").strip().replace("\n", " "))[:120]
         s.check("9.5j check_dist_sync.py 退出 0（产物与源码同源）", False,
                 detail="rc=%d｜检查了 %s 个｜内容不同的 %d 个：%s｜该有却没有的 %d 个｜"
                        "未声明排除的 %d 个｜%s%s→ 处置：重跑 `python 03-bundle/pack.py`"

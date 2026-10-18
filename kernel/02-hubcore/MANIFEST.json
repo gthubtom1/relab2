@@ -1395,77 +1395,77 @@
    "script": "03-bundle/patches/apply_protocol_automation_fix.py",
    "rc": 0,
    "status": "ok",
-   "out": "[步骤1] apply_matrix_fix.py：\n    [定位] 旧矩阵：第 176 行 → 第 189 行（共 14 行）\n    [结果] 替换了 14 行 → 51 行\n    [统计] 字节 14742 → 20561（+5819）\n    [统计] 总行 189 → 226（+37）\n    [已写] D:\\临时项目\\hub-dock\\work\\context-isolation\\02-hubcore\\workflows\\protocol-automation.md\n[步骤2] 方法书写法：\n  规则「矩阵正文里的裸文件名方法书 → 裸书名」命中 0 次\n[无改动] protocol-automation.md：本脚本要改的内容一处都没有，未写入任何字节。"
+   "out": "[步骤1] apply_matrix_fix.py：\n    [定位] 旧矩阵：第 176 行 → 第 189 行（共 14 行）\n    [结果] 替换了 14 行 → 51 行\n    [统计] 字节 14742 → 20561（+5819）\n    [统计] 总行 189 → 226（+37）\n    [已写] <hubcore>\\workflows\\protocol-automation.md\n[步骤2] 方法书写法：\n  规则「矩阵正文里的裸文件名方法书 → 裸书名」命中 0 次\n[无改动] protocol-automation.md：本脚本要改的内容一处都没有，未写入任何字节。"
   },
   {
    "target": "workflows/exe-rebuild.md",
    "script": "03-bundle/patches/apply_exe_rebuild_fix.py",
    "rc": 0,
    "status": "ok",
-   "out": "规则「INVARIANTS 改指真身」命中 2 次\n  规则「CHANGES 模板：改成诚实的自足说明」命中 1 次\n[结果] 改写 3 处，涉及 3 行\n[统计] 字节 42749 → 44405（+1656）\n[统计] 总行 283 → 290（+7）\n[已写] D:\\临时项目\\hub-dock\\work\\context-isolation\\02-hubcore\\workflows\\exe-rebuild.md"
+   "out": "规则「INVARIANTS 改指真身」命中 2 次\n  规则「CHANGES 模板：改成诚实的自足说明」命中 1 次\n[结果] 改写 3 处，涉及 3 行\n[统计] 字节 42749 → 44405（+1656）\n[统计] 总行 283 → 290（+7）\n[已写] <hubcore>\\workflows\\exe-rebuild.md"
   },
   {
    "target": "docs/methods/INVARIANTS.md",
    "script": "03-bundle/patches/apply_invariants_fix.py",
    "rc": 0,
    "status": "ok",
-   "out": "规则「review 路径改指真身」命中 1 次\n  规则「旧词「活技能」→「活方法书」」命中 1 次\n[结果] 改写 2 处，涉及 2 行\n[统计] 字节 8020 → 8594（+574）\n[统计] 总行 70 → 76（+6）\n[已写] D:\\临时项目\\hub-dock\\work\\context-isolation\\02-hubcore\\docs\\methods\\INVARIANTS.md"
+   "out": "规则「review 路径改指真身」命中 1 次\n  规则「旧词「活技能」→「活方法书」」命中 1 次\n[结果] 改写 2 处，涉及 2 行\n[统计] 字节 8020 → 8594（+574）\n[统计] 总行 70 → 76（+6）\n[已写] <hubcore>\\docs\\methods\\INVARIANTS.md"
   },
   {
    "target": "docs/methods/reverse-engineering.md",
    "script": "03-bundle/patches/apply_reverse_engineering_fix.py",
    "rc": 0,
    "status": "ok",
-   "out": "规则「INVARIANTS 改指真身」命中 4 次\n  规则「外部库能力表：诚实的缺口说明」命中 1 次\n[结果] 改写 5 处，涉及 5 行\n[统计] 字节 10680 → 11974（+1294）\n[统计] 总行 132 → 141（+9）\n[已写] D:\\临时项目\\hub-dock\\work\\context-isolation\\02-hubcore\\docs\\methods\\reverse-engineering.md"
+   "out": "规则「INVARIANTS 改指真身」命中 4 次\n  规则「外部库能力表：诚实的缺口说明」命中 1 次\n[结果] 改写 5 处，涉及 5 行\n[统计] 字节 10680 → 11974（+1294）\n[统计] 总行 132 → 141（+9）\n[已写] <hubcore>\\docs\\methods\\reverse-engineering.md"
   },
   {
    "target": "docs/methods/review.md",
    "script": "03-bundle/patches/apply_review_fix.py",
    "rc": 0,
    "status": "ok",
-   "out": "规则「三份附录链接加子目录前缀」命中 7 次\n[结果] 改写 7 处，涉及 5 行\n[统计] 字节 16452 → 17509（+1057）\n[统计] 总行 164 → 173（+9）\n[已写] D:\\临时项目\\hub-dock\\work\\context-isolation\\02-hubcore\\docs\\methods\\review.md"
+   "out": "规则「三份附录链接加子目录前缀」命中 7 次\n[结果] 改写 7 处，涉及 5 行\n[统计] 字节 16452 → 17509（+1057）\n[统计] 总行 164 → 173（+9）\n[已写] <hubcore>\\docs\\methods\\review.md"
   },
   {
    "target": "docs/methods/browser-automation.md",
    "script": "03-bundle/patches/apply_browser_automation_fix.py",
    "rc": 0,
    "status": "ok",
-   "out": "规则「13 份附录链接加子目录前缀」命中 22 次\n  规则「计票脚本：诚实的缺口说明」命中 1 次\n[结果] 改写 23 处，涉及 21 行\n[统计] 字节 8098 → 11174（+3076）\n[统计] 总行 124 → 149（+25）\n[已写] D:\\临时项目\\hub-dock\\work\\context-isolation\\02-hubcore\\docs\\methods\\browser-automation.md"
+   "out": "规则「13 份附录链接加子目录前缀」命中 22 次\n  规则「计票脚本：诚实的缺口说明」命中 1 次\n[结果] 改写 23 处，涉及 21 行\n[统计] 字节 8098 → 11174（+3076）\n[统计] 总行 124 → 149（+25）\n[已写] <hubcore>\\docs\\methods\\browser-automation.md"
   },
   {
    "target": "docs/methods/browser-automation/proof.md",
    "script": "03-bundle/patches/apply_browser_automation_proof_fix.py",
    "rc": 0,
    "status": "ok",
-   "out": "规则「计票脚本：诚实的缺口说明」命中 1 次\n[结果] 改写 1 处，涉及 1 行\n[统计] 字节 3528 → 4029（+501）\n[统计] 总行 80 → 85（+5）\n[已写] D:\\临时项目\\hub-dock\\work\\context-isolation\\02-hubcore\\docs\\methods\\browser-automation\\proof.md"
+   "out": "规则「计票脚本：诚实的缺口说明」命中 1 次\n[结果] 改写 1 处，涉及 1 行\n[统计] 字节 3528 → 4029（+501）\n[统计] 总行 80 → 85（+5）\n[已写] <hubcore>\\docs\\methods\\browser-automation\\proof.md"
   },
   {
    "target": "docs/PROJECT-MEMORY.md",
    "script": "03-bundle/patches/apply_project_memory_fix.py",
    "rc": 0,
    "status": "ok",
-   "out": "规则「变更示例链接：诚实的缺口说明」命中 1 次\n[结果] 改写 1 处，涉及 1 行\n[统计] 字节 8228 → 8915（+687）\n[统计] 总行 84 → 89（+5）\n[已写] D:\\临时项目\\hub-dock\\work\\context-isolation\\02-hubcore\\docs\\PROJECT-MEMORY.md"
+   "out": "规则「变更示例链接：诚实的缺口说明」命中 1 次\n[结果] 改写 1 处，涉及 1 行\n[统计] 字节 8228 → 8915（+687）\n[统计] 总行 84 → 89（+5）\n[已写] <hubcore>\\docs\\PROJECT-MEMORY.md"
   },
   {
    "target": "docs/OPERATING-MODEL.md",
    "script": "03-bundle/patches/apply_docs_audits_fix.py",
    "rc": 0,
    "status": "ok",
-   "out": "规则「行为记录链接：诚实的缺口说明」命中 1 次\n  规则「验证记录链接：诚实的缺口说明」命中 1 次\n[结果] 改写 2 处，涉及 2 行\n[统计] 字节 28863 → 29979（+1116）\n[统计] 总行 277 → 283（+6）\n[已写] D:\\临时项目\\hub-dock\\work\\context-isolation\\02-hubcore\\docs\\OPERATING-MODEL.md"
+   "out": "规则「行为记录链接：诚实的缺口说明」命中 1 次\n  规则「验证记录链接：诚实的缺口说明」命中 1 次\n[结果] 改写 2 处，涉及 2 行\n[统计] 字节 28863 → 29979（+1116）\n[统计] 总行 277 → 283（+6）\n[已写] <hubcore>\\docs\\OPERATING-MODEL.md"
   },
   {
    "target": "docs/ENGINEERING-CONTINUITY.md",
    "script": "03-bundle/patches/apply_docs_audits_fix.py",
    "rc": 0,
    "status": "ok",
-   "out": "规则「2026-09-13 审计链接：诚实的缺口说明」命中 1 次\n[结果] 改写 1 处，涉及 1 行\n[统计] 字节 12581 → 13304（+723）\n[统计] 总行 99 → 104（+5）\n[已写] D:\\临时项目\\hub-dock\\work\\context-isolation\\02-hubcore\\docs\\ENGINEERING-CONTINUITY.md"
+   "out": "规则「2026-09-13 审计链接：诚实的缺口说明」命中 1 次\n[结果] 改写 1 处，涉及 1 行\n[统计] 字节 12581 → 13304（+723）\n[统计] 总行 99 → 104（+5）\n[已写] <hubcore>\\docs\\ENGINEERING-CONTINUITY.md"
   },
   {
    "target": "docs/RESPONSIBILITY-PROTOCOL.md",
    "script": "03-bundle/patches/apply_docs_audits_fix.py",
    "rc": 0,
    "status": "ok",
-   "out": "规则「验证记录链接：诚实的缺口说明」命中 1 次\n[结果] 改写 1 处，涉及 1 行\n[统计] 字节 9258 → 9853（+595）\n[统计] 总行 88 → 93（+5）\n[已写] D:\\临时项目\\hub-dock\\work\\context-isolation\\02-hubcore\\docs\\RESPONSIBILITY-PROTOCOL.md"
+   "out": "规则「验证记录链接：诚实的缺口说明」命中 1 次\n[结果] 改写 1 处，涉及 1 行\n[统计] 字节 9258 → 9853（+595）\n[统计] 总行 88 → 93（+5）\n[已写] <hubcore>\\docs\\RESPONSIBILITY-PROTOCOL.md"
   }
  ]
 }

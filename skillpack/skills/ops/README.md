@@ -42,7 +42,7 @@ ops 里的契约是给人和模型读的；**给脚本 / CI 读的冻结契约**
 | [`../../schemas/carrier-manifest.json`](../../schemas/carrier-manifest.json) | carrier manifest（4.0 表，T23；producer 仍缺） | `../scripts/test-contract-v2.py`（`load_schema`） |
 | [`../../schemas/community-routing-signals.json`](../../schemas/community-routing-signals.json) | 社区路由信号表（T26） | `../scripts/verify-routing-signals.py`、`../scripts/test-routing-signals.py` |
 | [`../../schemas/release-candidate.json`](../../schemas/release-candidate.json) | 发布候选（候选目录自己声明的 schema） | `../../scripts/build-release-candidate.py`（写 `"schema": "schemas/release-candidate.json"`）、`../../scripts/verify-release-approval.py` |
-| [`../../schemas/release-approval.json`](../../schemas/release-approval.json) | 人工放行记录（`release-approvals/`） | `../../scripts/verify-release-approval.py`、`.github/workflows/release.yml`（`environment: release-approval` 闸门） |
+| [`../../schemas/release-approval.json`](../../schemas/release-approval.json) | 人工放行记录（`release-approvals/`） | `../../scripts/verify-release-approval.py`、仓根 `.github/workflows/release.yml`（`environment: release-approval` 闸门；注意**不在** `skillpack/.github/`） |
 
 > `auth-profile.json` / `case-attestation.json` 在 schema 层是**形态声明**：没有脚本去 load 这两个 schema 文件，
 > 规则由 `verify-auth-profile.py` 直接实现 —— 所以「schema 里写了、门禁没实现」这种漂移不可能发生。

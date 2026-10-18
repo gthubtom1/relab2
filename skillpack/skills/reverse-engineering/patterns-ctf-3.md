@@ -116,9 +116,9 @@ for start_val in range(0x10000):
 ```bash
 # Step 1: Bypass ptrace anti-debug
 # Patch ptrace call at offset with NOP (0x90)
-python3 -c "
+python -c "
 data = open('binary','rb').read()
-data = data[:0x72b] + b'\x90'*5 + data[:0x730]  # NOP the ptrace call
+data = data[:0x72b] + b'\x90'*5 + data[0x730:]  # NOP the ptrace call（后半段必须从 0x730 起，写成 data[:0x730] 会丢掉整个尾部）
 open('patched','wb').write(data)
 "
 
@@ -518,7 +518,7 @@ objdump -M intel -d $binary | grep -P "cmp\s+rdi" | \
 # Complex variant: parse add/sub/cmp chains and reverse-compute
 # Each binary: series of add/sub rdi,N then cmp rdi,target
 # Reverse: start from target, undo operations in reverse order
-python3 <<'EOF'
+python <<'EOF'
 import subprocess, re, glob
 for binary in sorted(glob.glob("crackmes/*")):
     asm = subprocess.check_output(["objdump", "-M", "intel", "-d", binary]).decode()
@@ -550,7 +550,7 @@ Binary uses fork/pipe IPC where the parent writes data and exits, child reads fr
 
 # Patch: change comparison value from 0x1 to 0x0
 # Find: 83 7d f4 01 → change to: 83 7d f4 00
-python3 -c "
+python -c "
 data = open('binary','rb').read()
 data = data.replace(b'\x83\x7d\xf4\x01', b'\x83\x7d\xf4\x00')
 open('binary_patched','wb').write(data)

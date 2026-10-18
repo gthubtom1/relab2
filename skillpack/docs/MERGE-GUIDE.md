@@ -175,7 +175,7 @@ git -C <开发根>\upstream\<短名> rev-parse HEAD
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
 $py = '(Resolve-ReverseToolSpec -Name 'pyre').Command'
-$repo = 'C:\relab2'   # lab 里换成 lab 路径
+$repo = '<仓根>'   # lab 里换成 lab 路径
 $up = '<开发根>\upstream'
 
 # ① 看现状（只读，安全）

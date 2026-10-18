@@ -4,7 +4,7 @@
 > 3. `rockyou.txt` 路径是 Linux 的，本机没有 —— 用 `D:\Tools\wordlists\` 下实际有的词表
 > 4. `pip install jwt-tool` **没有这个发行版** —— 用 `git clone` 仓库后 `python jwt_tool.py`
 >
-> 完整的 JWT 方法见 [`jwt/00-overview.md`](jwt/00-overview.md) 与 [`jwt/01-algorithm.md`](jwt/01-algorithm.md)；
+> 完整的 JWT 方法见 [`jwt/00-overview.md`](jwt/00-overview.md) 与 [`jwt/01-alg-none.md`](jwt/01-alg-none.md)；
 > OAuth/SAML 见 [`../../identity-federation/references/oauth-saml/`](../../identity-federation/references/oauth-saml/)。
 
 # JWT + OAuth 2.0 安全测试

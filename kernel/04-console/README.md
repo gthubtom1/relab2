@@ -3,7 +3,7 @@
 只管一件事：**把选好的几段写进某家智能体的入口文件，不用了能原样卸回。**
 
 没有技能管理、没有副插件卡带、没有模型供应商配置、没有云端。
-Python 3.12，只用标准库，服务只绑 `127.0.0.1`，页面完全离线自足。
+只用标准库（本机实测 Python 3.14.3 跑通；3.12+ 均可），服务只绑 `127.0.0.1`，页面完全离线自足。
 
 ## 界面长什么样
 
@@ -49,8 +49,7 @@ Python 3.12，只用标准库，服务只绑 `127.0.0.1`，页面完全离线自
 - **挪出子夹 = 停用，挪回来 = 启用**。不想用的卡别删，挪进 `_park/`（或 `cards/` 根目录）
   就行——控制台和打包器都只认那三个子夹。
 - 顶栏会报「池子外停用 N 张」，告诉你有多少张没在读。
-- 卡头那行 `# kind:` 必须和子夹一致（hub / base / guest）。对不上时磁贴会标 `⚠`，
-  按「载入」会被打包器拦下并说清是哪一行的问题。
+- 卡头那行 `# kind:` 和子夹对不上**不会被拦**：层只看卡躺在哪个池子里（`server.py` 的 `list_cards` 明写「卡片自己声明什么都不算」），`declared` 恒为空、没有 ⚠、载入照走。卡头只是给人看的备注。
 - 散卡不知道往哪放：`python 卡片归位.py`（加 `--dry-run` 只看不动），按卡头把根目录的卡
   塞回对应池子；卡头认不出来的留在原地，只报给你看。
 
@@ -97,7 +96,7 @@ start-console.bat --port N     指定端口（默认 0 = 自动挑空闲端口�
 主人换任何底模、任何指引卡后，仍要用目标宿主和模型做行为验收，不能只看文件位置。
 
 卡片只活在 `04-console/cards/`（一个卡一个 `.md`），**永不进包**。
-卡片格式：`# base: <卡名>` / `# kind: base|guest` / `# hosts: <适用谁>` / 空行 / 正文。
+卡片**头是可选的**：`server.py` 的 `_parse_card` 明写「只统计，不判断」——层由卡躺在哪个池子里决定（`base/` 就是底模卡，`guest/` 就是客套卡），卡片自己声明什么都不算。所以 `# base:` / `# kind:` / `# hosts:` 这几行写不写都行，`cards/base/muse-1.3.md` 这类真卡开头就是 `[MODE: LAB-LOCAL · ACTIVE]`，照读不误。**没有格式校验、没有 ⚠、不会拦载入。**
 正文上限 40,000 字节（每轮都注入，太大拖上下文；8,000 字节只是适配时的软目标）。
 
 ## 一键自测
@@ -122,19 +121,30 @@ python 06-verify/page_walk.py <端口> <令牌>     按浏览器顺序真走一�
 
 页面自身也兜错：任何未捕获的错都摊到右下「结果」栏，不再静悄悄变死。
 
-## 七个接口
+## 14 个 `/api/` 端点
+
+`server.py` 实跑路由一共 **14 个 `/api/*` 端点**（下面这张表逐条列全；`grep -o '"/api/[a-z/]*"' server.py | sort -u` 会多出 `/api/` 这个前缀本身，别把它当成第 15 个端点）。漏读一条，客户端就会少做一半的事。
 
 | 接口 | 干什么 |
 |---|---|
 | `GET /api/hosts` | 扫到的宿主：id、显示名、家目录、入口文件、在不在、装没装、在不在跑、版本与两张卡名 |
-| `POST /api/load` | `{"host_id", "base_id"?, "guest_id"?, "with_marker"?}`，调打包器装入 |
-| `POST /api/unload` | `{"host_id"}`，调打包器卸载 |
 | `GET /api/status` | 版本、装了哪些宿主、包位置、令牌、常驻 KB、文件数、卡片表 |
+| `GET /api/scan` | 只跑扫描并把报告原样给出（`?deep=1` 带深扫） |
 | `GET /api/cards` | 卡片表（id、池子、字节数）。只列 `hub/ base/ guest/` 三个池子 |
+| `GET /api/card?id=&kind=` | 单张卡的正文全文（带池子查更准；只在主人点名要时用） |
 | `POST /api/cards` | `{"name","hosts","content","kind":"hub|base|guest"}` 存进对应子夹 |
 | `POST /api/cards/delete` | `{"id","kind"}` 从对应子夹删卡（已装进宿主的不受影响） |
 | `GET /api/safebox?host_id=` | 这家的保险箱清单（每份就是一个 `.bak`） |
 | `POST /api/safebox` | `{"host_id","action":"snapshot|verify|restore"}`。`verify` 恒回 `ok:true` + `same` + `diffs`：**有差异不是失败**，页面靠 `diffs` 列清单 |
+| `POST /api/hosts/add` | `{"name","home"}` 手加一家扫不到的宿主 |
+| `POST /api/hosts/remove` | `{"id"}` 从手加名单里拿掉一家 |
+| `POST /api/hosts/ignore` | `{"home"}` 点名以后别再列这家 |
+| `POST /api/hosts/unignore` | `{"home"}` 取消忽略 |
+| `POST /api/hosts/kill` | `{"id"}` 强制关掉这家正在跑的进程（装之前要先关） |
+| `POST /api/load` | `{"host_id", "base_id"?, "guest_id"?, "with_marker"?}`，调打包器装入 |
+| `POST /api/unload` | `{"host_id"}`，调打包器卸载 |
+
+> 表里 16 行、端点 14 个：`/api/safebox` 同时有 `GET`（列清单）和 `POST`（三个动作），按**路径**数只算一个；`/api/cards` 也是 `GET`（列表）与 `POST`（存卡）共用同一个路径。其余每条各占一个路径。
 
 **保险箱就一件事**：把宿主入口文件原样存一份，要退的时候原样换回来。
 
@@ -182,7 +192,7 @@ python <03-bundle>/uninstall.py --host-home <家目录> --yes
 
 `.codex` `.claude` `.cursor` `.grok` `.gemini` `.deepseek` `.hermes`
 `.pi`（优先 `.pi/agent`）**`.omp/agent`** `.dsh` `.zcode` `.config/opencode`
-`.codeium/windsurf` `.aider`，共 14 家。
+`.windsurf` `.aider` `.pi-desktop`，共 15 家。
 
 > **★ omp 是唯一一家「两文件形态」**：家目录 `~/.omp/agent/` 下
 > **没有 `AGENTS.md`** —— 人设在 `PERSONALITY.md`，规则在 `RULES.md`。
@@ -209,10 +219,10 @@ node 一类的命令行程序再用一次 CIM 查询拿完整命令行来分辨�
 ```
 04-console/
 ├── run.py             启动器
-├── server.py          HTTP 服务、鉴权、四个接口
+├── server.py          HTTP 服务、鉴权、14 个 /api/ 端点
 ├── hosts.py           宿主识别 + 进程扫描
 ├── bundle_locator.py  定位 03-bundle、组装命令行、子进程调用
-├── selftest.py        一键自测（验收 1–8，含保险箱四步）
+├── selftest.py        一键自测（验收 1–9，含 3b–3o / 8b / 9b，共 18 个标签）
 ├── RESULT.md          验收真实输出
 ├── web/               index.html / app.js / style.css
 └── TEMP/              假宿主、假打包器、自测输出（可整个删掉）

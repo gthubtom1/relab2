@@ -12,6 +12,9 @@ import sys
 from datetime import datetime, timezone
 
 def parse_args(argv):
+    if any(a in ("-h", "--help") for a in argv):
+        print("usage: check-coordination-ownership.py --contract C --claims Q [--now ISO]")
+        sys.exit(0)
     out = {"contract": None, "claims": None, "now": None}
     i = 0
     while i < len(argv):

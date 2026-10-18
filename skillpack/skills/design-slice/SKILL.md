@@ -61,7 +61,7 @@ description: 把新功能切成端到端最薄闭环再横向扩张：先跑通�
 | `curl` | 系统自带 `curl.exe`（本机 `command -v curl` 有结果） | 打最小入口：`curl -sS -v <url>`，看是不是真的走完整条链路，而不是只有前半段回 200 |
 | `nmap` | `Resolve-ReverseToolSpec -Name 'nmap'` 现查（本机探测有结果；TOOLS.md 登记） | `nmap -sT -p <port> 127.0.0.1` 确认出口服务真在监听 |
 | `pktmon` | Windows 自带（`Get-Command pktmon` 有结果，本机实测） | 包到底有没有出去/回来；纸面连通的链路一抓就露馅 |
-| `tshark` | TOOLS.md §4 登记（GUI `Wireshark` 的 CLI 孪生，禁止拉 GUI） | 抓到帧才算链路真的通；分层信息比 `curl` 的报错更能定位断在哪一段 |
+| `tshark` | TOOLS.md §5 登记（GUI `Wireshark` 的 CLI 孪生，禁止拉 GUI） | 抓到帧才算链路真的通；分层信息比 `curl` 的报错更能定位断在哪一段 |
 | `git log -p -- <file>` | `git` 在本机 PATH 上（本机实测） | 看既有系统这一段历史上怎么接的，别重造第二套约定 |
 | 探测层通则 | `. ../scripts/lib/Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>` | 先探再调：`Available=False` 才按 `../TOOLS.md` 现场自装，禁止猜盘符 |
 

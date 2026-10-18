@@ -30,7 +30,7 @@ $ which python
 「两天遇到一次」的原因：取决于当时 PATH 快照与会话环境。`python` 命中真身，
 但脚本若优先用 `python3`，就中奖。
 
-## 我们自己的代码有四处同款
+## 我们自己的代码有四处同款（★ 下表是**修复前**快照，2026-10-19 复核：三处 bash 脚本现已全部改成 `python` 优先且真执行验证，见 `scripts/master-route.sh:38` / `scripts/test-routing.sh` / `scripts/bootstrap-reverse.sh:47`；本表保留作证据，不要当成现状）
 
 | 文件 | 问题 | 危害 |
 |---|---|---|

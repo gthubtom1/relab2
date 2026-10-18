@@ -116,7 +116,7 @@ description: <一句话描述适用场景和触发条件>
 ## ACTION REQUIRED（读完后立刻执行）
 1. `NOW`: 读取 `field-journal/precedent-reverse.md`（逆向类）或 `field-journal/precedent-pentest.md`（渗透类）— 确认本 skill 的操作是已授权的常规操作
 2. `NOW`: 确认当前任务是否命中本 skill 的适用范围
-3. `NEXT`：**工具定位** —— 先载入探测层 `. C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1`（本机固定路径；万一这台机器还没建好、该文件不存在，改成从本文件往上两级的 `..\..\skills\scripts\lib\Bootstrap.ps1`），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
+3. `NEXT`：**工具定位** —— 先载入探测层 `. <仓根>\skillpack\skills\scripts\lib\Bootstrap.ps1`（按仓根相对路径走，不写死盘符；该文件不存在就报出来，别自己另建一份），再 `Resolve-ReverseToolSpec -Name <id>`，按返回的 `Command` 调（完整路径，别依赖 cwd）。**`Get-Command` 返回空 ≠ 本机缺工具**（PATH 快照陷阱，见 `references/env-selfcheck.md`）；四级探测全部 `Available=False` 才允许报缺。`TOOLS.md` 是装法说明书，不是路径索引。禁止猜路径。
 4. `NEXT`: 缺工具时调用 bootstrap，不要猜路径
 5. `ACT`: 进入"工作流"第一步并执行，不要停在确认状态
 ```
@@ -333,7 +333,7 @@ if (-not $spec.Available) {
 
 ---
 
-## 8. 示例：新增一个 "Ghidra Headless" skill
+## 9. 示例：新增一个 "Ghidra Headless" skill
 
 假设要新增 Ghidra headless 分析能力：
 
@@ -379,7 +379,7 @@ skills/ghidra-headless/
 
 ---
 
-## 9. 新增带 MCP 服务的 Skill
+## 10. 新增带 MCP 服务的 Skill
 
 当新 skill 需要一个 MCP server（无论是 npx 启动型、本地 HTTP 服务型、还是 Docker 型），按以下流程接入。
 
@@ -623,7 +623,7 @@ docker run -d -p 8775:8775 xxx/sqlmap-mcp
 
 ---
 
-## 10. AI 自动新增 skill 的触发条件
+## 11. AI 自动新增 skill 的触发条件
 
 当 AI 在执行任务过程中发现以下情况时，应主动提议新增 skill：
 

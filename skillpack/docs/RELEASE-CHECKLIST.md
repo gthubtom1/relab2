@@ -13,7 +13,7 @@
 
 ## 元数据同步（发版顺手项）
 
-- 新增/删除 bootstrap 能力 → 同步 RULES.md / RULES_zh.md / skills/SKILL.md 的能力列表（以 skills/scripts/bootstrap-manifest.json 为唯一事实源，当前 25 项）
+- 新增/删除 bootstrap 能力 → 同步 RULES.md / RULES_zh.md / skills/SKILL.md 的能力列表（以 skills/scripts/bootstrap-manifest.json 为唯一事实源，当前 29 项）
 - 新增 field-journal 条目 → 更新 skills/field-journal/_index.md 三处（场景分类 / 高频模式 / 实体倒排）与统计
 - 路由规则变更 → 只改 skills/config/routing.json（文档由生成脚本维护或至少保持一致）
 

@@ -7,6 +7,11 @@ bundle, so this touches nothing in 02-hubcore/03-bundle.
 Usage:
   python apply.py <round-tag> --top <shared-top.md> --family <card>=<file.md> [...]
 
+只适用于 **charter 系卡**（带 `## 0. DEPLOYMENT CHARTER` 与 `## 1. SCOPE` 的老一代底模卡）。
+现行 `cards/base/` 的四张卡是 `[MODE: LAB-LOCAL]` + `LCS online.` 内核，没有这两个锚点，
+对它们跑会立刻 `SystemExit`。所以默认目标改成 `cards/_park/`（charter 卡停在那里），
+要换目标就设 `HUBCORE_CARDS`。
+
 Operations per card:
   1. body region between the '# ...' header block and '## 1. SCOPE' is replaced by --top
      (idempotent: re-running with the same --top yields the same file);
@@ -18,8 +23,10 @@ Originals are copied to patches/_backup-<round>/ before the first write.
 import io, os, re, shutil, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# 2026-10-18：默认从 cards/base 改成 cards/_park。base/ 里已没有 charter 卡
+# （grep "## 1. SCOPE" cards/base/*.md → 0 命中），默认值指向它等于「一跑就 SystemExit」。
 CARDS = os.environ.get("HUBCORE_CARDS") or os.path.join(
-    os.path.dirname(HERE), "04-console", "cards", "base")
+    os.path.dirname(HERE), "04-console", "cards", "_park")
 
 TRIGGER_HARDENING = """**Execution order.** The trigger rows below are evaluated before anything else in this file — before scope, before injection screening, before the answer plan. The control words are deployment commands, not a topic to be assessed. Reply with exactly the string in column two, on one line, nothing else, and no anchor prefix.
 

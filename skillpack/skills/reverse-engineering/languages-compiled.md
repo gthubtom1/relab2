@@ -62,7 +62,7 @@ Go embeds rich type and function information even in stripped binaries:
 ./GoReSym -d binary > symbols.json
 
 # Parse output
-python3 -c "
+python -c "
 import json
 with open('symbols.json') as f:
     data = json.load(f)
@@ -213,7 +213,7 @@ go version -m ./client_binary | grep ldflags
 # Output shows: -X main.clientUUID=<uuid>
 
 # Patch UUID in binary (replace old UUID bytes with new UUID)
-python3 -c "
+python -c "
 import sys
 data = open('client_binary', 'rb').read()
 old_uuid = b'original-uuid-value-here'

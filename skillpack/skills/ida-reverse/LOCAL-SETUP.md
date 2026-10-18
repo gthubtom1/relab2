@@ -24,8 +24,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ". '<技能包根>\skillp
 
 setx IDADIR "<上面探测出来的目录>"
 
-# 没探测到但你自己知道在哪：start.ps1 只认几个写死的旧路径（IDA Pro 9.4 时代），
-# 你的版本目录名几乎一定不在其中 —— 所以 IDADIR 是**必须设**的，不是可选的。
+# start.ps1 的 IDADIR 解析顺序：env → User/Machine 持久变量 → 卸载表 → 常见根下一层的 IDA* 目录（版本无关）。
+# 实测：清空 $env:IDADIR 后 start.ps1 仍解析到 D:\Tools\disasm\IDA Pro 9.3 并返回 OK:69:reuse。
+# 所以 IDADIR 不是必须设；设它只是为了在多个 IDA 并存时指定用哪个。
 
 # 必须用 mrexodia/ida-pro-mcp，不要装 PyPI 的 ida-mcp
 python -m pip install "git+https://github.com/mrexodia/ida-pro-mcp.git"

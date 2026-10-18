@@ -78,7 +78,7 @@
 
 - `HERE=.../community-raw/apk-reverse-source/scripts`，
   `SKILL_DIR=.../community-raw/apk-reverse-source`，
-  `REPO_ROOT=C:\relab2`，与真实仓库根**相等**。
+  `REPO_ROOT=<仓库根>`，与真实仓库根**相等**。
 - 该文件 328-331 行注释声称"在融合仓库里 REPO_ROOT 解析到 `<repo>/skills`"——
   **该断言为假**（探针：`comment-claim '<repo>/skills' true: False`）。
   它描述的是 T01 物理隔离之前的旧布局，备注过时。

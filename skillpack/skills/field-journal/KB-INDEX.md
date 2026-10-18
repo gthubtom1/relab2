@@ -432,7 +432,7 @@
 |---|---|
 | 函数跳来跳去，控制流被拉平了 | `reverse-engineering/references/ollvm-deobfuscation.md` |
 | 这个函数自己跳自己，是 trampoline 吗 | `reverse-engineering/references/trampoline-detour.md` |
-| DLL 怎么注入别的进程 | `reverse-engineering/references/dll-injection.md`（若未落盘读 manual-map-injection） |
+| DLL 怎么注入别的进程 | `reverse-engineering/references/manual-map-injection.md`（`dll-injection.md` **本包未落盘**，实测不存在） |
 | 内存改了但磁盘文件没变 | `reverse-engineering/references/external-memory-rw.md` |
 | 程序怎么开机自启 | `reverse-engineering/references/persistence-startup-chain.md` |
 | 怎么从 IOC 判断是不是同一个团伙 | `reverse-engineering/references/ioc-extraction.md` |

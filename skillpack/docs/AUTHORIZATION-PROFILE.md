@@ -69,7 +69,7 @@
 ## 负向 fixture
 
 `tests/auth/t15-f*.json` + 驱动 `tests/auth/test-auth-profile.py`
-（lab 在仓库外的 `D:/Project/skills-hub/work/T15-lab`，
+（lab 在仓库外的 `<work>/T15-lab`，
 主机名掩码断开存放）。六类各一：过期、空白名单、超范围动作、
 未批准危险动作、缺 proof、纯文本 ready（另加 `--force` 不绕过、
 双正向对照）。

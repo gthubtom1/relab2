@@ -114,7 +114,8 @@ FORBIDDEN = ("副插件", "底模", "user-skills", "skills-hub", "gthubtom1",
              "github.com", "hub-lean", "完善中枢", "优化中枢", "一次一项",
              "cha-", "冷咖啡", "寒霜", "FUSION")
 
-# 常驻进上下文的只有 CORE.md。这个数是硬闸门，不是建议。
+# CORE.md 是**首读件**（不是物理常驻件）：物理每轮注入的是标记块，它内联整份 AGENTS.md，
+# 由 03-bundle/_bundle_lib.py 的 MARKER_BUDGET（32,000 B）管。这个数是 CORE.md 自己的硬闸门。
 # 旧系统常驻 = hub/AGENTS.md 26,342 + hub/FUSION.md 4,591 + 引擎运行时生成的
 # 约 100 个技能名清单（engine.py:1002-1028）约 3,750 ≈ 34,683 B。
 # 权威值在 03-bundle/_bundle_lib.py 的 CORE_BUDGET（四道闸共用同一个数），
@@ -392,18 +393,26 @@ def check() -> int:
         "core": {"bytes": core_bytes, "budget": CORE_BUDGET,
                  "over": core_over, "path": "02-hubcore/CORE.md"},
         "always_on_real": {
-            "old_bytes": old_real,
-            "old_source": "实测：本机 ~/.dsh/AGENTS.md 标记块整块 36,685 B / 292 行",
-            "old_parts": {"hub/AGENTS.md": old_always - 4591,
-                          "hub/FUSION.md": 4591,
-                          "引擎运行时生成部分（实测差额）": old_gen},
+            # 没有上一版中枢时（old_always == 0），「旧账」只剩一个凭空的 old_gen，
+            # 算出来的 cut_pct 和 old_parts（hub/AGENTS.md 会是负数）都没有意义。
+            # 那种情况只报 new_bytes，不给降幅——宁可缺一项，也不给一个会被引用的假数字。
+            "old_bytes": old_real if old_always else None,
+            "old_source": ("实测：本机 ~/.dsh/AGENTS.md 标记块整块 36,685 B / 292 行"
+                           if old_always else None),
+            "old_parts": ({"hub/AGENTS.md": old_always - 4591,
+                           "hub/FUSION.md": 4591,
+                           "引擎运行时生成部分（实测差额）": old_gen}
+                          if old_always else None),
             "new_bytes": core_bytes,
             "new_parts": {"CORE.md（第一份按需首读）": core_bytes,
                           "标记块（物理每轮注入）":
-                              "见 03-bundle/_bundle_lib.py MARKER_BODY（12 块底线）+ MARKER_BUDGET 闸门"},
-            "cut_pct": round(100 * (1 - core_bytes / old_real), 1),
-            "note": "本项以 CORE.md 作分母口径。对外统一说法见 TASKBOARD「三层常驻结构」："
-                    "物理常驻是标记块，CORE.md 是首读件。",
+                              "见 03-bundle/_bundle_lib.py BOTTOM_LINES（12 块底线自检）+ MARKER_BUDGET=32000 闸门"},
+            "cut_pct": round(100 * (1 - core_bytes / old_real), 1) if old_always else None,
+            "note": ("本机没有上一版中枢的 hub/，只报 CORE.md 的大小，不算降幅。"
+                     "物理常驻是标记块（24 KB 级，见 MARKER_BUDGET），CORE.md 是首读件。"
+                     if not old_always else
+                     "本项以 CORE.md 作分母口径，只说明首读件的大小。"
+                     "物理常驻是标记块（24 KB 级，见 MARKER_BUDGET），CORE.md 是首读件。"),
         },
         "always_on": {"old_bytes": old_always, "new_bytes": new_always,
                       "cut_pct": round(100 * (1 - new_always / old_always), 1)

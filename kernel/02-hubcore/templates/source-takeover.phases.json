@@ -1,6 +1,6 @@
 {
   "flow": "source-takeover",
-  "note": "标准阶段身份和顺序不可删除、改名或重排；可以在标准阶段之间增加自定义阶段。每条必须有 requires，禁止空 confirm。不要套二开四停点。无源码 EXE 走 exe-rebuild。能交给别人用的停点必须有 build。边做边留下以后还能用的记录；还在做不拦，要点「做成了、进下一阶段」时账本里必须已有这些记录。领域含义在 .agents/skills/source-takeover/SKILL.md。",
+  "note": "标准阶段身份和顺序不可删除、改名或重排；可以在标准阶段之间增加自定义阶段。每条必须有 requires，禁止空 confirm。不要套二开四停点。无源码 EXE 走 exe-rebuild。能交给别人用的停点必须有 build。边做边留下以后还能用的记录；还在做不拦，要点「做成了、进下一阶段」时账本里必须已有这些记录。领域含义在 workflows/source-takeover.md。",
   "phases": [
     {
       "id": "0-intake",

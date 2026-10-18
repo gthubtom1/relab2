@@ -48,8 +48,7 @@ exit 21（missing_input，JSON 走 stderr），行为诚实。
  （`--limit must be 1..5`）；通用 delivery hint exit 20 budget_exceeded；
   分次累积 `34（delivery窄）+17（hack）=51 > 50`，单次均未阻断——预算无跨调用累加器（stateless CLI，既定设计，见 §5）。
 - NEG-C（provenance/许可证）：`t13-neg-c` 内把 source-lock 首条
-  pinned/resolved 改 `0…0` → `verify-source-attestation.py --snapshot-root
-  D:/Project/skills-hub/upstream` exit 20
+  pinned/resolved 改 `0…0` → `verify-source-attestation.py --snapshot-root <upstream>` exit 20
  （`snapshot HEAD '16926d…' != resolved_commit '000…0'`）；同拷贝内伪造
   triage 豁免条目 + `--write-lock` 重生锁 → `verify-triage-lock.py` 只给
   exit 10（见 §4 P1-1）。

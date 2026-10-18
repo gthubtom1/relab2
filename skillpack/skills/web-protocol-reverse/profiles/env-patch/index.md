@@ -3,7 +3,7 @@
 > **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License）的 `index.md`。原文主体已中文化，本次改编补齐来源声明、本机化标注与交叉引用校正。
 > **用途**：接收**已确认的 JS 入口**和**浏览器样本**，完成 `Rebuild → Patch → Consolidate`（重建 → 打补丁 → 固化）。
 > **前置（本机实测，2026-10-10）**：
-> - Node ✅ `(Resolve-ReverseToolSpec -Name 'node').Command` v24.20.0
+> - Node ✅ `(Resolve-ReverseToolSpec -Name 'node').Command` → **v22.23.3**（2026-10-19 实测；旧文写的 v24.20.0 已过时，用前现跑 `node -v`）
 > - **profile 自带脚本 ❌ 未落地**：本文提到的 `scripts/env-diagnose.js`、`scripts/analyze-gap-log.js`、`scripts/collect-browser-env.js`、`scripts/env_core.js`、`scripts/webpack_runtime.js`、`env/` 模块树与 `tests/` **都不在本包里**。要用得先从上游 MIT 仓库取，或自行实现等价物。
 > - **iv8 ❌ 本机无**：社区运行时，PyPI 上不存在；`../../references/crypto/iv8-runtime-cheatsheet.md` 里的 API 形态仅供有该运行时时参考，**未在本机验证**。
 

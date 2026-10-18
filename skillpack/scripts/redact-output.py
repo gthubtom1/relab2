@@ -22,6 +22,10 @@ def load_scanner(path):
     return module
 
 def main():
+    if any(a in ("-h", "--help") for a in sys.argv[1:]):
+        print("usage: redact-output.py [--scanner P] [--in F] [--out F]\n\n" + __doc__.strip())
+        return 0
+
     scanner_path, in_path, out_path = DEFAULT_SCANNER, None, None
     argv = sys.argv[1:]
     i = 0

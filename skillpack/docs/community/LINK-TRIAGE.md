@@ -7,7 +7,7 @@
 
 | 项目 | 值 |
 |---|---|
-| 仓库 | `C:\relab2`（分支 `main`） |
+| 仓库 | `<仓库根>`（分支 `main`） |
 | 基线 commit | `cec3d1328b445f5c1e6281a706c5d0935c7bc113` |
 | 基线测量命令 | `python skills/scripts/verify-doc-links.py` |
 | 基线结果 | `342 broken internal link(s)`，exit 1（WORK-BOARD 证据 E3 复现一致） |

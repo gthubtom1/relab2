@@ -17,7 +17,7 @@
 - §9 列着 **26 条未闭环**（环境/工具/行为层的真缺口），不是「都修好了」。
 - §27 记录 24/26 条 artifact 的 `artifactSha256` 全为 0（已复算）；§28 记录 top-1 命中率 50%。
 - 换句话说：**「代码改完」不等于「本机能干活」**。要判能不能干活，跑
-  `python skillpack/skills/scripts/final_acceptance.py --out work/acceptance`，不看本文的自述。
+  `python work/_benchmark/final_acceptance.py`，不看本文的自述。
 
 ---
 
@@ -38,9 +38,9 @@
 
 ---
 
-## 2. `community-raw/` 1089 个文件的逐个功能测试
+## 2. `skillpack/community-raw/` 1089 个文件的逐个功能测试
 
-**做不到的原因**：占全仓 38%，是 vendored 的第三方内容（上游快照），
+**做不到的原因**：占全仓跟踪文件约 35%（1089 / 3150），是 vendored 的第三方内容（上游快照），
 不是本项目写的代码。逐个测既不现实，也超出了「技能包」的职责边界。
 
 **已经做到的**：

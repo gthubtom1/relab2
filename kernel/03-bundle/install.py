@@ -673,8 +673,8 @@ def main(argv=None):
     ap.add_argument("--dry-run", action="store_true", help="只报计划，不写任何文件")
     ap.add_argument("--replace", action="store_true", help="宿主已有非本系统的 hub/ 时也装（先备份）")
     ap.add_argument("--allow-running", action="store_true", help="宿主正在跑也硬装，自己担责")
-    ap.add_argument("--base", default="", help="底模卡片文件（04-console/cards/ 下的卡），装完顺序：标记块/底模块/原文/指引块")
-    ap.add_argument("--guest", default="", help="技能指引卡片文件（成品文本原样粘，拼在最后）")
+    ap.add_argument("--base", default="", help="底模卡片文件（04-console/cards/ 下的卡），装完顺序：宿主原文/底模块/指引块/标记块（标记块永远最后）")
+    ap.add_argument("--guest", default="", help="技能指引卡片文件（成品文本原样粘，拼在标记块之前）")
     ap.add_argument("--hub", default="", help="中枢内核卡片文件（04-console/cards/ 下的 hub 卡）")
     ap.add_argument("--entry", default="", help="入口文件名（如 CLAUDE.md / AGENTS.md）")
     ap.add_argument("--replace-origin", action="store_true",

@@ -127,7 +127,7 @@ def f_discovery(r: Runner):
             "exit": code, "pass": ok})
 
 def f_route(r: Runner):
-    hint = "ctf pwn binary exploitation"
+    hint = "ctf pwn"
     cmd = [PY, "skills/scripts/community-route.py", "--hint", hint, "--json"]
     code, out, err = run(cmd, r.bundle)
     ok = False
@@ -150,14 +150,14 @@ def f_wrapper(r: Runner):
              "w=[str(R/x) for x in %s if not (R/x).is_file()];"
              "rt=json.load(open('skills/config/routing.json',encoding='utf-8'));"
              "print(json.dumps({'missing_wrappers':w,'routes':len(rt.get('routes',[]))}));"
-             "raise SystemExit(0 if not w and len(rt.get('routes',[]))==48 else 1)" % repr(WRAPPERS))
+             "raise SystemExit(0 if not w and len(rt.get('routes',[]))==63 else 1)" % repr(WRAPPERS))
     cmd = [PY, "-c", probe]
     code, out, err = run(cmd, r.bundle)
-    ok = code == 0 and '"routes":48' in out.replace(" ", "")
-    r.emit({"id": "F03", "name": "wrapper (4 SKILL.md + 48 routes)",
+    ok = code == 0 and '"routes":63' in out.replace(" ", "")
+    r.emit({"id": "F03", "name": "wrapper (4 SKILL.md + 63 routes)",
             "cwd": str(r.bundle), "runtime": RUNTIME,
             "deps": DEPS_BASE + "; bundle files: 4 wrapper SKILL.md + skills/config/routing.json",
-            "expected": {"exit": 0, "missing_wrappers": [], "routes": 48},
+            "expected": {"exit": 0, "missing_wrappers": [], "routes": 63},
             "stdout": out, "stderr": err, "exit": code, "pass": ok})
 
 def f_case_boundary(r: Runner):
@@ -234,7 +234,7 @@ def f_upgrade_rollback(r: Runner):
     def route_matched():
         code, out, err = run(
             [PY, "skills/scripts/community-route.py", "--hint",
-             "ctf pwn binary exploitation", "--json"], r.bundle)
+             "ctf pwn", "--json"], r.bundle)
         try:
             payload = json.loads(out)
             first = (payload.get("matches") or [{}])[0]

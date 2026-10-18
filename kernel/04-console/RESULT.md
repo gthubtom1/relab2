@@ -16,7 +16,7 @@
 |---|---|
 | `run.py` | 启动器。`python run.py` / `--no-open` / `--port N`，浏览器用 `os.startfile` |
 | `server.py` | `ThreadingHTTPServer`、令牌鉴权、回环限制、四个接口、静态页 |
-| `hosts.py` | 13 家宿主识别 + `tasklist` / CIM 活进程扫描 + 装没装判定 |
+| `hosts.py` | 15 家宿主识别 + `tasklist` / CIM 活进程扫描 + 装没装判定 |
 | `bundle_locator.py` | 定位 `03-bundle`、组装命令行、`stdio=inherit` 子进程调用 |
 | `selftest.py` | 一键自测，把验收 1-5 真跑一遍 |
 | `web/index.html` `web/app.js` `web/style.css` | 单页，完全离线自足 |
@@ -57,8 +57,8 @@ HTTP 200
                     "missing":  [
 
                                 ],
-                    "bundle_dir":  "D:\\临时项目\\hub-dock\\work\\context-isolation\\03-bundle",
-                    "source_dir":  "D:\\临时项目\\hub-dock\\work\\context-isolation\\03-bundle\\dist\\hubcore"
+                    "bundle_dir":  "<仓根>/kernel/03-bundle",
+                    "source_dir":  "<仓根>/kernel/03-bundle/dist/hubcore"
                 },
     "installed_ids":  [
 
@@ -71,7 +71,7 @@ HTTP 200
                    "file_count":  0
                },
     "process_probe_known":  true,
-    "hosts":  [ ... 13 家，每家 {id,name,installed,core_kb,file_count} ... ]
+    "hosts":  [ ... 15 家，每家 {id,name,installed,core_kb,file_count} ... ]
 }
 令牌对得上： True
 ```
@@ -373,7 +373,7 @@ foreach($f in @('web\index.html','web\app.js','web\style.css')){
    第一次真装建议挑 `.cursor` 或 `.zcode` 这种空的、或者先关掉再装一家在跑的之外的家。
 3. **`tasklist` 认不出的边角。** 如果某家把命令行跑在一个既不是 `node.exe` 也不是
    `bun/deno` 的运行时里（比如打包成 `.exe` 但改了名），CIM 那一层的特征词可能对不上，
-   就会漏判成"没在跑"。目前 13 家里没有观察到这种情况，但换机器不能保证。
+   就会漏判成"没在跑"。目前 15 家里没有观察到这种情况，但换机器不能保证。
 4. **PowerShell 万一被禁用/策略挡住**，CIM 那一层读不到命令行，页面会整体转成
    「先关掉这家再试」——所有家都装不了。这是故意的（宁可不装），但主人会以为坏了，
    界面上有「运行态读不到」这行字提醒。
@@ -391,7 +391,8 @@ foreach($f in @('web\index.html','web\app.js','web\style.css')){
 8. **双击启动器 `start-console.bat` 已验证。** 双击即起服务 + 自动打开浏览器，
    用户不手抄令牌（令牌仍在，只走 `?t=` 地址和请求头，不进人眼）。
    实测：`cmd /c start-console.bat --no-open` 起服务于 `127.0.0.1:57494`，
-   首页 1008 字符、13 家宿主、`package.ready=True`、无令牌 403。
+   首页 1008 字符、13 家宿主、`package.ready=True`、无令牌 403。（当时 `HOST_SPECS` 是 13 条；
+   现在 15 条 —— 数字是那天的快照，见文件顶部警告。）
    注意 bat 必须是纯 ASCII：中文 bat 在 cmd 下按 GBK 解析会逐行乱码，
    所以界面中文只留在网页和终端里，bat 本体用英文。
 9. **真家目录装前装后对比：入口 sha 全一致，非易失差异 0。**
@@ -405,11 +406,15 @@ foreach($f in @('web\index.html','web\app.js','web\style.css')){
 
 ## 2026-09-27 底模卡片（主人亲定）
 
-10. **顺序钉死：标记块 → 底模 → 原文 → 客人。** `install.py --base <卡片>`，
-    卡片格式 `# base: <名>` / `# hosts: <适用>` / 正文，上限 6000 B（每轮注入）。
-    `uninstall.py` 各摘各的（标记块认 11 底线，底模块认 `底模：` 第二行）。
+10. **顺序钉死：宿主原文 → 底模块 → 指引块 → 标记块（标记块永远最后）。** `install.py --base <卡片>`，
+    卡片格式 `# base: <名>` / `# hosts: <适用>` / 正文，上限 **40,000 B**（`_bundle_lib.BASE_BUDGET`，每轮注入）。
+    `uninstall.py` 各摘各的（标记块认 **12** 条底线短语 `BOTTOM_LINES`，底模块认 `底模：` 第二行）。
     自测验收 3b：建卡→带底模装（顺序/底模头/双摘回原文）→卸（指纹一致）→删卡，全过。
     卡片只活在 `04-console/cards/`，永不进包；包的禁词门与 94 条引用检查照绿。
     附带把标记块第 11 行改成新口径（"不联网，不自建 Skill；动手走客人总控路由。"），
     三处拷贝（`_bundle_lib` / 03-bundle `uninstall.py` / 打包产物）+ 底线短语同步，
-    正文 986 B ≤ 1200 上限。复现：`python selftest.py --bundle real`。
+    标记块整块 **约 24 KB**（`marker_block()` 实测 24,006–24,025 B，随宿主家目录路径长度浮动；上限 `MARKER_BUDGET` = 32,000 B）。复现：`python selftest.py --bundle real`。
+
+    > 2026-10-18 更正：本条原写「标记块 → 底模 → 原文 → 客人」「6000 B」「11 底线」「1200 B」，
+    > 那是 2026-09-27 当天的旧常量，四项均已作废。现行口径见上，权威值在
+    > `_bundle_lib.py`（`BASE_BUDGET` / `MARKER_BUDGET` / `BOTTOM_LINES`）与 `install.py` 的 `--base` help。

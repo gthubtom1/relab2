@@ -113,7 +113,7 @@ bit 10-31: operand/立即数
 
 ```bash
 # 检查是否为 DSL VM
-python3 << 'EOF'
+python << 'EOF'
 with open('target.js', 'rb') as f:
     head = f.read(100)
 

@@ -4,7 +4,7 @@
 脚本加载时 $('xxx') 拿到 null，后面一行就抛，整段脚本死掉，
 页面剩下纯静态的骨架——看着像示例，其实 JS 已经断了。
 
-    python 04-console/TEMP/check_ids.py
+    python 06-verify/check_page_ids.py
 """
 
 import re

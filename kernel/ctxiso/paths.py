@@ -7,9 +7,8 @@ import os
 from pathlib import Path
 
 PKG = Path(__file__).resolve().parent
-DEV_ROOT = PKG.parent                    # work/context-isolation/
+DEV_ROOT = PKG.parent                    # 本仓里是 kernel/（不是旧的 work/context-isolation/）
 STATE_DIR = DEV_ROOT / "state"
-EVIDENCE_DIR = DEV_ROOT / "04-evidence"
 CONFIG_PATH = PKG / "config.json"
 
 _DEFAULT = {

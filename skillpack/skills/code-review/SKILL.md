@@ -83,7 +83,7 @@ description: 逐行评审 diff：判断改动是否提升 code health、是否�
 | `git diff` / `git diff --stat` / `git log -p --follow <file>` | `git` 在本机 PATH 上（`Get-Command git` 有结果，本机实测） | 先量规模与历史：`--stat` 超阈值直接转上面的拆分分支；`log -p` 看这行以前为什么这么写 |
 | `curl` | 系统自带的 `curl.exe`（本机 `command -v curl` 有结果；仓里 `scripts/bootstrap-reverse.sh` 也用它下载） | 改动涉及 HTTP 面时，改动前后各打一次同一请求，比状态码与响应体，而不是只读 diff 想象 |
 | `cdb` | 探测层现查：`. ../scripts/lib/Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name 'cdb'`（TOOLS.md §2 登记的 WinDbg 控制台版） | 作者声称修了崩溃 → `cdb -z <dump>` 看栈帧是否与其描述一致 |
-| `tshark` | TOOLS.md §4 登记（GUI `Wireshark` 的 CLI 孪生，禁止拉 GUI）；本机没装时走探测层确认后再按 TOOLS.md 取 | 协议 / 握手面改动，抓一次 loopback 对比帧 |
+| `tshark` | TOOLS.md §5 登记（GUI `Wireshark` 的 CLI 孪生，禁止拉 GUI）；本机没装时走探测层确认后再按 TOOLS.md 取 | 协议 / 握手面改动，抓一次 loopback 对比帧 |
 | 探测层通则 | `. ../scripts/lib/Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>`，读 `Available` / `Command` / `Via` | 上表任何一条用前先定位，拿到 `Command` 就用完整路径调用；单条 `Get-Command` 返回空 ≠ 本机缺该工具 |
 
 ## 定义完成

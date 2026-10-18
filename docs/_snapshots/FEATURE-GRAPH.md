@@ -89,4 +89,3 @@
 | `patch-diff-exploit` | 渗透 | `apk-reverse`, `binary-diff`, `code-audit`, `dotnet-reverse` | apk, binary-diff, ghidra, git, ida, idat |
 | `pentest-tools` | 渗透 | `api-security`, `attack-chain`, `cloud-k8s`, `code-audit` | burpsuite, ffuf, ghidra, git, hashcat, httpx |
 | `pr-ship` | 开发 | `case-review`, `code-review`, `diagram-generator`, `docs-changelog` | git |
-

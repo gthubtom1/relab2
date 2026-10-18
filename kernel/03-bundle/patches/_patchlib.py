@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-_patchlib.py —— 六个定点修补脚本共用的底座。
+_patchlib.py —— 所有 `apply_*_fix.py` 共用的底座（当前 10 个）。
 
 规矩（每个 apply_*_fix.py 都必须遵守，dead-references 修补一律走这里）：
   * 定点改写：只改规则里点名的那些片段，不重排、不重写整篇。
@@ -11,7 +11,7 @@ _patchlib.py —— 六个定点修补脚本共用的底座。
   * 注释块里的行**不参与**改写（否则第二次跑会在归档里再改一遍）。
   * 保留目标文件原有的换行风格与 BOM。
   * 找不到该改的内容时：照旧返回 0 并报「无改动」；只有目标文件不在时返回 2。
-  * Python 3.12 标准库；不联网；不做任何 git 操作。
+  * Python 3.10+ 标准库；不联网；不做任何 git 操作。
 """
 
 from __future__ import annotations

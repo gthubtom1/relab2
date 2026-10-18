@@ -83,8 +83,8 @@ bash skills/scripts/master-route.sh --hint "把这段 smali 里的日志调用�
 > 历史每次运行自动归档到 `work/route/<hash>/`，不删除）。
 > 所以**一定要在 `<安装目录>` 里跑**，别在用户的项目里跑；跑完可以按需保留或删除。
 > 想更彻底一点（可选，约 1 分钟）：
-> - Windows：`powershell -NoProfile -ExecutionPolicy Bypass -File skills/scripts/test-routing.ps1` → 预期 `TOTAL=199 PASS=199`
-> - Linux / macOS / Kali：`bash skills/scripts/test-routing.sh` → 同上
+- Windows：`powershell -NoProfile -ExecutionPolicy Bypass -File skills/scripts/test-routing.ps1` → 预期 `TOTAL=247 PASS=247`
+- Linux / macOS / Kali：`bash skills/scripts/test-routing.sh` → 同上
 
 ## 4. 给用户的安装报告（照这个格式说）
 
@@ -149,7 +149,7 @@ rm -rf .skills/.git          # 关键：删掉嵌套的 .git，否则它会被�
 >
 > 另外：`--depth 1` 只裁剪**历史**，不会让工作区变小（`community-raw/` 的正文照样全量落地）。
 > 真想减小体积，就在 clone 之后删掉 `.skills/community-raw/`（社区 293 技能的**正文存档**，
-> 不影响 43 个核心技能；但社区 wrapper 的检索会因此不完整）。
+> 不影响 60 个核心技能；但社区 wrapper 的检索会因此不完整）。
 
 然后项目级指令里写**相对路径**（把用法 B 那段里的 `<安装目录>` 全部换成 `.skills`），例如：
 
@@ -162,16 +162,16 @@ rm -rf .skills/.git          # 关键：删掉嵌套的 .git，否则它会被�
 这样项目 clone 到任何机器都自带技能包，不用记绝对路径。
 另一点要告诉用户：
 - 有些客户端会递归扫描项目里的 `SKILL.md` 并把它们当作技能列出来。**包内三个数字别混**：
-  - **50** = 客户端递归扫描能发现的技能数（`skills/` 树里 46 个含 `SKILL.md` 的目录 + `skills/community/` 下 4 个 wrapper）
-    —— 与 `skills/scripts/audit-discovery-surface.py` 门的期望值一致；其中 43 个是顶层技能目录；
+  - **64** = 客户端递归扫描能发现的技能数（`skills/` 树里 60 个含 `SKILL.md` 的目录 + `skills/community/` 下 4 个 wrapper）
+    —— 与 `skills/scripts/audit-discovery-surface.py` 门的期望值一致；
   - **293** = 社区技能总条数（登记在 `skills/community/registry.json`，正文存档在仓库根的 `community-raw/`，
     **不进发现面**）；
-  - **48** = 路由条数（`skills/config/routing.json` 里的 R 编号，是"怎么分流"的表，不是技能数）。
-  若不想让这 50 个出现在用户的技能列表里，按该客户端文档把 `.skills/` 排除。
+  - **63** = 路由条数（`skills/config/routing.json` 里的 R 编号，是"怎么分流"的表，不是技能数）。
+  若不想让这 64 个出现在用户的技能列表里，按该客户端文档把 `.skills/` 排除。
   **想自证这三个数**（在安装目录里跑）：
-  - 50 = `skills/**/SKILL.md` 的目录数（46）+ `skills/community/**/SKILL.md` 的目录数（4）；
+  - 64 = `skills/**/SKILL.md` 的目录数（60）+ `skills/community/**/SKILL.md` 的目录数（4）；
   - 293 = `skills/community/registry.json` 里 `skills[]` 的条数；
-  - 48 = `skills/config/routing.json` 里 `routes` 的键数。
+  - 63 = `skills/config/routing.json` 里 `routes` 的键数。
 
 ### 用法 C — 客户端全局（可选，**需要用户单独同意**）
 

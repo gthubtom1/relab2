@@ -91,7 +91,7 @@ be an over-claim. The contract test re-checks the admission rule on every run.
 
 | field | records | why it is `null` | owner |
 |---|---|---|---|
-| `tree_digest` | 4 | 4.1 defines it against an in-repo `snapshot_root`. The snapshots live outside the repository (`D:/Project/skills-hub/upstream/<repo>`, verified clean at the locked commits), so no digest recorded here could be verified from the repository, which 17.28 forbids. | T12 (snapshot materialisation + canonicalisation), T21 (canonical base) |
+| `tree_digest` | 4 | 4.1 defines it against an in-repo `snapshot_root`. The snapshots live outside the repository (`<开发根>/upstream/<repo>`, verified clean at the locked commits), so no digest recorded here could be verified from the repository, which 17.28 forbids. | T12 (snapshot materialisation + canonicalisation), T21 (canonical base) |
 | `source_manifest` | 4 | No in-repo per-source manifest file exists. Creating one is not in T02's write allowance; `source-lock.json` belongs to T12. | T12 |
 | `snapshot_root` | 4 | Same as `tree_digest`: 4.1 requires a repository-relative path and there is no in-repo snapshot. | T12 |
 | `importer_version` | 4 | `scripts/adapt-community.py` declares no version constant, and inventing a semver would be fabrication. T05 must add one and re-import. | T05 |
@@ -465,7 +465,7 @@ Still **not** implemented, and not claimed:
 ## 10. Reproducing this migration
 
 ```powershell
-cd C:\relab2
+cd <repo-root>
 <python> skills\scripts\test-community-route.py
 <python> skills\scripts\test-contract-v2.py
 <python> scripts\validate-integration.py

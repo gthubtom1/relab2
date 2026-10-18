@@ -55,7 +55,7 @@ else {
             'D:\',
             (Join-Path $env:USERPROFILE 'Desktop'),
             (Join-Path $env:USERPROFILE 'Tools'),
-            (Join-Path $desktop 'App')
+            (Join-Path ([Environment]::GetFolderPath('Desktop')) 'App')
         ) | Where-Object { Test-Path -LiteralPath $_ }
         $idaCandidates = @(
             foreach ($root in $roots) {

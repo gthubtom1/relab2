@@ -1,6 +1,6 @@
 # Web 协议恢复（Spider King）
 
-> **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License，https://github.com/aoyunyang/spider-king-skill）的 `README.md`。保留原仓库 MIT 版权声明；本 README 为中文改写，并按本技能包（`C:\relab2\skillpack`）的落地情况做了**实情校正**。
+> **来源**：改编自 `aoyunyang/spider-king-skill`（MIT License，https://github.com/aoyunyang/spider-king-skill）的 `README.md`。保留原仓库 MIT 版权声明；本 README 为中文改写，并按本技能包（`<仓根>\skillpack`）的落地情况做了**实情校正**。
 > **什么时候用**：把「看起来只能靠浏览器跑」的 Web 目标，还原成可复现、可维护的协议链路或采集器时，先读本 README 建立预期，再进 `SKILL.md`。
 
 ---
@@ -65,8 +65,14 @@ protocol-reverse  (帧层：布局、状态机、序列化）
 > —— python 包期望 1234，本机装的是 **1243**，版本号对不上。
 > **可用写法**：`p.chromium.launch(channel="msedge")`（实测能起、能渲染、能读 DOM），
 > 或 `launch(executable_path=<显式路径>)`。照抄裸 `launch()` 一定失败。
-> 
+> ⚠️ **2026-10-19 复核更正**：本机 `python` / `python-venv` / `angr-mcp-venv` **都 import 不到 `playwright`**（`ModuleNotFoundError`），
+> `%LOCALAPPDATA%\ms-playwright\` 下也只有 `.links`（npx 缓存），没有浏览器目录。
+> 所以「本机基线主机 = playwright」**当前不成立**：用前先 `python -c "import playwright"` 复核，装不上就退回 `agent-browser`（`D:\Tools\cli\agent-browser.cmd`，实测 `agent-browser 0.27.0`）。
+
+| 能力 | 本机状态 | 替代 |
+|---|---|---|
 | **Reqable** | ❌ **本机无** | 用 tshark / mitmproxy 替代 |
+| **playwright (python)** | ❌ **本机无**（三个解释器均 import 失败） | 用 `agent-browser` CLI，或先 `pip install playwright` 复核 |
 | **iv8** | ❌ **本机无** | 社区运行时，PyPI 上不存在；相关 API 形态仅供有该运行时时参考，未在本机验证 |
 | **esprima / acorn / @babel/parser** | ❌ **本机未安装** | Node 可用，但这些 npm 包要先 `npm i`；`profiles/static-ast/` 那套需先装依赖 |
 | 技能自带 `scripts/` | ❌ **本次未落地** | 见下一节 |
@@ -90,7 +96,7 @@ HAR 导出仍可用浏览器 DevTools 完成。本文不写 Reqable 的具体操
 1. **`scripts/` 整个目录未落地**。上游 `SKILL.md` / `README.md` 里提到的 `check_reverse_env.py`、`protocol_diff.py`、`scaffold_reverse_project.py`、`evidence_normalizer.py`、`transcript_diff.py`、`transform_trace_diff.py`、`transport_profile_diff.py`、`crypto_fingerprint.py`、`forward_test_report.py`、`practice_lab.py`、`validate_skill.py`，**在本包里一个都没有**。需要时从上游 MIT 仓库取，或自行实现。
 2. **三套 profile 的 `scripts/` 与 `tests/` 未落地**。`profiles/browser-hook-snippets/`、`profiles/static-ast/`、`profiles/env-patch/` 在本包里**只有 Markdown 文档**，没有 `.js`、没有 `package.json`、没有 `node_modules`。文档里出现的 `../scripts/xhr_fetch.js`、`scripts/env-diagnose.js`、`npm test --prefix ...` 等命令**当前跑不了**。
 3. **`package-lock.json` 未落地**，所以 `profiles/static-ast/index.md` 的 `npm ci` 流程需要自己重新定依赖版本。
-4. **MCP 家族差异**。上游默认依赖 `chrome-devtools` 与 Camoufox 作为基线主机。本机已挂载的 MCP 是 `pyghidra-mcp`、`idapro`、`ida-pro-mcp`、`angr-mcp`、`x64dbg-mcp`，**不含浏览器类 MCP**。所以"默认 live 顺序 = chrome-devtools → js-reverse"这条在本机需要重新用 `js-reverse` 那一侧或本包工具链替代，且要先确认可用性。
+4. **MCP 家族差异**。上游默认依赖 `chrome-devtools` 与 Camoufox 作为基线主机。本机（omp）实测注册的 MCP 是 `pyghidra-mcp`、`idapro`、`angr-mcp`、`relab2-tools`、`rea`、`x64dbg-mcp`、`x32dbg-mcp`（`mcp-status.ps1` 现查；`ida-pro-mcp` 只登记在 Claude Code 那份配置里），**不含浏览器类 MCP**。所以"默认 live 顺序 = chrome-devtools → js-reverse"这条在本机需要重新用 `js-reverse` 那一侧或本包工具链替代，且要先确认可用性。
 > （★ 本机无 chrome-devtools / Camoufox MCP —— 见 SKILL.md「来源声明」实测记录；本机基线主机是 `playwright` 的 `launch(channel="msedge")`）
 5. **`LICENSE` 文件未随本次落地复制到本目录**，但 MIT 许可事实以本文与 `SKILL.md` 顶部的来源声明为准（见文末「许可」）。
 

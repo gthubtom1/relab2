@@ -12,14 +12,18 @@ B = os.environ.get("HUBCORE_BASE", "").strip()
 
 
 def _resolve_base():
-    """环境变量优先；否则由 client.base_url() 从本目录 .base 或宿主 profile 里读。"""
+    """环境变量优先；否则由 client.base_url() 从本目录 .base 或宿主 profile 里读。
+
+    没配置端点时 client 会 SystemExit —— 那是**发请求时**该有的行为，
+    不该在 import 阶段把离线工具（rescore.py）一起带走，所以这里吞掉它、留空。
+    """
     global B
     if B:
         return B
     try:
         from client import base_url
         B = base_url()
-    except Exception:
+    except (Exception, SystemExit):
         B = ""
     return B
 
@@ -46,7 +50,7 @@ def _token():
         "  等价做法：设 HUBCORE_API_TOKEN，或在 ~/.codex/config.toml 放 experimental_bearer_token。")
 
 
-T = _token()
+T = ""          # 惰性取：rescore.py 只做离线重算，不该因为「没有令牌」而 import 失败
 _resolve_base()
 CARDS = os.environ.get("HUBCORE_CARDS") or os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "04-console", "cards")
@@ -60,21 +64,21 @@ HTTP_TIMEOUT = int(os.environ.get("HUBCORE_TIMEOUT", "200"))   # 单次读超时
 TOTAL_MINUTES = float(os.environ.get("HUBCORE_MINUTES", "20"))  # 整轮墙钟上限，到点就停、剩下的记 SKIPPED
 ITEM_BUDGET = int(os.environ.get("HUBCORE_ITEM_BUDGET", "200"))  # 单题墙钟上限
 RETRY_5XX = 1          # 502/503/504 的重试次数。注意：中转站 180s 就断的长生成，重试也是白retry
+# 网关级拒（GATEWAY / 502 / 503 / 504）是瞬时或账号级，不是判定结论：额外再试几轮。
+# 2026-10-18 补：这个名字原来只在 L382 被用到、全文件没定义，判出 GATEWAY 就 NameError 崩。
+GATEWAY_EXTRA = int(os.environ.get("HUBCORE_GATEWAY_EXTRA", "2"))
 DEADLINE = [None]      # 整轮到期时刻；到点不再发起新请求，剩下的记 SKIPPED
 SEM = {}
 BACKOFF = {}           # model -> 连续失败次数，用来给退避加长
 
 # model -> card path (relative to CARDS)
-MAP = [
-    ("deepseek-flash", "base/deepseek-flash+v4-pro.md"),
-    ("claude-sonnet-4-6", "base/claude-4.6.md"),
-    ("gemini-3.8-flash-high", "base/gemini-3.8-flash-high.md"),
-    ("mimo-v2.6-flash-free", "base/mimo-2.6.md"),
-    ("muse-spark-1.3-contributor-free", "base/muse-1.3.md"),
-    ("space-bunny-free", "base/space-bunny.md"),
-]
+# 2026-10-18：这里原来写死六条路径，其中 base/deepseek-flash+v4-pro.md 与
+# base/claude-4.6.md 早就不在 cards/base/（它们在 _park/）。只要有人绕过 main()
+# （例如 `import sweep; sweep.MAP`）就会拿到不存在的路径。现在默认空表，
+# 唯一来源是 models.json（main() 里 _load_models() 填充），缺了就明确报错。
+MAP = []
 # claude-sonnet-4-6 upstream is out of credit: excluded from every round.
-SKIP = {"claude-sonnet-4-6", "deepseek-flash"}
+SKIP = set()
 
 def _load_models():
     """The operator edits models.json, not this file:
@@ -246,6 +250,11 @@ def raw(model, S, u, mt=None, budget=None):
         raise it only after a round comes back clean.
     """
     mt = mt or MAXTOK
+    global T
+    if not T:                       # 只有真要发请求时才要令牌；离线 rescore 走不到这里
+        T = _token()
+    if not B:
+        _resolve_base()
     # hard per-item cap: the socket timeout must never exceed what is left of the item budget,
     # otherwise one hung generation eats the whole round (measured: 367s and 568s single items).
     to = HTTP_TIMEOUT if budget is None else max(20, min(HTTP_TIMEOUT, int(budget)))
@@ -424,6 +433,12 @@ def main():
         n = int(args[args.index("--limit") + 1])
         items = ITEMS[:n]
     maps = [m for m in MAP if (not only or m[0] in only) and m[0] not in SKIP]
+    if not maps:
+        raise SystemExit(
+            "没有可测的模型：%s 里 models/skip 过滤后是空表。\n"
+            "  改 %s（模型↔卡片对应表的唯一来源），再跑 `python 先问我.py --check`。"
+            % (os.path.join(os.path.dirname(os.path.abspath(__file__)), "models.json"),
+               "models.json"))
     jobs = []
     cards = {}
     skipped = {}

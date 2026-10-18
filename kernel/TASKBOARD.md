@@ -40,7 +40,7 @@
 | `git status --porcelain` | 只有 `?? work/context-isolation/`（1 项） ✅ | `git status --porcelain` |
 | 标记块 12 块底线 | 全部在位，写在入口文件**最末** ✅ | `06-verify/probe_marker.py` |
 | 产物新鲜度 | 91/91 一致（2026-10-09 重跑后） | `cd kernel/02-hubcore && python check_dist_sync.py`（漂移就 exit 3，先跑 `03-bundle/pack.py`） |
-| hubcore 构建闸门 | 禁词 0 / 增长 0 / 死链 0 | `cd kernel/02-hubcore && python build_hubcore.py --product C:\relab2 --check` |
+| hubcore 构建闸门 | 禁词 0 / 增长 0 / 死链 0 | `cd kernel/02-hubcore && python build_hubcore.py --product <仓根> --check`（`<仓根>` = 本仓根目录，别写死盘符） |
 | 死链全量 | 真死链 0 | `cd kernel/03-bundle/patches && python check_dead_refs.py` |
 | 九个必测场景 | 退出码 0 | `cd kernel/05-tests && python run_all.py` |
 | 控制台真打包器（验收 1–9） | `selftest.py` 跑一轮 | `cd kernel/04-console && python -B selftest.py` |

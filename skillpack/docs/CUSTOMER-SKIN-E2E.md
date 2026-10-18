@@ -13,11 +13,11 @@ T16 候选（manifest + sbom + checksums）是 digest-only，不可运行，不�
 导入器 staging），放在仓库外：
 
 - 导出：`python tests/e2e/customer-skin-e2e.py` 自动把仓库根拷贝到
-  `D:/Project/skills-hub/work/t23-lab/bundle`（忽略 `.git`、`__pycache__`、
-  `.candidates`、`*.pyc`；实测 2115 文件）。
+  `<work>/t23-lab/bundle`（忽略 `.git`、`__pycache__`、
+  `.candidates`、`*.pyc`；实测 2515 文件）。
 - 自举证明：F07 用 **bundle 自己的脚本拷贝**以 `--root <bundle>` 重新跑
   T16 `build` + `check`，证明 bundle 自给自足，不依赖 checkout。
-- lab 与产物一律在仓库外 `D:/Project/skills-hub/work/t23-lab/`：
+- lab 与产物一律在仓库外 `<work>/t23-lab/`：
   `bundle/`、`bundle-broken/`（负向突变拷贝）、`candidate/`、`oldcase/`、
   `e2e-report.json`、`e2e-run.log`。
 
@@ -25,13 +25,13 @@ T16 候选（manifest + sbom + checksums）是 digest-only，不可运行，不�
 
 运行器：`tests/e2e/customer-skin-e2e.py [--lab DIR] [--no-export] [--fixtures ...]`。
 每条打印 cwd / runtime / 依赖 / 期望 JSON / stdout / stderr / 退出码。
-runtime 实测：`python 3.12.0 (Windows/AMD64)`，依赖一律标准库。
+runtime 实测：`python 3.14.3 (Windows/AMD64)`，依赖一律标准库。
 
 | fixture | 皮 | 命令（cwd=bundle） | 期望 | 实测（2026-10-01） |
 |---|---|---|---|---|
-| F01 discovery | 递归扫描==INDEX==manifest，无 raw 泄漏 | `audit-discovery-surface.py` | exit 0 | exit 0（46 canonical + 4 wrapper = 50，raw 暴露 0） |
-| F02 route | 社区路由真实命中 | `community-route.py --hint "ctf pwn binary exploitation" --json` | exit 0 + matched + matches[0].id=wrapper-* | exit 0，wrapper-ctf-super-hub |
-| F03 wrapper | 四 wrapper + 48 路由 | 内联检查 4 SKILL.md + routing.json | 0 缺失，routes=48 | exit 0 |
+| F01 discovery | 递归扫描==INDEX==manifest，无 raw 泄漏 | `audit-discovery-surface.py` | exit 0 | exit 0（60 canonical + 4 wrapper = 64，raw 暴露 0） |
+| F02 route | 社区路由真实命中 | `community-route.py --hint "ctf pwn" --json` | exit 0 + matched + matches[0].id=wrapper-* | exit 0，wrapper-ctf-super-hub |
+| F03 wrapper | 四 wrapper + 63 路由 | 内联检查 4 SKILL.md + routing.json | 0 缺失，routes=63 | exit 0 |
 | F04 case/integration | 适配边界 | `validate-integration.py` | exit 0 | exit 0（298 license-review 警告，非阻断） |
 | F05 artifact | 来源包自检 | `verify-community-bundle.py` | 0（或 10 且具名 no-.git） | exit 10，no-.git 具名（诚实降级） |
 | F06 report/gates | 发布门双态 | `verify-release-gate.py` 与 `--release` | 0 / 20 | 0 / 20（红即正确） |
@@ -70,7 +70,7 @@ F08 是**文件级模拟**（bundle 内 VERSION bump → 验证 → 字节恢复
 
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
-& (Resolve-ReverseToolSpec -Name 'pyre').Command ests\e2e\customer-skin-e2e.py
+python skillpack/tests/e2e/customer-skin-e2e.py
 ```
 
 全绿 exit 0；任一 fixture 失败则 exit 1，逐条块保留现场。

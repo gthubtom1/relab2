@@ -3,6 +3,7 @@
 
     python probe_marker.py            # 一次跑完；退出码 0 = 全过
     python probe_marker.py --only-std # 只跑必验的 A–E（跳过边角宿主 F）
+    python probe_marker.py --help     # 只印用法就退出，**不装不卸**
 
 只在本目录（06-verify）下写文件。所有假宿主家目录都在 06-verify/TEMP/ 里，
 不碰真家目录（~/.claude、~/.codex 等一律不写）。
@@ -575,6 +576,12 @@ CHECK_ORDER = ["A1_原内容保留", "A2_置末", "A3_标记成对", "A4_逐字�
 # ---------------------------------------------------------------- 主流程
 
 def main():
+    # 通用约定：`--help` 只印用法、不产生任何写盘动作。本脚本手写 argv 解析，
+    # 未知参数会被静默忽略 —— 不加这一段的话，「先跑 --help 看看用法」会直接
+    # 对六个假宿主真装真卸。
+    if "-h" in sys.argv[1:] or "--help" in sys.argv[1:]:
+        print(__doc__.strip())
+        return 0
     if not SRC.is_dir():
         print("找不到安装包：%s（先跑 pack.py）" % SRC)
         return 2

@@ -64,7 +64,7 @@ description: 修 bug 先复现再改、修根因不压症状，并留下先红�
 | `cdb` | `Resolve-ReverseToolSpec -Name 'cdb'` 现查（TOOLS.md §2 的 WinDbg 控制台版） | `cdb -z <dump>` 先判崩溃栈在自家代码还是第三方 dll |
 | `gdb` | `Resolve-ReverseToolSpec -Name 'gdb'` 现查（本机探测有结果）；查不到才按 TOOLS.md 自装 | `gdb -batch -ex bt -ex "info registers" <bin> <core>` 看有没有可控寄存器，决定是不是内存类缺陷 |
 | `curl --globoff` | 系统自带 `curl.exe`（本机 `command -v curl` 有结果） | 复现 HTTP 面失败；`--globoff` 的坑见上面那篇 journal |
-| `python`（不是 `python3`） | 本机实测在 PATH 上；`python3` 是 stub | 跑最小复现脚本，或跑仓库门 `../tests/verify-project-requirements.py` |
+| `python`（不是 `python3`） | 本机实测在 PATH 上；`python3` 是 stub | 跑最小复现脚本，或跑仓库门 `../skills/tests/verify-project-requirements.py`（仓根下即 `skillpack/skills/tests/...`） |
 | 探测层通则 | `. ../scripts/lib/Bootstrap.ps1` → `Resolve-ReverseToolSpec -Name <id>` | 上表路径用前先复核（`Available` / `Command` / `Via`）；探到的路径只活在本次会话，别写回文档 |
 
 ## 定义完成

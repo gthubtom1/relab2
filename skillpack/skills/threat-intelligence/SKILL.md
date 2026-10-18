@@ -77,7 +77,7 @@ Xquik is an independent third-party service. Not affiliated with X Corp. "Twitte
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File ..\scripts\bootstrap-reverse.ps1 `
-  -Capability xquik-mcp -McpHostTarget Codex
+  -Capability @('xquik-mcp') -McpHostTarget Codex
 ```
 
 ```bash

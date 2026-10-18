@@ -2,8 +2,8 @@
 
 > 全套 **1 – 9**，一条不留。
 >
-> 被测对象：`work/context-isolation/ctxiso/`（只读，一行没改）
-> 被测产品：`<仓根>\kernel`（只读）
+> 被测对象：`kernel/ctxiso/`（只读，一行没改）
+> 被测产品：`<仓根>/kernel`（只读）
 > 假产品：全部建在 `05-tests/TEMP/`，跑完整个目录删掉
 
 ## 跑法
@@ -15,7 +15,7 @@ python run_all.py
 
 | 退出码 | 意思 |
 |---|---|
-| 0 | 6 个场景全绿 |
+| 0 | 9 个场景全绿 |
 | 3 | 有红项（断言没过，或真仓库被改了） |
 | 2 | 环境没准备好（找不到账本 / ctxiso 起不来 / 没有真 state.py） |
 
@@ -28,8 +28,8 @@ python run_all.py
 | `--keep-state` | 跑完保留侧车状态目录里本轮假产品那几格 |
 | `--no-write-result` | 不刷新 `RESULT.md` 的自动段 |
 
-只依赖 Python 3.12 标准库。跑的时候会调真实 CLI（`python -m ctxiso …`）和真实的
-`hub/tools/state.py`，不用 mock——要测的就是它们真跑出来的字节。
+只依赖 Python 3.10+ 标准库（本机实测 3.14.3）。跑的时候会调真实 CLI（`python -m ctxiso …`）和真实的
+`02-hubcore/tools/state.py`，不用 mock——要测的就是它们真跑出来的字节。
 
 ## 三条共通的判定纪律
 
@@ -45,16 +45,16 @@ python run_all.py
 **三、真仓库零改动是机器证明的，不是承诺。**
 `run_all.py` 跑前跑后各取一次指纹（大小 + 纳秒 mtime），逐文件比对。
 
-- **硬保护区**（任何新增/改动/消失都直接判红）：`hub/`、`.hub/`、`features/`、
-  `work/v0.1.0/`、`02-hubcore/`、`ctxiso/`，以及仓根所有文件。
-- **软保护区**（只报、不算红）：`00-ANALYSIS/`、`01-design/`、`03-bundle/`、
-  `04-console/`、`03-tests/`。依据 `SPEC-自包含安装.md` §2 的文件分区表，
-  这几个目录分别归 E（T5）和 A/B（T1/T2），他们同时在开工——
+- **硬保护区**（任何新增/改动/消失都直接判红）：`02-hubcore/CORE.md`、`02-hubcore/AGENTS.md`、
+  `02-hubcore/workflows`、`02-hubcore/docs`、`02-hubcore/tools`（见 `test_scenarios.py` 的 `HARD_ZONES`）。
+- **软保护区**（只报、不算红）：`ctxiso/`、`00-ANALYSIS/`、`01-design/`（`PROJ_ZONES`）与
+  `03-bundle/`、`04-console/`、`06-verify/`（`SOFT_ZONES`）。依据 `SPEC-自包含安装.md` §2
+  的文件分区表，这几个目录分别归 E（T5）和 A/B（T1/T2），他们同时在开工——
   第一次跑的时候把 `00-ANALYSIS/` 误列进硬保护区，T5 写文档就误报了一次红，
   已按分区表改正。
 
 所有子进程都带 `PYTHONDONTWRITEBYTECODE=1`——不然 `python -m ctxiso` 会在
-`ctxiso/__pycache__/`、`hub/tools/__pycache__/` 里写 `.pyc`，那也是改动受保护区。
+`ctxiso/__pycache__/`、`02-hubcore/tools/__pycache__/` 里写 `.pyc`，那也是改动受保护区。
 
 ---
 
@@ -188,9 +188,9 @@ python -m ctxiso pack --product <仓根>\kernel --intent "给主人解释载入�
 | 4.7d | 返回体远小于全文 | `len(返回体) < 两份全文 / 4` |
 | 4.8 | 越界读取被拒 | `--target ../../OWNER-SPEECH.md` 退出码 2、`refused` 为真 |
 
-> 4.5 / 4.6 当前是红的。原因见 `RESULT.md` 手写分析：**`ctxiso/archive.py:118`
-> 用了 `hashlib.sha8`，标准库没有这个算法，`read --intent` 必崩。**
-> 断言没有为了让测试变绿而放宽；崩了就记红。
+> 4.5 / 4.6 已转绿（2026-10-18 复核）：`ctxiso/archive.py:126-128` 已把收据哈希改成
+> `hashlib.sha256(...)[:8]`，标准库没有 `sha8` 的问题不存在了；`RESULT.md` 自动段
+> 场景 4 22/22 通过，4.5 `read --intent` rc=0、4.6 收据齐全。
 
 ---
 
@@ -271,10 +271,9 @@ python -m ctxiso pack --product <仓根>\kernel --intent "给主人解释载入�
 | 7.8 | 第二次 index 是增量 | 账本 `read_bytes == 0` |
 | 7.8b | 没有新事件 | `new_events == 0` |
 
-> 7.6b 当前是红的。原因见 `RESULT.md` 手写分析：
-> `ctxiso/pack.py:49` 写的是 `store.docs(con, limit=500)`，
-> 所以 doc 超过 500 份之后，`omitted` 里的"还有 N 份未列"按 500 算，
-> 2000 份时它说"还有 490 份"，实际是 1990 份。
+> 7.6b 已转绿（2026-10-18 复核）：`ctxiso/pack.py:103-113` 的「还有 N 份未列」改成取
+> `GROUP BY` 的真实计数（不再是 `limit=500` 的截断行数）；`RESULT.md` 自动段 7.6b
+> 实测「期望 1990 份未列」通过。
 
 **跑完删掉**：`TEMP/` 整个目录（`--keep-temp` 可留），
 以及侧车状态目录里本轮假产品那几格（`--keep-state` 可留）。
@@ -378,10 +377,10 @@ python -m ctxiso pack --product <仓根>\kernel --intent "给主人解释载入�
 | # | 断言 | 门槛 |
 |---|---|---|
 | 9.1 – 9.1d | 真仓库 `guard check` | `ok=true`、`changed=[]`、`missing=[]`、`changed_excluding_append_only=[]` |
-| 9.1e | guard 本身不空转（假产品） | 34 个受控文件齐；`snapshot` 后 `check` 的 changed/missing 都空 |
-| 9.1f | **guard 能抓出真改动** | 改一个字 → `ok=false` 且 `changed` 含 `hub/AGENTS.md`；改回去 → `ok=true` |
-| 9.2 | `git status --porcelain` | 只有一行 `?? work/context-isolation/`（只读，无任何 git 写操作） |
-| 9.3 / 9.3b | 旧系统仍能干活 | 真实 `hub/tools/state.py` 在假产品上跑 `init→plan→require→work→status` 五步全 0；`status` 输出含 MISSION 与当前阶段 |
+| 9.1e | guard 本身不空转（假产品） | 24 个受控文件齐；`snapshot` 后 `check` 的 changed/missing 都空 |
+| 9.1f | **guard 能抓出真改动** | 改一个字 → `ok=false` 且 `changed` 含 `02-hubcore/CORE.md`；改回去 → `ok=true` |
+| 9.2 | `git status --porcelain` | 与跑前基线比**本轮新增** 0 行（别人的改动不计；只读，无任何 git 写操作） |
+| 9.3 / 9.3b | 旧系统仍能干活 | 真实 `02-hubcore/tools/state.py` 在假产品上跑 `init→plan→require→work→status` 五步全 0；`status` 输出含 MISSION 与当前阶段 |
 | 9.4 | **白名单之外的 UNKNOWN 写句柄为 0** | 见下 |
 | 9.4b | 白名单没有过期条目 | 每条都还挂在真实调用点上 |
 | 9.4c | 白名单每条都写了原因 | 每条说明 ≥ 20 字 |

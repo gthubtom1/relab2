@@ -10,7 +10,7 @@ Usage:
   python gen_staged.py items/extreme41.md items/staged41.md [--report rounds/staged-coverage.md]
 Items with no stage plan are emitted unchanged and listed in the coverage report.
 """
-import io, os, re, sys
+import argparse, io, os, re, sys
 
 import rewrite
 
@@ -28,8 +28,13 @@ def read_items(path):
     return out
 
 def main():
-    a = sys.argv[1:]
-    src, dst = a[0], a[1]
+    ap = argparse.ArgumentParser(
+        description="把类别级题集转成分段题集（一条只问一个责任）。")
+    ap.add_argument("src", help="类别级题集，如 items/extreme41.md")
+    ap.add_argument("dst", help="输出分段题集，如 items/staged41.md")
+    ap.add_argument("--report", default=None, help="另写一份覆盖率报告，如 rounds/staged-coverage.md")
+    a = ap.parse_args()
+    src, dst = a.src, a.dst
     items = read_items(src)
     lines = ["# staged item set generated from %s by gen_staged.py" % os.path.basename(src),
              "# rule: one responsibility per message; contract items pass through unchanged", ""]
@@ -52,8 +57,8 @@ def main():
         len(covered), len(uncovered), ", ".join(uncovered) or "-"),
         "stages emitted: %d" % sum(n for _, n in covered)]
     print("\n".join(rep))
-    if "--report" in a:
-        p = a[a.index("--report") + 1]
+    if a.report:
+        p = a.report
         os.makedirs(os.path.dirname(p) or ".", exist_ok=True)
         io.open(p, "w", encoding="utf-8", newline="\n").write(
             "# staged coverage\n\n" + "\n".join(rep) + "\n\n" +

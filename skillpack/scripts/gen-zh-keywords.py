@@ -31,6 +31,10 @@ WORK_DIR = os.environ.get("REVERSE_SKILL_WORK_DIR") or os.path.join(
 CASES = os.path.join(WORK_DIR, "natural-300", "cases.json")
 HITRATE_GLOB_DIR = WORK_DIR
 OUT = os.path.join(WORK_DIR, "zh-keywords")
+if any(a in ("-h", "--help") for a in sys.argv[1:]):
+    print(__doc__.strip())
+    sys.exit(0)
+
 for _a in sys.argv[1:]:
     if _a.startswith("--out="):
         OUT = _a.split("=", 1)[1]

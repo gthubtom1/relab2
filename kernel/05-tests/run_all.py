@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""一次跑完 6 个上下文隔离场景。
+"""一次跑完 9 个上下文隔离场景。
 
     python run_all.py                 # 跑全部，有红项退 3
     python run_all.py --only 3,7      # 只跑指定场景
@@ -93,7 +93,7 @@ def write_result_md(lines):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="上下文隔离 6 场景")
+    ap = argparse.ArgumentParser(description="上下文隔离 9 场景")
     ap.add_argument("--only", default="", help="只跑这些场景号，逗号分隔，如 3,7")
     ap.add_argument("--keep-temp", action="store_true", help="跑完保留 TEMP/")
     ap.add_argument("--keep-state", action="store_true", help="跑完保留侧车里假产品的状态目录")
@@ -166,7 +166,7 @@ def main(argv=None):
         except Exception as exc:  # noqa: BLE001 —— 场景挂了要报出来，不能吞
             import traceback
             sc.fail(exc)
-            sc.notes.append(traceback.format_exc(limit=6))
+            sc.notes.append(T.scrub(traceback.format_exc(limit=6)))
         for c in sc.checks:
             print(c.line())
         if sc.error:
@@ -225,7 +225,7 @@ def main(argv=None):
           % (len(changed["proj"]), len(removed["proj"])))
     for x in (changed["proj"] + removed["proj"])[:10]:
         print("      ~", x)
-    print("  [层3 别人分区·只报不判红] 03-bundle/ 04-console/ 03-tests/")
+    print("  [层3 别人分区·只报不判红] 03-bundle/ 04-console/ 06-verify/")
     print("    变化 %d / 消失 %d（T1/T2 同时在开工）"
           % (len(changed["soft"]), len(removed["soft"])))
     for x in (changed["soft"] + removed["soft"])[:10]:
@@ -288,7 +288,7 @@ def main(argv=None):
             lines.append("")
             lines.append("用时 %s ms，%d/%d 条断言通过。%s"
                          % (sc.ms, sum(1 for c in sc.checks if c.ok), len(sc.checks),
-                            ("**场景失败：%s**" % sc.error) if sc.error else ""))
+                            ("**场景失败：%s**" % T.scrub(sc.error)) if sc.error else ""))
             lines.append("")
             lines.append("| 判定 | 断言 | 实际数字 | 实际输出 |")
             lines.append("|---|---|---|---|")
@@ -313,7 +313,7 @@ def main(argv=None):
         lines.append("| 2 本项目内 | `ctxiso/`、`00-ANALYSIS/`、`01-design/` "
                      "| %d | %d | %d | 否（E/F 分区，别人在改） |"
                      % (len(changed["proj"]), len(added["proj"]), len(removed["proj"])))
-        lines.append("| 3 别人分区 | `03-bundle/`、`04-console/`、`03-tests/`、`06-verify/` "
+        lines.append("| 3 别人分区 | `03-bundle/`、`04-console/`、`06-verify/` "
                      "| %d | %d | %d | 否（T1/T2 同时开工） |"
                      % (len(changed["soft"]), len(added["soft"]), len(removed["soft"])))
         lines.append("")

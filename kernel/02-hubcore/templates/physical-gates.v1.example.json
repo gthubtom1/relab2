@@ -46,18 +46,18 @@
         }
       }
     },
-    "<other-check-id>": {
+    "<your-check-id>": {
       "kind": "business",
       "command": [
         "<product-root-relative-probe-file>",
-        "<other-check-id>"
+        "<your-check-id>"
       ],
       "cwd": ".",
       "timeout_sec": 30,
       "expect": {
         "exit_code": 0,
         "json": {
-          "result": "pass"
+          "<this-gate's-observed-field>": true
         }
       }
     }

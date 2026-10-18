@@ -5,7 +5,7 @@
 
 
 
-> 跑法：`cd work/context-isolation/05-tests && python run_all.py`
+> 跑法：`cd kernel/05-tests && python run_all.py`
 > 退出码：0 = 全绿，3 = 有红项，2 = 环境没准备好。
 > 下面「自动段」里的每一个数字都来自实跑，`run_all.py` 每次跑完会重写它；手写分析在自动段之后，不会被覆盖。
 > 原始控制台输出另存 `LAST-RUN.txt`；ctxiso 崩过的 stderr 另存 `LAST-STDERR.log`。
@@ -13,26 +13,26 @@
 <!-- BEGIN AUTO-RUN -->
 
 > 本段由 `python run_all.py` 自动生成，数字全部来自实跑，不要手改。
-> 生成时间：2026-10-17 10:00:18　·　Python 3.14.3
+> 生成时间：2026-10-19 01:57:08　·　Python 3.14.3
 
 ## 一句话总判定
 
 | 项 | 结果 |
 |---|---|
 | 场景数 | 9（全套 1–9） |
-| 断言 | 147 条，147 通过，0 红 |
+| 断言 | 151 条，151 通过，0 红 |
 | 有红的场景 | 无 |
 | 真仓库零改动（层 1） | 是 |
 | 退出码 | 0 |
-| 总用时 | 9819.6 ms |
+| 总用时 | 10538.5 ms |
 
 ## 场景 1　普通新任务：不会因为历史记录自动加载大量无关内容
 
-用时 245.1 ms，12/12 条断言通过。
+用时 268.1 ms，12/12 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
-| 通过 | 1.1 pack 成功 | bytes=`2320`；ms=`77.8` | rc=0 |
+| 通过 | 1.1 pack 成功 | bytes=`2320`；ms=`89.7` | rc=0 |
 | 通过 | 1.2 预算硬顶 | bytes=`2320`；budget=`6000`；headroom=`3680` | 配置 pack_budget_bytes=6000 |
 | 通过 | 1.3 包自报的 budget 与配置一致 | budget=`6000` | — |
 | 通过 | 1.4 无 README.md 正文片段 | shingles=`781`；hits=`0`；sample=`` | 比对 781 个 30 字 shingle，命中 0 个 |
@@ -49,7 +49,7 @@
 
 ## 场景 2　连续任务：当前任务状态能正确延续，不累积回灌
 
-用时 252.9 ms，8/8 条断言通过。
+用时 290.1 ms，8/8 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
@@ -60,11 +60,11 @@
 | 通过 | 2.4 两包大小之差 < 预算一半 | bytes1=`2320`；bytes2=`2343`；diff=`23`；limit=`3000` | 预算一半 = 3000 |
 | 通过 | 2.5 两次都在预算内 | bytes1=`2320`；bytes2=`2343`；budget=`6000` | — |
 | 通过 | 2.6 除意图行外两次包逐字节相同（无累积回灌） | same_bytes=`True` | 长度 2271 vs 2271 |
-| 通过 | 2.7 两次 indexed_events 相同（同一份索引，没被重灌） | events=`0`；doc_count=`63`；ms1=`83.6`；ms2=`76.2` | — |
+| 通过 | 2.7 两次 indexed_events 相同（同一份索引，没被重灌） | events=`0`；doc_count=`63`；ms1=`93.4`；ms2=`88.0` | — |
 
 ## 场景 3　自动记录：工作过程仍然能正常保存，没有被关掉
 
-用时 1790.1 ms，14/14 条断言通过。
+用时 1577.6 ms，14/14 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
@@ -72,7 +72,7 @@
 | 通过 | 3.2 策略写明自动记录一律保留 | — | 自动记录一律保留。ctxiso 不关、不改、不删任何一条记录。 |
 | 通过 | 3.3 state.py 完整流程跑通（init→plan→require→work→leave） | steps_ok=`7`；steps=`7` | init=0 \| plan=0 \| require=0 \| work --define=0 \| work --enter=0 \| work --leave=0 \| record=0 |
 | 通过 | 3.4 账本被真的追加了 | ledger_bytes=`1097` | 1097 字节 / 4 条事件 |
-| 通过 | 3.5 原话账被真的追加了 | req_bytes=`235`；req_id=`REQ-001` | {"requirement_id": "REQ-001", "verbatim_intent": "演示产品每次开工都要把主人原话追加进账本，不许覆盖旧记录", "status": "captured", "ts": "2026-10-17 |
+| 通过 | 3.5 原话账被真的追加了 | req_bytes=`235`；req_id=`REQ-001` | {"requirement_id": "REQ-001", "verbatim_intent": "演示产品每次开工都要把主人原话追加进账本，不许覆盖旧记录", "status": "captured", "ts": "2026-10-18 |
 | 通过 | 3.6 快照覆盖到被观测文件 | files=`8` | 指纹覆盖 8 个文件 |
 | 通过 | 3.7 追加动作真的写进去了 | req_bytes=`458` | require=0 work--enter=0 |
 | 通过 | 3.8 observe check ok=true | rc=`0` | 自动记录仍在正常追加：4 份资料增长，0 份变小，0 份消失。 |
@@ -83,25 +83,25 @@
 | 通过 | 3.12 没有 new（被观测文件快照时就已存在） | — | [] |
 | 通过 | 3.13 账本里 work_enter 出现两次（进入两次都是追加） | work_enter=`2` | work_enter 计数=2 |
 
-> 假产品目录：C:\relab2\kernel\05-tests\TEMP\fake-auto（测完随 TEMP 一起删）
+> 假产品目录：05-tests/TEMP/fake-auto（测完随 TEMP 一起删）
 > 真仓库 .hub/ 全程没被写：见 RESULT.md 的保护区指纹比对
 
 ## 场景 4　历史查询：用户明确需要过去资料时能找到并按需读取
 
-用时 638.5 ms，22/22 条断言通过。
+用时 763.0 ms，22/22 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
 | 通过 | 4.0 假产品索引成功 | indexed=`3` | — |
 | 通过 | 4.1 archive list 无任何文件正文 | shingles=`1820`；hits=`0`；sample=`` | 比对 1820 个 30 字 shingle（3 个文件），命中 0 |
 | 通过 | 4.1b 返回体里最长命中正文行 = 0 | longest_line=`0` | 命中最长行 0 字符（门槛 0） |
-| 通过 | 4.1c 返回体远小于源文件总量 | out_bytes=`1044`；src_bytes=`25524`；ratio=`0.0409` | 返回 1044 字节 / 源 25524 字节 = 0.0409 |
+| 通过 | 4.1c 返回体远小于源文件总量 | out_bytes=`1043`；src_bytes=`25524`；ratio=`0.04086` | 返回 1043 字节 / 源 25524 字节 = 0.0409 |
 | 通过 | 4.2 索引里找得到两版规格和原话 | rows=`3` | 命中 ['OWNER-SPEECH.md', 'docs/history/spec-v1.md', 'docs/history/spec-v2.md'] |
 | 通过 | 4.3 每行只有元数据字段 | — | 字段集合 ['kind', 'lines', 'mtime', 'one_line', 'path', 'sha', 'size'] |
 | 通过 | 4.4 read 无 --intent 退出码 2 | rc=`2` | {'ok': False, 'refused': True, 'why': '没有意图就不给正文。先说清为什么现在需要它。'} |
 | 通过 | 4.4b refused 为真 | — | {'ok': False, 'refused': True, 'why': '没有意图就不给正文。先说清为什么现在需要它。'} |
 | 通过 | 4.4c 拒绝时不回正文 | — | 拒绝体里没有 ok=true |
-| 通过 | 4.5 read --intent 成功 | rc=`0`；crashed=`False` | rc=0 stdout 前 120 字='{\n  "ok": true,\n  "receipt": {\n    "ts": "2026-10-17T02:00:11Z",\n    "target": "docs/history/spec-v1.md",\n    "intent": ' |
+| 通过 | 4.5 read --intent 成功 | rc=`0`；crashed=`False` | rc=0 stdout 前 120 字='{\n  "ok": true,\n  "receipt": {\n    "ts": "2026-10-18T17:57:00Z",\n    "target": "docs/history/spec-v1.md",\n    "intent": ' |
 | 通过 | 4.5b 正文真的回来了 | text_chars=`4157` | — |
 | 通过 | 4.7 compare --intent 成功 | rc=`0` | rc=0 stdout 前 120 字='{\n  "base": "docs/history/spec-v1.md",\n  "head": "docs/history/spec-v2.md",\n  "base_lines": 125,\n  "head_lines": 131,\n  ' stderr='' |
 | 通过 | 4.7b 返回里有差异摘要字段 | added=`129`；removed=`123`；similarity=`0.0156` | added=129 removed=123 similarity=0.0156 hunks=2 |
@@ -115,11 +115,11 @@
 | 通过 | 4.6f 内容不同的文件，sha8 不同 | sha_v1=`d8ca77b4`；sha_v2=`94f3f732` | v1='d8ca77b4' v2='94f3f732' |
 | 通过 | 4.8 目标在产品外被拒 | rc=`2` | {'ok': False, 'refused': True, 'why': '目标在产品目录之外，拒绝读。'} |
 
-> 假产品目录：C:\relab2\kernel\05-tests\TEMP\fake-hist
+> 假产品目录：05-tests/TEMP/fake-hist
 
 ## 场景 5　项目更新：第二版来了要能对比第一版、快速定位变化
 
-用时 554.6 ms，15/15 条断言通过。
+用时 674.4 ms，15/15 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
@@ -143,7 +143,7 @@
 
 ## 场景 6　上下文压缩：压缩后不会把整个历史项目塞回当前上下文
 
-用时 372.7 ms，19/19 条断言通过。
+用时 449.5 ms，19/19 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
@@ -153,8 +153,8 @@
 | 通过 | 6.4 规则写明取回要带意图 | — | ['取回任何一份被丢掉的资料，都要带读取意图。'] |
 | 通过 | 6.4b 没有任何一条规则要求重新总结历史 | offending=`0` | [] |
 | 通过 | 6.5 假产品历史已索引 | ledger_bytes=`2780320`；events=`800` | 账本 2780320 字节 / 800 条 |
-| 通过 | 6.6 生成 SURVIVOR.md | path=`C:\relab2\kernel\state\c4c3db4f53eb\SURVIVOR.md`；survivor_bytes=`551` | — |
-| 通过 | 6.6b 生成 dropped.json | path=`C:\relab2\kernel\state\c4c3db4f53eb\dropped.json`；dropped_bytes=`729` | — |
+| 通过 | 6.6 生成 SURVIVOR.md | path=`state/c4c3db4f53eb/SURVIVOR.md`；survivor_bytes=`551` | — |
+| 通过 | 6.6b 生成 dropped.json | path=`state/c4c3db4f53eb/dropped.json`；dropped_bytes=`729` | — |
 | 通过 | 6.7 存活集正好是传进去的 7 个字段 | fields=`7` | ['intent', 'stage', 'goal', 'next', 'blockers', 'confirmed_decisions', 'constraints'] |
 | 通过 | 6.8 SURVIVOR.md < 2000 字节 | bytes=`523`；limit=`2000` | — |
 | 通过 | 6.9 SURVIVOR.md 不含任何探针名 / 事件 kind | hits=`0` | 命中 无 |
@@ -172,31 +172,31 @@
 
 ## 场景 7　大量历史文件：资料越来越多也不会每次自动读一大片
 
-用时 2883.6 ms，14/14 条断言通过。
+用时 3198.8 ms，14/14 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
-| 通过 | 7.0 假产品造好了 | files=`2001`；bytes=`24655620`；ledger_bytes=`16413620`；make_ms=`961.7` | 2001 文件 / 24655620 字节（历史文件 2000×4096 B，账本 5000 事件 / 16413620 字节） |
-| 通过 | 7.1 index 耗时 < 15000 ms | elapsed_ms=`746.7`；ledger_ms=`442.9`；ledger_read_bytes=`16413620` | 整条命令（含解释器启动 + 文档扫描 + 账本增量） |
+| 通过 | 7.0 假产品造好了 | files=`2001`；bytes=`24655620`；ledger_bytes=`16413620`；make_ms=`933.6` | 2001 文件 / 24655620 字节（历史文件 2000×4096 B，账本 5000 事件 / 16413620 字节） |
+| 通过 | 7.1 index 耗时 < 15000 ms | elapsed_ms=`885.4`；ledger_ms=`489.1`；ledger_read_bytes=`16413620` | 整条命令（含解释器启动 + 文档扫描 + 账本增量） |
 | 通过 | 7.2 索引库远小于源（比值 < 10%） | index_bytes=`1576960`；src_bytes=`24655620`；ratio=`0.063959`；shrink=`15.6` | 索引 1576960 字节 / 源 24655620 字节 = 0.06396 |
 | 通过 | 7.3 索引 doc 表有 2000 行 | doc_rows=`2000`；history_rows=`2000` | {'history': 2000} |
-| 通过 | 7.3b 100 文件的对照产品也索引好了 | indexed=`100`；ms=`567.9` | — |
-| 通过 | 7.4 2000 文件下 pack ≤ 预算 | bytes=`2661`；budget=`6000`；pack_ms=`81.3` | — |
-| 通过 | 7.4b 100 文件下 pack ≤ 预算 | bytes=`2658`；budget=`6000`；pack_ms=`81.5` | — |
+| 通过 | 7.3b 100 文件的对照产品也索引好了 | indexed=`100`；ms=`645.9` | — |
+| 通过 | 7.4 2000 文件下 pack ≤ 预算 | bytes=`2661`；budget=`6000`；pack_ms=`100.4` | — |
+| 通过 | 7.4b 100 文件下 pack ≤ 预算 | bytes=`2658`；budget=`6000`；pack_ms=`95.5` | — |
 | 通过 | 7.4c 两个产品的索引行数一样多（比较才公平） | listed_2000=`10`；listed_100=`10` | 2000 文件列 10 行，100 文件列 10 行 |
 | 通过 | 7.5 包里的索引行数 ≤ pack_max_index_rows × 类别数 | listed_rows=`10`；max_rows=`10` | — |
 | 通过 | 7.6 其余资料进 omitted，并写明怎么取 | omitted=`1` | history 资料还有 1990 份未列（全量：`ctxiso archive list --kind history`，那是索引不是正文） |
 | 通过 | 7.6b omitted 里的份数算得对 | — | 期望 1990 份未列 |
 | 通过 | 7.7 2000 文件 vs 100 文件，包大小差 < 500 B | bytes_2000=`2661`；bytes_100=`2658`；diff=`3`；limit=`500` | 2661 B vs 2658 B，差 3 B |
-| 通过 | 7.8 第二次 index 账本 read_bytes = 0（增量） | first_read_bytes=`16413620`；second_read_bytes=`0`；attempts=`1`；first_ms=`746.7`；second_ms=`279.0` | 第1次 read_bytes=0 new_events=0 279.0ms　（第一次全量 read_bytes=16413620 字节） |
+| 通过 | 7.8 第二次 index 账本 read_bytes = 0（增量） | first_read_bytes=`16413620`；second_read_bytes=`0`；attempts=`1`；first_ms=`885.4`；second_ms=`356.1` | 第1次 read_bytes=0 new_events=0 356.1ms　（第一次全量 read_bytes=16413620 字节） |
 | 通过 | 7.8b 第二次 index 没有新增事件 | new_events=`0` | — |
 
-> 7.8 允许跑两次取最后一次：同机别的进程也会跑 ctxiso index，撞同一份索引库时 read_bytes 可能不为 0。增量逻辑本身是对的（store.refresh_ledger 按 meta.ledger_cursor seek 到新增字节）。本轮跑了 1 次：第1次 read_bytes=0 new_events=0 279.0ms
-> 文档索引每次都会重算全部 2000 个文件的 sha 与行数（refresh_docs 没有按 mtime 短路），所以第二次账本 read_bytes=0 但整条命令仍要 279.0 ms
+> 7.8 允许跑两次取最后一次：同机别的进程也会跑 ctxiso index，撞同一份索引库时 read_bytes 可能不为 0。增量逻辑本身是对的（store.refresh_ledger 按 meta.ledger_cursor seek 到新增字节）。本轮跑了 1 次：第1次 read_bytes=0 new_events=0 356.1ms
+> 文档索引每次都会重算全部 2000 个文件的 sha 与行数（refresh_docs 没有按 mtime 短路），所以第二次账本 read_bytes=0 但整条命令仍要 356.1 ms
 
 ## 场景 8　长期项目维护：跑很久以后仍能按需取回必要信息
 
-用时 892.5 ms，16/16 条断言通过。
+用时 1029.1 ms，16/16 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
@@ -221,15 +221,19 @@
 
 ## 场景 9　新旧系统并存：新开发系统没有破坏原来的中枢
 
-用时 2189.4 ms，27/27 条断言通过。
+用时 2287.4 ms，31/31 条断言通过。
 
 | 判定 | 断言 | 实际数字 | 实际输出 |
 |---|---|---|---|
+| 通过 | 9.1 真仓库 guard check：ok=true | guard_ok=`True` | 中枢原有 24 个受控文件全部逐字节未变。 |
+| 通过 | 9.1b changed 为空 | changed=`0` | [] |
+| 通过 | 9.1c missing 为空 | — | [] |
+| 通过 | 9.1d 非 append-only 的改动为空 | baseline_at=`2026-10-18T17:54:20Z` | [] |
 | 通过 | 9.1e guard snapshot/check 基线自洽：changed/missing 都空 | guarded=`24`；guard_ok=`True` | 受控 24 个文件：中枢原有 24 个受控文件全部逐字节未变。 |
 | 通过 | 9.1f guard 能抓出真改动（不是空转） | caught=`['02-hubcore/CORE.md']`；restored=`True` | 改一个字后 changed=['02-hubcore/CORE.md'] / ok=False；改回去后 ok=True |
-| 通过 | 9.2 本轮测试没有把仓库弄脏（与跑前基线比，只算新增；别人的改动不计） | lines=`0`；baseline=`18`；raw=`` | 跑前已有 18 行（别人改动，不计）· 本轮新增 0 行：[] |
+| 通过 | 9.2 本轮测试没有把仓库弄脏（与跑前基线比，只算新增；别人的改动不计） | lines=`0`；baseline=`120`；raw=`` | 跑前已有 120 行（别人改动，不计）· 本轮新增 0 行：[] |
 | 通过 | 9.3 旧系统 state.py 全流程跑通（init→plan→require→work→status） | steps_ok=`5`；steps=`5` | init=0 \| plan=0 \| require=0 \| work --define=0 \| status=0 |
-| 通过 | 9.3b status 输出含 MISSION 与当前阶段/下一步 | out_chars=`1022`；has_mission=`True` | ---------------------------------------- \| 产品：fake-old　类型：cli-tool \| 路径：C:\relab2\kernel\05-tests\TEMP\fake-old-system \| MISSION r1：让演示产品的导出失败原因一眼看得见 \| 可观察成功：导出命令失败时退出码非 0 且把原因打在标准错误上 \| 当前路线：先收原话，再用 state work 累积责任 \| 源码档 |
+| 通过 | 9.3b status 输出含 MISSION 与当前阶段/下一步 | out_chars=`1022`；has_mission=`True` | ---------------------------------------- \| 产品：fake-old　类型：cli-tool \| 路径：<kernel>\05-tests\TEMP\fake-old-system \| MISSION r1：让演示产品的导出失败原因一眼看得见 \| 可观察成功：导出命令失败时退出码非 0 且把原因打在标准错误上 \| 当前路线：先收原话，再用 state work 累积责任 \| 源码档：这个产品文件夹 |
 | 通过 | 9.4 白名单之外的 UNKNOWN 写句柄数为 0 | calls=`19`；suspect=`0`；unregistered=`0` | 扫了 19 个写句柄，自动认不出落点的 0 个，其中未登记 0 个。白名单： |
 | 通过 | 9.4b 白名单里没有过期条目（每条都还挂在真实调用点上） | stale=`0` | 过期：无 |
 | 通过 | 9.4c 白名单每一条都写了「写到哪里、为什么安全」 | entries=`12` | 12 条，最短说明 26 字 |
@@ -242,9 +246,9 @@
 | 通过 | 9.5b 装出来的东西搜不到源仓路径 / context-isolation / github.com / http:// / user-skills | scanned=`91`；hits=`0`；real_hits=`0`；whitelisted=`0` | 扫了 91 个文件，命中 0 处；白名单排除 0 处 |
 | 通过 | 9.5c 每一处命中都在明明白白的白名单里（不许静默跳过） | whitelist=`0` | 无 |
 | 通过 | 9.5d 02-hubcore 已被临时改名（源树此刻不在原位） | renamed=`True` | 改名成功=True；02-hubcore 在原位=False |
-| 通过 | 9.5e 假宿主里 python hub/tools/state.py --help 成功 | rc=`0`；ms=`174.3` | usage: state.py [-h]                 {init,plan,status,gate,work,probe,accept-closed,accept-seen,confirm,attempt,reopen,record,require,verif |
-| 通过 | 9.5f 假宿主里 python hub/ctxiso/cli.py status --product <假产品> 成功 | rc=`0`；ms=`82.7` | {   "ok": true,   "product": "C:\\relab2\\kernel\\05-tests\\TEMP\\fake-home-prod",   "state_dir": "C:\\relab2\\kernel\\05-tests\\TEMP\\fake- |
-| 通过 | 9.5g 假宿主里 python -m ctxiso status --product <假产品> 成功 | rc=`0`；ms=`78.3` | {   "ok": true,   "product": "C:\\relab2\\kernel\\05-tests\\TEMP\\fake-home-prod",   "state_dir": "C:\\relab2\\kernel\\05-tests\\TEMP\\fake- |
+| 通过 | 9.5e 假宿主里 python hub/tools/state.py --help 成功 | rc=`0`；ms=`192.9` | usage: state.py [-h]                 {init,plan,status,gate,work,probe,accept-closed,accept-seen,confirm,attempt,reopen,record,require,verif |
+| 通过 | 9.5f 假宿主里 python hub/ctxiso/cli.py status --product <假产品> 成功 | rc=`0`；ms=`102.4` | {   "ok": true,   "product": "<kernel>\\05-tests\\TEMP\\fake-home-prod",   "state_dir": "<kernel>\\05-tests\\TEMP\\fake-home\\hub\\.state\\5 |
+| 通过 | 9.5g 假宿主里 python -m ctxiso status --product <假产品> 成功 | rc=`0`；ms=`90.3` | {   "ok": true,   "product": "<kernel>\\05-tests\\TEMP\\fake-home-prod",   "state_dir": "<kernel>\\05-tests\\TEMP\\fake-home\\hub\\.state\\5 |
 | 通过 | 9.5h 02-hubcore 名字已改回来（try/finally + 重试 + atexit 兜底） | restored=`True`；leftover=`False` | 回到原位=True；残留改名目录=False；回滚函数返回=True |
 | 通过 | 9.5i 新包的状态写在包内 .state/（不落在源仓任何地方） | state_in_pkg=`True`；children=`['573ca44604cb']` | 包内 .state/ = True |
 | 通过 | 9.5j check_dist_sync.py 退出 0（产物与源码同源） | rc=`0`；checked=`91` | 产物是当前源码构建出来的 |
@@ -253,7 +257,6 @@
 | 通过 | 9.5m 出货件里没有运行期残留（.state/ 与 __pycache__/） | scanned=`dist/hubcore`；residue=`0` | 扫 03-bundle/dist/hubcore（出货件本身）：无 |
 | 通过 | 9.5m2 残留确实是运行期产生的（装前无 → 跑完才有），不是随包发出的 | dist_clean=`True`；at_install=`False`；runtime_state=`True` | 出货件 无；刚装好时 .state=False；跑完 9.5f/9.5g 后 .state=True |
 
-> 9.1 真仓库 guard check：rc=3（侧车无基线 —— 本测试**有意不新建**，以免覆盖统筹的基线）
 > 9.5 用的是打包器的产物 03-bundle/dist/hubcore，91 个文件；包内 .state/ 落在 05-tests/TEMP/ 下，跑完随 TEMP 一起删。
 
 ## 保护区指纹比对（三层）
@@ -262,9 +265,9 @@
 |---|---|---|---|---|---|
 | 1 硬保护区 | 中枢本体（`02-hubcore/` 的规则与运行核）、仓根文件 | 0 | 0 | 0 | **是** |
 | 2 本项目内 | `ctxiso/`、`00-ANALYSIS/`、`01-design/` | 0 | 0 | 0 | 否（E/F 分区，别人在改） |
-| 3 别人分区 | `03-bundle/`、`04-console/`、`03-tests/`、`06-verify/` | 1 | 0 | 0 | 否（T1/T2 同时开工） |
+| 3 别人分区 | `03-bundle/`、`04-console/`、`06-verify/` | 1 | 0 | 0 | 否（T1/T2 同时开工） |
 
-跑前取指纹 442 个文件，跑后 442 个。
+跑前取指纹 453 个文件，跑后 453 个。
 
 层3 别人分区 本轮观察到的变化（不是本测试夹具写的）：
 - `03-bundle/bundle-meta.json`
@@ -274,9 +277,34 @@
 - `05-tests/TEMP/` 整个目录：已删
 - 侧车状态目录里本轮假产品的格子 `<hubcore>/state/<key>/`：46577448868b, 524715d835b4, 99c34664221f, c2277428a875, c4c3db4f53eb, dd52b67c7351, f34784f003ed, f831c3d84ce2
 
-跑完 `<hubcore>/state/` 现有内容：`b8b4b57a808e`
+跑完 `<hubcore>/state/` 现有内容：`5c1c28ba7880, b8b4b57a808e`
 
 <!-- END AUTO-RUN -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -389,14 +417,27 @@
 
 ### 一句话
 
-**9 个场景 / 152 条断言 / 151 通过 / 1 红，退出码 3。**
-最后这一条红是**打包链的问题，不是 ctxiso 的问题**：
-`03-bundle/dist/hubcore/.state/` 混进了出货内容（详见 F2）。
-本轮中途还红过一条 9.5j（产物忘了重打），统筹重打后已转绿（F1）。
+**以顶部自动段为准**（`run_all.py` 每次跑完重写，数字是最近一次实跑）。
+2026-10-18 这一轮复跑了多次：中途出现过 146/1 红（9.5j：源码改了未重打 `dist/`）与
+一次场景挂起（`selftest` 与 `run_all` 并发跑互删 `TEMP/`，非产品缺陷）→
+重打 `dist/` 且串行执行后 **147 条断言 / 147 通过 / 0 红 / 退出码 0**。
+此前手写段写的是「152 条 / 151 通过 / 1 红 / 退出码 3」，那条红是
+`03-bundle/dist/hubcore/.state/` 混进出货件（F2）——`pack.py` 复制时已排除 `.state/`，
+9.5m / 9.5m2 实测通过，**已转绿**，手写段随之对齐。
+
+断言的条数是**条件式生成**的（例如 9.1 在侧车无基线时只 `note` 不 `check`、场景 5 在 `compare`
+提前 return 时后面整段不生成），实测到过 120 / 138 / 147 / 151 四种总数。
+**别拿条数当回归基线，看「0 红」和每个场景的 X/X 通过。**
+
+> 另一条实测坑：**跑 `run_all.py` 时别同时改仓库。** 9.2 的判据是「跑前基线 vs 跑后只算新增」，
+> 别人并发写文件会被记成「本轮新增」（这正是它要抓的东西，不是测试缺陷，但会制造假红）。
+
+> 注意：9.5j（产物与源码同源）会在**源码改动尚未重打 `dist/`** 时红——
+> 那是护栏按设计工作，处置是重跑 `python 03-bundle/pack.py`，不是改测试。
 
 这套测试到目前为止一共抓出 **5 个真缺陷**（`archive.py` 的 `hashlib.sha8`、
 `cli.py` 的 `read_history` 少传参数、`pack.py` 的 `omitted` 少报份数、
-产物忘了重打、产物混入 `.state/`），前三个已修、第四个已修、第五个待 T1 处置。
+产物忘了重打、产物混入 `.state/`），**五个全部已修**（第五个见 F2）。
 
 ---
 
@@ -509,7 +550,7 @@ def _test_injected_write(product):
 
 ---
 
-## F. 打包链的两条红（一条已修，一条还开着）
+## F. 打包链的两条红（两条都已修）
 
 ### F1（9.5j）护栏已生效：抓到过一次「忘了重打」，统筹重打后转绿
 
@@ -538,7 +579,7 @@ verdict=产物过期：0 个文件该有却没有、1 个内容不同
 > 建议改成按标记结构（例如 docstring 条目序号）匹配，
 > 或匹配失败时给出"素材行号 + 期望内容"，而不是只报 `找不到：'3。'`。
 
-### F2（9.5m，唯一剩下的红）`dist/` 里混进了运行期残留
+### F2（9.5m，已转绿）`dist/` 里混进了运行期残留
 
 ```
 03-bundle\dist\hubcore\.state\ad09fb308a9b\index.sqlite
@@ -556,6 +597,12 @@ verdict=产物过期：0 个文件该有却没有、1 个内容不同
 **处置**：`pack.py` 复制时排除 `.state/`（`check_dist_sync.py` 的 `SKIP_DIST` 里
 已经有 `"state"`，打包器这边漏了），然后重跑一次 `pack.py`。
 本轮**没有代改**——`03-bundle/` 是 T1 的分区。
+
+> **2026-10-18 复核：已修并转绿。** `pack.py` 现在在建包末尾显式
+> `for state_dir in out.rglob(L.STATE_DIRNAME): rmtree_quiet(...)`（`pack.py:335-339`），
+> `check_dist_sync.py` 的 `_files()` 也按**相对路径**排除 `__pycache__`/`.state`。
+> 自动段 9.5m「出货件里没有运行期残留」`residue=0`、9.5m2「残留确实是运行期产生的」
+> 三条子判据（出货件 无 / 刚装好 .state=False / 跑完 .state=True）全部通过。
 
 ---
 
@@ -591,8 +638,9 @@ byte-level sha 相等在有换行转换的打包链上永远不可能成立，�
   仍建议在 `check_dist_sync.py` 里显式读 `bundle-meta.json`，否则以后再加排除项会重演。
 - **场景 9.5 的独立运行只在假宿主里验过，没在真宿主家目录验过**——真宿主家目录
   属于主人的机器，不在 `05-tests/` 的写入范围内。
-- **没有联网，没有 git 写操作。** `git status --porcelain` 是只读的，实测
-  只有一行 `?? work/context-isolation/`。
+- **没有联网，没有 git 写操作。** `git status --porcelain` 是只读的；9.2 那条判的是
+  「与跑前基线比，**本轮测试新增** 0 行」（别人的未提交改动不计，见 `test_scenarios.py` 的
+  `TEMP/.git-status-before` 逻辑），自动段实测 `lines=0`。
 
 ---
 
@@ -602,19 +650,19 @@ byte-level sha 相等在有换行转换的打包链上永远不可能成立，�
 |---|---|
 | 只在 `05-tests/` 下建文件 | 是：`run_all.py`、`test_scenarios.py`、`SCENARIOS.md`、`RESULT.md`、`LAST-RUN.txt`、`LAST-STDERR.log`、`.gitignore` |
 | 假产品位置 | 全部在 `05-tests/TEMP/`（11 个目录名，见 `test_scenarios.FAKE_PRODUCT_NAMES`），跑完整个目录删掉 |
-| **层 1 硬保护区（判红）** | `hub/`、`.hub/`、`features/`、`work/v0.1.0/`、仓根所有文件 —— 被改 0 / 新增 0 / 消失 0 |
-| 层 2 本项目内（只报） | `02-hubcore/`、`ctxiso/`、`00-ANALYSIS/`、`01-design/` |
-| 层 3 别人分区（只报） | `03-bundle/`、`04-console/`、`03-tests/` |
+| **层 1 硬保护区（判红）** | `02-hubcore/CORE.md`、`02-hubcore/AGENTS.md`、`02-hubcore/workflows`、`02-hubcore/docs`、`02-hubcore/tools`、仓根所有文件 —— 被改 0 / 新增 0 / 消失 0 |
+| 层 2 本项目内（只报） | `ctxiso/`、`00-ANALYSIS/`、`01-design/` |
+| 层 3 别人分区（只报） | `03-bundle/`、`04-console/`、`06-verify/` |
 | 真仓库 `.hub/` | 一个字节没动 |
 | `ctxiso/` | 一个字节没动（被测对象，全程只读） |
 | `02-hubcore` | 临时改名一次，**try/finally + 重试 + atexit + 下次启动自愈**四道兜底，本轮回滚成功 |
 
 **唯一落在 `05-tests/` 之外的写盘，是被测代码自己的状态目录**
-`work/context-isolation/state/<产品key>/`——`ctxiso/paths.py:11` 把 `STATE_DIR`
+`kernel/state/<产品key>/`——`ctxiso/paths.py:11` 把 `STATE_DIR`
 写死在那里。跑完按 `FAKE_PRODUCT_NAMES` 算出的 key 把本套测试的格子全删了
-（**只删 TEMP 下面产品的 key，绝不碰真仓库那一格 `ad09fb308a9b`**，
+（**只删 TEMP 下面产品的 key，绝不碰真仓库那一格 `5c1c28ba7880`**，
 也不碰统筹自己手工验证时留下的格子——那些格子里记的是 `BIG.md` / "验证截断标记"，
 一看就不是本套测试造的）。需要留证据就加 `--keep-state`。
 
 所有子进程都带 `PYTHONDONTWRITEBYTECODE=1`：不然 `python -m ctxiso` 和 `state.py`
-会在 `ctxiso/__pycache__/`、`hub/tools/__pycache__/` 里写 `.pyc`，那也算改动保护区。
+会在 `ctxiso/__pycache__/`、`02-hubcore/tools/__pycache__/` 里写 `.pyc`，那也算改动保护区。
