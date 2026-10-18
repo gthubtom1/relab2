@@ -201,7 +201,13 @@ expect_fragment() { grep -Fq "$1" "$CALL_LOG" || { echo "missing argv fragment: 
 rejects_without_pnpm() {
   local runner="$1"; shift
   : > "$CALL_LOG"; set +e; "$runner" "$@" >/dev/null 2>&1; local rc=$?; set -e
-  [[ $rc -ne 0 ]] && ! grep -Eq '^pnpm\|(install|dev)' "$CALL_LOG"
+  # ★ 2026-10-18：原来是 `[[ $rc -ne 0 ]] && ! grep ...` —— 当 $rc == 0 时
+  #   整个 && 表达式返回 1，在 set -e 下**静默退出**（CI 实测：打完 test-routing.sh 的
+  #   ALL PASS 之后 **12 秒零输出、exit 1**，与文件头注释里记的「11 秒零输出」同一现象，
+  #   只是那次加了 ERR trap 却没覆盖到「&& 短路返回 1」这条路径）。
+  #   现在两条条件各自显式断言，失败会点名。
+  [[ $rc -ne 0 ]] || { echo "ASSERT FAILED: rejects_without_pnpm expected non-zero rc, got 0 (args: $*)" >&2; return 1; }
+  ! grep -Eq '^pnpm\|(install|dev)' "$CALL_LOG" || { echo "ASSERT FAILED: pnpm install/dev was called" >&2; cat "$CALL_LOG" >&2; return 1; }
 }
 
 pipx_package=$(json_value dependency pipx)
