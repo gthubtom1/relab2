@@ -33,7 +33,7 @@ clone 完**在这个目录下开一个新的智能体会话** —— 之后读�
 **第 0.5 步 · 一条命令问「这台机器现在能不能干活」**
 
 ```powershell
-# 先看它要干什么 —— 只打印计划、不改环境变量与配置；会刷新本机工具快照 `skillpack/.hub/tools.local.json`（gitignored）
+# 先看它要干什么 —— 只打印计划、不改环境变量与配置；**也不刷新**工具快照（`skillpack/.hub/tools.local.json` 由 `selfcheck.ps1` 写）
 powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2.ps1 setup -DryRun
 # 真跑：仓根定位 → 环境变量 → 技能挂载（幂等，可反复跑）
 powershell -NoProfile -ExecutionPolicy Bypass -File .\relab2.ps1 setup

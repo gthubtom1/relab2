@@ -225,6 +225,11 @@ def check_file(text: str, path: str) -> tuple[list[str], int]:
         if not ev.strip():
             errs.append(f"{path} :: findings/{aid} :: 证据列为空（ADF-R41：每条 Finding 必须映射到 Evidence）")
             continue
+        # ★ 2026-10-18 审计（A5 的 B4）：**未填过的模板会直接 PASS** ——
+        #   占位值 `E-xxx` 让「证据列非空」成立，而 `E-\d+` 匹配不上所以连存在性都不查。
+        #   清空证据列反而 FAIL。这不是"宽松"，是"填了占位符比不填更容易过"。
+        if re.search(r"E-\s*(xxx|XXX|nnn|NNN|\?\?)", ev) or re.search(r"\b(TBD|TODO|待补|待定)\b", ev, re.I):
+            errs.append(f"{path} :: findings/{aid} :: 证据列是**占位符**（{ev!r}）—— 模板没填完不算有证据")
         for e in re.findall(r"E-\d+", ev):
             if referenced_e_known is not None and e not in referenced_e_known:
                 errs.append(f"{path} :: findings/{aid} :: 引用了本文件未定义的 Evidence {e}")

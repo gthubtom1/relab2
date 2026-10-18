@@ -17,7 +17,8 @@ relab2.ps1 —— 本仓库的唯一门面（对齐 REA 的 setup / doctor / upd
 约定：
   · 本文件不写任何盘符绝对路径（环境初始化.md §10）。仓根一律由 $PSScriptRoot 推导。
   · doctor **不改配置、不改环境变量**；但它会调用 selfcheck / register-skills -Doctor / mcp-status，
-    其中会有**机器状态快照**被刷新（如 skillpack\.hub\tools.local.json —— 已 gitignore）。
+    其中会有**机器状态快照**被刷新（如 skillpack\.hub\tools.local.json —— 已 gitignore；
+    注意 DryRun **不会**刷新它，那份由 selfcheck.ps1 写）。
     ⚠️ 旧版这里写的是「只读，不改任何东西」—— 与事实不符（审计实测），已改。
     退出码 0 = 就绪，1 = 未就绪。
   · setup 幂等，带 -DryRun 预览，不碰用户未授权的机器级状态。
