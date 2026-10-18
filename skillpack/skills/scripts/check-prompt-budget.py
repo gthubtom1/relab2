@@ -177,6 +177,12 @@ def main() -> int:
     # ★ 2026-10-15 审计 P3：以前只看一层，嵌套技能（community/* 等 6 个）不被统计。
     #   register-skills.ps1 已改递归，这里必须同口径。
     paths = sorted(glob.glob(os.path.join(args.root, "**", "SKILL.md"), recursive=True))
+    # ★ 2026-10-18 审计（A5）：**零值守卫**。同仓的 verify-ps1-bom / verify-powershell-syntax
+    #   都有这道守卫，只有这里没有 —— 于是 `--root` 指错（或技能被清空）时 checked=0 仍 exit 0，
+    #   看起来"全绿"。项目自己的原则是 P11：无输入 ≠ 审过。
+    if not paths:
+        print(f"SKIP: --root={args.root} 下 0 个 SKILL.md —— 没有可检查对象，不冒充通过")
+        return 10
     bad: dict[str, list[str]] = {}
     sizes: list[tuple[int, str]] = []
     for p in paths:

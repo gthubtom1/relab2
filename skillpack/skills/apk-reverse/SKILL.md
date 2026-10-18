@@ -1,6 +1,6 @@
 ---
 name: apk-reverse
-description: APK 逆向：jadx/apktool 解包、改 smali/AndroidManifest、重打包、Frida hook。用于：APK 逻辑、装不上、去广告、查服务器、root 检测、**安装包、开机自启、后台行为、后台在干什么、网络行为**。
+description: APK 逆向：jadx/apktool 解包、改 smali/AndroidManifest、重打包、Frida hook。用于：APK 逻辑、装不上、去广告、root 检测、安装包、开机自启、后台行为。
 ---
 
 ## ACTION REQUIRED（读完后立刻执行）
