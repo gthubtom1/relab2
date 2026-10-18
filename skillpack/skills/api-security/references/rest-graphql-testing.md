@@ -1,3 +1,6 @@
+> ⚠️ **本文是薄摘要**（137 行），GraphQL 的完整方法见 [`injection/graphql.md`](injection/graphql.md)。
+> 2026-10-18 复核：本文提到的 3 个工具（`graphql-cop` / `clairvoyance` / `graphw00f`）**本机均未安装**，命令需先装。
+
 # REST + GraphQL 深度测试
 
 ## GraphQL 安全测试完整清单

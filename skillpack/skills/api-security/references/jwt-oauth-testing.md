@@ -1,3 +1,12 @@
+> ⚠️ **本文有 4 处已知必错，照抄会报错**（2026-10-18 复核）：
+> 1. `jwt.split` 在 Python 里是字符串方法，**不能** `jwt.split(token, '.')` —— 用 `token.split('.')`
+> 2. `base64url_encode` 不是标准库函数 —— 用 `base64.urlsafe_b64encode(...).rstrip(b'=')`
+> 3. `rockyou.txt` 路径是 Linux 的，本机没有 —— 用 `D:\Tools\wordlists\` 下实际有的词表
+> 4. `pip install jwt-tool` **没有这个发行版** —— 用 `git clone` 仓库后 `python jwt_tool.py`
+>
+> 完整的 JWT 方法见 [`jwt/00-overview.md`](jwt/00-overview.md) 与 [`jwt/01-algorithm.md`](jwt/01-algorithm.md)；
+> OAuth/SAML 见 [`../../identity-federation/references/oauth-saml/`](../../identity-federation/references/oauth-saml/)。
+
 # JWT + OAuth 2.0 安全测试
 
 ## JWT 攻击面
