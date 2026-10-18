@@ -20,12 +20,13 @@ import re
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 
-ROOT = r"C:\relab2"
+ROOT = str(Path(__file__).resolve().parents[4])  # experiments/desc-ab -> 仓库根
 SK = os.path.join(ROOT, "skillpack", "skills")
 BENCH = os.path.join(SK, "tests", "routing-benchmark-natural.json")
 ROUTING = os.path.join(SK, "config", "routing.json")
-OUT = r"C:\Windows\Temp\descab"
+OUT = os.path.join(tempfile.gettempdir(), "descab")
 BATCH = 12
 OLD_REF = "9f74253^"
 

@@ -95,8 +95,10 @@ def actual_kb_originals() -> int:
 
 def actual_toolmap() -> tuple[int, int]:
     """toolmap prefer 的 (失效数, 总数)。"""
+    repo_root = Path(__file__).resolve().parents[3]  # skillpack/skills/tests -> 仓库根
+    bootstrap = repo_root / "skillpack" / "skills" / "scripts" / "lib" / "Bootstrap.ps1"
     rc, out = _run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
-                    ". 'C:/relab2/skillpack/skills/scripts/lib/Bootstrap.ps1';"
+                    f". '{bootstrap.as_posix()}';"
                     " $h = Test-ReverseToolmapHealth; \"$($h.missing) $($h.total)\""], timeout=180)
     if rc == 0 and out.strip():
         parts = out.strip().split()

@@ -330,9 +330,9 @@ function Get-ReverseToolMap {
 
 # deny 规则：某工具 id 在某路径上是否禁止使用（防误命中捆绑运行时，例如 IDA 自带的裸 Python）
 # ★ 2026-10-15 独立审查 P8：toolmap.default.json 的 prefer 失效没有任何东西在报。
-#   实测本机 68 条 prefer 里 53 条指向不存在的文件（只有 15 条命中）。本机不致命，
-#   因为 D:\Tools\_map.json 本机覆盖表 38 条全部存在；但换一台没有 _map.json 的机器，
-#   68 条里只有 15 条指得动，其余会静默落到第 4 级 scan（可信度最低、需确认身份）。
+#   2026-10-18 复核：本机 44 条 prefer **全部命中**（0 条失效）；覆盖表 50 条。
+#   原记录「68 条里 53 条失效 / 只有 15 条命中 / 覆盖表 38 条」是旧读数，已过期。
+#   但仍要保留这条警告：换一台没有 _map.json 的机器，prefer 会静默落到第 4 级 scan（可信度最低、需确认身份）。
 #   而 toolmap.default.json 自称「由 scripts/gen-default-toolmap.py 生成」——那个生成器
 #   在仓库里不存在（环境初始化.md §11.6 已承认），所以这表是手工维护的，必然漂移。
 #   本函数把「失效 prefer 计数」变成可观测数字，供 doctor/selfcheck 报告。
