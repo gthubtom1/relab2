@@ -1,5 +1,11 @@
 # 交接文档 — 融合技能包
 
+> ⚠️ **本文写于 2026-10-17，其中的数字已过期**（2026-10-18 复核）：
+> - 「23 门」→ 实际 **45 门**（`ci-gates.json` 数组长度）
+> - 「Python 3.12.0」→ 实际 **3.11.7**（pyre venv）/ 3.14.3（默认）
+> - 「total=21 ok=21」→ 以 `run-ci-gates.py` 当次输出为准
+> 本文的**方法**仍然有效；**数字**请当场复算。
+
 **给新对话的第一份必读。** 读完本文再动手。
 
 ---
@@ -131,7 +137,7 @@ community-raw/                   ← 仓库根，在发现根之外
 
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
-& (Resolve-ReverseToolSpec -Name 'pyre').Command kills\tests\run-ci-gates.py --runner python
+& (Resolve-ReverseToolSpec -Name 'pyre').Command skills\tests\run-ci-gates.py --runner python
 # 真树（有 ../upstream 快照）: total=21 ok=21 non_blocking=0 skipped=0 blocked=0 failed=0, exit 0
 # clone 到仓库外（无快照）  : total=21 ok=17 non_blocking=3 skipped=1 blocked=0 failed=0, exit 0
 ```
@@ -448,7 +454,7 @@ test-routing-natural.ps1         # 76/86    exit 1（脚本语义：有失败即
 **1. 改之前先冻基线**（五条，全部记录数字；数字必须与当次实跑一致，不许沿用上一轮的）：
 
 ```powershell
-& (Resolve-ReverseToolSpec -Name 'pyre').Command kills\tests\run-ci-gates.py --runner python        # 期望 total=21 ok=21（清单 23 门，见 §0「门数唯一口径」）
+& (Resolve-ReverseToolSpec -Name 'pyre').Command skills\tests\run-ci-gates.py --runner python        # 期望 total=21 ok=21（清单 23 门，见 §0「门数唯一口径」）
 powershell -NoProfile -ExecutionPolicy Bypass -File skills\scripts\test-routing.ps1          # 182/182
 powershell -NoProfile -ExecutionPolicy Bypass -File skills\scripts\extract-summaries.ps1 -Check  # INDEX.md 是生成物：exit 0 才算与 SKILL.md 同步（CI 唯一检查它的一步）
 powershell -NoProfile -ExecutionPolicy Bypass -File skills\scripts\test-routing-natural.ps1  # 76/86
