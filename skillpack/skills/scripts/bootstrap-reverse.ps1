@@ -521,9 +521,15 @@ function Ensure-ApktoolInstall {
     Ensure-JavaRuntime
     $releaseTag = if ($Definition.PSObject.Properties['releaseTag']) { [string]$Definition.releaseTag } else { '' }
     $asset = Get-GitHubLatestReleaseAsset -Repo $Definition.repo -AssetRegex $Definition.assetRegex -ReleaseTag $releaseTag
-    # ★ 2026-10-18：installDir 支持任意环境变量（含自定义的 REVERSE_TOOL_ROOT）。
-    #   [Environment]::ExpandEnvironmentVariables 认所有环境变量，而 Join-Path/Test-Path 不会自动展开。
+    # ★ 2026-10-18：installDir 必须是**绝对路径**（test-bootstrap-supply-chain.ps1:42 会校验），
+    #   所以 manifest 里保留 %USERPROFILE%\Tools 这种写法；这里做两件事：
+    #   ① 展开环境变量（Join-Path/Test-Path 不会自动展开）
+    #   ② 若本机设了 REVERSE_TOOL_ROOT，把 %USERPROFILE%\Tools 前缀换过去 —— 工具都装 D 盘
     $installDir = [Environment]::ExpandEnvironmentVariables([string]$Definition.installDir)
+    $defaultTools = [Environment]::ExpandEnvironmentVariables('%USERPROFILE%\Tools')
+    if ($env:REVERSE_TOOL_ROOT -and $installDir.StartsWith($defaultTools, [StringComparison]::OrdinalIgnoreCase)) {
+        $installDir = $env:REVERSE_TOOL_ROOT + $installDir.Substring($defaultTools.Length)
+    }
     Ensure-DownloadDirectory -Path $installDir
 
     $jarName = [System.IO.Path]::GetFileName($asset.name)
