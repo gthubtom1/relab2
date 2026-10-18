@@ -175,7 +175,7 @@ for (int i = 0; i < count; i++) {
 
 ## 坑
 
-- **`rabin2` 在本机是坏副本**，用 `r2 -qc` 代替。
+- `rabin2` **可用**（2026-10-18 实测 6.2.4，`rabin2 -I` rc=0）；批量扫仍推荐 `r2 -qc`。
 - **r2 `/x` 通配符是 `.` 不是 `?`**，`search.from/to` 无效；重定位样本要 `2>$null`。
 - **r2 的 `~` 过滤不支持 `^`/`$` 锚点**：本机实测 `iS~^\.text$` 输出为空，`iS~.text$` 仍会连 `ARM.text` / `.debug_frame$$$ARM.text` 一起带出。要精确匹配节名，把 `iS` 输出交给外部 awk：
   ```bash

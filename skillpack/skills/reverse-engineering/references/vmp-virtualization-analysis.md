@@ -18,7 +18,7 @@
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $diec = (Resolve-ReverseToolSpec -Name 'diec').Command
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
-$cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
+$cdb  = (Resolve-ReverseToolSpec -Name 'cdb').Command
 $inj  = (Resolve-ReverseToolSpec -Name 'scyllahide').Command
 $py   = (Resolve-ReverseToolSpec -Name 'pyre').Command
 ```
@@ -110,7 +110,7 @@ handler 内解立即数的算术混淆以 VM key 为种子。在 VM entry 桩里
 
 ```powershell
 $exe  = 'C:\path\to\vmp_sample.exe'
-$cdb  = "$env:LOCALAPPDATA\Microsoft\WindowsApps\cdbX64.exe"
+$cdb  = "$env:LOCALAPPDATA\Microsoft\WindowsApps\cdb.exe"
 $cmds = "$env:TEMP\vmp_cdb.txt"
 
 @'

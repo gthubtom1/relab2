@@ -20,7 +20,7 @@
 
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
-$cdb   = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
+$cdb   = (Resolve-ReverseToolSpec -Name 'cdb').Command
 $r2    = (Resolve-ReverseToolSpec -Name 'r2').Command
 $frida = (Resolve-ReverseToolSpec -Name 'frida').Command
 $py    = (Resolve-ReverseToolSpec -Name 'pyre').Command

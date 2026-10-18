@@ -41,7 +41,7 @@
 | 自动脱壳 | `upx` | `(Resolve-ReverseToolSpec -Name 'upx').Command` |
 | Ghidra 无头 | `analyzeHeadless` | `(Resolve-ReverseToolSpec -Name 'analyzeHeadless').Command` |
 | IDA 无头 | `idat64` / `idat` | 8.3 便携版 / 9.4 |
-| 动态调试（脚本化） | `cdb` / `cdbX86` | `%LOCALAPPDATA%\Microsoft\WindowsApps\cdbX64.exe` |
+| 动态调试（脚本化） | `cdb` / `cdbX86` | `%LOCALAPPDATA%\Microsoft\WindowsApps\cdb.exe` |
 | 动态调试（交互式） | `x64dbg` + MCP | 走 `xd://mcp__x64dbg_automate_mcp_*` |
 | 反反调试 L1（注入式） | `scyllahide` | `(Resolve-ReverseToolSpec -Name 'scyllahide').Command` |
 | 反反调试 L3（硬件断点） | `cdb` 的 `ba` 命令 | 同上 |

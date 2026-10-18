@@ -20,7 +20,7 @@ $upx    = (Resolve-ReverseToolSpec -Name 'upx').Command
 $r2     = (Resolve-ReverseToolSpec -Name 'r2').Command
 $pesis  = (Resolve-ReverseToolSpec -Name 'pe-sieve').Command
 $procdmp= (Resolve-ReverseToolSpec -Name 'procdump').Command
-$cdb    = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
+$cdb    = (Resolve-ReverseToolSpec -Name 'cdb').Command
 ```
 
 ## 壳行为模型
@@ -112,7 +112,7 @@ UCL data compression library 1.03
 
 ```powershell
 $exe  = 'C:\path\to\packed.exe'
-$cdb  = "$env:LOCALAPPDATA\Microsoft\WindowsApps\cdbX64.exe"
+$cdb  = "$env:LOCALAPPDATA\Microsoft\WindowsApps\cdb.exe"
 $log  = "$env:TEMP\cdb_unpack.txt"
 $cmds = "$env:TEMP\c_unpack.txt"
 

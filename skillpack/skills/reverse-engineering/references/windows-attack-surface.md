@@ -39,10 +39,10 @@ $r2    = (Resolve-ReverseToolSpec -Name 'r2').Command
 $diec  = (Resolve-ReverseToolSpec -Name 'diec').Command
 $capa  = (Resolve-ReverseToolSpec -Name 'capa').Command
 $py    = (Resolve-ReverseToolSpec -Name 'pyre').Command          # pefile 2024.8.26 / yara 4.5.4
-$cdb   = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
+$cdb   = (Resolve-ReverseToolSpec -Name 'cdb').Command
 ```
 
-> ★ cdb 只能走 `%LOCALAPPDATA%\Microsoft\WindowsApps\cdbX64.exe` alias，且**不能加进 PATH**。
+> ★ cdb 只能走 `%LOCALAPPDATA%\Microsoft\WindowsApps\cdb.exe` alias，且**不能加进 PATH**。
 > x86 样本换 `cdbX86`，混用报 `Win32 error 0n50`。
 
 ## 步骤

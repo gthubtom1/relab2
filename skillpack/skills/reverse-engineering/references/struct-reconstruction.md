@@ -18,7 +18,7 @@
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command      # (Resolve-ReverseToolSpec -Name 'r2').Command
-$cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command # WindowsApps alias
+$cdb  = (Resolve-ReverseToolSpec -Name 'cdb').Command # WindowsApps alias
 $py   = (Resolve-ReverseToolSpec -Name 'pyre').Command                        # pefile 2024.8.26 + capstone 5.0.6
 ```
 

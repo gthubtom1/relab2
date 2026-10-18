@@ -23,8 +23,8 @@
 
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
-$cdb = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
-# → C:\Users\<user>\AppData\Local\Microsoft\WindowsApps\cdbX64.exe
+$cdb = (Resolve-ReverseToolSpec -Name 'cdb').Command
+# → C:\Users\<user>\AppData\Local\Microsoft\WindowsApps\cdb.exe
 $x86 = (Resolve-ReverseToolSpec -Name 'cdbX86').Command   # 只调 32 位目标
 ```
 
@@ -352,7 +352,7 @@ MCP 侧的常用调用（`xd://mcp__x64dbg_automate_mcp_*`）：
    有缩进的多行结构不会被解析。
 6. **`-cf` 脚本里 `#` 不是注释**。cdb 用 `$$` 注释，或干脆别写注释。
 7. **cdb 的退出码不可信**（实测 `-2147024866`）。判成功看日志内容，不看 `$LASTEXITCODE`。
-8. **`cdbX86` 只能调 32 位目标，`cdbX64` 只能调 64 位**。混用报
+8. **`cdbX86` 只能调 32 位目标，`cdb` 只能调 64 位**。混用报
    `Win32 error 0n50 / 不支持该请求`。找 32 位样本看 `%SystemRoot%\SysWOW64\*`。
 9. **WindowsApps 不能加进 PATH**。`cdb.exe` 直跑会「拒绝访问」。
 10. **WindowsApps 不能加进 PATH**。`cdb.exe` 直跑会「拒绝访问」。

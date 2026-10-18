@@ -127,9 +127,9 @@ PATH 里往往同时躺着 GUI 版和 CLI 版，**PATH 级命中早于 `_map.jso
 | 探测 id | 会返回（若未配 deny） | 实际该用 | CLI 孪生 |
 |---|---|---|---|
 | `die` | `die.exe`（GUI） | `diec.exe` | ✔ |
-| `ida` / `ida64` | `ida.exe`（GUI） | `idat.exe` | ✔ |
+| `ida` / `ida64` | `ida.exe`（GUI） | `idat.exe`（CLI，**规范 id 是 `idat`**） | ✔ |
 | `Wireshark` / `wshark` | `Wireshark.exe`（GUI） | `tshark.exe` | ✔ |
-| `x64dbg` / `x32dbg` | `x64dbg.exe`（GUI） | `headless.exe` | ✔ |
+| `x64dbg` / `x32dbg` | `x64dbg.exe`（GUI） | `headless.exe` ⚠️ **headless 不加载 MCP 插件**（见 START-HERE / KNOWN-BOUNDARIES §9-#8）；MCP 路径必须用 GUI + 插件 | ✔ |
 
 **GUI 禁入 bash**：弹窗等输入、零 stdout、进程永不退出 → 命令不返回 → 模型不运行 →
 **没有模型能察觉自己卡住**（终端计时器继续走，token 静止）。
@@ -187,12 +187,15 @@ java -version; dotnet --version
 
 # 4. 有 GUI 混入吗
 Resolve-ReverseToolSpec -Name 'die'    # 期望 diec.exe
-Resolve-ReverseToolSpec -Name 'ida'    # 期望 idat.exe
-Resolve-ReverseToolSpec -Name 'x64dbg' # 期望 headless.exe
+Resolve-ReverseToolSpec -Name 'idat'   # 期望 idat.exe（CLI）；'ida' 解析到 ida.exe 是 GUI
+Resolve-ReverseToolSpec -Name 'x64dbg' # 期望 x64dbg.exe（GUI）；headless.exe 不能跑 MCP
 
 # 5. Python 工具链在哪个解释器里（venv 可能抢走 python）
 (Get-Command python).Source
-python -c "import angr, z3, lief, capstone"   # 应无 ImportError
+python -c "import capstone; print(capstone.__version__)"   # 默认 python 3.14.3：capstone 5.0.7 有
+python -c "import angr"                                      # 默认 python：**ModuleNotFoundError**
+(Resolve-ReverseToolSpec -Name 'pyre').Command               # 逆向库在 pyre venv（3.11.7）里
+# pyre venv 实测：angr / z3 / capstone 5.0.6 有；**lief 没有**（需要时 pip install lief）
 ```
 
 **注意**：venv 目录进了 PATH 会抢走全局 `python`，导致「明明装了 angr 却 import 不到」。

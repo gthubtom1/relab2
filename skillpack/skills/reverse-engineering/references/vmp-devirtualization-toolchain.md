@@ -157,7 +157,7 @@ simgr = proj.factory.simulation_manager(state)
 
 ```powershell
 $exe  = 'C:\path\to\vmp_sample.exe'
-$cdb  = "$env:LOCALAPPDATA\Microsoft\WindowsApps\cdbX64.exe"
+$cdb  = "$env:LOCALAPPDATA\Microsoft\WindowsApps\cdb.exe"
 $cmds = "$env:TEMP\vmp_trace.txt"
 
 @'

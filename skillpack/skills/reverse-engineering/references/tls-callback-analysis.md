@@ -17,12 +17,12 @@
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
-$cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command   # x64 样本
+$cdb  = (Resolve-ReverseToolSpec -Name 'cdb').Command   # x64 样本
 $cdb86= (Resolve-ReverseToolSpec -Name 'cdbX86').Command   # x86 样本
 $py   = (Resolve-ReverseToolSpec -Name 'pyre').Command                        # pefile 2024.8.26
 ```
 
-> ★ cdb **只能走 app execution alias**：`%LOCALAPPDATA%\Microsoft\WindowsApps\cdbX64.exe`。直跑 WindowsApps 包目录里的 `cdb.exe` 会「拒绝访问」，**且绝不要把它加进 PATH**。
+> ★ cdb **只能走 app execution alias**：`%LOCALAPPDATA%\Microsoft\WindowsApps\cdb.exe`。直跑 WindowsApps 包目录里的 `cdb.exe` 会「拒绝访问」，**且绝不要把它加进 PATH**。
 
 ## TLS 目录结构
 
@@ -130,7 +130,7 @@ count: 3
 
 ```powershell
 $exe  = 'C:\path\to\sample.exe'
-$cdb  = "$env:LOCALAPPDATA\Microsoft\WindowsApps\cdbX64.exe"
+$cdb  = "$env:LOCALAPPDATA\Microsoft\WindowsApps\cdb.exe"
 $cmds = "$env:TEMP\tls_cdb.txt"
 
 @'
@@ -238,7 +238,7 @@ TLS 存在必须满足**两个**独立证据，缺一不可：
 2. ★ **`LdrpCallTlsInitializers` 会反复命中**（每个线程一次）。实测 tlsdemo.exe 上 3 次。别以为断点坏了。
 3. ★ **静态 TLS 不在 `DataDirectory[9]` 里**。用 `.CRT$XLA`/`.CRT$XLZ` 节段的静态 TLS 没有回调数组，只查目录会漏判。r2 用 `iS~CRT` 看节名。
 4. ★ **回调数不等于源码声明数**。实测我声明 2 个回调，枚举出 3 个 —— MinGW CRT 会插入自己的 `__dyn_tls_init` / `__mingw_TLScallback`。按数组顺序执行，第一个和最后一个往往是 CRT 的。
-5. ★ **cdb 必须走 alias**：`%LOCALAPPDATA%\Microsoft\WindowsApps\cdbX64.exe`。直跑包目录里的 exe 报「拒绝访问」。
+5. ★ **cdb 必须走 alias**：`%LOCALAPPDATA%\Microsoft\WindowsApps\cdb.exe`。直跑包目录里的 exe 报「拒绝访问」。
 6. ★ **cdb 断点必须在 `g` 之前下**（延迟绑定）。`g` 之后才 `bu` 会来不及。
 7. **cdb 命令串必须用 `-cf <文件>`**。带引号的内联命令串经 cmd 会被转义坏（`Win32 error 0n2`）。而且 `.sleep`、`.sympath-` 这类在脚本里也容易踩坑 —— `.sympath-` **不接受参数**，写成 `.sympath- srv*` 报 `Syntax error`。清符号路径就单独写 `.sympath-`。
 8. **`@$peb` 可用但 `@$tib` 不可用**。实测 `r @$peb` 返回 `$peb=000000d4dda0b000`，`r @$tib` 报 `Bad register error`。写 cdb 脚本读 PEB 用 `@$peb`。

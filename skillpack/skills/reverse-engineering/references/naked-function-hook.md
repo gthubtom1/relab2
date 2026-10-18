@@ -17,7 +17,7 @@
 
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
-$cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
+$cdb  = (Resolve-ReverseToolSpec -Name 'cdb').Command
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
 $rasm = (Resolve-ReverseToolSpec -Name 'rasm2').Command
 ```

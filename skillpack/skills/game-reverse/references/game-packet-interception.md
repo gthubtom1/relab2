@@ -33,7 +33,7 @@
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $tshark = (Resolve-ReverseToolSpec -Name 'wireshark').Command   # (Resolve-ReverseToolSpec -Name 'tshark').Command
 $r2     = (Resolve-ReverseToolSpec -Name 'r2').Command
-$cdb    = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
+$cdb    = (Resolve-ReverseToolSpec -Name 'cdb').Command
 $capa   = (Resolve-ReverseToolSpec -Name 'capa').Command
 $mitm   = (Resolve-ReverseToolSpec -Name 'mitmdump').Command
 $py     = (Resolve-ReverseToolSpec -Name 'pyre').Command    # scapy 2.8.0 / dpkt / cryptography 均已装

@@ -20,7 +20,7 @@
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
 $py   = (Resolve-ReverseToolSpec -Name 'pyre').Command    # capstone 5.0.6（算指令边界）
-$cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
+$cdb  = (Resolve-ReverseToolSpec -Name 'cdb').Command
 ```
 
 ## 步骤

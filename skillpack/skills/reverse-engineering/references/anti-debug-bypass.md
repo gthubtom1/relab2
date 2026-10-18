@@ -17,12 +17,12 @@
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
-$cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
+$cdb  = (Resolve-ReverseToolSpec -Name 'cdb').Command
 $inj  = (Resolve-ReverseToolSpec -Name 'scyllahide').Command   # InjectorCLIx64.exe
 $rdi  = (Resolve-ReverseToolSpec -Name 'r2').Command
 ```
 
-cdb 只能走 alias：`%LOCALAPPDATA%\Microsoft\WindowsApps\cdbX64.exe`（x86 用 `cdbX86.exe`）。
+cdb 只能走 alias：`%LOCALAPPDATA%\Microsoft\WindowsApps\cdb.exe`（x86 用 `cdbX86.exe`）。
 
 ## 先建立一个基线
 
@@ -68,7 +68,7 @@ STILL_ALIVE
 
 ```powershell
 $exe  = 'C:\path\to\adbg.exe'
-$cdb  = "$env:LOCALAPPDATA\Microsoft\WindowsApps\cdbX64.exe"
+$cdb  = "$env:LOCALAPPDATA\Microsoft\WindowsApps\cdb.exe"
 $log  = "$env:TEMP\cdb_adbg.txt"
 $cmds = "$env:TEMP\adbg_cdb.txt"
 
@@ -137,7 +137,7 @@ $peb=000000d4dda0b000
 
 ```powershell
 $exe  = 'C:\path\to\adbg.exe'
-$cdb  = "$env:LOCALAPPDATA\Microsoft\WindowsApps\cdbX64.exe"
+$cdb  = "$env:LOCALAPPDATA\Microsoft\WindowsApps\cdb.exe"
 $inj  = "(Resolve-ReverseToolSpec -Name 'scyllahide').Command"
 $dll  = '<scyllahide 目录>\Generic\HookLibraryx64.dll'
 $log  = "$env:TEMP\cdb_sh.txt"

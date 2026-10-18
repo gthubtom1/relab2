@@ -60,7 +60,7 @@
    而 `2003fe7f` 是**字节序写反**。通配符实测：`7ffe03..` 命中、`7ffe03??` 空。
    另：`-qc '/x ...; q'` 里的 `;` 会截断命令，参数串只放一条。
    **`/x` 是可用的 AOB 检索工具，不必绕开它。**
-3. **cdb 只能走 `%LOCALAPPDATA%\Microsoft\WindowsApps\cdbX64.exe` alias**，不能加进 PATH；
+3. **cdb 只能走 `%LOCALAPPDATA%\Microsoft\WindowsApps\cdb.exe` alias**，不能加进 PATH；
    x86 换 `cdbX86`，混用报 `Win32 error 0n50`。
 4. **cdb 命令文件每行一条、扁平，结尾必须有 `q`**；`r rcx rdx r8` 写成一行报 `Syntax error`。
 5. **cdb 日志读出来编码不固定**：Python 里按 `raw[:8]` 有无 `\x00` 判断用 `utf-16-le` 还是 `utf-8`。

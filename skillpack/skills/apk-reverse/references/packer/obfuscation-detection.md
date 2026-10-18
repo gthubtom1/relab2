@@ -165,7 +165,7 @@ $idat = (Resolve-ReverseToolSpec -Name 'idat64_83').Command
 
 - **`UPX!` magic 被改后 `upx -d` 会直接失败**，别反复试，改用运行时 dump。
 - **r2 的 `/x` 通配符是 `.` 不是 `?`**，且 `search.from/to` 无效。
-- **rabin2 在本机是坏副本**，用 `r2 -qc` 代替。
+- `rabin2` **可用**（2026-10-18 实测 6.2.4）；批量扫仍推荐 `r2 -qc`。
 - **`.init_array` 为空不代表没有初始化逻辑**：可能放在 `.ctors` 或 `.preinit_array`，或由 `JNI_OnLoad` 触发。
 - **IDA headless：`idat.exe` 是 32 位**，分析 64 位 SO 必须用 `idat64.exe`。
 - **capstone/elftools 在 `(Resolve-ReverseToolSpec -Name 'pyre').Command`**，。

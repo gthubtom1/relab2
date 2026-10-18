@@ -33,7 +33,7 @@
 $r2      = (Resolve-ReverseToolSpec -Name 'r2').Command
 $diec    = (Resolve-ReverseToolSpec -Name 'diec').Command
 $capa    = (Resolve-ReverseToolSpec -Name 'capa').Command
-$cdb     = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
+$cdb     = (Resolve-ReverseToolSpec -Name 'cdb').Command
 $peSieve = (Resolve-ReverseToolSpec -Name 'pe-sieve').Command
 $scylla  = (Resolve-ReverseToolSpec -Name 'scyllahide').Command
 $yara    = (Resolve-ReverseToolSpec -Name 'yara').Command

@@ -19,7 +19,7 @@
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2  = (Resolve-ReverseToolSpec -Name 'r2').Command
-$cdb = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
+$cdb = (Resolve-ReverseToolSpec -Name 'cdb').Command
 $py  = (Resolve-ReverseToolSpec -Name 'pyre').Command    # pefile 2024.8.26
 $sys = '<工具根>\<分类>\<工具名>'       # Listdlls64.exe（验证模块列表里没有它）
 ```

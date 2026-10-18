@@ -16,7 +16,7 @@
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
-$cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
+$cdb  = (Resolve-ReverseToolSpec -Name 'cdb').Command
 $rasm = (Resolve-ReverseToolSpec -Name 'rasm2').Command
 $py   = (Resolve-ReverseToolSpec -Name 'pyre').Command   # pefile 2024.8.26
 ```
@@ -181,7 +181,7 @@ scanned user32.dll         1005 named exports
 
 ```powershell
 $exe  = 'C:\path\to\sample.exe'
-$cdb  = "$env:LOCALAPPDATA\Microsoft\WindowsApps\cdbX64.exe"
+$cdb  = "$env:LOCALAPPDATA\Microsoft\WindowsApps\cdb.exe"
 $cmds = "$env:TEMP\api_cdb.txt"
 
 @'

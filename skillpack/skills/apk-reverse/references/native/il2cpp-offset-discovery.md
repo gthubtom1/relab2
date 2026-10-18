@@ -186,7 +186,7 @@ for (int i=0;i<count;i++){
 - **`libil2cpp.so` 被混淆/加壳后函数边界模糊**：先跑 `so-structure-audit.md` 和 `../packer/obfuscation-detection.md`。
 - **`process_vm_readv` 的 syscall 号因架构而异**：arm64=270，x86_64=310。
 - **本机无 Android 设备**：指针链/跨进程读部分**需真机/模拟器，本机未验证**；静态 metadata 解析部分已验证。
-- **`rabin2` 本机是坏副本**，用 `r2 -qc`。
+- `rabin2` **可用**（2026-10-18 实测 6.2.4，`rabin2 -I` rc=0）；批量扫仍推荐 `r2 -qc`，因为一次进程能扫多个文件。
 
 ## 相关
 

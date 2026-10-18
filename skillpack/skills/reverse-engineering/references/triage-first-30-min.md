@@ -44,7 +44,7 @@
 | 自动脱壳 | `upx` | `(Resolve-ReverseToolSpec -Name 'upx').Command` |
 | Ghidra 无头 | `analyzeHeadless` | `(Resolve-ReverseToolSpec -Name 'analyzeHeadless').Command` |
 | IDA 无头 | `idat` | `(Resolve-ReverseToolSpec -Name 'idat').Command` |
-| 动态调试（x64） | `cdb` | `%LOCALAPPDATA%\Microsoft\WindowsApps\cdbX64.exe` |
+| 动态调试（x64） | `cdb` | `%LOCALAPPDATA%\Microsoft\WindowsApps\cdb.exe` |
 | 反反调试注入器 | `scyllahide` | `(Resolve-ReverseToolSpec -Name 'scyllahide').Command` |
 | 注入 / hook 扫描 | `pe-sieve` | `(Resolve-ReverseToolSpec -Name 'pe-sieve').Command` |
 | YARA 规则匹配 | `yara` | `(Resolve-ReverseToolSpec -Name 'yara').Command` |

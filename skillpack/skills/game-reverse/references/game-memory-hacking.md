@@ -31,7 +31,7 @@
 ```powershell
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2      = (Resolve-ReverseToolSpec -Name 'r2').Command
-$cdb     = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
+$cdb     = (Resolve-ReverseToolSpec -Name 'cdb').Command
 $diec    = (Resolve-ReverseToolSpec -Name 'diec').Command
 $capa    = (Resolve-ReverseToolSpec -Name 'capa').Command
 $yara    = (Resolve-ReverseToolSpec -Name 'yara').Command
@@ -39,7 +39,7 @@ $peSieve = (Resolve-ReverseToolSpec -Name 'pe-sieve').Command
 $py      = (Resolve-ReverseToolSpec -Name 'pyre').Command
 ```
 
-> ★ cdb 只能走 `%LOCALAPPDATA%\Microsoft\WindowsApps\cdbX64.exe` alias，不能加进 PATH。
+> ★ cdb 只能走 `%LOCALAPPDATA%\Microsoft\WindowsApps\cdb.exe` alias，不能加进 PATH。
 
 本篇的可复现样本（自建，用于验证命令）：
 

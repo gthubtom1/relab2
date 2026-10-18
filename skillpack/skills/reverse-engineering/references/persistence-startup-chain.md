@@ -17,7 +17,7 @@
 . 'C:\relab2\skillpack\skills\scripts\lib\Bootstrap.ps1'
 $r2   = (Resolve-ReverseToolSpec -Name 'r2').Command
 $floss = (Resolve-ReverseToolSpec -Name 'floss').Command
-$cdb  = (Resolve-ReverseToolSpec -Name 'cdbX64').Command
+$cdb  = (Resolve-ReverseToolSpec -Name 'cdb').Command
 $pm   = '<工具根>\<分类>\<工具名>\Procmon64.exe'
 $sys  = '<工具根>\<分类>\<工具名>\Autoruns64.exe'    # 一次性扫全部自启动点
 ```
